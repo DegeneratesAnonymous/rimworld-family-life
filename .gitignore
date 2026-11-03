@@ -11,3 +11,5 @@ Source/**/obj/
 *.suo
 .DS_Store
 Thumbs.db
+tools/**/bin/
+tools/**/obj/
