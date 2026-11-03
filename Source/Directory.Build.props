@@ -1,0 +1,7 @@
+<Project>
+  <!-- Imported before the SDK, so the per-version obj folder takes effect for restore too. -->
+  <PropertyGroup>
+    <GameVersion Condition="'$(GameVersion)' == ''">1.7</GameVersion>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)$(MSBuildProjectName)/obj/$(GameVersion)/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

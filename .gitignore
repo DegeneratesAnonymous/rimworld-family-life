@@ -1,0 +1,13 @@
+Source/**/bin/
+Source/**/obj/
+1.6/Assemblies/*.dll
+1.7/Assemblies/*.dll
+1.6/Assemblies/*.json
+1.7/Assemblies/*.json
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db

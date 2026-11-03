@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    Added when someone the pawn was closely attached to dies. The stage follows how strong the attachment was, so losing a
+    parent you were very close to hurts more than losing a distant sibling. Small on purpose: the game already has its own
+    thoughts for a relative's death, and this only deepens them. It can be switched off in the mod settings.
+  -->
+  <ThoughtDef>
+    <defName>WFL_FamilyGrief</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>8</durationDays>
+    <stackLimit>4</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>missing someone</label>
+        <description>I keep thinking about someone I was fond of.</description>
+        <baseMoodEffect>-2</baseMoodEffect>
+      </li>
+      <li>
+        <label>grieving someone close</label>
+        <description>I lost someone I was close to. The house feels wrong without them.</description>
+        <baseMoodEffect>-4</baseMoodEffect>
+      </li>
+      <li>
+        <label>devastated by a loss</label>
+        <description>I lost someone who was a part of everything I did. I do not know how to go on as before.</description>
+        <baseMoodEffect>-6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <!-- Small, short-lived mood effects for time spent with family. They reward what pawns do; none of them is a need. -->
+  <ThoughtDef>
+    <defName>WFL_FamilyTimeSpent</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>0.75</durationDays>
+    <stackLimit>3</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>time with family</label>
+        <description>It was good to just be with someone I care about.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_SharedMeal</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>0.5</durationDays>
+    <stackLimit>2</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>ate with family</label>
+        <description>A meal tastes better with family at the table.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_HeardBedtimeStory</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>heard a bedtime story</label>
+        <description>Someone read to me before bed. I feel safe and looked after.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_ToldBedtimeStory</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>read to a child</label>
+        <description>Reading to a child at the end of the day is the best part of it.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_Date</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>had a date</label>
+        <description>A whole hour just for the two of us. I had forgotten how much I needed that.</description>
+        <baseMoodEffect>5</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Learned</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>learned from family</label>
+        <description>Someone patient showed me how it is done.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Taught</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>taught someone</label>
+        <description>It feels good to pass on what I know.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_MadePeace</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>4.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>made peace</label>
+        <description>We finally talked it through. It is not all mended, but it is no longer a wall between us.</description>
+        <baseMoodEffect>6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_HeardFamilyStory</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.5</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>heard a family story</label>
+        <description>I heard about where we come from. It is good to know.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Babysat</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>minded a little one</label>
+        <description>Looking after a little one was tiring and lovely.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_BabysatForUs</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>2.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>grateful for the sitter</label>
+        <description>I am glad someone we trust looked after the little ones for us.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Bedside</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>sat with someone</label>
+        <description>I sat with someone who was unwell. It mattered to be there.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Visited</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.5</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>someone sat with me</label>
+        <description>Someone stayed with me while I was unwell. I am not alone.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_BondedWithBaby</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>held a baby</label>
+        <description>Holding my little one close is the best part of the day.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Cuddled</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>was held</label>
+        <description>I was held and I felt safe.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_CameOfAge</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>6.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>grown up</label>
+        <description>I am grown now. People are proud of me, and I am a little afraid, and a little excited.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Anniversary</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>3.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>anniversary</label>
+        <description>Another year together. I would do it all again.</description>
+        <baseMoodEffect>5</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Reunion</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>4.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>back together</label>
+        <description>Someone I missed is back. I did not know how much I missed them until I saw them.</description>
+        <baseMoodEffect>6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Estranged</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>8.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>estranged from family</label>
+        <description>Things have gone wrong between us, and it hangs over everything.</description>
+        <baseMoodEffect>-4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_Missing</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>3.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>missing someone far away</label>
+        <description>I keep wondering how someone dear to me is getting on, so far away.</description>
+        <baseMoodEffect>-2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_TraditionAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>4.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>family tradition</label>
+        <description>We kept our tradition together. It feels like we belong to something.</description>
+        <baseMoodEffect>6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_ComingOfAgeAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>4.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>celebrated a coming of age</label>
+        <description>We celebrated a young person becoming an adult. The whole family was there.</description>
+        <baseMoodEffect>6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_MemorialAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>6.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>remembered together</label>
+        <description>We remembered someone we lost, together. It hurt, and it helped.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+</Defs>

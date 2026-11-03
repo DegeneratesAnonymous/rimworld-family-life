@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Settings -->
+  <WFL_S_LogEvents>Log family events to the dev log</WFL_S_LogEvents>
+  <WFL_S_LogEventsTip>Writes one line per family change (births, deaths, partnerships, moves) to the log. Useful when reporting a problem.</WFL_S_LogEventsTip>
+
+  <!-- General -->
+  <WFL_Someone>someone</WFL_Someone>
+  <WFL_DayN>day {0}</WFL_DayN>
+  <WFL_StatusColony>in the colony</WFL_StatusColony>
+  <WFL_StatusAway>elsewhere</WFL_StatusAway>
+  <WFL_StatusDead>dead</WFL_StatusDead>
+  <WFL_StatusDiedOn>died {0}</WFL_StatusDiedOn>
+  <WFL_Child>child</WFL_Child>
+
+  <!-- Chronicle -->
+  <WFL_Chron_RecordsBegan>The colony began keeping family records.</WFL_Chron_RecordsBegan>
+  <WFL_Chron_Birth>{0} was born to {1}.</WFL_Chron_Birth>
+  <WFL_Chron_Joined>{0} joined the colony.</WFL_Chron_Joined>
+  <WFL_Chron_Left>{0} left the colony.</WFL_Chron_Left>
+  <WFL_Chron_Died>{0} died.</WFL_Chron_Died>
+  <WFL_Chron_LineageFounded>{0} became the founder of the {1} family.</WFL_Chron_LineageFounded>
+  <WFL_Chron_Affiliated>{0} became part of the {1} family.</WFL_Chron_Affiliated>
+  <WFL_Chron_PartnersFormed>{0} and {1} became partners.</WFL_Chron_PartnersFormed>
+  <WFL_Chron_PartnersEnded>{0} and {1} are no longer partners.</WFL_Chron_PartnersEnded>
+  <WFL_Chron_HouseholdFormed>{0} started a new household.</WFL_Chron_HouseholdFormed>
+
+  <!-- Families window -->
+  <WFL_NoFamilies>No family records yet. They appear as soon as the colony has people with known relatives.</WFL_NoFamilies>
+  <WFL_FamilyOf>{0} family</WFL_FamilyOf>
+  <WFL_ListTip>{0} living in the colony.</WFL_ListTip>
+  <WFL_Tab_Overview>Overview</WFL_Tab_Overview>
+  <WFL_Tab_Members>Members</WFL_Tab_Members>
+  <WFL_Tab_Households>Households</WFL_Tab_Households>
+  <WFL_Tab_History>History</WFL_Tab_History>
+  <WFL_FoundedBy>Founded by {0}, {1}.</WFL_FoundedBy>
+  <WFL_Counts>{0} in the colony, {1} elsewhere, {2} dead.</WFL_Counts>
+  <WFL_Affiliates>By marriage or recognition</WFL_Affiliates>
+  <WFL_Aff_Spouse>by marriage</WFL_Aff_Spouse>
+  <WFL_Aff_Recognized>recognized as family</WFL_Aff_Recognized>
+  <WFL_Households>Households</WFL_Households>
+  <WFL_NoHouseholds>Nobody from this family lives in the colony right now.</WFL_NoHouseholds>
+  <WFL_Generation>Generation {0}</WFL_Generation>
+  <WFL_ChildOf>child of {0}</WFL_ChildOf>
+  <WFL_PartnerOf>partner of {0}</WFL_PartnerOf>
+  <WFL_HouseholdsHelp>A household is the people who live together. Partners who move in together form a new household, children stay with their parents, and adult children stay until they pair up. Use Move to change it yourself.</WFL_HouseholdsHelp>
+  <WFL_HouseholdN>Household {0}</WFL_HouseholdN>
+  <WFL_Move>Move...</WFL_Move>
+  <WFL_MoveTo>Move in with {0}</WFL_MoveTo>
+  <WFL_MoveToNew>Start a new household</WFL_MoveToNew>
+  <WFL_NoHistory>Nothing recorded yet.</WFL_NoHistory>
+
+  <!-- Pawn tab -->
+  <WFL_TabFamily>Family</WFL_TabFamily>
+  <WFL_Tab_Lineage>Family</WFL_Tab_Lineage>
+  <WFL_Tab_Household>Lives with</WFL_Tab_Household>
+  <WFL_Tab_Parents>Parents</WFL_Tab_Parents>
+  <WFL_Tab_Partners>Partners</WFL_Tab_Partners>
+  <WFL_Tab_Children>Children</WFL_Tab_Children>
+  <WFL_Tab_Siblings>Siblings</WFL_Tab_Siblings>
+  <WFL_OpenFamilies>Open families window</WFL_OpenFamilies>
+  <WFL_FamilyButton>Family</WFL_FamilyButton>
+  <WFL_OpenFamilyTip>Open the {0} family</WFL_OpenFamilyTip>
+
+  <!-- Settings (relationships) -->
+  <WFL_S_Grief>Deeper grief for close family</WFL_S_Grief>
+  <WFL_S_GriefTip>When someone dies, relatives who were closely attached get an extra, small and temporary mood penalty on top of the game's own. The closer they were, the deeper it goes. Turn off to leave grief entirely to the base game.</WFL_S_GriefTip>
+
+  <!-- Settings (activities) -->
+  <WFL_S_Activities>Family activities</WFL_S_Activities>
+  <WFL_S_ActivitiesTip>Relatives spend time together during joy time, children are read to before bed, and relatives who eat together feel it. These take the place of other recreation; they never interrupt work, a player order, or an emergency. Turn off to remove all of it.</WFL_S_ActivitiesTip>
+  <WFL_S_Hours>Family time target per day: {0} hours</WFL_S_Hours>
+  <WFL_S_HoursTip>A soft limit. Once someone has had this much family time today they stop starting new family activities until tomorrow. An activity already in progress is never cut short.</WFL_S_HoursTip>
+  <WFL_S_Stories>Bedtime stories</WFL_S_Stories>
+  <WFL_S_StoriesTip>In the hour before a child's bedtime, the parent with the best Social skill who is free reads to them. With a book the child learns from it; without one the parent teaches something they know, at a lower rate.</WFL_S_StoriesTip>
+  <WFL_S_Meals>Eating together</WFL_S_Meals>
+  <WFL_S_MealsTip>Relatives who eat in the same room at about the same time grow closer and get a small mood lift. It does not change where or when anyone eats.</WFL_S_MealsTip>
+
+  <!-- Job reports -->
+  <WFL_Report_FamilyTime>spending time with {0}.</WFL_Report_FamilyTime>
+  <WFL_Report_BedtimeStory>reading a bedtime story to {0}.</WFL_Report_BedtimeStory>
+  <WFL_Report_ListenToStory>listening to a bedtime story.</WFL_Report_ListenToStory>
+
+  <!-- Relationships -->
+  <WFL_Tab_Relationships>Relationships</WFL_Tab_Relationships>
+  <WFL_Tier_Fractured>fractured</WFL_Tier_Fractured>
+  <WFL_Tier_Strained>strained</WFL_Tier_Strained>
+  <WFL_Tier_Steady>steady</WFL_Tier_Steady>
+  <WFL_Tier_Close>close</WFL_Tier_Close>
+  <WFL_Tier_TightKnit>tight-knit</WFL_Tier_TightKnit>
+  <WFL_LeftOut>The others do not seem very attached to: {0}</WFL_LeftOut>
+  <WFL_CohesionHelp>Closeness is a summary of how attached and trusting the people in a household are, less any tension between them. Individuals can feel differently from the household as a whole.</WFL_CohesionHelp>
+  <WFL_RelPick>Showing: {0}</WFL_RelPick>
+  <WFL_RelHelp>How this person feels about each of their relatives. It sits alongside the game's own opinion and never replaces it. Hover a row for the numbers.</WFL_RelHelp>
+  <WFL_Bond_Attachment>Attachment</WFL_Bond_Attachment>
+  <WFL_Bond_Trust>Trust</WFL_Bond_Trust>
+  <WFL_Bond_Tension>Tension</WFL_Bond_Tension>
+  <WFL_Bond_Familiarity>Familiarity</WFL_Bond_Familiarity>
+  <WFL_NoBonds>No relationships recorded yet.</WFL_NoBonds>
+  <WFL_BondKind_Housemate>housemate</WFL_BondKind_Housemate>
+  <WFL_BondKind_Parent>their child</WFL_BondKind_Parent>
+  <WFL_BondKind_Child>their parent</WFL_BondKind_Child>
+  <WFL_BondKind_Sibling>sibling</WFL_BondKind_Sibling>
+  <WFL_BondKind_Partner>partner</WFL_BondKind_Partner>
+  <WFL_BondKind_Ex>former partner</WFL_BondKind_Ex>
+  <WFL_BondTip>{0} toward {1}: attachment {2}, trust {3}, tension {4}, familiarity {5}.</WFL_BondTip>
+
+  <!-- Phases 4-6 -->
+  <WFL_S_Dates>Dates for partners (with a sitter for the children)</WFL_S_Dates>
+  <WFL_S_DatesTip>Partners sometimes spend an hour alone together. If children are at home, a trusted relative or friend minds them.</WFL_S_DatesTip>
+  <WFL_S_Teaching>Relatives teach each other</WFL_S_Teaching>
+  <WFL_S_TeachingTip>An older relative who is clearly better at a skill may teach a younger one during family time.</WFL_S_TeachingTip>
+  <WFL_S_BabyBonding>Bonding with babies</WFL_S_BabyBonding>
+  <WFL_S_BabyBondingTip>Parents hold, sing to and play with their babies.</WFL_S_BabyBondingTip>
+  <WFL_S_Bedside>Sitting with sick relatives</WFL_S_Bedside>
+  <WFL_S_BedsideTip>Relatives who are close to someone unwell may sit with them.</WFL_S_BedsideTip>
+  <WFL_S_Traditions>Family traditions and gatherings</WFL_S_Traditions>
+  <WFL_S_TraditionsTip>Families take up traditions from what they value, and sometimes hold gatherings for them, for a coming of age, or to remember someone.</WFL_S_TraditionsTip>
+  <WFL_S_Conflicts>Family conflict</WFL_S_Conflicts>
+  <WFL_S_ConflictsTip>Tension that lasts can become a rift between relatives. Rifts can be mended with time together.</WFL_S_ConflictsTip>
+  <WFL_S_Rivalry>Sibling rivalry</WFL_S_Rivalry>
+  <WFL_S_RivalryTip>A child who is given far less attention than a sibling may resent the sibling.</WFL_S_RivalryTip>
+  <WFL_S_Health>Relationship health affects breakups</WFL_S_Health>
+  <WFL_S_HealthTip>Couples who have drifted apart are more likely to break up; steady couples are less likely to.</WFL_S_HealthTip>
+  <WFL_S_Affairs>Allow affairs</WFL_S_Affairs>
+  <WFL_S_AffairsTip>Off by default. A partnered colonist whose relationship is in real crisis may start a romance with someone else.</WFL_S_AffairsTip>
+  <WFL_S_Strict>Strict romance</WFL_S_Strict>
+  <WFL_S_StrictTip>Partnered colonists never start romances with others.</WFL_S_StrictTip>
+  <WFL_Msg_TraditionAdopted>The {0} family has taken up a tradition: {1}.</WFL_Msg_TraditionAdopted>
+  <WFL_Gathering_Report_tradition>at a family gathering.</WFL_Gathering_Report_tradition>
+  <WFL_Gathering_Report_comingofage>celebrating a coming of age.</WFL_Gathering_Report_comingofage>
+  <WFL_Gathering_Report_memorial>remembering someone.</WFL_Gathering_Report_memorial>
+  <WFL_Gathering_Title_tradition>Family tradition</WFL_Gathering_Title_tradition>
+  <WFL_Gathering_Text_tradition>{0} is bringing the family together for a tradition.</WFL_Gathering_Text_tradition>
+  <WFL_Gathering_Title_comingofage>Coming of age</WFL_Gathering_Title_comingofage>
+  <WFL_Gathering_Text_comingofage>{0} is bringing the family together to celebrate {1} becoming an adult.</WFL_Gathering_Text_comingofage>
+  <WFL_Gathering_Title_memorial>Remembering</WFL_Gathering_Title_memorial>
+  <WFL_Gathering_Text_memorial>{0} is gathering the family to remember {1}.</WFL_Gathering_Text_memorial>
+  <WFL_Chron_CameOfAge>{0} came of age.</WFL_Chron_CameOfAge>
+  <WFL_Chron_Reunion>{0} came back after a long time away.</WFL_Chron_Reunion>
+  <WFL_Chron_Anniversary>{0} and {1} marked another year together.</WFL_Chron_Anniversary>
+  <WFL_Chron_TraditionAdopted>The {0} family took up a tradition: {1}.</WFL_Chron_TraditionAdopted>
+  <WFL_Chron_TraditionAbandoned>The {0} family let go of a tradition: {1}.</WFL_Chron_TraditionAbandoned>
+  <WFL_Chron_TraditionHeld>The {0} family held a gathering: {1}.</WFL_Chron_TraditionHeld>
+  <WFL_Chron_RiftOpened>{0} and {1} fell out.</WFL_Chron_RiftOpened>
+  <WFL_Chron_RiftResolved>{0} and {1} made peace.</WFL_Chron_RiftResolved>
+  <WFL_Trad_feast>Family feast</WFL_Trad_feast>
+  <WFL_Trad_reading>Reading night</WFL_Trad_reading>
+  <WFL_Trad_hunt>The hunt</WFL_Trad_hunt>
+  <WFL_Trad_craftfair>Craft fair</WFL_Trad_craftfair>
+  <WFL_Trad_party>Family party</WFL_Trad_party>
+  <WFL_Trad_vigil>Vigil</WFL_Trad_vigil>
+  <WFL_Trad_foundersday>Founders' day</WFL_Trad_foundersday>
+  <WFL_Trad_reunion>Family reunion</WFL_Trad_reunion>
+  <WFL_Dim_Hearth>hearth and home</WFL_Dim_Hearth>
+  <WFL_Dim_Scholarly>learning</WFL_Dim_Scholarly>
+  <WFL_Dim_Martial>fighting spirit</WFL_Dim_Martial>
+  <WFL_Dim_Craft>craftsmanship</WFL_Dim_Craft>
+  <WFL_Dim_Revelry>merrymaking</WFL_Dim_Revelry>
+  <WFL_Dim_Faith>faith</WFL_Dim_Faith>
+  <WFL_Dim_Status>standing</WFL_Dim_Status>
+  <WFL_Dim_Warmth>warmth</WFL_Dim_Warmth>
+  <WFL_Dim_Steadiness>steadiness</WFL_Dim_Steadiness>
+  <WFL_Dim_Rootedness>rootedness</WFL_Dim_Rootedness>
+  <WFL_Dim_Devotion>devotion to family</WFL_Dim_Devotion>
+  <WFL_Tab_Traditions>Traditions</WFL_Tab_Traditions>
+  <WFL_Culture>Culture</WFL_Culture>
+  <WFL_NoValues>No clear family values yet. They form from the character of the people in the family, and from what they live through.</WFL_NoValues>
+  <WFL_ValuesLine>This family values: {0}.</WFL_ValuesLine>
+  <WFL_CultureHelp>Values follow the character of the family's members and move slowly. Shared events reinforce them.</WFL_CultureHelp>
+  <WFL_LegacyLine>Known for: {0}.</WFL_LegacyLine>
+  <WFL_Memories>Defining memories</WFL_Memories>
+  <WFL_Mem_Birth>{1} welcomed {0}.</WFL_Mem_Birth>
+  <WFL_Mem_Loss>The family lost {0}.</WFL_Mem_Loss>
+  <WFL_Mem_Wedding>{0} and {1} were wed.</WFL_Mem_Wedding>
+  <WFL_Mem_Parting>{0} and {1} parted.</WFL_Mem_Parting>
+  <WFL_Mem_CameOfAge>{0} grew up.</WFL_Mem_CameOfAge>
+  <WFL_Mem_Reunion>{0} came home.</WFL_Mem_Reunion>
+  <WFL_Mem_Anniversary>{0} and {1} reached a milestone together.</WFL_Mem_Anniversary>
+  <WFL_Mem_Tradition>The family kept a tradition.</WFL_Mem_Tradition>
+  <WFL_Mem_Reconciliation>{0} and {1} made peace.</WFL_Mem_Reconciliation>
+  <WFL_TraditionsHelp>A family takes up a tradition when it values what the tradition is about. You can mute one, or ask for it to be held now.</WFL_TraditionsHelp>
+  <WFL_NoTraditions>This family has no traditions yet. They appear on their own once its values are clear and enough of the family is in the colony.</WFL_NoTraditions>
+  <WFL_TraditionLast>last held {0}, {1} times</WFL_TraditionLast>
+  <WFL_TraditionNever>not held yet</WFL_TraditionNever>
+  <WFL_Mute>Mute</WFL_Mute>
+  <WFL_Unmute>Unmute</WFL_Unmute>
+  <WFL_HoldNow>Hold now</WFL_HoldNow>
+  <WFL_HoldNowQueued>The family will hold: {0}.</WFL_HoldNowQueued>
+  <WFL_RiftLine>Estranged from {0} ({1}) since {2}.</WFL_RiftLine>
+  <WFL_RiftCause_Tension>ongoing tension</WFL_RiftCause_Tension>
+  <WFL_RiftCause_Neglect>feeling neglected</WFL_RiftCause_Neglect>
+  <WFL_RiftCause_Rivalry>sibling rivalry</WFL_RiftCause_Rivalry>
+  <WFL_RiftCause_Breakup>a breakup</WFL_RiftCause_Breakup>
+  <WFL_Why_Together>time spent together</WFL_Why_Together>
+  <WFL_Why_Meal>sharing meals</WFL_Why_Meal>
+  <WFL_Why_Story>bedtime stories</WFL_Why_Story>
+  <WFL_Why_Teaching>learning from one another</WFL_Why_Teaching>
+  <WFL_Why_Date>time alone together</WFL_Why_Date>
+  <WFL_Why_Care>looking after one another</WFL_Why_Care>
+  <WFL_Why_Gathering>family gatherings</WFL_Why_Gathering>
+  <WFL_Why_Peace>making peace</WFL_Why_Peace>
+  <WFL_Why_Rift>falling out</WFL_Why_Rift>
+  <WFL_Why_Breakup>the breakup</WFL_Why_Breakup>
+  <WFL_Why_Birth>a new baby</WFL_Why_Birth>
+  <WFL_Why_Partnered>becoming partners</WFL_Why_Partnered>
+  <WFL_Why_Friction>forced company they did not enjoy</WFL_Why_Friction>
+  <WFL_Lately>Lately: {0}</WFL_Lately>
+  <WFL_Msg_BondDeepened>{0} has grown much closer to {1}, from {2}.</WFL_Msg_BondDeepened>
+  <WFL_Msg_BondCooled>{0} and {1} have drifted apart, from {2}.</WFL_Msg_BondCooled>
+  <WFL_S_BondMessages>Tell me when relationships change noticeably</WFL_S_BondMessages>
+  <WFL_S_BondMessagesTip>A short message when someone grows much closer to, or drifts from, a relative, with the reason.</WFL_S_BondMessagesTip>
+  <WFL_Tree>Family tree</WFL_Tree>
+  <WFL_NoTree>Nobody to show yet.</WFL_NoTree>
+  <WFL_Tree_Died>died</WFL_Tree_Died>
+  <WFL_Tree_Away>elsewhere</WFL_Tree_Away>
+  <WFL_Tree_MarriedIn>by marriage</WFL_Tree_MarriedIn>
+  <WFL_TreeClick>Click to compare closeness with everyone.</WFL_TreeClick>
+  <WFL_TreeLegend>The coloured bar on a person is the household they live in. Dim boxes are people who are elsewhere or who have died.</WFL_TreeLegend>
+  <WFL_TreeLinkPartners>Partners</WFL_TreeLinkPartners>
+  <WFL_TreeLinkFormer>Former partners: the partnership ended (divorced or separated).</WFL_TreeLinkFormer>
+  <WFL_TreeLegendLinks>A pink bar joins partners; a broken red bar joins former partners. A child hangs from the point between its own two parents, and a faint line links a parent who is drawn apart. Blue text marks step-parents and step-children.</WFL_TreeLegendLinks>
+  <WFL_Tree_StepParent>step-parent of {0}</WFL_Tree_StepParent>
+  <WFL_Tree_StepChild>stepchild of {0}</WFL_Tree_StepChild>
+  <WFL_FormerPartnerOf>Former partner of {0}</WFL_FormerPartnerOf>
+  <WFL_StepChildren>step-children: {0}</WFL_StepChildren>
+  <WFL_Chron_FamiliesJoined>{0} and {1} became partners, joining the {2} and {3} families.</WFL_Chron_FamiliesJoined>
+  <WFL_Chron_StepFamily>{0} and {1} became partners and formed a step-family{2}.</WFL_Chron_StepFamily>
+  <WFL_Msg_FamiliesJoined>{0} and {1} are now partners, joining the {2} and {3} families.</WFL_Msg_FamiliesJoined>
+  <WFL_Msg_StepFamily>{0} and {1} have become a step-family.</WFL_Msg_StepFamily>
+  <WFL_Mem_Joined>{0} and {1} joined their families.</WFL_Mem_Joined>
+  <WFL_Mem_StepFamily>{0} and {1} made a step-family.</WFL_Mem_StepFamily>
+  <WFL_ExportRecords>Save records to a file</WFL_ExportRecords>
+  <WFL_ExportRecordsTip>Writes who is related to whom, as the mod has recorded it, to a text file. Useful for checking a tree that looks wrong.</WFL_ExportRecordsTip>
+  <WFL_ExportedRecords>Family records written to {0}</WFL_ExportedRecords>
+  <WFL_TreeFocusHelp>Click a person to see how close everyone else is to them. Double-click to find someone in the colony.</WFL_TreeFocusHelp>
+  <WFL_TreeFocusing>Showing how close everyone is to {0}: the green bar fills as they grow closer. Click {0} again to hide it, or click anyone else to compare with them.</WFL_TreeFocusing>
+  <WFL_TreeCloseness>Closeness to {0}: {1} of 100</WFL_TreeCloseness>
+  <WFL_TreeFeels>{0} feels {2} attached to {1}, with {3} trust and {4} tension.</WFL_TreeFeels>
+  <WFL_TreeNoBond>No bond is recorded between {0} and {1}.</WFL_TreeNoBond>
+  <WFL_TreeDoubleClick>Double-click to find them in the colony.</WFL_TreeDoubleClick>
+  <WFL_Tab_Zone>Zone</WFL_Tab_Zone>
+  <WFL_ZoneHelp>Give this family a zone of its own. Paint it from Architect > Zone > Family zone, then choose the family on the zone (or here). Everyone in the family, including children born later, is kept to it. Anyone you give a different area afterwards keeps it.</WFL_ZoneHelp>
+  <WFL_ZoneNone>No family has been given this zone yet.</WFL_ZoneNone>
+  <WFL_ZoneCurrent>{0}: {1} of {2} family members are kept to it.</WFL_ZoneCurrent>
+  <WFL_ZoneChoose>Use a family zone already painted</WFL_ZoneChoose>
+  <WFL_ZoneNoAreas>There are no areas yet</WFL_ZoneNoAreas>
+  <WFL_ZoneCreate>Paint a family zone</WFL_ZoneCreate>
+  <WFL_ZonePaint>Paint this area</WFL_ZonePaint>
+  <WFL_ZoneRemove>Take this family out of its zone</WFL_ZoneRemove>
+  <WFL_ZoneTooMany>The game allows only a few allowed areas. Delete one you do not use, or choose an existing area.</WFL_ZoneTooMany>
+  <WFL_ZoneSuffix>{0} area</WFL_ZoneSuffix>
+  <WFL_FamilyZone>Family zone</WFL_FamilyZone>
+  <WFL_FamilyZoneDesc>Paint a zone for one family. Choose the family on the zone afterwards and every member is kept to it. Use Delete Zone to shrink or remove it.</WFL_FamilyZoneDesc>
+  <WFL_ZoneChooseFamily>Choose family</WFL_ZoneChooseFamily>
+  <WFL_ZoneChooseFamilyDesc>Choose which family this zone belongs to. Everyone in that family, including children born later, stays inside it.</WFL_ZoneChooseFamilyDesc>
+  <WFL_ZoneNoFamilies>No families to choose from</WFL_ZoneNoFamilies>
+</LanguageData>

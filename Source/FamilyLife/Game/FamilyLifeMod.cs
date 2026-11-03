@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using HarmonyLib;
+using RimWorld;
+using UnityEngine;
+using Verse;
+
+namespace FamilyLife
+{
+    public class FamilySettings : ModSettings
+    {
+        public bool logEvents;
+        public bool griefAmplification = true;
+        public bool familyActivities = true;
+        public float dailyFamilyHours = 2f;
+        public bool bedtimeStories = true;
+        public bool sharedMeals = true;
+        public bool dates = true;
+        public bool teaching = true;
+        public bool traditions = true;
+        public bool babyBonding = true;
+        public bool bedside = true;
+        public bool conflicts = true;
+        public bool rivalry = true;
+        public bool relationshipHealth = true;
+        public bool affairs;
+        public bool bondMessages = true;
+        public bool strictRomance;
+
+        public override void ExposeData()
+        {
+            Scribe_Values.Look(ref logEvents, "logEvents");
+            Scribe_Values.Look(ref griefAmplification, "griefAmplification", true);
+            Scribe_Values.Look(ref familyActivities, "familyActivities", true);
+            Scribe_Values.Look(ref dailyFamilyHours, "dailyFamilyHours", 2f);
+            Scribe_Values.Look(ref bedtimeStories, "bedtimeStories", true);
+            Scribe_Values.Look(ref sharedMeals, "sharedMeals", true);
+            Scribe_Values.Look(ref dates, "dates", true);
+            Scribe_Values.Look(ref teaching, "teaching", true);
+            Scribe_Values.Look(ref traditions, "traditions", true);
+            Scribe_Values.Look(ref babyBonding, "babyBonding", true);
+            Scribe_Values.Look(ref bedside, "bedside", true);
+            Scribe_Values.Look(ref conflicts, "conflicts", true);
+            Scribe_Values.Look(ref rivalry, "rivalry", true);
+            Scribe_Values.Look(ref relationshipHealth, "relationshipHealth", true);
+            Scribe_Values.Look(ref affairs, "affairs");
+            Scribe_Values.Look(ref bondMessages, "bondMessages", true);
+            Scribe_Values.Look(ref strictRomance, "strictRomance");
+        }
+    }
+
+    public class FamilyLifeMod : Mod
+    {
+        public static FamilySettings Settings;
+        private static readonly List<string> applied = new List<string>();
+        private static readonly List<string> failed = new List<string>();
+
+        public FamilyLifeMod(ModContentPack content) : base(content)
+        {
+            Settings = GetSettings<FamilySettings>();
+
+            // One patch class at a time: if a hook fails (another mod, a new game build) it is skipped and logged,
+            // and the periodic reconcile still keeps the family records correct.
+            var harmony = new Harmony("SpacemanWil.WilsFamilyLife");
+            foreach (var type in typeof(FamilyLifeMod).Assembly.GetTypes().Where(t => t.IsDefined(typeof(HarmonyPatch), false)))
+            {
+                try { harmony.CreateClassProcessor(type).Patch(); applied.Add(type.Name); }
+                catch (Exception e)
+                {
+                    failed.Add(type.Name);
+                    Log.Warning("[Wil's Family Life] Skipped hook " + type.Name + ": " + e.Message);
+                }
+            }
+            LongEventHandler.ExecuteWhenFinished(FamilyTabs.RegisterOnHumanlikes);
+            Log.Message("[Wil's Family Life] Loaded (" + applied.Count + " hooks" + (failed.Count > 0 ? ", " + failed.Count + " skipped" : "") + ").");
+        }
+
+        public override string SettingsCategory() => "Wil's Family Life";
+
+        public override void DoSettingsWindowContents(Rect inRect)
+        {
+            var list = new Listing_Standard();
+            list.Begin(inRect);
+            list.CheckboxLabeled("WFL_S_Activities".Translate(), ref Settings.familyActivities, "WFL_S_ActivitiesTip".Translate());
+            if (Settings.familyActivities)
+            {
+                list.Label("WFL_S_Hours".Translate(Settings.dailyFamilyHours.ToString("0.0")), tooltip: "WFL_S_HoursTip".Translate());
+                Settings.dailyFamilyHours = Mathf.Round(list.Slider(Settings.dailyFamilyHours, 0.5f, 4f) * 2f) / 2f;
+                list.CheckboxLabeled("WFL_S_Stories".Translate(), ref Settings.bedtimeStories, "WFL_S_StoriesTip".Translate());
+                list.CheckboxLabeled("WFL_S_Meals".Translate(), ref Settings.sharedMeals, "WFL_S_MealsTip".Translate());
+                list.CheckboxLabeled("WFL_S_Dates".Translate(), ref Settings.dates, "WFL_S_DatesTip".Translate());
+                list.CheckboxLabeled("WFL_S_Teaching".Translate(), ref Settings.teaching, "WFL_S_TeachingTip".Translate());
+                list.CheckboxLabeled("WFL_S_BabyBonding".Translate(), ref Settings.babyBonding, "WFL_S_BabyBondingTip".Translate());
+                list.CheckboxLabeled("WFL_S_Bedside".Translate(), ref Settings.bedside, "WFL_S_BedsideTip".Translate());
+            }
+            list.CheckboxLabeled("WFL_S_Traditions".Translate(), ref Settings.traditions, "WFL_S_TraditionsTip".Translate());
+            list.CheckboxLabeled("WFL_S_Conflicts".Translate(), ref Settings.conflicts, "WFL_S_ConflictsTip".Translate());
+            if (Settings.conflicts)
+            {
+                list.CheckboxLabeled("WFL_S_Rivalry".Translate(), ref Settings.rivalry, "WFL_S_RivalryTip".Translate());
+                list.CheckboxLabeled("WFL_S_Health".Translate(), ref Settings.relationshipHealth, "WFL_S_HealthTip".Translate());
+                list.CheckboxLabeled("WFL_S_Affairs".Translate(), ref Settings.affairs, "WFL_S_AffairsTip".Translate());
+                list.CheckboxLabeled("WFL_S_Strict".Translate(), ref Settings.strictRomance, "WFL_S_StrictTip".Translate());
+            }
+            list.CheckboxLabeled("WFL_S_BondMessages".Translate(), ref Settings.bondMessages, "WFL_S_BondMessagesTip".Translate());
+            list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());
+            list.CheckboxLabeled("WFL_S_LogEvents".Translate(), ref Settings.logEvents, "WFL_S_LogEventsTip".Translate());
+            list.End();
+        }
+    }
+}

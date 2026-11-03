@@ -1,0 +1,17 @@
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\PatchCheck.exe
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\PatchCheck.deps.json
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\PatchCheck.runtimeconfig.json
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\PatchCheck.dll
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\PatchCheck.pdb
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\bin\Debug\net10.0\System.Reflection.MetadataLoadContext.dll
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.csproj.AssemblyReference.cache
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.AssemblyInfoInputs.cache
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.AssemblyInfo.cs
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.csproj.CoreCompileInputs.cache
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.csproj.Up2Date
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.dll
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\refint\PatchCheck.dll
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.pdb
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\PatchCheck.genruntimeconfig.cache
+C:\Users\colem\Downloads\rimworld-family-life\tools\PatchCheck\obj\Debug\net10.0\ref\PatchCheck.dll

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "80GVV+9kvsg=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\colem\\Downloads\\rimworld-family-life\\tools\\Inspect\\Inspect.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\colem\\.nuget\\packages\\system.reflection.metadataloadcontext\\10.0.14\\system.reflection.metadataloadcontext.10.0.14.nupkg.sha512"
+  ],
+  "logs": []
+}

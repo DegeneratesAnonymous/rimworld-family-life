@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Family time is ordinary recreation: it is offered during joy time next to TV and chess, and uses up joy like they do. -->
+  <JoyKindDef>
+    <defName>WFL_FamilyTime</defName>
+    <label>family time</label>
+    <needsThing>false</needsThing>
+  </JoyKindDef>
+
+  <JobDef>
+    <defName>WFL_FamilyTime</defName>
+    <driverClass>FamilyLife.JobDriver_FamilyTime</driverClass>
+    <reportString>spending time with TargetA.</reportString>
+    <joyKind>WFL_FamilyTime</joyKind>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <JoyGiverDef>
+    <defName>WFL_FamilyTime</defName>
+    <giverClass>FamilyLife.JoyGiver_FamilyTime</giverClass>
+    <baseChance>1.6</baseChance>
+    <requireChair>false</requireChair>
+    <desireSit>false</desireSit>
+    <joyKind>WFL_FamilyTime</joyKind>
+    <jobDef>WFL_FamilyTime</jobDef>
+    <canDoWhileInBed>false</canDoWhileInBed>
+    <countsForRecRoom>false</countsForRecRoom>
+  </JoyGiverDef>
+
+  <JobDef>
+    <defName>WFL_BedtimeStory</defName>
+    <driverClass>FamilyLife.JobDriver_BedtimeStory</driverClass>
+    <reportString>reading a bedtime story to TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>WFL_ListenToStory</defName>
+    <driverClass>FamilyLife.JobDriver_ListenToStory</driverClass>
+    <reportString>listening to a bedtime story.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+</Defs>

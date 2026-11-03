@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!--
+    One think node, in the game's own hook for mods, ahead of the main colonist behavior. It only ever offers a bedtime story, only to a
+    parent who is free and a child who is about to go to bed. Everything else family-related goes through joy time.
+  -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>*/ThinkTreeDef[defName="Humanlike"]//li[@Class="ThinkNode_SubtreesByTag" and insertTag="Humanlike_PreMain"]</xpath>
+    <order>Append</order>
+    <value>
+      <li Class="ThinkNode_ConditionalColonist">
+        <subNodes>
+          <li Class="FamilyLife.JobGiver_BedtimeStory" />
+          <li Class="FamilyLife.JobGiver_FamilyCare" />
+        </subNodes>
+      </li>
+    </value>
+  </Operation>
+</Patch>

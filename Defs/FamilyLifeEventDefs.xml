@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Kinds of time together. They share one driver; the job def decides what the time is for and what it does when it ends. -->
+  <JobDef>
+    <defName>WFL_Date</defName>
+    <driverClass>FamilyLife.JobDriver_FamilyTime</driverClass>
+    <reportString>on a date with TargetA.</reportString>
+    <joyKind>WFL_FamilyTime</joyKind>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>WFL_Teach</defName>
+    <driverClass>FamilyLife.JobDriver_FamilyTime</driverClass>
+    <reportString>teaching TargetA.</reportString>
+    <joyKind>WFL_FamilyTime</joyKind>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>WFL_Reconcile</defName>
+    <driverClass>FamilyLife.JobDriver_FamilyTime</driverClass>
+    <reportString>trying to make peace with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <!-- Attention to someone who needs it. -->
+  <JobDef>
+    <defName>WFL_Bedside</defName>
+    <driverClass>FamilyLife.JobDriver_Attend</driverClass>
+    <reportString>sitting with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <JobDef>
+    <defName>WFL_Babysit</defName>
+    <driverClass>FamilyLife.JobDriver_Attend</driverClass>
+    <reportString>minding TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <JobDef>
+    <defName>WFL_Cradle</defName>
+    <driverClass>FamilyLife.JobDriver_Attend</driverClass>
+    <reportString>holding TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <JobDef>
+    <defName>WFL_Lullaby</defName>
+    <driverClass>FamilyLife.JobDriver_Attend</driverClass>
+    <reportString>singing to TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <JobDef>
+    <defName>WFL_PlayBaby</defName>
+    <driverClass>FamilyLife.JobDriver_Attend</driverClass>
+    <reportString>playing with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <!-- A family gathering is the game's own party with a guest list. It is never picked at random. -->
+  <GatheringDef>
+    <defName>WFL_FamilyGathering</defName>
+    <label>family gathering</label>
+    <workerClass>FamilyLife.GatheringWorker_FamilyGathering</workerClass>
+    <randomSelectionWeight>0</randomSelectionWeight>
+    <duty>Party</duty>
+    <letterTitle>Family gathering</letterTitle>
+    <letterText>The family is gathering.</letterText>
+    <calledOffMessage>The family gathering was called off.</calledOffMessage>
+    <finishedMessage>The family gathering is over.</finishedMessage>
+    <gatherSpotDefs>
+      <li>PartySpot</li>
+    </gatherSpotDefs>
+  </GatheringDef>
+</Defs>

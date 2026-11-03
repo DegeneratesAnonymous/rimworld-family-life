@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Wil's Family Life</name>
+  <author>Spaceman_Wil</author>
+  <packageId>SpacemanWil.WilsFamilyLife</packageId>
+  <modVersion>0.11.0</modVersion>
+  <supportedVersions>
+    <li>1.6</li>
+    <li>1.7</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>Ludeon.RimWorld</li>
+    <li>Ludeon.RimWorld.Royalty</li>
+    <li>Ludeon.RimWorld.Ideology</li>
+    <li>Ludeon.RimWorld.Biotech</li>
+  </loadAfter>
+  <description>WIL'S FAMILY LIFE (early development)
+
+A generational family simulation: who is related to whom, which households live together, and how that changes as people are born, marry, move, and die. It keeps durable family records, relationships, everyday family time, culture and traditions, family gatherings, and the conflicts that come with family life.
+
+WHAT WORKS NOW
+- Family lineages that survive the death of their founder, with ancestry, marriage and recognition links.
+- Households (who lives together). Partners who move in together form a new household, children stay with their parents, adult children stay until they pair up, and you can move anyone yourself.
+- A Family button on the bio card (and a Family tab on every colonist) opening the Families window.
+- A chronicle of births, deaths, partnerships, arrivals and departures.
+- Relationships: how attached, trusting and tense each person is toward their relatives, a closeness summary for each household, and deeper (temporary) grief when someone close dies. Your surnames on the character card link to the family.
+- Everyday family life: relatives choose to spend time together during joy time, children are read to before bed (the free parent with the best Social skill, with a book if one is nearby), and relatives who eat together feel it. A soft daily limit keeps it from crowding out anything else.
+
+Works with vanilla RimWorld 1.6 and 1.7. Requires Harmony. Biotech is optional. Other mods are never required.
+
+Created by Spaceman_Wil. Uses Harmony by Andreas Pardeike.</description>
+</ModMetaData>
