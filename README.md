@@ -10,7 +10,7 @@ Adds 48 value-tradition episodes, witnessed incidents and shared news, family su
 
 ## Development roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The first individual-agency slice is in progress; these future milestones are not shipped features.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The current development PR adds chosen houses, earned associates, colonist-based actions, crests, gradual relationship updates and household recovery. See [the implementation guide](docs/HOUSES-AND-ROLEPLAY.md) for supported play styles and limits. Prestige, succession disputes, elections and coups remain future work; the new jobs and UI still require live acceptance.
 
 ## Design principles
 

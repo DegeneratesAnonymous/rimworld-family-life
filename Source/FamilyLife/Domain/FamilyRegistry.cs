@@ -191,7 +191,7 @@ namespace FamilyLife.Domain
         public List<PersonRecord> MembersOf(int lineageId)
         {
             EnsureIndexes();
-            return Persons.Where(p => p.PrimaryLineageId == lineageId).OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
+            return Persons.Where(p => p.SocialFamilyId>0 ? p.SocialFamilyId==lineageId : p.SocialFamilyId==0 && p.PrimaryLineageId == lineageId).OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
         }
 
         public List<PersonRecord> AffiliatesOf(int lineageId)
@@ -201,7 +201,7 @@ namespace FamilyLife.Domain
             var result = new List<PersonRecord>();
             if (lineage == null) return result;
             foreach (var a in lineage.Affiliations)
-                if (personById.TryGetValue(a.PersonId, out var p)) result.Add(p);
+                if (personById.TryGetValue(a.PersonId, out var p) && p.SocialFamilyId==0) result.Add(p);
             return result.OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
         }
 
@@ -216,7 +216,7 @@ namespace FamilyLife.Domain
                 foreach (var rid in h.ResidentIds)
                 {
                     if (!personById.TryGetValue(rid, out var p)) continue;
-                    if (p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id)))
+                    if (BelongsToFamily(p,lineageId))
                     {
                         result.Add(h);
                         break;
@@ -231,6 +231,7 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             if (person == null) return 0;
+            if (person.SocialFamilyId!=0) return person.SocialFamilyId>0 && GetLineage(person.SocialFamilyId)!=null ? person.SocialFamilyId : 0;
             if (person.PrimaryLineageId != 0) return person.PrimaryLineageId;
             foreach (var lineage in Lineages)
                 if (lineage.HasAffiliate(person.Id)) return lineage.Id;
@@ -246,7 +247,7 @@ namespace FamilyLife.Domain
             foreach (var p in Persons)
             {
                 if (p.Presence != presence) continue;
-                if (p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id))) n++;
+                if (BelongsToFamily(p,lineageId)) n++;
             }
             return n;
         }

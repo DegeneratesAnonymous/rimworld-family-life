@@ -123,6 +123,7 @@ namespace FamilyLife
                 Now = now,
                 Setting = setting,
                 FromActivity = fromActivity,
+                QualityHours = fromActivity ? 0f : EventTuning.ConversationTicks / (float)BondTuning.TicksPerHour,
                 RelationshipPace = 0.25f, // Provisional ordinary-event pace; incident shocks use their own path.
                 ResourcePressure = component.Economy.Pressure(ia.LineageId) || component.Economy.Pressure(ib.LineageId),
                 InitiatorBond = registry.GetBond(ia.Id, ib.Id),
@@ -138,7 +139,7 @@ namespace FamilyLife
 
             if (!ia.Child && !ib.Child)
             {
-                try { ctx.RomanticallyEligible = RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
+                try { ctx.RomanticallyEligible = initiator.ageTracker.AgeBiologicalYears>=18 && recipient.ageTracker.AgeBiologicalYears>=18 && !registry.AssessKinship(ia.Id,ib.Id).BlocksRomance && RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
                 catch (Exception) { ctx.RomanticallyEligible = false; }
             }
 

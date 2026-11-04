@@ -21,6 +21,7 @@ namespace FamilyLife
 
         private int selectedLineageId;
         private Tab tab = Tab.Overview;
+        private string branchName = "";
         private Vector2 listScroll;
         private Vector2 bodyScroll;
         private float bodyHeight = 400f;
@@ -55,6 +56,12 @@ namespace FamilyLife
         public override void PreOpen()
         {
             base.PreOpen();
+            var c=FamilyComponent.Current;
+            if(c!=null && !c.PerspectiveInitialized)
+            {
+                c.PerspectivePawnId=Find.Selector.SingleSelectedThing is Pawn selected && selected.IsColonist ? selected.thingIDNumber : c.Registry.Persons.FirstOrDefault(p=>p.InColony && !p.Juvenile)?.Id??0;
+                c.PerspectiveInitialized=true;
+            }
             if (PendingLineageId != 0)
             {
                 selectedLineageId = PendingLineageId;
@@ -149,7 +156,7 @@ namespace FamilyLife
             Widgets.Label(new Rect(rect.x, rect.y, rect.width, 32f), "WFL_FamilyOf".Translate(registry.LineageDisplayName(lineage)));
             Text.Font = GameFont.Small;
             var exportRect = new Rect(rect.xMax - 190f, rect.y + 2f, 180f, 26f);
-            if (Widgets.ButtonText(exportRect, "WFL_ExportRecords".Translate()))
+            if (ActionButton(exportRect, "WFL_ExportRecords".Translate(),component.PerspectivePawnId==0))
             {
                 try
                 {
@@ -160,7 +167,8 @@ namespace FamilyLife
             }
             TooltipHandler.TipRegion(exportRect, "WFL_ExportRecordsTip".Translate());
 
-            float tabY = rect.y + 36f;
+            Widgets.Label(new Rect(rect.x,rect.y+32,rect.width,24),"WFL_Perspective_Acting".Translate(component.PerspectivePawnId==0?"WFL_Perspective_Overseer".Translate().ToString():FamilyUi.NameOf(registry,component.PerspectivePawnId)));
+            float tabY = rect.y + 60f;
             float tabWidth = 108f;
             var tabs = new[] { Tab.Overview, Tab.Relationships, Tab.Moments, Tab.Households, Tab.Zone, Tab.Traditions, Tab.History };
             for (int i = 0; i < tabs.Length; i++)
@@ -210,8 +218,99 @@ namespace FamilyLife
 
         // ------------------------------------------------------------------ overview
 
+        private static bool ActionButton(Rect rect,string label,bool allowed)
+        {bool previous=GUI.enabled;GUI.enabled=previous&&allowed;bool clicked=Widgets.ButtonText(rect,label);GUI.enabled=previous;return clicked;}
+        private static void ReportHouseAction(bool started)
+        {if(!started) Messages.Message("WFL_House_ActionUnavailable".Translate(),MessageTypeDefOf.NeutralEvent,false);}
+
+        private bool HouseButton(Rect rect,string label,FamilyRegistry registry,Lineage lineage,bool headOnly=false)
+        {
+            int actor=FamilyComponent.Current?.PerspectivePawnId??0;
+            bool allowed=actor==0 || (headOnly?registry.HeadOf(lineage.Id)==actor:registry.CanManageHouse(actor,lineage.Id));
+            return ActionButton(rect,label,allowed);
+        }
+        private void DrawHousePerspective(Rect view,ref float y,FamilyComponent component,FamilyRegistry registry,Lineage lineage)
+        {
+            int actor=component.PerspectivePawnId;
+            string name=actor==0?"WFL_Perspective_Overseer".Translate().ToString():FamilyUi.NameOf(registry,actor);
+            if(Widgets.ButtonText(new Rect(10,y,368,28),"WFL_Perspective_Acting".Translate(name)))
+            {
+                var options=registry.Persons.Where(p=>p.InColony && !p.Juvenile).Take(200).Select(p=>new FloatMenuOption(FamilyUi.NameOf(registry,p.Id),()=>component.PerspectivePawnId=p.Id)).ToList();
+                options.Add(new FloatMenuOption("WFL_Perspective_Overseer".Translate(),()=>component.PerspectivePawnId=0));Find.WindowStack.Add(new FloatMenu(options));
+            }
+            y+=34;
+            if(actor>0)
+            {
+                Line(view,ref y,"WFL_Perspective_Role".Translate(("WFL_HouseRole_"+registry.RoleInHouse(actor,lineage.Id)).Translate(),registry.ContactOf(actor,lineage.Id)?.Respect.ToString("0")??"0"),0f,true);
+                if(ActionButton(new Rect(10,y,180,28),"WFL_Petition_Admission".Translate(),!registry.BelongsToFamily(registry.GetPerson(actor),lineage.Id))) ReportHouseAction(HouseInteractions.StartPetition(component.TryGetPawn(actor),lineage.Id,PetitionKind.Admission));
+                if(ActionButton(new Rect(198,y,180,28),"WFL_Petition_Recognition".Translate(),registry.RoleInHouse(actor,lineage.Id)==HouseRole.Member)) ReportHouseAction(HouseInteractions.StartPetition(component.TryGetPawn(actor),lineage.Id,PetitionKind.Recognition));
+                y+=34;
+                if(Widgets.ButtonText(new Rect(10,y,180,28),"WFL_Petition_Aid".Translate())) ReportHouseAction(component.Economy.RequestAid(component.TryGetPawn(actor),lineage.Id));
+                if(registry.FamilyOf(actor)==lineage.Id && Widgets.ButtonText(new Rect(198,y,180,28),"WFL_Perspective_Withdraw".Translate())) {registry.SetSocialFamily(actor,-1,Activities.Now);component.FamilyMembershipChanged();}
+                y+=34;
+                if(Widgets.ButtonText(new Rect(10,y,368,28),"WFL_Perspective_OfferAid".Translate())) ReportHouseAction(component.Economy.OfferAid(component.TryGetPawn(actor),lineage.Id));y+=34;
+                if(registry.FamilyOf(actor)==lineage.Id && Widgets.ButtonText(new Rect(10,y,368,28),"WFL_Perspective_Branch".Translate()))
+                {var branch=registry.CreateFamilyBranch(actor,lineage.Id,branchName,Activities.Now);if(branch!=null){selectedLineageId=branch.Id;component.FamilyMembershipChanged();}}y+=34;
+                foreach(var q in registry.HousePetitions.Where(q=>q.PersonId==actor || q.FamilyId==lineage.Id && q.HeardBy==actor && registry.HeadOf(lineage.Id)==actor).OrderByDescending(q=>q.CreatedTick).Take(8))
+                {
+                    Line(view,ref y,"WFL_Petition_Status".Translate(FamilyUi.NameOf(registry,q.PersonId),("WFL_PetitionKind_"+q.Kind).Translate(),("WFL_PetitionState_"+q.State).Translate(),registry.LineageDisplayName(registry.GetLineage(q.FamilyId))));
+                    if(q.State==PetitionState.Heard && registry.HeadOf(q.FamilyId)==actor)
+                    {
+                        if(Widgets.ButtonText(new Rect(10,y,160,26),"WFL_Petition_Accept".Translate())){registry.DecidePetition(q.Id,actor,true,Activities.Now);component.FamilyMembershipChanged();}
+                        if(Widgets.ButtonText(new Rect(178,y,160,26),"WFL_Petition_Decline".Translate())) registry.DecidePetition(q.Id,actor,false,Activities.Now);
+                        y+=32;
+                    }
+                }
+                if(registry.HeadOf(lineage.Id)==actor && Widgets.ButtonText(new Rect(10,y,368,28),"WFL_Perspective_Delegate".Translate()))
+                {
+                    var options=registry.Persons.Where(p=>p.InColony && !p.Juvenile && p.Id!=actor && registry.BelongsToFamily(p,lineage.Id)).Take(100).Select(p=>new FloatMenuOption(FamilyUi.NameOf(registry,p.Id),()=>registry.DelegateHouse(actor,p.Id,lineage.Id,!lineage.Stewards.Contains(p.Id)))).ToList();
+                    if(options.Count>0)Find.WindowStack.Add(new FloatMenu(options));
+                }
+                y+=34;
+            }
+            Line(view,ref y,"WFL_Associates_Help".Translate(),0f,true);
+            Heading(view,ref y,"WFL_Associates_Title".Translate());
+            foreach(var c in registry.HouseContacts.Where(c=>c.FamilyId==lineage.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId),lineage.Id)).OrderByDescending(c=>c.Respect).Take(12))
+                Line(view,ref y,"WFL_Associates_Line".Translate(FamilyUi.NameOf(registry,c.PersonId),("WFL_HouseRole_"+registry.RoleInHouse(c.PersonId,lineage.Id)).Translate(),c.Respect.ToString("0")),0f,true);
+        }
+
         private void DrawOverview(Rect view, ref float y, FamilyRegistry registry, Lineage lineage)
         {
+            var component = FamilyComponent.Current;
+            DrawHousePerspective(view,ref y,component,registry,lineage);
+            FamilyCrest.Draw(new Rect(10,y+4,64,76),lineage);
+            if(HouseButton(new Rect(86,y+4,150,30),"WFL_Crest_Primary".Translate(),registry,lineage)) lineage.CrestPrimary=(CrestStyle.Index(lineage.CrestPrimary,lineage.Id,CrestStyle.Colors)+1)%CrestStyle.Colors;
+            if(HouseButton(new Rect(242,y+4,150,30),"WFL_Crest_Secondary".Translate(),registry,lineage)) lineage.CrestSecondary=(CrestStyle.Index(lineage.CrestSecondary,7,CrestStyle.Colors)+1)%CrestStyle.Colors;
+            if(HouseButton(new Rect(86,y+40,150,30),("WFL_Crest_Mark_"+CrestStyle.Index(lineage.CrestMark,lineage.Id/CrestStyle.Colors,CrestStyle.Marks)).Translate(),registry,lineage)) lineage.CrestMark=(CrestStyle.Index(lineage.CrestMark,lineage.Id/CrestStyle.Colors,CrestStyle.Marks)+1)%CrestStyle.Marks;
+            if(HouseButton(new Rect(242,y+40,150,30),("WFL_Crest_Pattern_"+CrestStyle.Index(lineage.CrestPattern,0,CrestStyle.Patterns)).Translate(),registry,lineage)) lineage.CrestPattern=(CrestStyle.Index(lineage.CrestPattern,0,CrestStyle.Patterns)+1)%CrestStyle.Patterns;
+            y+=90;
+            Line(view,ref y,"WFL_House_Ancestry".Translate(),0f,true);
+            if(HouseButton(new Rect(10,y,180,28),"WFL_House_Admit".Translate(),registry,lineage,true))
+            {
+                var options=registry.Persons.Where(p=>p.InColony && registry.FamilyOf(p.Id)!=lineage.Id).Take(200).Select(p=>new FloatMenuOption(FamilyUi.NameOf(registry,p.Id),()=>{if(component.PerspectivePawnId>0) HouseInteractions.StartPetition(component.TryGetPawn(component.PerspectivePawnId),lineage.Id,PetitionKind.Admission,true,component.TryGetPawn(p.Id));else {registry.SetSocialFamily(p.Id,lineage.Id,Activities.Now);component.FamilyMembershipChanged();}})).ToList();
+                if(options.Count>0) Find.WindowStack.Add(new FloatMenu(options));
+            }
+            if(HouseButton(new Rect(198,y,180,28),"WFL_House_Leave".Translate(),registry,lineage,true))
+            {
+                var options=registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Where(p=>p.InColony).Distinct().Take(200).Select(p=>new FloatMenuOption(FamilyUi.NameOf(registry,p.Id),()=>{registry.SetSocialFamily(p.Id,-1,Activities.Now);component.FamilyMembershipChanged();})).ToList();
+                if(options.Count>0) Find.WindowStack.Add(new FloatMenu(options));
+            }
+            y+=34;
+            if(HouseButton(new Rect(10,y,368,28),"WFL_House_Unite".Translate(),registry,lineage,true))
+            {
+                var options=registry.Lineages.Where(l=>l.Id!=lineage.Id && registry.LivingCount(l.Id,Presence.Colony)>0).Take(100).Select(l=>new FloatMenuOption(registry.LineageDisplayName(l),()=>{if(component.PerspectivePawnId>0) HouseInteractions.StartPetition(component.TryGetPawn(component.PerspectivePawnId),l.Id,PetitionKind.Union);else {registry.UniteFamilies(l.Id,lineage.Id,Activities.Now);component.FamilyMembershipChanged();}})).ToList();
+                if(options.Count>0) Find.WindowStack.Add(new FloatMenu(options));
+            }
+            y+=34;
+            branchName=Widgets.TextField(new Rect(10,y,180,28),branchName);
+            if(HouseButton(new Rect(198,y,180,28),"WFL_House_Branch".Translate(),registry,lineage))
+            {
+                var options=registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Where(p=>p.InColony && !p.Juvenile && (component.PerspectivePawnId==0 || p.Id==component.PerspectivePawnId)).Distinct().Take(100).Select(p=>new FloatMenuOption(FamilyUi.NameOf(registry,p.Id),()=>{var branch=registry.CreateFamilyBranch(p.Id,lineage.Id,branchName,Activities.Now);if(branch!=null){selectedLineageId=branch.Id;branchName="";component.FamilyMembershipChanged();}})).ToList();
+                if(options.Count>0) Find.WindowStack.Add(new FloatMenu(options));
+            }
+            y+=38;
+
+
             string founder = FamilyUi.NameOf(registry, lineage.FounderId);
             Line(view, ref y, "WFL_FoundedBy".Translate(founder, FamilyUi.Date(lineage.FoundedTick)));
             Line(view, ref y, "WFL_Counts".Translate(
@@ -433,7 +532,7 @@ namespace FamilyLife
                        : person.Presence == Presence.Away ? new Color(0.2f, 0.2f, 0.24f)
                        : new Color(0.14f, 0.14f, 0.14f);
             bool isFocus = focus != 0 && person.Id == focus;
-            PairCloseness pair = focus != 0 && !isFocus ? registry.ClosenessBetween(focus, person.Id) : null;
+            PairCloseness pair = component.PerspectivePawnId==0 && focus != 0 && !isFocus ? registry.ClosenessBetween(focus, person.Id) : null;
             if (pair == null)
                 Widgets.DrawBoxSolid(rect, fill);
             else
@@ -471,7 +570,7 @@ namespace FamilyLife
                        : person.Presence == Presence.Away ? "WFL_Tree_Away".Translate().ToString()
                        : stepKids.Count > 0 ? "WFL_Tree_StepParent".Translate(FamilyUi.ShortNames(registry, stepKids)).ToString()
                        : stepParents.Count > 0 ? "WFL_Tree_StepChild".Translate(FamilyUi.ShortNames(registry, stepParents)).ToString()
-                       : (person.PrimaryLineageId == lineage.Id ? "" : "WFL_Tree_MarriedIn".Translate().ToString());
+                       : (person.SocialFamilyId==lineage.Id && person.PrimaryLineageId!=lineage.Id ? "WFL_House_Chosen".Translate().ToString() : person.PrimaryLineageId == lineage.Id ? "" : "WFL_Tree_MarriedIn".Translate().ToString());
             Text.Font = GameFont.Tiny;
             GUI.color = stepKids.Count > 0 || stepParents.Count > 0 ? new Color(0.6f, 0.75f, 0.9f) : new Color(0.6f, 0.6f, 0.6f);
             Widgets.Label(new Rect(textX, rect.y + 23f, textW, 32f), sub.Truncate(textW * 2f));
@@ -572,10 +671,12 @@ namespace FamilyLife
                 Line(view, ref y, "WFL_NoHouseholds".Translate(), 0f, true);
                 return;
             }
-            var subject = people.FirstOrDefault(p => p.Id == relationsPersonId) ?? people[0];
+            int acting=FamilyComponent.Current?.PerspectivePawnId??0;
+            var subject = acting>0?registry.GetPerson(acting):people.FirstOrDefault(p => p.Id == relationsPersonId) ?? people[0];
+            if(subject==null) return;
             relationsPersonId = subject.Id;
 
-            if (Widgets.ButtonText(new Rect(0f, y, 220f, 26f), "WFL_RelPick".Translate(subject.FullName)))
+            if (ActionButton(new Rect(0f, y, 220f, 26f), "WFL_RelPick".Translate(subject.FullName),acting==0))
                 Find.WindowStack.Add(new FloatMenu(people.Select(p => { var id = p.Id; return new FloatMenuOption(p.FullName, () => relationsPersonId = id); }).ToList()));
             y += 32f;
             Line(view, ref y, "WFL_RelHelp".Translate(), 0f, true);
@@ -653,7 +754,7 @@ namespace FamilyLife
                     Text.Anchor = TextAnchor.MiddleLeft;
                     Widgets.Label(new Rect(row.x, row.y, row.width - 110f, row.height), p.FullName + (p.Juvenile ? " (" + "WFL_Child".Translate() + ")" : ""));
                     Text.Anchor = TextAnchor.UpperLeft;
-                    if (Widgets.ButtonText(new Rect(row.xMax - 100f, row.y + 1f, 100f, 24f), "WFL_Move".Translate()))
+                    if (ActionButton(new Rect(row.xMax - 100f, row.y + 1f, 100f, 24f), "WFL_Move".Translate(),component.PerspectivePawnId==0 || component.PerspectivePawnId==p.Id || registry.CanManageHouse(component.PerspectivePawnId,lineage.Id)))
                         OpenMoveMenu(component, registry, p);
                     y += 28f;
                 }
@@ -678,6 +779,21 @@ namespace FamilyLife
 
         private void DrawZone(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
+            bool savedEnabled=GUI.enabled;
+            int acting=FamilyComponent.Current?.PerspectivePawnId??0;
+            GUI.enabled=savedEnabled&&(acting==0 || registry.CanManageHouse(acting,lineage.Id));
+            try
+            {
+
+            Heading(view, ref y, "WFL_Pantry_Title".Translate());
+            Line(view, ref y, "WFL_Pantry_Food".Translate(lineage.FoodReserveDays.ToString("0.0")));
+            lineage.FoodReserveDays = Widgets.HorizontalSlider(new Rect(10,y,view.width-20,24),lineage.FoodReserveDays,.5f,3f); y+=30;
+            Line(view, ref y, "WFL_Pantry_Fuel".Translate(lineage.FuelReserveDays.ToString("0.0")));
+            lineage.FuelReserveDays = Widgets.HorizontalSlider(new Rect(10,y,view.width-20,24),lineage.FuelReserveDays,.5f,3f); y+=30;
+            Line(view, ref y, "WFL_Pantry_Medicine".Translate(lineage.MedicineReserve));
+            lineage.MedicineReserve = Mathf.RoundToInt(Widgets.HorizontalSlider(new Rect(10,y,view.width-20,24),lineage.MedicineReserve,0,10)); y+=30;
+            Widgets.CheckboxLabeled(new Rect(10,y,view.width-20,30),"WFL_Pantry_Emergency".Translate(),ref lineage.EmergencySharing); y+=36;
+            Widgets.CheckboxLabeled(new Rect(10,y,view.width-20,44),"WFL_Pantry_PublicFunds".Translate(),ref lineage.UsePublicBarterFunds); y+=50;
             Line(view, ref y, "WFL_ZoneHelp".Translate(), 0f, true);
             var current = lineage.ZoneAreaId == 0 ? null : FamilyZones.AreaFor(lineage);
             y += 4f;
@@ -690,22 +806,24 @@ namespace FamilyLife
             }
             y += 6f;
             if (FamilyZones.HomeMap() == null) return;
-            if (Widgets.ButtonText(new Rect(10f, y, 300f, 28f), "WFL_ZoneCreate".Translate())) { FamilyZones.StartPainting(); Close(); }
+            if (HouseButton(new Rect(10f, y, 300f, 28f), "WFL_ZoneCreate".Translate(),registry,lineage)) { FamilyZones.StartPainting(); Close(); }
             y += 34f;
             // A family zone already painted can be handed to this family from here as well as from the zone itself.
             var free = Find.Maps.SelectMany(m => m.zoneManager.AllZones).OfType<Zone_Family>().Where(z => z.areaId == 0 || z.areaId != lineage.ZoneAreaId).ToList();
-            if (free.Count > 0 && Widgets.ButtonText(new Rect(10f, y, 300f, 28f), "WFL_ZoneChoose".Translate()))
+            if (free.Count > 0 && HouseButton(new Rect(10f, y, 300f, 28f), "WFL_ZoneChoose".Translate(),registry,lineage))
             {
                 var options = free.Select(z => { var zone = z; return new FloatMenuOption(zone.label, () => zone.SetFamily(component, lineage)); }).ToList();
                 Find.WindowStack.Add(new FloatMenu(options));
             }
             if (free.Count > 0) y += 34f;
-            if (current != null && Widgets.ButtonText(new Rect(10f, y, 300f, 28f), "WFL_ZoneRemove".Translate()))
+            if (current != null && HouseButton(new Rect(10f, y, 300f, 28f), "WFL_ZoneRemove".Translate(),registry,lineage))
             {
                 foreach (var z in FamilyZones.ZonesOf(lineage).ToList()) z.areaId = 0;
                 FamilyZones.Release(component, lineage, current);
             }
             if (current != null) y += 34f;
+                    }
+            finally {GUI.enabled=savedEnabled;}
         }
 
         // ------------------------------------------------------------------ culture and traditions
@@ -733,6 +851,12 @@ namespace FamilyLife
 
         private void DrawTraditions(Rect view, ref float y, FamilyRegistry registry, Lineage lineage)
         {
+            bool savedEnabled=GUI.enabled;
+            int acting=FamilyComponent.Current?.PerspectivePawnId??0;
+            GUI.enabled=savedEnabled&&(acting==0 || registry.CanManageHouse(acting,lineage.Id));
+            try
+            {
+
             Line(view, ref y, "WFL_TraditionsHelp".Translate(), 0f, true);
             if (lineage.Traditions.Count == 0)
             {
@@ -754,23 +878,26 @@ namespace FamilyLife
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
                 bool muted = t.Muted;
-                if (Widgets.ButtonText(new Rect(row.xMax - 240f, row.y + 2f, 110f, 26f), muted ? "WFL_Unmute".Translate() : "WFL_Mute".Translate()))
+                if (HouseButton(new Rect(row.xMax - 240f, row.y + 2f, 110f, 26f), muted ? "WFL_Unmute".Translate() : "WFL_Mute".Translate(),registry,lineage))
                     registry.SetTraditionMuted(lineage.Id, t.Id, !muted);
-                if (!muted && Widgets.ButtonText(new Rect(row.xMax - 124f, row.y + 2f, 120f, 26f), "WFL_HoldNow".Translate()))
+                if (!muted && HouseButton(new Rect(row.xMax - 124f, row.y + 2f, 120f, 26f), "WFL_HoldNow".Translate(),registry,lineage))
                 {
                     registry.RequestGathering(t.Id, lineage.Id, 0, now, 0, 3 * ActivityTuning.TicksPerDay);
                     Messages.Message("WFL_HoldNowQueued".Translate(FamilyUi.TraditionNameById(t.Id)), MessageTypeDefOf.NeutralEvent, false);
                 }
                 y += 32f;
             }
+                    }
+            finally {GUI.enabled=savedEnabled;}
         }
 
         // ------------------------------------------------------------------ moments and standing between families
 
         private void DrawMoments(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
+            int perspective=component.PerspectivePawnId;
             Heading(view, ref y, "WFL_Agency_Title".Translate());
-            foreach (var person in registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile).Take(24))
+            foreach (var person in registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile && (perspective==0 || p.Id==perspective)).Take(24))
             {
                 var belonging = registry.AssessBelonging(person.Id);
                 Line(view, ref y, "WFL_Agency_Belonging".Translate(FamilyUi.NameOf(registry, person.Id), belonging.TrustedConnections, belonging.StrainedConnections));
@@ -779,6 +906,14 @@ namespace FamilyLife
                 Line(view, ref y, "WFL_Agency_Evidence".Translate(agency.Included, agency.Excluded, ("WFL_Ev_" + agency.LastEvent.Replace('-', '_') + "_Title").Translate(), FamilyUi.Date(agency.LastEvidenceTick)), 14f, true);
                 if (agency.Goal != PersonalGoal.None) Line(view, ref y, "WFL_Agency_Goal".Translate(("WFL_Goal_" + agency.Goal).Translate(), Mathf.RoundToInt(agency.Progress * 100), agency.Active ? "WFL_Agency_Active".Translate() : agency.Progress >= 1 ? "WFL_Agency_Achieved".Translate() : "WFL_Agency_Abandoned".Translate()), 14f);
             }
+            Heading(view, ref y, "WFL_Attention_Title".Translate());
+            foreach (var child in registry.MembersOf(lineage.Id).Where(p => p.InColony && p.Juvenile).Take(24))
+                foreach (var giver in child.ParentIds.Where(id=>perspective==0 || id==perspective).Take(4))
+                {
+                    var comparison = registry.CompareAttention(giver,child.Id,Activities.Now);
+                    if (!comparison.Unequal) continue;
+                    Line(view, ref y, "WFL_Attention_Comparison".Translate(FamilyUi.NameOf(registry,giver), FamilyUi.NameOf(registry,child.Id), (comparison.ChildTicks / 2500f).ToString("0.0"), FamilyUi.NameOf(registry,comparison.OtherChild), (comparison.OtherTicks / 2500f).ToString("0.0")),0f,true);
+                }
             Heading(view, ref y, "WFL_Moments_Standing".Translate());
             var ties = registry.TiesOf(lineage.Id);
             if (ties.Count == 0) Line(view, ref y, "WFL_Moments_NoTies".Translate(), 0f, true);
@@ -787,7 +922,9 @@ namespace FamilyLife
                 int otherId = tie.LineageA == lineage.Id ? tie.LineageB : tie.LineageA;
                 string other = FamilyUi.LineageName(registry, otherId);
                 Line(view, ref y, "WFL_TieLine".Translate(other, ("WFL_TieState_" + tie.State).Translate(), Mathf.RoundToInt(tie.Goodwill), Mathf.RoundToInt(tie.Grievance)));
-                if (tie.Grievance >= 10f && tie.WrongedBy != 0)
+                if(perspective>0 && tie.Grievance>=10f && !registry.Incidents.Any(i=>i.ActorId==tie.WrongedBy && i.VictimId==tie.WrongedPerson && registry.KnowsIncident(perspective,i)))
+                    Line(view,ref y,"WFL_Perspective_UnknownCause".Translate(),14f,true);
+                else if (tie.Grievance >= 10f && tie.WrongedBy != 0)
                     Line(view, ref y, "WFL_TieCause".Translate(FamilyUi.NameOf(registry, tie.WrongedPerson), FamilyUi.NameOf(registry, tie.WrongedBy), FamilyUi.Date(tie.GrievanceTick)), 14f, true);
                 else if (tie.Grievance >= 10f)
                     Line(view, ref y, "WFL_TieCauseMany".Translate(), 14f, true);
@@ -800,30 +937,32 @@ namespace FamilyLife
             foreach (var a in lineage.Affiliations) relevant.Add(a.PersonId);
 
             Heading(view, ref y, "WFL_Stories_Incidents".Translate());
-            var incidents = registry.Incidents.Where(i => i.ActorFamily == lineage.Id || i.VictimFamily == lineage.Id).OrderByDescending(i => i.Tick).Take(24).ToList();
+            var incidents = registry.Incidents.Where(i => (i.ActorFamily == lineage.Id || i.VictimFamily == lineage.Id) && registry.KnowsIncident(perspective,i)).OrderByDescending(i => i.Tick).Take(24).ToList();
             if (incidents.Count == 0) Line(view, ref y, "WFL_Stories_Empty".Translate(), 0f, true);
             foreach (var i in incidents)
             {
                 string actor = i.ActorId == 0 ? "WFL_Stories_Unknown".Translate().ToString() : FamilyUi.NameOf(registry, i.ActorId);
-                Line(view, ref y, "WFL_Stories_Incident".Translate(FamilyUi.Date(i.Tick), ("WFL_Incident_" + i.Kind).Translate(), actor, FamilyUi.NameOf(registry, i.VictimId), i.KnownBy.Count, i.Resolved ? "WFL_Stories_Resolved".Translate() : "WFL_Stories_Open".Translate(), i.Id));
-                Line(view, ref y, "WFL_Stories_Known".Translate(string.Join(", ", i.KnownBy.Take(16).Select(id => FamilyUi.NameOf(registry, id)))), 14f, true);
+                if(perspective==0) Line(view, ref y, "WFL_Stories_Incident".Translate(FamilyUi.Date(i.Tick), ("WFL_Incident_" + i.Kind).Translate(), actor, FamilyUi.NameOf(registry, i.VictimId), i.KnownBy.Count, i.Resolved ? "WFL_Stories_Resolved".Translate() : "WFL_Stories_Open".Translate(), i.Id));
+                if(perspective>0) Line(view,ref y,"WFL_Stories_PrivateIncident".Translate(i.Id,FamilyUi.Date(i.Tick),("WFL_Incident_"+i.Kind).Translate(),actor,FamilyUi.NameOf(registry,i.VictimId),i.Resolved?"WFL_Stories_Resolved".Translate():"WFL_Stories_Open".Translate()));
+                if(perspective==0) Line(view, ref y, "WFL_Stories_Known".Translate(string.Join(", ", i.KnownBy.Take(16).Select(id => FamilyUi.NameOf(registry, id)))), 14f, true);
+                if (i.RepairSteps>0) Line(view,ref y,"WFL_Reparation_Progress".Translate(i.RepairSteps),14f,true);
                 if (i.Context != IncidentContext.None) Line(view, ref y, "WFL_Stories_Context".Translate(string.Join(", ", new[] { IncidentContext.Combat, IncidentContext.MentalBreak, IncidentContext.Accident, IncidentContext.Planned }.Where(flag => (i.Context & flag) != 0).Select(flag => ("WFL_Context_" + flag).Translate().ToString()))), 14f, true);
                 if (!i.Resolved && i.VictimFamily == lineage.Id)
                 {
-                    if (Widgets.ButtonText(new Rect(14, y, 180, 26), "WFL_Stories_Forgive".Translate())) registry.ForgiveIncident(i.Id, lineage.Id);
+                    if (HouseButton(new Rect(14, y, 180, 26), "WFL_Stories_Forgive".Translate(),registry,lineage)) registry.ForgiveIncident(i.Id, lineage.Id);
                     y += 30;
                 }
             }
             Heading(view, ref y, "WFL_Stories_Plots".Translate());
-            foreach (var p in registry.Plots.Where(p => relevant.Contains(p.OrganizerId) || relevant.Contains(p.TargetId)).OrderByDescending(p => p.CreatedTick).Take(12))
+            foreach (var p in registry.Plots.Where(p => (relevant.Contains(p.OrganizerId) || relevant.Contains(p.TargetId)) && registry.KnowsPlot(perspective,p)).OrderByDescending(p => p.CreatedTick).Take(12))
                 Line(view, ref y, "WFL_Stories_Plot".Translate(FamilyUi.NameOf(registry, p.OrganizerId), FamilyUi.NameOf(registry, p.TargetId), ("WFL_PlotState_" + p.State).Translate(), p.IncidentId, p.Recruits.Count));
             Heading(view, ref y, "WFL_Stories_Supplies".Translate());
             Line(view, ref y, "WFL_Stories_Claims".Translate(registry.Claims.Count(c => c.HolderFamily == lineage.Id)), 0f, true);
-            foreach (var supply in registry.Requests.Where(r => relevant.Contains(r.RequesterId) || relevant.Contains(r.DonorId)).OrderByDescending(r => r.CreatedTick).Take(16))
+            foreach (var supply in registry.Requests.Where(r => (relevant.Contains(r.RequesterId) || relevant.Contains(r.DonorId)) && (perspective==0 || r.RequesterId==perspective || r.DonorId==perspective)).OrderByDescending(r => r.CreatedTick).Take(16))
                 Line(view, ref y, "WFL_Stories_Request".Translate(FamilyUi.NameOf(registry, supply.RequesterId), ("WFL_SupplyApproach_" + supply.Approach).Translate(), supply.Count, supply.Definition, ("WFL_SupplyState_" + supply.State).Translate()));
 
             Heading(view, ref y, "WFL_Moments_Promises".Translate());
-            var promises = registry.Commitments.Where(p => (relevant.Contains(p.FromId) || relevant.Contains(p.ToId)) && p.State != 3).OrderByDescending(p => p.CreatedTick).Take(12).ToList();
+            var promises = registry.Commitments.Where(p => (relevant.Contains(p.FromId) || relevant.Contains(p.ToId)) && p.State != 3 && (perspective==0 || p.FromId==perspective || p.ToId==perspective)).OrderByDescending(p => p.CreatedTick).Take(12).ToList();
             if (promises.Count == 0) Line(view, ref y, "WFL_Moments_NoPromises".Translate(), 0f, true);
             foreach (var p in promises)
                 Line(view, ref y, "WFL_PromiseLine_" + p.State, 0f, false, FamilyUi.NameOf(registry, p.FromId), FamilyUi.NameOf(registry, p.ToId), FamilyUi.Date(p.DueTick));
@@ -834,6 +973,7 @@ namespace FamilyLife
             {
                 var e = registry.EventLog[i];
                 if (!relevant.Contains(e.A) && !relevant.Contains(e.B)) continue;
+                if(perspective>0 && e.A!=perspective && e.B!=perspective && e.Third!=perspective) continue;
                 var def = EventCatalog.Get(e.EventId) ?? TraditionMoments.Get(e.EventId);
                 if (def == null) continue;
                 shown++;
@@ -862,7 +1002,7 @@ namespace FamilyLife
             {
                 var e = registry.Chronicle[i];
                 bool about = e.Kind == FamilyEventKind.RecordsBegan ? true
-                    : e.Kind == FamilyEventKind.LineageFounded || e.Kind == FamilyEventKind.LineageAffiliated ? e.B == lineage.Id
+                    : e.Kind == FamilyEventKind.LineageFounded || e.Kind == FamilyEventKind.LineageAffiliated || e.Kind == FamilyEventKind.SocialBranch || e.Kind == FamilyEventKind.SocialMembership ? e.B == lineage.Id
                     : e.Kind == FamilyEventKind.TraditionAdopted || e.Kind == FamilyEventKind.TraditionAbandoned || e.Kind == FamilyEventKind.TraditionHeld ? e.A == lineage.Id
                     : relevant.Contains(e.A) || (e.Kind == FamilyEventKind.PartnershipFormed || e.Kind == FamilyEventKind.PartnershipEnded || e.Kind == FamilyEventKind.Birth || e.Kind == FamilyEventKind.Anniversary || e.Kind == FamilyEventKind.RiftOpened || e.Kind == FamilyEventKind.RiftResolved) && relevant.Contains(e.B);
                 if (!about) continue;

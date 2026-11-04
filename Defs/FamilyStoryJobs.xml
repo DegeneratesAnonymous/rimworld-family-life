@@ -5,4 +5,9 @@
   <JobDef><defName>WFL_StealSupply</defName><driverClass>FamilyLife.JobDriver_FamilySupply</driverClass><reportString>taking supplies for the family.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_StoryTalk</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>talking with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_StoryListen</defName><driverClass>FamilyLife.JobDriver_StoryListen</driverClass><reportString>listening to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_PersonalTime</defName><driverClass>FamilyLife.JobDriver_PersonalTime</driverClass><reportString>taking some personal time.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_BarterFunds</defName><driverClass>FamilyLife.JobDriver_BarterFunds</driverClass><reportString>collecting funds for household barter.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_ReconcileStory</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>discussing reconciliation with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_HousePetition</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>discussing a family petition with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_HouseInvite</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>offering family membership to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

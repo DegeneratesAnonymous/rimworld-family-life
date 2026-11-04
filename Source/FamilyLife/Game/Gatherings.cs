@@ -64,17 +64,18 @@ namespace FamilyLife
         {
             var component = FamilyComponent.Current;
             if (component == null || lord == null) return;
-            var people = lord.ownedPawns.Where(p => p != null && !p.Dead).ToList();
+            var people = lord.ownedPawns.Where(p => p != null && p.Spawned && !p.Dead).ToList();
             int now = Activities.Now;
             int together = System.Math.Min(durationTicks, 6000);
-            for (int i = 0; i < people.Count; i++)
-                for (int j = i + 1; j < people.Count; j++)
-                {
-                    var a = component.Registry.GetPerson(people[i].thingIDNumber);
-                    var b = component.Registry.GetPerson(people[j].thingIDNumber);
-                    if (a != null && b != null && component.Registry.KindOf(a, b).HasValue)
-                        component.Registry.RecordTogether(a.Id, b.Id, together, now, BondCause.Gathering);
-                }
+            // A party does not give everyone a full private conversation with every other attendee.
+            foreach (var pair in GatheringBudget.Pairs(people,people.Count*2,now))
+            {
+                var first=pair.Key; var second=pair.Value;
+                if(first.Map!=second.Map || first.Position.DistanceTo(second.Position)>12 || !GenSight.LineOfSight(first.Position,second.Position,first.Map)) continue;
+                var a=component.Registry.GetPerson(first.thingIDNumber); var b=component.Registry.GetPerson(second.thingIDNumber);
+                if(a!=null && b!=null && component.Registry.KindOf(a,b).HasValue)
+                    component.Registry.RecordTogether(a.Id,b.Id,together/System.Math.Min(8,System.Math.Max(1,people.Count-1)),now,BondCause.Gathering);
+            }
 
             // A gathering is the setting for a few moments between the people who were there, whether or not they are family.
             SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration, TraditionCatalog.IndexOf(kind) >= 0 ? kind : null);
@@ -171,7 +172,7 @@ namespace FamilyLife
             if (lineage == null) return null;
             Pawn best = null;
             int bestScore = int.MinValue;
-            foreach (var record in registry.Persons.Where(p => p.InColony && !p.Juvenile && (p.PrimaryLineageId == lineage.Id || lineage.HasAffiliate(p.Id))))
+            foreach (var record in registry.Persons.Where(p => p.InColony && !p.Juvenile && registry.BelongsToFamily(p,lineage.Id)))
             {
                 var pawn = component.TryGetPawn(record.Id);
                 if (pawn == null || pawn.Map != map || !pawn.Spawned || pawn.Drafted || !GatheringsUtility.PawnCanStartOrContinueGathering(pawn)) continue;

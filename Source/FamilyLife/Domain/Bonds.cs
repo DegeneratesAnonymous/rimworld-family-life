@@ -30,6 +30,7 @@ namespace FamilyLife.Domain
         public float Tension;
         public float Familiarity;
         public int LastTick;
+        public int QualityDay = -1, QualityTicksToday;
         public int LastQualityTick;      // when they last spent time together on purpose; 0 = never
     }
 

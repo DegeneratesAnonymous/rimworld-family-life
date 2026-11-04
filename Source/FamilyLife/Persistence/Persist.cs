@@ -30,6 +30,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Juvenile, "juvenile");
             Scribe_Values.Look(ref FirstSeenTick, "seen");
             Scribe_Values.Look(ref DeathTick, "died", -1);
+            Scribe_Values.Look(ref SocialFamilyId, "socialFamily");
             Scribe_Values.Look(ref PrimaryLineageId, "lineage");
             Scribe_Values.Look(ref HouseholdId, "household");
             Scribe_Values.Look(ref LastHouseholdId, "lastHousehold");
@@ -69,6 +70,18 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref StoriesTold, "storiesTold");
             Scribe_Values.Look(ref MealsShared, "mealsShared");
             Scribe_Values.Look(ref ZoneMapId, "zoneMapId", -1);
+            Scribe_Values.Look(ref FoodReserveDays, "foodReserveDays", 1f);
+            Scribe_Values.Look(ref FuelReserveDays, "fuelReserveDays", 2f);
+            Scribe_Values.Look(ref MedicineReserve, "medicineReserve", 2);
+            Scribe_Values.Look(ref EmergencySharing, "emergencySharing", true);
+            Scribe_Values.Look(ref UsePublicBarterFunds, "usePublicBarterFunds");
+            Scribe_Values.Look(ref ParentHouseId, "parentHouse");
+            Scribe_Values.Look(ref HeadId,"head");
+            Scribe_Collections.Look(ref Stewards, "stewards", LookMode.Value);
+            Scribe_Values.Look(ref CrestPrimary, "crestPrimary", -1);
+            Scribe_Values.Look(ref CrestSecondary, "crestSecondary", 7);
+            Scribe_Values.Look(ref CrestMark, "crestMark", -1);
+            Scribe_Values.Look(ref CrestPattern, "crestPattern");
             Scribe_Values.Look(ref ZoneAreaId, "zoneAreaId");
             Scribe_Collections.Look(ref ZoneApplied, "zoneApplied", LookMode.Value);
             if (ZoneApplied == null) ZoneApplied = new List<int>();
@@ -97,6 +110,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Familiarity, "familiarity");
             Scribe_Values.Look(ref LastTick, "last");
             Scribe_Values.Look(ref LastQualityTick, "lastQuality");
+            Scribe_Values.Look(ref QualityDay, "qualityDay", -1);
+            Scribe_Values.Look(ref QualityTicksToday, "qualityTicksToday");
             Scribe_Values.Look(ref HighTensionSince, "highTensionSince");
             Scribe_Values.Look(ref QualityRecent, "qualityRecent");
             Scribe_Values.Look(ref LastOpinion, "lastOpinion");
@@ -245,6 +260,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Tick, "tick");
             Scribe_Values.Look(ref Amount, "amount");
             Scribe_Values.Look(ref Restored, "restored");
+            Scribe_Values.Look(ref RepairSteps, "repairSteps");
+            Scribe_Values.Look(ref LastRepairTick, "lastRepairTick", -1000000);
             Scribe_Values.Look(ref Resource, "resource", "");
             Scribe_Values.Look(ref Kind, "kind");
             Scribe_Values.Look(ref Context, "context");
@@ -273,6 +290,45 @@ namespace FamilyLife.Domain
         }
     }
 
+    public sealed partial class HouseContact : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref PersonId,"personId");
+            Scribe_Values.Look(ref FamilyId,"familyId");
+            Scribe_Values.Look(ref ServiceDays,"serviceDays");
+            Scribe_Values.Look(ref LastPositiveDay,"lastPositiveDay",-1);
+            Scribe_Values.Look(ref LastTick,"lastTick");
+            Scribe_Values.Look(ref Respect,"respect");
+        }
+    }
+    public sealed partial class HousePetition : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id,"id");
+            Scribe_Values.Look(ref PersonId,"personId");
+            Scribe_Values.Look(ref FamilyId,"familyId");
+            Scribe_Values.Look(ref CreatedTick,"createdTick");
+            Scribe_Values.Look(ref HeardTick,"heardTick");
+            Scribe_Values.Look(ref HeardBy,"heardBy");
+            Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");
+            Scribe_Values.Look(ref Kind,"kind");
+            Scribe_Values.Look(ref State,"state");
+        }
+    }
+
+    public sealed partial class AttentionRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Giver, "giver");
+            Scribe_Values.Look(ref Recipient, "recipient");
+            Scribe_Values.Look(ref Day, "day");
+            Scribe_Values.Look(ref Ticks, "ticks");
+        }
+    }
+
     public sealed partial class AgencyRecord : IExposable
     {
         public void ExposeData()
@@ -287,6 +343,9 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Goal, "goal");
             Scribe_Values.Look(ref Progress, "progress");
             Scribe_Values.Look(ref LastEvent, "lastEvent", "");
+            Scribe_Values.Look(ref LastActionTick, "lastActionTick", -1000000);
+            Scribe_Values.Look(ref LastPersonalDay, "lastPersonalDay", -1);
+            Scribe_Values.Look(ref PersonalSessions, "personalSessions");
         }
     }
 
@@ -320,6 +379,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref HomeZ, "homeZ");
             Scribe_Values.Look(ref DoorX, "doorX");
             Scribe_Values.Look(ref DoorZ, "doorZ");
+            Scribe_Values.Look(ref DebtId, "debtId");
+            Scribe_Values.Look(ref RepaymentAttemptTick, "repaymentAttemptTick");
             Scribe_Values.Look(ref Kind, "kind");
             Scribe_Values.Look(ref Approach, "approach");
             Scribe_Values.Look(ref State, "state");
@@ -348,6 +409,10 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
             Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
             Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
+            Scribe_Collections.Look(ref HouseContacts,"houseContacts",LookMode.Deep);
+            Scribe_Collections.Look(ref HousePetitions,"housePetitions",LookMode.Deep);
+            Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
+            Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
             Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
             Scribe_Collections.Look(ref Incidents, "incidents", LookMode.Deep);
             Scribe_Collections.Look(ref Plots, "plots", LookMode.Deep);

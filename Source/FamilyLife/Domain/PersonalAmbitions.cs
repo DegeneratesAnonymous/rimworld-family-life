@@ -8,6 +8,7 @@ namespace FamilyLife.Domain
     public sealed partial class AgencyRecord
     {
         public int PersonId, FamilyId, Included, Excluded, LastEvidenceTick = -1, StartedTick, EndedTick;
+        public int LastActionTick = -1000000, LastPersonalDay = -1, PersonalSessions;
         public PersonalGoal Goal;
         public float Progress;
         public string LastEvent = "";
@@ -16,7 +17,12 @@ namespace FamilyLife.Domain
     public sealed partial class FamilyRegistry
     {
         public List<AgencyRecord> Agency = new List<AgencyRecord>();
-        public AgencyRecord AgencyOf(int id) => Agency.FirstOrDefault(a => a.PersonId == id);
+        private readonly Dictionary<int,AgencyRecord> agencyByPerson = new Dictionary<int,AgencyRecord>();
+        public AgencyRecord AgencyOf(int id)
+        {
+            if(agencyByPerson.Count!=Agency.Count) {agencyByPerson.Clear();foreach(var a in Agency) agencyByPerson[a.PersonId]=a;}
+            return agencyByPerson.TryGetValue(id,out var record)?record:null;
+        }
 
         // Actual completed moments, not absence of interactions, establish inclusion/exclusion evidence.
         public void NoteAgencyMoment(EventResult moment, int now)
@@ -48,7 +54,7 @@ namespace FamilyLife.Domain
                 if (a.Included >= 3 && positive) a.Goal = achievement ? PersonalGoal.Recognition : PersonalGoal.Connection;
                 else if (a.Excluded >= 3 && !positive) a.Goal = PersonalGoal.Independence;
                 else return;
-                a.StartedTick = now; a.EndedTick = 0; a.Progress = 0;
+                a.StartedTick = now; a.EndedTick = 0; a.Progress = 0; a.PersonalSessions = 0; a.LastPersonalDay = -1;
                 return;
             }
             // Independence is an aspiration, not an automatic departure or political action.
@@ -57,9 +63,11 @@ namespace FamilyLife.Domain
             if (a.Progress >= 1 && a.Goal != PersonalGoal.Independence && (a.Goal == PersonalGoal.Recognition || AssessBelonging(person).TrustedConnections > 0)) a.EndedTick = now;
         }
         private static void ResetAgency(AgencyRecord a, int family)
-        { a.FamilyId = family; a.Goal = PersonalGoal.None; a.Included = a.Excluded = a.StartedTick = a.EndedTick = 0; a.Progress = 0; a.LastEvidenceTick = -1; a.LastEvent = ""; }
+        { a.FamilyId = family; a.Goal = PersonalGoal.None; a.Included = a.Excluded = a.StartedTick = a.EndedTick = 0; a.Progress = 0; a.LastActionTick = -1000000; a.LastPersonalDay = -1; a.PersonalSessions = 0; a.LastEvidenceTick = -1; a.LastEvent = ""; }
         public void MaintainAgency(int now)
         {
+            MaintainHouseRelations(now);
+            Attention.RemoveAll(a => a.Day < now / ActivityTuning.TicksPerDay - 6);
             foreach (var a in Agency)
             {
                 if (a.FamilyId != FamilyOf(a.PersonId)) ResetAgency(a, FamilyOf(a.PersonId));

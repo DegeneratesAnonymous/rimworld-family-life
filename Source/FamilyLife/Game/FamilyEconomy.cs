@@ -12,7 +12,7 @@ namespace FamilyLife
     [DefOf]
     public static class WFL_StoryDefOf
     {
-        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen;
+        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite;
         static WFL_StoryDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(WFL_StoryDefOf)); }
     }
 
@@ -55,12 +55,15 @@ namespace FamilyLife
             var claim = R.ClaimFor(thing.thingIDNumber);
             if (claim == null) return true;
             int family = R.FamilyOf(pawn.thingIDNumber);
-            if (family == claim.HolderFamily || R.GetLineage(claim.HolderFamily)?.HasAffiliate(pawn.thingIDNumber) == true) return true;
+            bool treatment = pawn.CurJobDef == JobDefOf.TendPatient && pawn.CurJob.targetA.Pawn is Pawn patient && (patient.Downed || patient.health.hediffSet.BleedRateTotal > 0);
+            if (HouseholdPolicy.EmergencyAccess(R.GetLineage(claim.HolderFamily)?.EmergencySharing == true, KindOf(thing) == SupplyKind.Food, pawn.needs?.food?.CurLevel < .1f, thing.def.IsMedicine, treatment)) return true;
+            if (family == claim.HolderFamily || R.BelongsToFamily(R.GetPerson(pawn.thingIDNumber),claim.HolderFamily)) return true;
             return (pawn.CurJobDef == WFL_StoryDefOf.WFL_ExchangeSupply || pawn.CurJobDef == WFL_StoryDefOf.WFL_StealSupply) && R.Requests.Any(r => r.RequesterId == pawn.thingIDNumber && r.SourceId == thing.thingIDNumber && r.Open &&
                 (pawn.CurJobDef == WFL_StoryDefOf.WFL_ExchangeSupply || pawn.CurJobDef == WFL_StoryDefOf.WFL_StealSupply));
         }
         internal static SupplyKind KindOf(Thing t)
         {
+            if (t.def == ThingDefOf.Silver) return SupplyKind.Currency;
             if (t is Apparel) return SupplyKind.Apparel;
             if (t.def.IsMedicine) return SupplyKind.Medicine;
             if (t.def.IsDrug) return SupplyKind.Drug;
@@ -91,14 +94,15 @@ namespace FamilyLife
         private IEnumerable<Need> Needs(List<Pawn> members, Area area)
         {
             var adult = members.First();
-            yield return new Need { Kind = SupplyKind.Food, Target = members.Count * 1.6f, Urgency = members.Any(p => p.needs?.food?.CurLevel < 0.2f) ? 1f : 0.4f, ForPawn = adult };
+            var policy = R.GetLineage(R.FamilyOf(adult.thingIDNumber));
+            yield return new Need { Kind = SupplyKind.Food, Target = HouseholdPolicy.FoodTarget(members.Count, policy?.FoodReserveDays ?? 1f), Urgency = members.Any(p => p.needs?.food?.CurLevel < 0.2f) ? 1f : 0.4f, ForPawn = adult };
             if (members.Any(p => p.health.HasHediffsNeedingTend() || (p.skills?.GetSkill(SkillDefOf.Medicine)?.Level ?? 0) >= 6))
-                yield return new Need { Kind = SupplyKind.Medicine, Target = Math.Max(2, members.Count(p => p.health.HasHediffsNeedingTend()) * 3), Urgency = members.Any(p => p.health.HasHediffsNeedingTend()) ? 0.9f : 0.3f, ForPawn = adult };
+                yield return new Need { Kind = SupplyKind.Medicine, Target = Math.Max(policy?.MedicineReserve ?? 2, members.Count(p => p.health.HasHediffsNeedingTend()) * 3), Urgency = members.Any(p => p.health.HasHediffsNeedingTend()) ? 0.9f : 0.3f, ForPawn = adult };
             foreach (var building in area.Map.listerBuildings.allBuildingsColonist.Where(b => area[b.Position]).Take(128))
             {
                 var fuel = building.GetComp<CompRefuelable>();
                 if (fuel != null && !fuel.Props.fuelIsMortarBarrel) yield return new Need { Kind = SupplyKind.Fuel, Fuel = fuel.Props.fuelFilter,
-                    Target = Math.Max(1, fuel.Props.fuelConsumptionRate * 2), Urgency = fuel.Fuel <= 0 ? 0.7f : 0.25f, ForPawn = adult };
+                    Target = Math.Max(1, fuel.Props.fuelConsumptionRate * Math.Max(.5f, Math.Min(3f,policy?.FuelReserveDays ?? 2f))), Urgency = fuel.Fuel <= 0 ? 0.7f : 0.25f, ForPawn = adult };
             }
             foreach (var p in members)
             {
@@ -144,6 +148,7 @@ namespace FamilyLife
                 if (actor == null) return;
                 var home = FamilyZones.AreaFor(family);
                 var stock = Stock(map, now);
+                if (TryRepayment(family, members, stock, now)) return;
                 var homeAreas = homes.Select(l => new KeyValuePair<int, Area>(l.Id, FamilyZones.AreaFor(l))).ToList();
                 var cellHomes = new Dictionary<IntVec3, int>();
                 Func<IntVec3, int> householdAt = cell =>
@@ -185,6 +190,7 @@ namespace FamilyLife
                             ((R.GetBond(donor.thingIDNumber, actor.thingIDNumber)?.Trust ?? 0) >= 35 ? SupplyApproach.Loan : SupplyApproach.Ask);
                         int price = Math.Max(1, (int)Math.Ceiling(offered.GetStatValue(StatDefOf.MarketValue) * count));
                         if (approach != SupplyApproach.Return && InventorySilver(actor) >= price) approach = SupplyApproach.Barter;
+                        else if (approach != SupplyApproach.Return && TryGetBarterFunds(actor, price, stock, family)) return;
                         bool refused = R.Requests.Any(r => r.RequesterId == actor.thingIDNumber && r.DonorId == donor.thingIDNumber && r.Kind == need.Kind && r.State == SupplyState.Refused && now - r.CreatedTick < ActivityTuning.TicksPerDay);
                         bool visible = offered.Position.DistanceTo(actor.Position) <= 12 && GenSight.LineOfSight(actor.Position, offered.Position, map);
                         float hostility = R.GetTie(family.Id, R.FamilyOf(donor.thingIDNumber))?.Grievance ?? 0;
@@ -197,7 +203,65 @@ namespace FamilyLife
             }
             catch (Exception ex) { if (!warned) { warned = true; Log.Warning("[Wil's Family Life] Family supply planner skipped: " + ex); } }
         }
-        private bool Start(Pawn actor, Pawn donor, Thing source, int count, Need need, SupplyApproach approach, Area home, int now)
+        internal bool OfferAid(Pawn donor,int family)
+        {
+            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || donor==null || !donor.Spawned || !Activities.IsFree(donor) || donor.CurJob?.playerForced==true || R.FamilyOf(donor.thingIDNumber)==0 || family==R.FamilyOf(donor.thingIDNumber)) return false;
+            var recipient=component.TryGetPawn(R.HeadOf(family));var home=FamilyZones.AreaFor(R.GetLineage(family));
+            if(recipient?.Map!=donor.Map || home?.Map!=donor.Map || !Activities.IsFree(recipient) || recipient.CurJob?.playerForced==true) return false;
+            var need=new Need{Kind=SupplyKind.Food,ForPawn=recipient,Target=1.6f,Urgency=.4f};
+            int own=R.FamilyOf(donor.thingIDNumber);
+            var source=Stock(donor.Map,Activities.Now).FirstOrDefault(t=>Fits(t,need) && R.ClaimFor(t.thingIDNumber)?.HolderFamily==own && R.ClaimFor(t.thingIDNumber)?.OwnerFamily==own && recipient.CanReserve(t));
+            return source!=null && Start(recipient,donor,source,Math.Min(source.stackCount,Math.Max(1,(int)System.Math.Ceiling(1.6f/Units(source,SupplyKind.Food)))),need,SupplyApproach.Offer,home,Activities.Now);
+        }
+        internal bool RequestAid(Pawn requester,int donorFamily)
+        {
+            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || requester==null || !requester.Spawned || !Activities.IsFree(requester) || requester.CurJob?.playerForced==true || R.FamilyOf(requester.thingIDNumber)==0 || donorFamily==R.FamilyOf(requester.thingIDNumber)) return false;
+            var home=FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(requester.thingIDNumber)));
+            var donor=component.TryGetPawn(R.HeadOf(donorFamily));
+            if(home?.Map!=requester.Map || donor?.Map!=requester.Map || !Activities.IsFree(donor) || donor.CurJob?.playerForced==true) return false;
+            var need=new Need{Kind=SupplyKind.Food,ForPawn=requester,Target=1.6f,Urgency=.6f};
+            var source=Stock(requester.Map,Activities.Now).FirstOrDefault(t=>Fits(t,need) && R.ClaimFor(t.thingIDNumber)?.HolderFamily==donorFamily && requester.CanReserve(t));
+            return source!=null && Start(requester,donor,source,Math.Min(source.stackCount,Math.Max(1,(int)System.Math.Ceiling(1.6f/Units(source,SupplyKind.Food)))),need,SupplyApproach.Ask,home,Activities.Now);
+        }
+        private bool TryRepayment(Lineage family, List<Pawn> members, List<Thing> stock, int now)
+        {
+            foreach (var debt in R.Requests.Where(r => R.FamilyOf(r.RequesterId) == family.Id && r.Approach == SupplyApproach.Loan && !r.DebtPaid && (r.State == SupplyState.Exchanged || r.State == SupplyState.Stored) && now-r.CreatedTick >= ActivityTuning.TicksPerDay && now-r.RepaymentAttemptTick >= ActivityTuning.TicksPerDay/2).Take(4).ToList())
+            {
+                var borrower = members.FirstOrDefault(p => p.thingIDNumber == debt.RequesterId);
+                if (borrower == null || !Activities.IsFree(borrower) || borrower.CurJob?.playerForced == true || !Activities.CanSpareAttention(borrower) || R.Requests.Any(r => r.DebtId == debt.Id && r.Open)) continue;
+                var creditor = component.TryGetPawn(debt.DonorId);
+                if (creditor?.Map != borrower.Map || !Activities.IsFree(creditor) || creditor.CurJob?.playerForced == true || !Activities.CanSpareAttention(creditor)) continue;
+                var home = FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(creditor.thingIDNumber)));
+                if (home?.Map != borrower.Map) continue;
+                var need = new Need{Kind=debt.Kind,ForPawn=creditor};
+                if (debt.Kind==SupplyKind.Fuel)
+                {
+                    var def=DefDatabase<ThingDef>.GetNamedSilentFail(debt.Definition); if(def==null) continue;
+                    need.Fuel=new ThingFilter();need.Fuel.SetAllow(def,true);
+                }
+                var source = stock.FirstOrDefault(t => t.Spawned && t.Map==borrower.Map && t.def.defName==debt.Definition && Fits(t,need) && R.ClaimFor(t.thingIDNumber)?.HolderFamily==family.Id && R.ClaimFor(t.thingIDNumber)?.OwnerFamily==family.Id);
+                if(source==null) continue;
+                int count=debt.Kind==SupplyKind.Food ? (int)Math.Ceiling(debt.Units/Units(source,debt.Kind)) : debt.Count;
+                if(count<=0 || source.stackCount<count || creditor.carryTracker.AvailableStackSpace(source.def)<count || !creditor.CanReserve(source)) continue;
+                float held=stock.Where(t=>t.Spawned && t.Map==borrower.Map && KindOf(t)==debt.Kind && R.ClaimFor(t.thingIDNumber)?.HolderFamily==family.Id).Sum(t=>t.stackCount*Units(t,debt.Kind));
+                float reserve=debt.Kind==SupplyKind.Food ? HouseholdPolicy.FoodTarget(members.Count,family.FoodReserveDays) : debt.Kind==SupplyKind.Medicine ? family.MedicineReserve : debt.Count;
+                if(held-count*Units(source,debt.Kind)<reserve) continue;
+                debt.RepaymentAttemptTick=now;
+                if(Start(creditor,borrower,source,count,need,SupplyApproach.Repay,home,now,debt.Id)) return true;
+            }
+            return false;
+        }
+        private bool TryGetBarterFunds(Pawn pawn, int price, List<Thing> stock, Lineage family)
+        {
+            if (price<=0 || price>pawn.carryTracker.AvailableStackSpace(ThingDefOf.Silver) || InventorySilver(pawn)>=price) return false;
+            int publicSilver=stock.Where(t=>t.Spawned && t.Map==pawn.Map && t.def==ThingDefOf.Silver && R.ClaimFor(t.thingIDNumber)==null).Sum(t=>t.stackCount);
+            var source=stock.Where(t=>t.Spawned && t.Map==pawn.Map && t.def==ThingDefOf.Silver && t.stackCount>=price && !t.IsForbidden(pawn) )
+                .FirstOrDefault(t=> (R.ClaimFor(t.thingIDNumber)?.OwnerFamily==family.Id && R.ClaimFor(t.thingIDNumber)?.HolderFamily==family.Id || family.UsePublicBarterFunds && StoreUtility.IsInAnyStorage(t) && R.ClaimFor(t.thingIDNumber)==null && publicSilver-price>=100) && pawn.CanReserve(t) && pawn.CanReach(t,PathEndMode.Touch,Danger.None));
+            if(source==null) return false;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_BarterFunds,source);job.count=price;
+            pawn.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+        }
+        private bool Start(Pawn actor, Pawn donor, Thing source, int count, Need need, SupplyApproach approach, Area home, int now, int debtId = 0)
         {
             count = Math.Min(count, actor.carryTracker.AvailableStackSpace(source.def));
             if (count <= 0 || !Destination(actor, home, source, out var storage)) return false;
@@ -205,10 +269,11 @@ namespace FamilyLife
             if (!door.IsValid) return false;
             var request = R.OpenSupplyRequest(actor.thingIDNumber, donor?.thingIDNumber ?? 0, source.thingIDNumber, actor.Map.uniqueID, count, need.Kind, approach, now);
             if (request == null) return false;
+            request.DebtId = debtId;
             request.HomeX = storage.x; request.HomeZ = storage.z; request.DoorX = door.x; request.DoorZ = door.z;
             request.Definition = source.def.defName; request.Units = count * Units(source, need.Kind);
             request.Price = Math.Max(1, (int)Math.Ceiling(source.GetStatValue(StatDefOf.MarketValue) * count));
-            if (approach == SupplyApproach.Return) request.RootIncidentId = R.Incidents.LastOrDefault(i => i.Kind == IncidentKind.Theft && i.ActorId == donor.thingIDNumber && i.VictimFamily == R.FamilyOf(actor.thingIDNumber) && i.Resource == source.def.defName && !i.Resolved)?.Id ?? 0;
+            if (approach == SupplyApproach.Return) request.RootIncidentId = R.Incidents.LastOrDefault(i => i.Kind == IncidentKind.Theft && i.VictimFamily == R.FamilyOf(actor.thingIDNumber) && i.Resource == source.def.defName && !i.Resolved)?.Id ?? 0;
             var def = approach == SupplyApproach.PublicClaim || approach == SupplyApproach.Relocate ? WFL_StoryDefOf.WFL_CollectSupply : (approach == SupplyApproach.Steal ? WFL_StoryDefOf.WFL_StealSupply : WFL_StoryDefOf.WFL_ExchangeSupply);
             var job = JobMaker.MakeJob(def, source, donor, door); job.count = count;
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
@@ -227,18 +292,18 @@ namespace FamilyLife
             }
             return IntVec3.Invalid;
         }
-        internal static int InventorySilver(Pawn pawn) => pawn.inventory?.innerContainer.Where(t => t.def == ThingDefOf.Silver).Sum(t => t.stackCount) ?? 0;
+        internal static int InventorySilver(Pawn pawn) => pawn.inventory?.innerContainer.Where(t => t.def == ThingDefOf.Silver).Select(t => t.stackCount).DefaultIfEmpty(0).Max() ?? 0;
         internal bool Pay(Pawn actor, Pawn donor, int price)
         {
             // Reserve one complete physical payment. Splitting several stacks and dropping them can charge a partial price.
-            var silver = actor.inventory?.innerContainer.FirstOrDefault(t => t.def == ThingDefOf.Silver && t.stackCount >= price && R.MayUseStock(t.thingIDNumber, R.FamilyOf(actor.thingIDNumber)));
+            var silver = actor.inventory?.innerContainer.FirstOrDefault(t => t.def == ThingDefOf.Silver && t.stackCount >= price && (R.ClaimFor(t.thingIDNumber)==null || R.ClaimFor(t.thingIDNumber).OwnerFamily==R.FamilyOf(actor.thingIDNumber) && R.ClaimFor(t.thingIDNumber).HolderFamily==R.FamilyOf(actor.thingIDNumber)));
             if (silver == null || donor.inventory == null) return false;
             var payment = silver.SplitOff(price);
             int owner = R.ClaimFor(payment.thingIDNumber)?.OwnerFamily ?? 0, holder = R.ClaimFor(payment.thingIDNumber)?.HolderFamily ?? 0;
-            R.ClaimStock(payment.thingIDNumber, R.FamilyOf(donor.thingIDNumber), R.FamilyOf(donor.thingIDNumber), donor.Map.uniqueID, SupplyKind.Fuel);
+            R.ClaimStock(payment.thingIDNumber, R.FamilyOf(donor.thingIDNumber), R.FamilyOf(donor.thingIDNumber), donor.Map.uniqueID, SupplyKind.Currency);
             if (donor.inventory.innerContainer.TryAdd(payment, false)) return true;
             R.ForgetStock(payment.thingIDNumber);
-            if (owner != 0) R.ClaimStock(payment.thingIDNumber, owner, holder, actor.Map.uniqueID, SupplyKind.Fuel);
+            if (owner != 0) R.ClaimStock(payment.thingIDNumber, owner, holder, actor.Map.uniqueID, SupplyKind.Currency);
             actor.inventory.innerContainer.TryAdd(payment, false);
             return false;
         }

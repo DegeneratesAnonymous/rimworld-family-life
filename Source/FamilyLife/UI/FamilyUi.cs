@@ -132,6 +132,10 @@ namespace FamilyLife
                 case FamilyEventKind.JoinedColony: return "WFL_Chron_Joined".Translate(a).ToString();
                 case FamilyEventKind.LeftColony: return "WFL_Chron_Left".Translate(a).ToString();
                 case FamilyEventKind.Died: return "WFL_Chron_Died".Translate(a).ToString();
+                case FamilyEventKind.SocialMembership:
+                    return "WFL_House_Changed".Translate(a,e.B>0?registry.LineageDisplayName(registry.GetLineage(e.B)):"WFL_House_None".Translate().ToString()).ToString();
+                case FamilyEventKind.SocialBranch:
+                    return "WFL_House_Founded".Translate(a,registry.LineageDisplayName(registry.GetLineage(e.B))).ToString();
                 case FamilyEventKind.LineageFounded:
                     return "WFL_Chron_LineageFounded".Translate(a, registry.LineageDisplayName(registry.GetLineage(e.B))).ToString();
                 case FamilyEventKind.LineageAffiliated:

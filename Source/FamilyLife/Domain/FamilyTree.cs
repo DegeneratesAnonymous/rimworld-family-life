@@ -75,6 +75,7 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             if (GetLineage(lineageId) == null) return false;
+            if((GetLineage(lineageId).ParentHouseId>0 || Persons.Any(p=>p.SocialFamilyId==lineageId)) && LivingCount(lineageId,Presence.Colony)>0) return true;
             if (LivingCount(lineageId, Presence.Colony) < 2) return false;
             int byDescent = 0;
             foreach (var p in Persons)
@@ -91,6 +92,7 @@ namespace FamilyLife.Domain
             EnsureIndexes();
             if (person == null) return 0;
             int own = LineageIdFor(person);
+            if(person.SocialFamilyId!=0) return own;
             if (own != 0 && IsListedFamily(own)) return own;
             foreach (var lineage in Lineages)
                 if (lineage.HasAffiliate(person.Id) && IsListedFamily(lineage.Id)) return lineage.Id;

@@ -84,7 +84,26 @@ namespace FamilyLife
                     }
                 }
             }
+            if (map.mapPawns.AllPawnsSpawned.Any(p => !p.Downed && !p.IsPrisoner && p.HostileTo(Faction.OfPlayer))) return false;
             var free = map.mapPawns.FreeColonistsSpawned.Where(Available).Take(64).ToList();
+            foreach (var incident in r.Incidents.Where(i=>!i.Resolved && i.MapId==map.uniqueID && i.ActorId!=0 && now-i.LastRepairTick>=ActivityTuning.TicksPerDay).OrderByDescending(i=>i.Tick).Take(8))
+            {
+                var other=c.TryGetPawn(incident.ActorId);
+                if(!Available(other) || other.Map!=map) continue;
+                var speaker=free.FirstOrDefault(p=>p!=other && r.FamilyOf(p.thingIDNumber)==incident.VictimFamily && incident.KnownBy.Contains(p.thingIDNumber) &&
+                    (c.ProfileOf(p.thingIDNumber)?[(int)Dim.Warmth]??0)>.4f && Activities.AttemptAllowed(p.thingIDNumber,now,ActivityTuning.TicksPerDay,10));
+                if(speaker==null || !speaker.CanReach(other,PathEndMode.Touch,Danger.None)) continue;
+                var talk=JobMaker.MakeJob(WFL_StoryDefOf.WFL_ReconcileStory,other);talk.count=incident.Id;
+                Activities.NoteAttempt(speaker.thingIDNumber,now,10);
+                speaker.jobs.StartJob(talk,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+            }
+            var independent = free.FirstOrDefault(p => r.CanTakePersonalTime(p.thingIDNumber,now));
+            if (independent != null)
+            {
+                r.AgencyOf(independent.thingIDNumber).LastActionTick = now;
+                independent.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_PersonalTime), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+                return true;
+            }
             if (FamilyLifeMod.Settings.familyViolence)
                 foreach (var i in r.Incidents.Where(i => !i.Resolved && i.MapId == map.uniqueID && i.ActorId != 0).OrderByDescending(i => i.Severity).Take(8))
                 {
@@ -119,10 +138,16 @@ namespace FamilyLife
             var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_StoryTalk, other); job.count = story;
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc); return true;
         }
-        internal static void FinishTalk(Pawn actor, Pawn other, int story)
+        internal static void FinishTalk(Pawn actor, Pawn other, int story, bool reconciliation = false)
         {
             var c = FamilyComponent.Current;
             if (c == null || actor.Map != other.Map || actor.Position.DistanceTo(other.Position) > 3) return;
+            if(reconciliation)
+            {
+                bool consent=(c.ProfileOf(other.thingIDNumber)?[(int)Dim.Warmth]??0)>=0 && (c.Registry.GetBond(other.thingIDNumber,actor.thingIDNumber)?.Tension??0)<70;
+                c.Registry.DiscussReparation(story,actor.thingIDNumber,other.thingIDNumber,consent,Activities.Now);
+                return;
+            }
             if (story < 0 && c.Registry.Incidents.Any(i => i.Id == -story && i.KnownBy.Contains(actor.thingIDNumber))) { c.Registry.LearnIncident(-story, other.thingIDNumber, Activities.Now); return; }
             var plot = c.Registry.Plots.FirstOrDefault(p => p.Id == story && p.OrganizerId == actor.thingIDNumber);
             if (plot == null || c.Registry.Incidents.FirstOrDefault(i => i.Id == plot.IncidentId)?.Resolved != false) return;

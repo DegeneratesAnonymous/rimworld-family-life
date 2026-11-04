@@ -61,4 +61,14 @@
   <WFL_Context_MentalBreak>Mental break</WFL_Context_MentalBreak>
   <WFL_Context_Accident>Crossfire</WFL_Context_Accident>
   <WFL_Context_Planned>Planned attack</WFL_Context_Planned>
+<WFL_SupplyApproach_Repay>Collect offered loan repayment</WFL_SupplyApproach_Repay>
+<WFL_Pantry_Title>Household reserves</WFL_Pantry_Title>
+<WFL_Pantry_Food>Food target: {0} days</WFL_Pantry_Food>
+<WFL_Pantry_Fuel>Fuel target: {0} days</WFL_Pantry_Fuel>
+<WFL_Pantry_Medicine>Medicine reserve: {0}</WFL_Pantry_Medicine>
+<WFL_Pantry_Emergency>Share private food in starvation and medicine during emergency treatment</WFL_Pantry_Emergency>
+<WFL_Pantry_PublicFunds>Allow collecting public silver for barter (keeps a 100-silver public reserve)</WFL_Pantry_PublicFunds>
+<WFL_Reparation_Progress>Mutually accepted repair conversations: {0} of 3. Rebuilding trust takes separate days.</WFL_Reparation_Progress>
+<WFL_SupplyApproach_Offer>Offered aid</WFL_SupplyApproach_Offer>
+<WFL_Stories_PrivateIncident>#{0} · {1}: {2} — {3} → {4}. {5}. Known to your colonist.</WFL_Stories_PrivateIncident>
 </LanguageData>

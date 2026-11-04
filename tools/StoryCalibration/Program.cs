@@ -8,7 +8,8 @@ Directory.CreateDirectory(output);
 var summary = new StringBuilder("# Seeded story calibration\n\nFive RimWorld years = 300 days. Seed 1701. Synthetic opportunities, not a live playtest or measured activity distribution. Profiles and initial histories vary; opportunity budgets are identical.\n\n| Scenario | Mode | Events | Unique IDs | Great % | Mean attachment | Mean trust | Mean tension | Saturated bonds % | Final grievance |\n|---|---|---:|---:|---:|---:|---:|---:|---:|---:|\n");
 var frequencies = new StringBuilder("scenario,mode,event,tier,count\n");
 var history = new StringBuilder("scenario,mode,day,attachment,trust,tension,grievance\n");
-var coverage = EventCatalog.All.ToDictionary(d => d.Id, d => 0);
+var allDefinitions = EventCatalog.All.Concat(TraditionMoments.All).ToList();
+var coverage = allDefinitions.ToDictionary(d => d.Id, d => 0);
 var endpoints = new Dictionary<string,(float attachment,float grievance,float saturation)>();
 foreach (string scenario in new[] { "compatible", "hostile", "feud-child-friends", "proud-abrasive", "kind-low-social" })
 foreach (string mode in new[] { "isolated-events", "synthetic-hourly", "recovery" })
@@ -51,7 +52,7 @@ foreach (string mode in new[] { "isolated-events", "synthetic-hourly", "recovery
             var c = new PairContext { Registry = registry, Initiator = a, Recipient = b, Now = now, SameFamily = a.LineageId == b.LineageId,
                 InitiatorBond = registry.GetBond(a.Id,b.Id), RecipientBond = registry.GetBond(b.Id,a.Id), Kind = registry.KindOf(registry.GetPerson(a.Id),registry.GetPerson(b.Id)),
                 FamilyTie = registry.GetTie(a.LineageId,b.LineageId), Rift = registry.OpenRiftBetween(a.Id,b.Id), Setting = setting, FromActivity = setting != ActivityKind.None,
-                OpinionOfRecipient = Opinion(a.Id,b.Id), OpinionOfInitiator = Opinion(b.Id,a.Id), RelationshipPace = .25f };
+                QualityHours = setting == ActivityKind.None ? .28f : 0, OpinionOfRecipient = Opinion(a.Id,b.Id), OpinionOfInitiator = Opinion(b.Id,a.Id), RelationshipPace = .25f };
             var def = registry.PickEvent(c, EventCatalog.All, rng, true); if (def == null) continue;
             var result = registry.ResolveEvent(def,c,rng); registry.ApplyEvent(result,now);
             string key = def.Id + "," + result.Tier; counts[key] = counts.GetValueOrDefault(key) + 1; total++; coverage[def.Id]++; if (result.Tier == EventTier.Great) great++;
@@ -62,7 +63,7 @@ foreach (string mode in new[] { "isolated-events", "synthetic-hourly", "recovery
     foreach (var pair in counts) frequencies.AppendLine($"{scenario},{mode},{pair.Key},{pair.Value}");
     summary.AppendLine($"| {scenario} | {mode} | {total} | {counts.Keys.Select(k=>k.Split(',')[0]).Distinct().Count()} | {100f*great/Math.Max(1,total):F1} | {registry.Bonds.Average(b=>b.Attachment):F1} | {registry.Bonds.Average(b=>b.Trust):F1} | {registry.Bonds.Average(b=>b.Tension):F1} | {100f*registry.Bonds.Count(b=>b.Attachment>=95&&b.Trust>=95)/Math.Max(1,registry.Bonds.Count):F1} | {registry.Ties.Sum(t=>t.Grievance):F1} |");
 }
-summary.AppendLine("\nFrequency/tier counts and daily trajectories are written alongside this report. Zero-frequency events are not evidence of a bug: third-party, achievement, distress and other missing contexts are not fabricated. These runs do not exercise all 90 definitions. No work time or TPS is measured; jobs, pathing, social memories, actual activity distribution and player interruption require live validation. Recovery mode deliberately changes profiles and opinions after day 150 to test whether entrenched histories can improve; it does not model an organic personality change. Synthetic-hourly mode adds passive bond updates but does not simulate physical activity jobs. All initial pawns remain at their starting age and colony presence to isolate social rules.");
+summary.AppendLine("\nFrequency/tier counts and daily trajectories are written alongside this report. Zero-frequency events are not evidence of a bug: third-party, achievement, distress and other missing contexts are not fabricated. Natural runs select from the 90 core definitions and do not exercise every core opportunity or any of the 48 tradition-specific gathering episodes. The coverage table includes all 138 definitions, with unexercised tradition entries explicitly zero. Controlled outcome probes include all 138 but bypass eligibility and do not apply consequences. No work time or TPS is measured; jobs, pathing, social memories, actual activity distribution and player interruption require live validation. Recovery mode deliberately changes profiles and opinions after day 150 to test whether entrenched histories can improve; it does not model an organic personality change. Synthetic-hourly mode adds passive bond updates but does not simulate physical activity jobs. All initial pawns remain at their starting age and colony presence to isolate social rules.");
 File.WriteAllText(Path.Combine(output,"summary.md"),summary.ToString());
 File.WriteAllText(Path.Combine(output,"frequencies.csv"),frequencies.ToString());
 File.WriteAllText(Path.Combine(output,"history.csv"),history.ToString());
@@ -77,7 +78,7 @@ if (endpoints["hostile/recovery"].grievance >= endpoints["hostile/synthetic-hour
 // They measure execution/reception math, not whether the narrative can legitimately occur.
 var probes = new StringBuilder("profile,event,poor,flat,good,great,mean_execution,mean_reception\n");
 foreach (string profile in new[]{"compatible","hostile","feud-child-friends","proud-abrasive","kind-low-social"})
-foreach (var def in EventCatalog.All)
+foreach (var def in allDefinitions)
 {
     bool friendly = profile == "compatible" || profile == "kind-low-social";
     Actor ProbeActor(int id, bool child)

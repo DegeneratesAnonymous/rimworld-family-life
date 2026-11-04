@@ -141,11 +141,19 @@ namespace FamilyLife.Domain
         {
             if (ticks <= 0 || a == b) return;
             KeepPromises(a, b, ticks, now);
-            float hours = ticks / (float)BondTuning.TicksPerHour;
+            if (cause == BondCause.Together || cause == BondCause.Story || cause == BondCause.Teaching)
+            { RecordAttention(a,b,ticks,now); RecordAttention(b,a,ticks,now); }
             foreach (var pair in new[] { new[] { a, b }, new[] { b, a } })
             {
                 var bond = EnsureBond(pair[0], pair[1], now);
                 if (bond == null) continue;
+                int day = now / ActivityTuning.TicksPerDay;
+                if (bond.QualityDay != day) { bond.QualityDay = day; bond.QualityTicksToday = 0; }
+                int credited = Math.Min(ticks, Math.Max(0, ActivityTuning.DefaultDailyTargetTicks - bond.QualityTicksToday));
+                bond.LastQualityTick=now;
+                if (credited <= 0) continue;
+                bond.QualityTicksToday += credited;
+                float hours = credited / (float)BondTuning.TicksPerHour;
                 // Time together helps in proportion to how the two feel about each other, and less the closer they already are.
                 // With someone they cannot stand it does the opposite: forced company grates.
                 float fit = ActivityTuning.TimeFit(bond.LastOpinion);
@@ -160,6 +168,8 @@ namespace FamilyLife.Domain
                 else bond.Note(cause, ActivityTuning.QualityAttachmentPerHour * hours * helpful * room, now);
                 bond.LastQualityTick = now;
                 bond.QualityRecent += hours;
+                if(bond.LastOpinion>0 && bond.Attachment>=35 && bond.Trust>=35)
+                    NoteHouseService(pair[1],FamilyOf(pair[0]),2,now);
             }
         }
 
@@ -200,6 +210,7 @@ namespace FamilyLife.Domain
                     : ActivityTuning.NeverTogetherHours;
                 float staleness = Math.Max(0.2f, Math.Min(3f, hoursSince / ActivityTuning.StaleHoursFullDesire));
                 float desire = KindWeight(kind.Value) * (0.5f + attachment / 100f) * staleness * (1f - 0.8f * tension / 100f) * appetite;
+                desire *= AgencyCompanionFactor(holderId,id);
                 if (desire >= ActivityTuning.MinDesire) result.Add(new RankedCompanion { Id = id, Desire = desire });
             }
             return result.OrderByDescending(c => c.Desire).ThenBy(c => c.Id).ToList();

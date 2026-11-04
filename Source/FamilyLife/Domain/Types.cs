@@ -43,6 +43,7 @@ namespace FamilyLife.Domain
         BondDeepened = 22,      // A = the one who feels it, B = the other; announced, not in the chronicle
         BondCooled = 23,
         FamiliesJoined = 24,    // A, B = the partners whose two families were joined by it
+        SocialMembership = 26, SocialBranch = 27,
         StepFamilyFormed = 25   // A, B = the partners; at least one of them already had children who are not the other's       // A, B = the two people
     }
 
@@ -93,6 +94,8 @@ namespace FamilyLife.Domain
                     case FamilyEventKind.RiftOpened:
                     case FamilyEventKind.RiftResolved:
                     case FamilyEventKind.FamiliesJoined:
+                    case FamilyEventKind.SocialMembership:
+                    case FamilyEventKind.SocialBranch:
                     case FamilyEventKind.StepFamilyFormed:
                         return true;
                     default:

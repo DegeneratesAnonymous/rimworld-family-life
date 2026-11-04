@@ -263,7 +263,7 @@ namespace FamilyLife.Domain
             EnsureIndexes();
             var lineage = GetLineage(lineageId);
             var members = Persons
-                .Where(p => p.InColony && (p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id))))
+                .Where(p => p.InColony && (BelongsToFamily(p,lineageId)))
                 .Select(p => p.Id).ToList();
             return CohesionAmong(members);
         }

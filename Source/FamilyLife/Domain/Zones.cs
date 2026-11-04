@@ -34,7 +34,7 @@ namespace FamilyLife.Domain
             var lineage = GetLineage(lineageId);
             if (lineage == null || lineage.ZoneAreaId == 0) return new List<int>();
             lineage.ZoneApplied = lineage.ZoneApplied ?? new List<int>();
-            return Persons.Where(p => p.InColony && (p.PrimaryLineageId == lineageId || lineage.HasAffiliate(p.Id)) && !lineage.ZoneApplied.Contains(p.Id))
+            return Persons.Where(p => p.InColony && (BelongsToFamily(p,lineageId)) && !lineage.ZoneApplied.Contains(p.Id))
                 .Select(p => p.Id).OrderBy(i => i).ToList();
         }
 

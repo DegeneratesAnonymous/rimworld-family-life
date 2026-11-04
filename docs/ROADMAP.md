@@ -4,13 +4,13 @@
 
 Build a colony social simulation centered on families and individual agency. Relationships normally change over days and seasons. Real deaths, betrayals and rescues may create immediate shocks; repair requires sustained behavior. Avoid permanent villain/black-sheep labels, automatic family-wide knowledge, unconditional size bonuses, and ideology/family/royalty as a zero-sum allegiance formula. Keep tribal through spacer colonies plausible and budget simulation work for 3× speed.
 
-Current baseline: family records, households, bonds, culture, gatherings and activities; 138 event definitions; witnessed incidents, supplies and revenge. The merged expansion passes 333 domain tests and both builds, but its live acceptance checklist remains outstanding in FAMILY-STORIES.md.
+Current baseline: family records, households, bonds, culture, gatherings and activities; 138 event definitions; witnessed incidents, supplies and revenge. The current PR passes 408 domain tests and both builds. Live acceptance remains outstanding in FAMILY-STORIES.md and HOUSES-AND-ROLEPLAY.md.
 
-## Milestone 1 — individual agency within families (in progress)
+## Milestone 1 — individual agency within families (implemented slices; live validation pending)
 
 First slice: ordinary authored social moments use one quarter of previous primary bond changes in game contexts. Incident shocks remain separate. Add a pure directed belonging assessment from existing relationships; family size cannot manufacture loyalty. Assessments are derived, not saved labels, and make no claims about actual political behavior.
 
-Remaining slices:
+Design scope (implemented foundations and remaining depth):
 - Persist personal ambitions (recognition, leadership, independence, security, protecting someone), evidence-backed progress and abandonment. Do not automatically assign evil motives from traits or stepfamily status.
 - Track actual favoritism, unequal obligations, inclusion and rejection; surface why a pawn feels supported or excluded. A compassionate dissenter can be a family's black sheep.
 - Support divided loyalties: a member can love one relative, distrust another and oppose the house leadership.
@@ -53,8 +53,14 @@ Domain and persistence checks, both supported builds, Harmony checks, then live 
 
 ### Milestone 1 follow-up — lived experience and personal aims
 
-Implemented on the individual-agency branch: persisted per-adult records of positive/difficult completed family moments, source event/date, and goals for connection, recognition or independence. The first qualifying moment per in-game day counts; three days establish a goal, eight further favorable days can fulfill a connection goal when a trusted connection exists, or a recognition goal through achievement-context episodes, setbacks reduce progress, a seven-day cooldown prevents immediate restarting, and fourteen days without evidence or leaving the colony sets an active aim aside. Recognition requires achievement-context episodes. Independence progress measures resolve, and cannot fulfill the goal or force a departure without a future action integration. Mixed directed outcomes can count differently for each participant. Neutral/ambient moments do not count, and lack of interaction is never automatically exclusion. Family changes reset the old context.
+Implemented on the individual-agency branch: persisted per-adult records of positive/difficult completed family moments, source event/date, and goals for connection, recognition or independence. The first qualifying moment per in-game day counts; three days establish a goal, eight further favorable days can fulfill a connection goal when a trusted connection exists, or a recognition goal through achievement-context episodes, setbacks reduce progress, a seven-day cooldown prevents immediate restarting, and fourteen days without evidence or leaving the colony sets an active aim aside. Recognition requires achievement-context episodes. Independence progress measures resolve; three completed personal-time sessions on separate days can fulfill a need for breathing room, without forcing departure. Mixed directed outcomes can count differently for each participant. Neutral/ambient moments do not count, and lack of interaction is never automatically exclusion. Family changes reset the old context.
 
-Families → Moments now explains current trusted/strained connections, experience and aims (up to 24 current adults per family). The model does not yet infer intentional favoritism, grant prestige, force independence/departure, or manipulate elections/schemes. Those behavior integrations remain future work. The recorded experience is a foundation for perceived inclusion, not proof of anyone's intentions. No new all-pairs tick loop: evidence updates on completed events; goal maintenance joins existing staggered maintenance.
+Families → Moments now explains current trusted/strained connections, experience and aims (up to 24 current adults per family). The model does not infer intentional favoritism, force departure, or manipulate elections/political schemes. Those deeper behavior integrations remain future work. The recorded experience is a foundation for perceived inclusion, not proof of anyone's intentions. No new all-pairs tick loop: evidence updates on completed events; goal maintenance joins existing staggered maintenance.
 
 Live acceptance still required: save/reload progress and cooldowns, adult transitions, changing families, mixed-result episodes, UI scrolling, and 3× performance with many families.
+
+## Current implementation checkpoint
+
+See [HOUSES-AND-ROLEPLAY.md](HOUSES-AND-ROLEPLAY.md) for the implemented mechanics and their limits. Milestone 1 now includes bounded agency biases, actual personal time, a measured parent-child attention ledger, daily quality caps and staged repair. Milestone 2 has pantry controls, emergency sharing, physical repayment and barter-fund collection. Milestone 3 has chosen membership, departure, branches, explicit unions and kinship checks. Milestone 4 has editable persisted crests with shared cached rendering. These slices remain subject to live acceptance rather than being declared release-complete.
+
+The associate/colonist layer adds earned respect without automatic membership, head/steward roles, permission-aware player actions, physically delivered petitions and private story-record views. It supports chosen crews and rival houses while preserving ancestry. Initial persisted head selection is a compatibility fallback; milestone 5's prestige, legitimacy, inheritance and succession disputes remain open. Milestones 6–7's political institutions, deeper evidence and physical tradition activities remain future work.

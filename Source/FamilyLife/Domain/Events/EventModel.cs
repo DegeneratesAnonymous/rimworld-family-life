@@ -149,6 +149,7 @@ namespace FamilyLife.Domain
         public Commitment Broken;             // a recorded promise from the initiator to the recipient that went unkept and has not been talked about
         public FamilyTie FamilyTie;           // the standing between their two families, if they belong to different ones
         public ActivityKind Setting;
+        public float QualityHours = -1f; // -1 retains legacy domain-call credit; runtime supplies actual duration or zero for already-recorded activities.
         public float RelationshipPace = 1f; // Runtime tuning; contexts created by older callers retain existing behavior.
         public string TraditionId;
         public bool ResourcePressure;

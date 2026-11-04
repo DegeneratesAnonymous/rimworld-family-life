@@ -322,7 +322,7 @@ namespace FamilyLife.Domain
                 float weight = 0f;
                 foreach (var p in Persons)
                 {
-                    if (!p.InColony || !(p.PrimaryLineageId == lineage.Id || lineage.HasAffiliate(p.Id))) continue;
+                    if (!p.InColony || !(BelongsToFamily(p,lineage.Id))) continue;
                     var profile = profileOf?.Invoke(p.Id);
                     if (profile == null) continue;
                     float w = p.Juvenile ? CultureTuning.JuvenileWeight : CultureTuning.AdultWeight;
@@ -375,7 +375,7 @@ namespace FamilyLife.Domain
             var groups = new Dictionary<string, int>();
             foreach (var p in Persons)
             {
-                if (!(p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id)))) continue;
+                if (!(BelongsToFamily(p,lineageId))) continue;
                 if (p.TopSkillLevel < CultureTuning.LegacyMinLevel) continue;
                 var group = CultureTuning.LegacyGroup(p.TopSkill);
                 if (group == null) continue;
@@ -389,7 +389,7 @@ namespace FamilyLife.Domain
         public int ColonyPeopleOf(int lineageId)
         {
             var lineage = GetLineage(lineageId);
-            return Persons.Count(p => p.InColony && (p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id))));
+            return Persons.Count(p => p.InColony && (BelongsToFamily(p,lineageId)));
         }
 
         /// <summary>
@@ -497,9 +497,9 @@ namespace FamilyLife.Domain
             var result = new List<int>();
             foreach (var p in Persons.Where(x => x.InColony).OrderBy(x => x.Id))
             {
-                bool family = p.PrimaryLineageId == lineageId || (lineage != null && lineage.HasAffiliate(p.Id));
+                bool family = BelongsToFamily(p,lineageId);
                 bool friend = hosts.Count > 0 && hosts.All(h => h == p.Id || (opinionOf?.Invoke(p.Id, h) ?? int.MinValue) >= minOpinion);
-                if (family || friend) result.Add(p.Id);
+                if (family || friend || RoleInHouse(p.Id,lineageId)==HouseRole.Associate || RoleInHouse(p.Id,lineageId)==HouseRole.TrustedAssociate) result.Add(p.Id);
             }
             return result;
         }

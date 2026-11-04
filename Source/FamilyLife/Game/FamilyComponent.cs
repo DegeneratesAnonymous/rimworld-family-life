@@ -84,8 +84,12 @@ namespace FamilyLife
             return pawnIndex.TryGetValue(id, out var p) && p != null && !p.Discarded ? p : null;
         }
 
+        public bool PerspectiveInitialized;
+        public int PerspectivePawnId;
         public override void ExposeData()
         {
+            Scribe_Values.Look(ref PerspectivePawnId,"perspectivePawn");
+            Scribe_Values.Look(ref PerspectiveInitialized,"perspectiveInitialized");
             Scribe_Deep.Look(ref Registry, "registry");
             if (Registry == null) Registry = new FamilyRegistry();     // a game that did not have the mod yet
         }
@@ -220,6 +224,9 @@ namespace FamilyLife
             opinionCache[key] = new CachedOpinion { Value = value ?? 0, Known = value.HasValue, Expires = now + OpinionLifetime + stagger };
             return value;
         }
+
+        public void FamilyMembershipChanged()
+        { Revision++; FamilyZones.Apply(this); }
 
         public void MovePerson(int personId, int targetHouseholdId)
         {

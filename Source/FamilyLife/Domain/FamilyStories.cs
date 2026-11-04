@@ -110,9 +110,10 @@ namespace FamilyLife.Domain
             float size = i.Severity / 10f * (good ? 1f : blame);
             ChangeBond(observerId, i.ActorId, good ? new BondChange(size * 0.4f, size, -size, 1) : new BondChange(-size * 0.4f, -size, size * 1.5f, 1), now);
             int family = FamilyOf(observerId);
-            if (family != 0 && family == i.VictimFamily && i.ActorFamily != 0 && family != i.ActorFamily && !i.FamiliesAffected.Contains(family))
+            if (family != 0 && family == i.VictimFamily && !i.FamiliesAffected.Contains(family))
             {
                 i.FamiliesAffected.Add(family);
+                NoteHouseService(i.ActorId,family,good ? Math.Min(2,size*2) : -Math.Min(20,size*2),now);
                 var tie = EnsureTie(family, i.ActorFamily);
                 if (tie != null)
                 {
@@ -185,6 +186,14 @@ namespace FamilyLife.Domain
 
         private void RepairStories()
         {
+            foreach(var p in Persons) if(p.SocialFamilyId>0 && !lineageById.ContainsKey(p.SocialFamilyId)) p.SocialFamilyId=0;
+            HouseContacts = (HouseContacts ?? new List<HouseContact>()).Where(c=>c!=null && personById.ContainsKey(c.PersonId) && lineageById.ContainsKey(c.FamilyId)).GroupBy(c=>(c.PersonId,c.FamilyId)).Select(g=>g.First()).Take(1024).ToList();
+            HousePetitions = (HousePetitions ?? new List<HousePetition>()).Where(q=>q!=null && personById.ContainsKey(q.PersonId) && lineageById.ContainsKey(q.FamilyId)).Take(128).ToList();
+            foreach(var q in HousePetitions) NextPetitionId=Math.Max(NextPetitionId,q.Id+1);
+            foreach(var house in Lineages) house.Stewards=(house.Stewards??new List<int>()).Where(personById.ContainsKey).Distinct().ToList();
+            kinshipCache.Clear();
+            agencyByPerson.Clear();
+            Attention = (Attention ?? new List<AttentionRecord>()).Where(a => a != null && personById.ContainsKey(a.Giver) && personById.ContainsKey(a.Recipient)).Take(4096).ToList();
             Agency = (Agency ?? new List<AgencyRecord>()).Where(a => a != null && personById.ContainsKey(a.PersonId)).GroupBy(a => a.PersonId).Select(g => g.First()).ToList();
             Incidents = Incidents ?? new List<FamilyIncident>(); Plots = Plots ?? new List<RevengePlot>();
             Claims = Claims ?? new List<StockClaim>(); Requests = Requests ?? new List<SupplyRequest>();

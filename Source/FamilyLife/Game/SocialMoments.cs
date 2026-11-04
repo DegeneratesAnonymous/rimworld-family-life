@@ -343,10 +343,7 @@ namespace FamilyLife
             var component = FamilyComponent.Current;
             if (component == null) return;
             var registry = component.Registry;
-            var pairs = new List<KeyValuePair<Pawn, Pawn>>();
-            for (int i = 0; i < people.Count; i++)
-                for (int j = i + 1; j < people.Count; j++)
-                    pairs.Add(new KeyValuePair<Pawn, Pawn>(people[i], people[j]));
+            var pairs = GatheringBudget.Pairs(people.InRandomOrder().ToList(),60,0);
             int wanted = Mathf.Clamp(Mathf.RoundToInt(3 * Frequency), 1, 5);
             foreach (var pair in pairs.InRandomOrder().OrderByDescending(p => CrossFamily(registry, p.Key, p.Value) ? 1 : 0).Take(wanted * 3))
             {
@@ -461,7 +458,7 @@ namespace FamilyLife
     /// <summary>One person walks up to another and talks. When it has gone on long enough, the event is settled and shown.</summary>
     public class JobDriver_SocialMoment : JobDriver
     {
-        private const int TalkTicks = 700;
+        private const int TalkTicks = EventTuning.ConversationTicks;
         private int talkedTicks;
         private bool greeted;
 

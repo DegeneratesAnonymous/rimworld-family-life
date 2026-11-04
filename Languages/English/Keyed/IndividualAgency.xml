@@ -10,5 +10,61 @@
 <WFL_Agency_Abandoned>Set aside</WFL_Agency_Abandoned>
 <WFL_Goal_Connection>Build family connections</WFL_Goal_Connection>
 <WFL_Goal_Recognition>Find recognition within the family</WFL_Goal_Recognition>
-<WFL_Goal_Independence>Find greater independence</WFL_Goal_Independence>
+<WFL_Goal_Independence>Find room for personal pursuits</WFL_Goal_Independence>
+<WFL_Attention_Title>Unequal recorded attention (last seven days)</WFL_Attention_Title>
+<WFL_Attention_Comparison>{0}: {1} received {2} hours of recorded personal attention; {3} received {4}. This records shared time, not intent. Medical care and group activities are excluded.</WFL_Attention_Comparison>
+<WFL_Crest_Primary>Cycle primary color</WFL_Crest_Primary>
+<WFL_Crest_Secondary>Cycle secondary color</WFL_Crest_Secondary>
+<WFL_Crest_Mark_0>Symbol: Sun</WFL_Crest_Mark_0>
+<WFL_Crest_Mark_1>Symbol: Diamond</WFL_Crest_Mark_1>
+<WFL_Crest_Mark_2>Symbol: Chevron</WFL_Crest_Mark_2>
+<WFL_Crest_Mark_3>Symbol: Cross</WFL_Crest_Mark_3>
+<WFL_Crest_Mark_4>Symbol: Ring</WFL_Crest_Mark_4>
+<WFL_Crest_Mark_5>Symbol: Bars</WFL_Crest_Mark_5>
+<WFL_Crest_Pattern_0>Pattern: Solid</WFL_Crest_Pattern_0>
+<WFL_Crest_Pattern_1>Pattern: Split</WFL_Crest_Pattern_1>
+<WFL_Crest_Pattern_2>Pattern: Quartered</WFL_Crest_Pattern_2>
+<WFL_House_Ancestry>Social membership is separate from ancestry. Admission and union preserve biological/adoptive parent links, existing bonds and remembered wrongs. A union transfers communal property; individual admission does not.</WFL_House_Ancestry>
+<WFL_House_Admit>Admit a pawn</WFL_House_Admit>
+<WFL_House_Leave>Release a member</WFL_House_Leave>
+<WFL_House_Unite>Unite another family into this one</WFL_House_Unite>
+<WFL_House_Branch>Create named branch</WFL_House_Branch>
+<WFL_House_Changed>{0} now belongs to {1}.</WFL_House_Changed>
+<WFL_House_Founded>{0} founded the branch {1}.</WFL_House_Founded>
+<WFL_House_None>no social house</WFL_House_None>
+<WFL_Perspective_Overseer>Colony overseer</WFL_Perspective_Overseer>
+<WFL_Perspective_Acting>Acting as: {0}</WFL_Perspective_Acting>
+<WFL_Perspective_Role>Standing here: {0}; earned respect: {1}. Grey controls require delegated or head authority.</WFL_Perspective_Role>
+<WFL_Perspective_Withdraw>Withdraw myself</WFL_Perspective_Withdraw>
+<WFL_Perspective_Branch>Found my own branch</WFL_Perspective_Branch>
+<WFL_Perspective_Delegate>Appoint or revoke a steward</WFL_Perspective_Delegate>
+<WFL_Petition_Admission>Ask to join</WFL_Petition_Admission>
+<WFL_Petition_Recognition>Seek recognition</WFL_Petition_Recognition>
+<WFL_Petition_Aid>Ask for food aid</WFL_Petition_Aid>
+<WFL_Petition_Status>{0} → {3}: {1} — {2}</WFL_Petition_Status>
+<WFL_Petition_Accept>Accept petition</WFL_Petition_Accept>
+<WFL_Petition_Decline>Decline petition</WFL_Petition_Decline>
+<WFL_Petition_Accepted>{0} and {1} agreed to the family petition.</WFL_Petition_Accepted>
+<WFL_Petition_Denied>{0} and {1} did not agree to the family petition.</WFL_Petition_Denied>
+<WFL_Associates_Title>Friends and associates of the house</WFL_Associates_Title>
+<WFL_Associates_Line>{0}: {1}, respect {2}</WFL_Associates_Line>
+<WFL_HouseRole_Outsider>Outsider</WFL_HouseRole_Outsider>
+<WFL_HouseRole_Associate>Associate</WFL_HouseRole_Associate>
+<WFL_HouseRole_TrustedAssociate>Trusted associate</WFL_HouseRole_TrustedAssociate>
+<WFL_HouseRole_Member>Member</WFL_HouseRole_Member>
+<WFL_HouseRole_Steward>Steward</WFL_HouseRole_Steward>
+<WFL_HouseRole_Head>Head</WFL_HouseRole_Head>
+<WFL_PetitionKind_Admission>Admission</WFL_PetitionKind_Admission>
+<WFL_PetitionKind_Recognition>Recognition</WFL_PetitionKind_Recognition>
+<WFL_PetitionKind_Union>Union</WFL_PetitionKind_Union>
+<WFL_PetitionState_Proposed>Proposed</WFL_PetitionState_Proposed>
+<WFL_PetitionState_Heard>Heard</WFL_PetitionState_Heard>
+<WFL_PetitionState_Accepted>Accepted</WFL_PetitionState_Accepted>
+<WFL_PetitionState_Denied>Denied</WFL_PetitionState_Denied>
+<WFL_PetitionState_Expired>Expired</WFL_PetitionState_Expired>
+<WFL_House_ActionUnavailable>No discussion or transfer could begin. Check that both pawns are available on the same map, that the request is eligible and not already pending, and that any supply transfer has a home with suitable storage and available goods.</WFL_House_ActionUnavailable>
+<WFL_Perspective_OfferAid>Offer food aid from my house</WFL_Perspective_OfferAid>
+<WFL_Associates_Help>Earn respect through delivered supplies, aid, repayment and sustained positive contact. Associates receive invitations and can seek admission. Trust does not grant ownership of a house’s stores or authority over its members.</WFL_Associates_Help>
+<WFL_Perspective_UnknownCause>Your colonist does not know a recorded cause of this grievance.</WFL_Perspective_UnknownCause>
+<WFL_House_Chosen>Chosen family member</WFL_House_Chosen>
 </LanguageData>
