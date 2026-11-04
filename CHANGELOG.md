@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased - performance at accelerated speeds
+- Cache family-zone work per map, invalidate on relevant changes with debounce, retain a periodic fallback, and revalidate targets. Active visits stay responsive; discovery rotates maps/sites and enforces the three-visit limit.
+- Use spatial social searches with rotating, bounded shared-activity candidates; reuse pair contexts and eligibility calculations.
+- Compare observed facts before structural reconciliation, with a full six-hour fallback and forced manual resync. Continue hourly observation and relationship simulation.
+- Group bond lookups once per sweep, stagger independent maintenance, cache family-zone member IDs and UI layouts/lists, and rank door openers before path checks.
+- Add opt-in timing/allocation diagnostics, regression and mutation checks, and a documented 3× profiling procedure. No live TPS gain is claimed.
+
+## Unreleased - grounded relationship moments
+- Face-to-face moments require living, spawned participants on the same map; a pending third-person event cancels when its participant leaves.
+- Ordinary adjacent labor no longer masquerades as a community aid day. Deliberate aid still needs a request and beneficiary mechanic.
+- Two-person events are no longer multiplied by the number of nearby witnesses; duplicate contexts do not add selection weight.
+- Meaningful moments respect both participants' daily limit, including during activities; ambient moments remain available. Pending conversations recheck current eligibility.
+- Lessons follow their event's teacher and learner roles and select usable skills. Cross-family apprenticeships retain both their teaching and family-standing effects.
+- Added regressions and event mutation checks; in-game validation is still required.
+
 ## 0.13.4 - find out why pawns stay in the zone
 - New debug action 'Why is the selected pawn staying in their family zone?': prints the pawn's family, restriction, schedule, current job and work priorities, runs the work-time check once and prints the restriction afterwards.
 

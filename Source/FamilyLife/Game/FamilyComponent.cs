@@ -8,8 +8,8 @@ using Verse;
 namespace FamilyLife
 {
     /// <summary>
-    /// The single entry point of the mod's simulation. No per-pawn tick work: it reconciles on a timer, and sooner
-    /// (debounced) when a relationship hook or a death reports a change.
+    /// Observes family facts and updates relationships hourly, and sooner after debounced relationship/death hooks.
+    /// Unchanged facts skip structural reconciliation; independent maintenance is staggered.
     /// </summary>
     public class FamilyComponent : GameComponent
     {
@@ -17,6 +17,22 @@ namespace FamilyLife
         private const int DirtyDelay = 60;         // coalesce bursts of changes (a birth adds several relations)
 
         public FamilyRegistry Registry = new FamilyRegistry();
+        internal readonly PerformanceProbe Performance = new PerformanceProbe();
+        internal int Revision { get; private set; }
+        private readonly TickGate maintenance = new TickGate(625);
+        private int maintenancePhase;
+        private readonly ObservationCache observationCache = new ObservationCache();
+        private readonly TickGate fullReconcile = new TickGate(15000);
+        private readonly Dictionary<int, int[]> zoneMembers = new Dictionary<int, int[]>();
+        private int zoneMemberRevision = -1;
+        internal int[] ZoneMemberIds(Lineage lineage)
+        {
+            if (zoneMemberRevision != Revision) { zoneMembers.Clear(); zoneMemberRevision = Revision; }
+            if (!zoneMembers.TryGetValue(lineage.Id, out var ids))
+                zoneMembers[lineage.Id] = ids = Registry.MembersOf(lineage.Id).Concat(Registry.AffiliatesOf(lineage.Id)).Select(p => p.Id).Distinct().ToArray();
+            return ids;
+        }
+        private static readonly string[] MaintenanceNames = { "Maintain ties", "Maintain promises", "Maintain gatherings", "Maintain zones" };
 
         /// <summary>Who finished a meal in the last few minutes; used to notice relatives eating together. Not saved.</summary>
         public readonly List<RecentMeal> RecentMeals = new List<RecentMeal>();
@@ -75,22 +91,37 @@ namespace FamilyLife
 
         public override void GameComponentTick()
         {
+            using var measurement = Performance.Measure("Family tick");
             int now = Find.TickManager.TicksGame;
             if (now < retryAfter) return;
-            if ((dirty && now - dirtySince >= DirtyDelay) || now - lastSync >= SyncInterval) Sync(now);
-            SocialMoments.Tick(this, now);
+            if ((dirty && now - dirtySince >= DirtyDelay) || now - lastSync >= SyncInterval) Sync(now, false);
+            // Keep event effects atomic; independent housekeeping runs in four staggered phases.
+            if (now != lastSync && maintenance.Take(now)) Maintain(now);
+            using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>
-        public void Sync(int now)
+        public void Sync(int now, bool forceReconcile = true)
         {
+            using var measurement = Performance.Measure("Core sync");
             dirty = false;
             lastSync = now;
             try
             {
-                var observations = PawnObserver.Observe(pawnIndex, Registry.Persons.Where(p => p.Presence == Presence.Colony).Select(p => p.Id).ToList(), profiles);
-                var events = Registry.Apply(observations, now);
-                var griefs = Registry.UpdateBonds(OpinionOf, now, events, ProfileOf);
+                List<PersonObservation> observations;
+                using (Performance.Measure("Observe pawns")) observations = PawnObserver.Observe(pawnIndex, Registry.Persons.Where(p => p.Presence == Presence.Colony).Select(p => p.Id).ToList(), profiles);
+                List<FamilyEvent> events;
+                bool factsChanged;
+                using (Performance.Measure("Compare observations")) factsChanged = observationCache.Update(observations);
+                if (forceReconcile || factsChanged || fullReconcile.Take(now))
+                {
+                    using (Performance.Measure("Reconcile records")) events = Registry.Apply(observations, now);
+                    fullReconcile.Invalidate(); fullReconcile.Take(now);
+                    Revision++;
+                }
+                else events = new List<FamilyEvent>();
+                List<Grief> griefs;
+                using (Performance.Measure("Update bonds")) griefs = Registry.UpdateBonds(OpinionOf, now, events, ProfileOf);
                 var s = FamilyLifeMod.Settings;
                 Registry.UpdateCulture(ProfileOf, now);
                 events.AddRange(Registry.UpdateMilestones(now));
@@ -99,12 +130,7 @@ namespace FamilyLife
                 events.AddRange(Registry.UpdateBondMilestones(now));
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
-                Registry.PruneTimeRecords(now);
-                Registry.UpdateTies(now);
-                if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
-                SocialMoments.NoteBrokenPromises(this, Registry.UpdateCommitments(now), now);
-                FamilyGatherings.Process(this, now);
-                FamilyZones.Apply(this);
+                if (forceReconcile) FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)
                     GriefApplier.Apply(griefs, TryGetPawn);
                 if (FamilyLifeMod.Settings != null && FamilyLifeMod.Settings.logEvents)
@@ -115,9 +141,34 @@ namespace FamilyLife
             catch (Exception ex)
             {
                 // Never let a bad sweep run every tick. Report once, then try again after a normal interval.
+                observationCache.Clear();
+                fullReconcile.Invalidate();
                 retryAfter = now + SyncInterval;
                 Log.Error("[Wil's Family Life] Family sweep failed; will retry later. " + ex);
             }
+        }
+
+        private void Maintain(int now)
+        {
+            int phase = maintenancePhase;
+            maintenancePhase = (maintenancePhase + 1) % 4;
+            using var measurement = Performance.Measure(MaintenanceNames[phase]);
+            try
+            {
+                switch (phase)
+                {
+                    case 0:
+                        Registry.PruneTimeRecords(now);
+                        Registry.UpdateTies(now);
+                        var s = FamilyLifeMod.Settings;
+                        if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
+                        break;
+                    case 1: SocialMoments.NoteBrokenPromises(this, Registry.UpdateCommitments(now), now); break;
+                    case 2: FamilyGatherings.Process(this, now); break;
+                    case 3: FamilyZones.Apply(this); break;
+                }
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Maintenance phase " + phase + " failed; will retry next cycle: " + ex); }
         }
 
         /// <summary>Character profile of a colony member from the last sweep (traits only), or null when unknown.</summary>
@@ -170,6 +221,7 @@ namespace FamilyLife
         public void MovePerson(int personId, int targetHouseholdId)
         {
             Registry.MoveToHousehold(personId, targetHouseholdId, Find.TickManager.TicksGame);
+            Revision++;
         }
     }
 }

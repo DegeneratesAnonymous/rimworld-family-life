@@ -51,6 +51,95 @@ namespace FamilyLife.Tests
             return new EventResult { Def = d, Context = c, Tier = tier };
         }
 
+        private sealed class FixedRandom : Random
+        {
+            private int calls;
+            public override double NextDouble() => calls++ == 0 ? 0.6 : 0.0;
+        }
+
+        [Fact]
+        public void Third_party_candidates_do_not_duplicate_pair_only_events()
+        {
+            var r = World(out int now);
+            var pairOnly = new EventDef { Id = "pair", Bucket = EventBucket.Individual, Motive = new Drive(0.9f) };
+            var withThird = new EventDef { Id = "third", Bucket = EventBucket.Individual, Motive = new Drive(0.9f), NeedsThird = true };
+            var plain = Pair(r, now, 1, 21);
+            var witness = Pair(r, now, 1, 21);
+            witness.Third = Person(r, 2);
+            var contexts = new[] { plain, witness };
+            // Two equal candidates: 60% selects the third-party event, not a duplicate pair event.
+            var pick = r.PickEventAmong(contexts, new[] { pairOnly, withThird }, new FixedRandom(), true);
+            Assert.True(pick.HasValue);
+            Assert.Same(withThird, pick.Value.Key);
+            Assert.Same(witness, pick.Value.Value);
+            var duplicate = r.PickEventAmong(new[] { plain, plain, plain, plain, witness }, new[] { pairOnly, withThird }, new FixedRandom(), true);
+            Assert.Same(withThird, duplicate.Value.Key);
+            for (int seed = 0; seed < 100; seed++)
+            {
+                var original = r.PickEventAmong(new[] { plain }, new[] { pairOnly }, new Random(seed), true);
+                var crowded = r.PickEventAmong(contexts, new[] { pairOnly }, new Random(seed), true);
+                Assert.Equal(original.HasValue, crowded.HasValue);
+                if (crowded.HasValue) Assert.Null(crowded.Value.Value.Third);
+            }
+        }
+
+        [Theory]
+        [InlineData(1, false)]
+        [InlineData(2, false)]
+        [InlineData(1, true)]
+        [InlineData(2, true)]
+        public void Daily_limit_protects_both_people_but_leaves_ambient_moments_available(int exhausted, bool fromActivity)
+        {
+            var r = World(out int now);
+            for (int i = 0; i < EventTuning.MaxPerPersonPerDay; i++)
+                r.EventLog.Add(new EventRecord { EventId = "other", A = exhausted, B = 21, Tick = now, Weight = EventWeight.Meaningful });
+            var c = Pair(r, now, 1, 2);
+            c.FromActivity = fromActivity;
+            var meaningful = new EventDef { Id = "meaningful", Weight = EventWeight.Meaningful, Motive = new Drive(0.9f) };
+            var ambient = new EventDef { Id = "ambient", Weight = EventWeight.Ambient, Motive = new Drive(0.9f) };
+            Assert.False(r.Explain(c, new[] { meaningful }, true)[0].Eligible);
+            Assert.True(r.Explain(c, new[] { ambient }, true)[0].Eligible);
+            c.Now += Day;
+            Assert.True(r.Explain(c, new[] { meaningful }, true)[0].Eligible);
+        }
+
+        [Theory]
+        [InlineData("A2-04", 1, 10, false)]
+        [InlineData("B2-01", 1, 30, false)]
+        [InlineData("C2-01", 1, 30, false)]
+        [InlineData("A3-09", 10, 11, true)]
+        public void Teaching_follows_the_event_roles_despite_an_unrelated_higher_skill(string eventId, int a, int b, bool recipientTeaches)
+        {
+            var r = World(out int now);
+            var c = Pair(r, now, a, b, a == 10, b == 10 || b == 11 || b == 30);
+            var teacher = recipientTeaches ? c.Recipient : c.Initiator;
+            var learner = recipientTeaches ? c.Initiator : c.Recipient;
+            teacher.Skills.Clear(); learner.Skills.Clear();
+            teacher.Skills["Cooking"] = 12;
+            learner.Skills["Cooking"] = 2;
+            learner.Skills["Artistic"] = 20;
+            var result = Force(r, EventCatalog.Get(eventId), c, EventTier.Good);
+            r.ApplyEvent(result, now);
+            Assert.Equal("Cooking", result.XpSkill);
+            Assert.Equal(learner.Id, result.XpTo);
+            Assert.True(result.XpAmount > 0);
+        }
+
+        [Fact]
+        public void Lessons_choose_a_skill_the_learner_can_use_including_level_zero()
+        {
+            var r = World(out int now);
+            var c = Pair(r, now, 1, 2);
+            c.Initiator.Skills.Clear(); c.Recipient.Skills.Clear();
+            c.Initiator.Skills["Artistic"] = 20; // learner has this skill disabled
+            c.Initiator.Skills["Cooking"] = 10;
+            c.Recipient.Skills["Cooking"] = 0; // enabled, even without experience
+            var result = Force(r, EventCatalog.Get("A1-06"), c, EventTier.Good);
+            r.ApplyEvent(result, now);
+            Assert.Equal("Cooking", result.XpSkill);
+            Assert.Equal(2, result.XpTo);
+        }
+
         // ---------------------------------------------------------------- what an outcome does
 
         [Fact]

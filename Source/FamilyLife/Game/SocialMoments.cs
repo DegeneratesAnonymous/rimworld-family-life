@@ -50,6 +50,10 @@ namespace FamilyLife
 
         private static readonly Dictionary<int, Pending> pending = new Dictionary<int, Pending>();
         private static int lastSample;
+        private static readonly SearchCursor mapCursor = new SearchCursor();
+        private sealed class SharedSearch { public readonly SearchCursor Cursor = new SearchCursor(); public int Round; }
+        private static readonly Dictionary<Map, SharedSearch> sharedSearch = new Dictionary<Map, SharedSearch>();
+        public static void Reset() { pending.Clear(); sharedSearch.Clear(); mapCursor.Reset(); lastSample = 0; SocialContext.Reset(); }
 
         public static bool EventAllowed(EventDef d)
         {
@@ -66,16 +70,17 @@ namespace FamilyLife
 
         public static void Tick(FamilyComponent component, int now)
         {
-            if (!Enabled || now - lastSample < SampleInterval) return;
+            int interval = Math.Max(30, SampleInterval / Math.Max(1, Find.Maps.Count));
+            if (!Enabled || (now >= lastSample && now - lastSample < interval)) return;
             lastSample = now;
             // A conversation that never got going (the pawn was called away on the way) must not keep them out of the next one.
             foreach (var stale in pending.Where(kv => now - kv.Value.Tick > 2 * PawnLookCooldown).Select(kv => kv.Key).ToList()) pending.Remove(stale);
-            foreach (var map in Find.Maps)
-            {
-                if (!map.IsPlayerHome) continue;
-                try { SampleMap(component, map, now); }
-                catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not look for a social moment: " + ex.Message); }
-            }
+            foreach (var gone in sharedSearch.Keys.Where(m => !Find.Maps.Contains(m)).ToList()) sharedSearch.Remove(gone);
+            if (Find.Maps.Count == 0) return;
+            var map = Find.Maps[mapCursor.Take(Find.Maps.Count)];
+            if (!map.IsPlayerHome) return;
+            try { SampleMap(component, map, now); }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not look for a social moment: " + ex.Message); }
         }
 
         private static void SampleMap(FamilyComponent component, Map map, int now)
@@ -86,10 +91,13 @@ namespace FamilyLife
             if (everyone.Count < 2) return;
 
             // Two people in the middle of the same activity: a game, a shared task. They are already together, so nothing needs to start.
-            var together = FindShared(component, everyone, now);
+            Pawn together;
+            using (component.Performance.Measure("Shared recreation search")) together = FindShared(component, everyone, now);
             if (together != null) return;
 
             var free = everyone.Where(p => Activities.IsFree(p) && Activities.CanSpareAttention(p) && !pending.ContainsKey(p.thingIDNumber)).InRandomOrder().ToList();
+            var nearby = new NearbyIndex<Pawn>((int)MaxDistance);
+            foreach (var pawn in free) nearby.Add(pawn, pawn.Position.x, pawn.Position.z);
             int tried = 0;
             foreach (var a in free)
             {
@@ -98,9 +106,9 @@ namespace FamilyLife
                 Activities.NoteAttempt(a.thingIDNumber, now, LookChannel);
                 if (Rand.Value > Mathf.Clamp01(0.6f * Frequency)) continue;
 
-                foreach (var b in free.Where(o => o != a && o.Position.DistanceTo(a.Position) <= MaxDistance && !pending.ContainsKey(o.thingIDNumber)).Take(3))
+                foreach (var b in nearby.Within(a.Position.x, a.Position.z, (int)MaxDistance).Where(o => o != a && !pending.ContainsKey(o.thingIDNumber)).Take(3))
                 {
-                    tried++;
+                    if (tried++ >= MaxPairsPerSample) return;
                     if (!a.CanReach(b, PathEndMode.Touch, Danger.None)) continue;
                     if (TryStart(component, map, a, b, ActivityKind.None, now)) return;
                     if (TryStart(component, map, b, a, ActivityKind.None, now)) return;
@@ -123,15 +131,15 @@ namespace FamilyLife
             if (GenLocalDate.DayPercent(map) < 0.2f || GenLocalDate.DayPercent(map) > 0.8f) return false;
             return CellFinder.TryFindRandomCellNear(initiator.Position, map, 16,
                 c => c.InBounds(map) && c.Standable(map) && !c.Roofed(map) && map.areaManager.Home[c] && !c.IsForbidden(initiator) && !c.IsForbidden(recipient)
-                     && initiator.CanReach(c, PathEndMode.OnCell, Danger.None) && recipient.CanReach(c, PathEndMode.OnCell, Danger.None)
-                     && c.DistanceTo(initiator.Position) >= 6f, out cell);
+                     && c.DistanceTo(initiator.Position) >= 6f
+                     && initiator.CanReach(c, PathEndMode.OnCell, Danger.None) && recipient.CanReach(c, PathEndMode.OnCell, Danger.None), out cell);
         }
 
         /// <summary>Asks the engine whether <paramref name="initiator"/> reaching toward <paramref name="recipient"/> would lead to something, and starts it.</summary>
         private static bool TryStart(FamilyComponent component, Map map, Pawn initiator, Pawn recipient, ActivityKind setting, int now)
         {
+            using var measurement = component.Performance.Measure("Conversation selection");
             var registry = component.Registry;
-            if (registry.EventsTodayFor(initiator.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay || registry.EventsTodayFor(recipient.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay) return false;
 
             // Sometimes the two go for a short walk in the home area instead of standing where they are; that is a different setting for what follows.
             var walkCell = IntVec3.Invalid;
@@ -143,7 +151,7 @@ namespace FamilyLife
             contexts.Add(first);
             foreach (var third in SocialContext.ThirdCandidates(component, initiator, recipient, map))
             {
-                var ctx = SocialContext.Build(component, initiator, recipient, setting, false, third);
+                var ctx = SocialContext.AddThird(component, first, third, map);
                 if (ctx != null) contexts.Add(ctx);
             }
 
@@ -181,8 +189,10 @@ namespace FamilyLife
             var def = EventCatalog.Get(p.DefId);
             if (component == null || def == null) return;
             var third = p.ThirdId != 0 ? component.TryGetPawn(p.ThirdId) : null;
+            // A third-party event cannot finish after its required witness or participant has left.
+            if (p.ThirdId != 0 && (third == null || !third.Spawned || third.Map != initiator.Map || third.Dead)) return;
             var ctx = SocialContext.Build(component, initiator, recipient, p.Setting, false, third);
-            if (ctx == null) return;
+            if (ctx == null || !component.Registry.Explain(ctx, new[] { def }, ChildrenSupported, EventAllowed)[0].Eligible) return;
             Perform(component, def, ctx);
         }
 
@@ -193,33 +203,45 @@ namespace FamilyLife
         private static readonly HashSet<string> CompetitiveJoy = new HashSet<string> { "Gaming_Cerebral", "Gaming_Dexterity" };
 
         /// <summary>
-        /// Looks for two people who are, right now, doing the same thing side by side: a game, a shared piece of work. They are already
+        /// Looks for two people who are, right now, doing the same thing side by side: a recreation activity. They are already
         /// together, so the moment happens in place without sending anyone anywhere.
         /// </summary>
         private static Pawn FindShared(FamilyComponent component, List<Pawn> everyone, int now)
         {
             if (S != null && !S.sharedActivityEvents) return null;
-            for (int i = 0; i < everyone.Count; i++)
+            if (everyone.Count == 0) return null;
+            var groups = new Dictionary<JobDef, NearbyIndex<Pawn>>();
+            foreach (var pawn in everyone)
             {
-                var a = everyone[i];
+                var job = pawn.CurJob;
+                if (pawn.Drafted || pawn.InMentalState || job?.def.joyKind == null || job.def.joyKind.defName == "WFL_FamilyTime") continue;
+                if (!groups.TryGetValue(job.def, out var group)) groups[job.def] = group = new NearbyIndex<Pawn>(6);
+                group.Add(pawn, pawn.Position.x, pawn.Position.z);
+            }
+            if (groups.Count == 0) return null;
+            if (!sharedSearch.TryGetValue(everyone[0].Map, out var search)) sharedSearch[everyone[0].Map] = search = new SharedSearch();
+            int start = search.Cursor.Take(everyone.Count), checks = 0, eventAttempts = 0;
+            int rotation = search.Round++ & int.MaxValue;
+            for (int offset = 0; offset < everyone.Count; offset++)
+            {
+                int index = (start + offset) % everyone.Count;
+                var a = everyone[index];
+                search.Cursor.ResumeAfter(index, everyone.Count);
                 var ja = a.CurJob;
-                if (ja == null || a.Drafted || a.InMentalState) continue;
+                if (ja == null || a.Drafted || a.InMentalState || !groups.TryGetValue(ja.def, out var group)) continue;
                 if (!Activities.AttemptAllowed(a.thingIDNumber, now, ActivityCooldown, ActivityChannel)) continue;
-                for (int j = i + 1; j < everyone.Count; j++)
+                int perPawn = 0;
+                foreach (var b in group.Candidates(a.Position.x, a.Position.z, 6, rotation))
                 {
-                    var b = everyone[j];
-                    var jb = b.CurJob;
-                    if (jb == null || b.Drafted || b.InMentalState || jb.def != ja.def) continue;
-                    if (a.Position.DistanceTo(b.Position) > 6f) continue;
-                    ActivityKind kind;
-                    if (ja.def.joyKind != null && ja.def.joyKind.defName != "WFL_FamilyTime")
-                        kind = CompetitiveJoy.Contains(ja.def.joyKind.defName) ? ActivityKind.Competition : ActivityKind.GameNight;
-                    else if (ja.def == JobDefOf.FinishFrame || ja.def == JobDefOf.Repair || ja.def == JobDefOf.Sow || ja.def == JobDefOf.CutPlant)
-                        kind = ActivityKind.CommunityAid;
-                    else continue;
+                    if (++checks > 256) return null;
+                    if (b == a || a.Position.DistanceToSquared(b.Position) > 36f) continue;
+                    if (++perPawn > 8) break;
+                    if (b.CurJobDef != ja.def || b.Drafted || b.InMentalState) continue;
+                    var kind = CompetitiveJoy.Contains(ja.def.joyKind.defName) ? ActivityKind.Competition : ActivityKind.GameNight;
                     Activities.NoteAttempt(a.thingIDNumber, now, ActivityChannel);
                     Activities.NoteAttempt(b.thingIDNumber, now, ActivityChannel);
                     if (Rand.Value > 0.5f * Frequency) continue;
+                    if (++eventAttempts > MaxPairsPerSample) return null;
                     if (OnActivity(kind, a, b)) return a;
                 }
             }
@@ -245,9 +267,11 @@ namespace FamilyLife
 
         private static bool OnActivityCore(ActivityKind kind, Pawn a, Pawn b, string forced)
         {
-            if (!Enabled || a == null || b == null || a == b || a.Map == null || a.Dead || b.Dead) return false;
+            if (!Enabled || a == null || b == null || a == b || !a.Spawned || !b.Spawned ||
+                a.Map == null || a.Map != b.Map || a.Dead || b.Dead) return false;
             var component = FamilyComponent.Current;
             if (component == null) return false;
+            using var measurement = component.Performance.Measure("Activity moment selection");
             if (forced == null && Rand.Value > Mathf.Clamp01(0.6f * Frequency)) return false;       // most shared activities pass without any particular moment
             var registry = component.Registry;
             int now = Activities.Now;
@@ -257,7 +281,6 @@ namespace FamilyLife
             {
                 var initiator = order == 0 ? a : b;
                 var recipient = order == 0 ? b : a;
-                if (registry.EventsTodayFor(initiator.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay && forced == null) continue;
                 var contexts = new List<PairContext>();
                 var plain = SocialContext.Build(component, initiator, recipient, kind, true);
                 if (plain == null) continue;
@@ -265,7 +288,7 @@ namespace FamilyLife
                 contexts.Add(plain);
                 foreach (var third in SocialContext.ThirdCandidates(component, initiator, recipient, a.Map))
                 {
-                    var ctx = SocialContext.Build(component, initiator, recipient, kind, true, third);
+                    var ctx = SocialContext.AddThird(component, plain, third, a.Map);
                     if (ctx != null) contexts.Add(ctx);
                 }
 

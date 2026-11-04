@@ -99,6 +99,14 @@ namespace FamilyLife
         /// <summary>Builds the circumstances for <paramref name="initiator"/> reaching toward <paramref name="recipient"/>. Null when either is unknown to the records.</summary>
         public static PairContext Build(FamilyComponent component, Pawn initiator, Pawn recipient, ActivityKind setting, bool fromActivity, Pawn third = null)
         {
+            // Physical social moments must have both participants on the same active map.
+            // Off-map relationships are maintained by the registry, not by face-to-face interactions.
+            if (component == null || initiator == null || recipient == null ||
+                !initiator.Spawned || !recipient.Spawned || initiator.Map == null ||
+                initiator.Map != recipient.Map || initiator.Dead || recipient.Dead)
+                return null;
+            if (third != null && (!third.Spawned || third.Dead || third.Map != initiator.Map))
+                return null;
             var registry = component.Registry;
             var ra = registry.GetPerson(initiator.thingIDNumber);
             var rb = registry.GetPerson(recipient.thingIDNumber);
@@ -139,6 +147,20 @@ namespace FamilyLife
                 ctx.ThirdAttachToInitiator = (int)(registry.GetBond(ctx.Third.Id, ia.Id)?.Attachment ?? -1f);
                 ctx.ThirdOpinionOfInitiator = component.OpinionBetween(ctx.Third.Id, ia.Id) ?? 0;
             }
+            return ctx;
+        }
+
+        public static void Reset() => snapshots.Clear();
+
+        /// <summary>Read the pair once, then add only the facts belonging to each third person.</summary>
+        public static PairContext AddThird(FamilyComponent component, PairContext pair, Pawn third, Map map)
+        {
+            if (third == null || !third.Spawned || third.Dead || third.Map != map || third.thingIDNumber == pair.Initiator.Id || third.thingIDNumber == pair.Recipient.Id) return null;
+            var ctx = pair.Copy();
+            ctx.Third = ActorOf(component, third, pair.Now);
+            ctx.ThirdAttachToRecipient = (int)(component.Registry.GetBond(ctx.Third.Id, pair.Recipient.Id)?.Attachment ?? -1f);
+            ctx.ThirdAttachToInitiator = (int)(component.Registry.GetBond(ctx.Third.Id, pair.Initiator.Id)?.Attachment ?? -1f);
+            ctx.ThirdOpinionOfInitiator = component.OpinionBetween(ctx.Third.Id, pair.Initiator.Id) ?? 0;
             return ctx;
         }
 

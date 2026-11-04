@@ -37,6 +37,43 @@ namespace FamilyLife
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
 
+        private sealed class WorkSite
+        {
+            public IntVec3 Cell;
+            public Thing Thing;
+            public bool Repair;
+            public bool IsCurrent(Map map)
+            {
+                if (Thing != null) return Thing.Spawned && Thing.Map == map && Thing.Position == Cell && Thing.Faction == Faction.OfPlayer &&
+                    (Repair ? Thing.HitPoints < Thing.MaxHitPoints : Thing is Blueprint || Thing is Frame);
+                return RoofWork(map, Cell);
+            }
+        }
+        private static bool RoofWork(Map map, IntVec3 cell)
+        {
+            if (!cell.InBounds(map)) return false;
+            bool roofed = map.roofGrid.Roofed(cell);
+            return (!roofed && map.areaManager.BuildRoof[cell] && RoofCollapseUtility.WithinRangeOfRoofHolder(cell, map)) ||
+                   (roofed && map.areaManager.NoRoof[cell]);
+        }
+        private sealed class MapWork
+        {
+            public readonly TickGate Refresh = new TickGate(300, 60);
+            public readonly List<WorkSite> Sites = new List<WorkSite>();
+            public readonly SearchCursor Cursor = new SearchCursor();
+        }
+        // Map objects scope caches to the actual map, never to map-local area IDs.
+        private static readonly Dictionary<Map, MapWork> work = new Dictionary<Map, MapWork>();
+        private static readonly SearchCursor mapCursor = new SearchCursor();
+        private static readonly TickGate pruneWork = new TickGate(2500);
+        public static void Invalidate(Map map) { if (map != null && work.TryGetValue(map, out var cached)) cached.Refresh.Invalidate(); }
+
+        internal static void WorkChanged(Map map, IntVec3 cell)
+        {
+            if (map != null && work.ContainsKey(map) && cell.InBounds(map) && map.zoneManager.ZoneAt(cell) is Zone_Family)
+                Invalidate(map);
+        }
+
         public static bool IsActive(Pawn pawn) => pawn != null && ByGuest.ContainsKey(pawn.thingIDNumber);
         public static bool IsGranted(Pawn pawn) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted;
 
@@ -81,63 +118,79 @@ namespace FamilyLife
         public static void Process(FamilyComponent component)
         {
             int now = Find.TickManager.TicksGame;
-            foreach (var pass in ByGuest.Values.ToList()) Update(pass, now);
-            foreach (var map in Find.Maps)
+            if (ByGuest.Count != 0)
+                foreach (var pass in ByGuest.Values.ToList()) Update(pass, now);
+            if (pruneWork.Take(now))
+                foreach (var gone in work.Keys.Where(m => !Find.Maps.Contains(m)).ToList()) work.Remove(gone);
+            if (ByGuest.Count >= 3 || Find.Maps.Count == 0) return;
+            // One map per pass; active visits above are always maintained regardless of discovery budget.
+            var map = Find.Maps[mapCursor.Take(Find.Maps.Count)];
+            if (!map.zoneManager.AllZones.Any(z => z is Zone_Family f && f.areaId != 0)) { work.Remove(map); return; }
+            using (component.Performance.Measure("Zone work discovery")) SeekWork(component, map, now);
+        }
+
+        private static void RefreshWork(Map map, MapWork cached)
+        {
+            cached.Sites.Clear();
+            void Add(Thing thing, bool repair)
             {
-                if (!map.zoneManager.AllZones.Any(z => z is Zone_Family f && f.areaId != 0)) continue;
-                SeekWork(component, map, now);
+                if (thing.Faction == Faction.OfPlayer && map.zoneManager.ZoneAt(thing.Position) is Zone_Family z && z.areaId != 0)
+                    cached.Sites.Add(new WorkSite { Cell = thing.Position, Thing = thing, Repair = repair });
+            }
+            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)) Add(t, false);
+            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)) Add(t, false);
+            foreach (var t in map.listerBuildingsRepairable.RepairableBuildings(Faction.OfPlayer)) Add(t, true);
+            foreach (var zone in map.zoneManager.AllZones.OfType<Zone_Family>())
+            {
+                if (zone.areaId == 0) continue;
+                foreach (var cell in zone.Cells)
+                {
+                    if (!RoofWork(map, cell)) continue;
+                    cached.Sites.Add(new WorkSite { Cell = cell });
+                    break; // one roof task per zone is enough to arrange access
+                }
             }
         }
 
-        /// <summary>Finds construction and repair work inside a family zone that an idle outsider could do, and starts one visit for it.</summary>
+        /// <summary>Cached work refreshes every 300 ticks. Try at most four rotating sites per pass, revalidating before use.</summary>
         private static void SeekWork(FamilyComponent component, Map map, int now)
         {
-            var sites = new List<KeyValuePair<IntVec3, bool>>();
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, false));
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, false));
-            foreach (var t in map.listerBuildingsRepairable.RepairableBuildings(Faction.OfPlayer)) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, true));
-            // Roofs are not things: a cell in the build-roof area with no roof, or in the no-roof area with one, is work waiting.
-            foreach (var zoneToScan in map.zoneManager.AllZones.OfType<Zone_Family>())
-            {
-                if (zoneToScan.areaId == 0) continue;
-                foreach (var cell in zoneToScan.Cells)
-                {
-                    bool roofed = map.roofGrid.Roofed(cell);
-                    if ((!roofed && map.areaManager.BuildRoof[cell] && RoofCollapseUtility.WithinRangeOfRoofHolder(cell, map)) || (roofed && map.areaManager.NoRoof[cell]))
-                    {
-                        sites.Add(new KeyValuePair<IntVec3, bool>(cell, false));
-                        break;                                                                // one waiting cell is enough to call someone
-                    }
-                }
-            }
-            if (sites.Count == 0) return;
-
+            if (!work.TryGetValue(map, out var cached)) work[map] = cached = new MapWork();
+            if (cached.Refresh.Take(now))
+                using (component.Performance.Measure("Zone work refresh")) RefreshWork(map, cached);
+            if (cached.Sites.Count == 0) return;
+            var workers = map.mapPawns.FreeColonistsSpawned.Where(p => !ByGuest.ContainsKey(p.thingIDNumber) && Available(p) && IdleEnough(p)).ToList();
+            if (workers.Count == 0) return;
             var registry = component.Registry;
             var busyZones = new HashSet<Zone_Family>(ByGuest.Values.Select(p => p.Zone));
-            foreach (var site in sites)
+            int start = cached.Cursor.Take(cached.Sites.Count);
+            for (int offset = 0; offset < System.Math.Min(4, cached.Sites.Count); offset++)
             {
-                if (!(map.zoneManager.ZoneAt(site.Key) is Zone_Family zone) || zone.areaId == 0 || busyZones.Contains(zone)) continue;
+                int index = (start + offset) % cached.Sites.Count;
+                cached.Cursor.ResumeAfter(index, cached.Sites.Count);
+                var site = cached.Sites[index];
+                if (!site.IsCurrent(map) || !(map.zoneManager.ZoneAt(site.Cell) is Zone_Family zone) || zone.areaId == 0 || busyZones.Contains(zone)) continue;
                 var lineage = zone.Family(registry);
                 if (lineage == null) continue;
                 Pawn guest = null; float bestDist = float.MaxValue;
-                foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
+                foreach (var pawn in workers)
                 {
-                    if (ByGuest.ContainsKey(pawn.thingIDNumber) || !Available(pawn) || !IdleEnough(pawn) || !CanDoSiteWork(pawn, site.Value)) continue;
+                    if (ByGuest.ContainsKey(pawn.thingIDNumber) || !CanDoSiteWork(pawn, site.Repair)) continue;
                     var restriction = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
-                    if (restriction == null || restriction.TrueCount == 0 || restriction[site.Key]) continue;      // free to go there already
+                    if (restriction == null || restriction.TrueCount == 0 || restriction[site.Cell]) continue;
                     if (cooldown.TryGetValue(pawn.thingIDNumber, out int until) && now < until) continue;
                     if (IsFamilyMember(registry, lineage, pawn)) continue;
-                    float d = pawn.Position.DistanceToSquared(site.Key);
+                    float d = pawn.Position.DistanceToSquared(site.Cell);
                     if (d < bestDist) { bestDist = d; guest = pawn; }
                 }
-                if (guest == null) continue;
-                if (Begin(registry, component, guest, zone, lineage, now)) busyZones.Add(zone);
-                if (ByGuest.Count >= 3) return;                                                // a few visits at a time is plenty
+                if (guest != null && Begin(registry, component, guest, zone, lineage, now)) busyZones.Add(zone);
+                if (ByGuest.Count >= 3) return;
             }
         }
 
         private static bool Begin(FamilyRegistry registry, FamilyComponent component, Pawn guest, Zone_Family zone, Lineage lineage, int now)
         {
+            if (ByGuest.Count >= 3) return false;
             cooldown[guest.thingIDNumber] = now + CooldownAfterRefusal;                  // replaced by a shorter one if the visit goes ahead and ends well
             if (!FindDoor(zone, guest, out IntVec3 inside, out IntVec3 outside)) { Trace(guest.LabelShort + ": no edge cell found for " + zone.label); return false; }
             var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, OriginalArea = guest.playerSettings.AreaRestrictionInPawnCurrentMap, Lineage = lineage.Id };
@@ -160,18 +213,17 @@ namespace FamilyLife
             var lineage = registry.GetLineage(pass.Lineage);
             if (lineage == null) return;
             var guest = pass.Guest;
-            Pawn best = null; float bestScore = float.MaxValue;
+            Pawn best = null;
             for (int round = 0; round < 2 && best == null; round++)
             {
-                foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
-                {
-                    var candidate = component.TryGetPawn(person.Id);
-                    if (candidate == null || candidate == guest || !Available(candidate) || candidate.Map != guest.Map || !CanOpenFor(candidate, guest)) continue;
-                    if (round == 0 && pass.Tried.Contains(candidate.thingIDNumber)) continue;
-                    if (!candidate.CanReach(pass.Inside, PathEndMode.OnCell, Danger.Deadly)) continue;
-                    float score = candidate.Position.DistanceTo(pass.Inside) + (candidate.DevelopmentalStage == DevelopmentalStage.Adult ? 0f : 40f);
-                    if (score < bestScore) { bestScore = score; best = candidate; }
-                }
+                var candidates = registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct()
+                    .Select(person => component.TryGetPawn(person.Id))
+                    .Where(candidate => candidate != null && candidate != guest && Available(candidate) && candidate.Map == guest.Map && CanOpenFor(candidate, guest))
+                    .Where(candidate => round != 0 || !pass.Tried.Contains(candidate.thingIDNumber))
+                    .OrderBy(candidate => candidate.Position.DistanceTo(pass.Inside) + (candidate.DevelopmentalStage == DevelopmentalStage.Adult ? 0f : 40f));
+                // Cheap distance ranking first: stop at the nearest reachable opener rather than path-checking every relative.
+                foreach (var candidate in candidates)
+                    if (candidate.CanReach(pass.Inside, PathEndMode.OnCell, Danger.Deadly)) { best = candidate; break; }
                 if (best == null) pass.Tried.Clear();                                    // everyone has been tried: start over
             }
             if (best == null) { Trace(guest.LabelShort + " knocks but nobody in the family is able to come to " + pass.Zone.label); return; }
@@ -253,7 +305,7 @@ namespace FamilyLife
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); }
+        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); work.Clear(); mapCursor.Reset(); pruneWork.Invalidate(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]
@@ -324,9 +376,12 @@ namespace FamilyLife
         public override void GameComponentTick()
         {
             if (Find.TickManager.TicksGame % 30 != 0) return;
-            FamilyZoneView.Sync();
             var component = FamilyComponent.Current;
-            if (component != null) { GuestPasses.Process(component); if (Find.TickManager.TicksGame % 120 == 0) FamilyZones.ManageWorkTime(component); }
+            if (component == null) return;
+            using var measurement = component.Performance.Measure("Zone tick");
+            GuestPasses.Process(component);
+            if (Find.TickManager.TicksGame % 120 == 0)
+                using (component.Performance.Measure("Zone work schedules")) FamilyZones.ManageWorkTime(component);
         }
 
         public override void StartedNewGame() => GuestPasses.Reset();

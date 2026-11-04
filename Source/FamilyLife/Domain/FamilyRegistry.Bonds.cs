@@ -62,6 +62,7 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             var pairs = new List<KeyValuePair<int, int>>();
+            var byHolder = Bonds.GroupBy(b => b.From).ToDictionary(g => g.Key, g => g.OrderByDescending(b => b.Attachment).ThenBy(b => b.To).ToList());
             foreach (var holder in Persons.Where(p => p.InColony).OrderBy(p => p.Id))
             {
                 var candidates = new SortedSet<int>();
@@ -84,7 +85,8 @@ namespace FamilyLife.Domain
 
                 // People the events have brought together who are not family or housemates keep a bond too, so it follows the game's opinion.
                 int extra = 0;
-                foreach (var bond in Bonds.Where(b => b.From == holder.Id).OrderByDescending(b => b.Attachment).ThenBy(b => b.To))
+                if (!byHolder.TryGetValue(holder.Id, out var existingBonds)) continue;
+                foreach (var bond in existingBonds)
                 {
                     if (extra >= BondTuning.MaxAcquaintances) break;
                     if (!personById.TryGetValue(bond.To, out var o) || !o.InColony || KindOf(holder, o).HasValue) continue;

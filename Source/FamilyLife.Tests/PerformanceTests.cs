@@ -73,6 +73,8 @@ namespace FamilyLife.Tests
 
             int tick = now;
             double apply = Measure("Apply (nothing changed)", 20, () => r.Apply(people, tick));
+            var observations = new ObservationCache(); observations.Update(people);
+            Measure("Compare unchanged observations", 200, () => observations.Update(people));
             double bonds = Measure("UpdateBonds (hourly)", 20, () => { tick += BondTuning.TicksPerHour; r.UpdateBonds(opinion, tick, new List<FamilyEvent>(), profile); });
             double culture = Measure("UpdateCulture", 20, () => r.UpdateCulture(profile, tick));
             double trad = Measure("UpdateTraditions", 20, () => r.UpdateTraditions(tick));

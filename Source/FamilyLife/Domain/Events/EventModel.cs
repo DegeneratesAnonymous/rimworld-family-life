@@ -158,6 +158,9 @@ namespace FamilyLife.Domain
         public int ThirdOpinionOfInitiator;       // the third person's opinion of the initiator
         public bool RomanticallyEligible;         // the game's own rules allow a romance between them (adults, orientation, no conflicting bonds)
 
+        /// <summary>Copies the pair facts for a different third participant. Actors are read-only for this selection.</summary>
+        public PairContext Copy() => (PairContext)MemberwiseClone();
+
         public float AttachI => InitiatorBond == null ? 0f : InitiatorBond.Attachment;
         public float AttachR => RecipientBond == null ? 0f : RecipientBond.Attachment;
         public float TrustI => InitiatorBond == null ? 25f : InitiatorBond.Trust;
@@ -316,7 +319,8 @@ namespace FamilyLife.Domain
         public Cond[] Opportunity = new Cond[0];
         public Drive Motive = new Drive(0.3f);
         public Drive Reception = new Drive(0.5f);
-        public string TeachSkill;                          // for events that teach: the skill, or "best" for the better skill of the two
+        public string TeachSkill;                          // a named skill, or "best" for the teacher's largest usable skill gap
+        public bool RecipientTeaches;                      // imitation learns from the recipient; other lessons are initiated by the teacher
         public bool ConcernsPromise;                       // the event is about a recorded promise that was broken
         public bool ActivityOnly;                          // happens only when the game's own activity reports it, never from idle sampling
         public bool ThirdIsChild;                          // the child in an adult-child event is the third person, not one of the pair

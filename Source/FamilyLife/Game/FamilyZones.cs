@@ -85,9 +85,9 @@ namespace FamilyLife
             {
                 var area = FindArea(lineage.ZoneAreaId);
                 if (area == null) continue;
-                foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
+                foreach (var id in component.ZoneMemberIds(lineage))
                 {
-                    var pawn = component.TryGetPawn(person.Id);
+                    var pawn = component.TryGetPawn(id);
                     if (pawn?.playerSettings == null || pawn.Dead || !pawn.Spawned || pawn.Map != area.Map || GuestPasses.IsActive(pawn)) continue;
                     var held = pawn.playerSettings.AreaRestrictionInPawnCurrentMap;
                     if (held != null && held != area) continue;                      // the player gave them something else
@@ -117,9 +117,9 @@ namespace FamilyLife
         private static void ReleasePawns(FamilyComponent component, Lineage lineage, Area area)
         {
             var registry = component.Registry;
-            foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
+            foreach (var id in component.ZoneMemberIds(lineage))
             {
-                var pawn = component.TryGetPawn(person.Id);
+                var pawn = component.TryGetPawn(id);
                 if (pawn?.playerSettings != null && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == area)
                     pawn.playerSettings.AreaRestrictionInPawnCurrentMap = null;
             }
@@ -129,9 +129,10 @@ namespace FamilyLife
         {
             var registry = component.Registry;
             int n = 0;
-            foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct().Where(p => p.InColony))
+            foreach (var id in component.ZoneMemberIds(lineage))
             {
-                var pawn = component.TryGetPawn(person.Id);
+                if (registry.GetPerson(id)?.InColony != true) continue;
+                var pawn = component.TryGetPawn(id);
                 if (pawn?.playerSettings != null && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == area) n++;
             }
             return n;
