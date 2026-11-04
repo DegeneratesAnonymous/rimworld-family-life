@@ -123,6 +123,7 @@ namespace FamilyLife
                 Now = now,
                 Setting = setting,
                 FromActivity = fromActivity,
+                RelationshipPace = 0.25f, // Provisional ordinary-event pace; incident shocks use their own path.
                 ResourcePressure = component.Economy.Pressure(ia.LineageId) || component.Economy.Pressure(ib.LineageId),
                 InitiatorBond = registry.GetBond(ia.Id, ib.Id),
                 RecipientBond = registry.GetBond(ib.Id, ia.Id),

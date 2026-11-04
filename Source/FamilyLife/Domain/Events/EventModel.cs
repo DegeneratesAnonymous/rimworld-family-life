@@ -149,6 +149,7 @@ namespace FamilyLife.Domain
         public Commitment Broken;             // a recorded promise from the initiator to the recipient that went unkept and has not been talked about
         public FamilyTie FamilyTie;           // the standing between their two families, if they belong to different ones
         public ActivityKind Setting;
+        public float RelationshipPace = 1f; // Runtime tuning; contexts created by older callers retain existing behavior.
         public string TraditionId;
         public bool ResourcePressure;
         public bool FromActivity;             // reported by a game activity (a story, a meal, a gathering) rather than sampled from two people being near

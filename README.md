@@ -8,6 +8,10 @@ A RimWorld mod (1.6 and 1.7) that keeps durable family records and, over later v
 
 Adds 48 value-tradition episodes, witnessed incidents and shared news, family supply collection and negotiation, identifiable theft/restitution, and adult revenge conspiracies. Lethal attacks are optional and off by default. Homes now express preferences while player allowed areas remain independent. See [the feature guide and live validation checklist](docs/FAMILY-STORIES.md); this expansion has not yet been played in-game.
 
+## Development roadmap
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The first individual-agency slice is in progress; these future milestones are not shipped features.
+
 ## Design principles
 
 - **Standalone.** Harmony is the only hard dependency; Biotech and other mods only enhance.

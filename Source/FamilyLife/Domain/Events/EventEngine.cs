@@ -273,9 +273,10 @@ namespace FamilyLife.Domain
 
         private static float Room(float v) => Math.Max(0.15f, 1f - v / 100f) * 1.5f;
 
-        private void Shift(Bond b, EventTier tier, Arc arc, bool initiator, float repeat)
+        private void Shift(Bond b, EventTier tier, Arc arc, bool initiator, float repeat, float pace = 1f)
         {
             if (b == null) return;
+            float oldA = b.Attachment, oldT = b.Trust, oldN = b.Tension, oldF = b.Familiarity;
             float room = Room(b.Attachment);
             float trustRoom = Room(b.Trust);
             switch (tier)
@@ -293,6 +294,9 @@ namespace FamilyLife.Domain
                     b.Familiarity += arc.Familiarity * 0.2f;
                     break;
             }
+            pace = Math.Max(0f, Math.Min(1f, pace));
+            b.Attachment = oldA + (b.Attachment - oldA) * pace; b.Trust = oldT + (b.Trust - oldT) * pace;
+            b.Tension = oldN + (b.Tension - oldN) * pace; b.Familiarity = oldF + (b.Familiarity - oldF) * pace;
             b.Attachment = BondTuning.Clamp(b.Attachment); b.Trust = BondTuning.Clamp(b.Trust);
             b.Tension = BondTuning.Clamp(b.Tension); b.Familiarity = BondTuning.Clamp(b.Familiarity);
         }
@@ -315,13 +319,13 @@ namespace FamilyLife.Domain
             var cause = CauseFor(d, r.Tier);
             if (d.Outcomes == null)
             {
-                Shift(ab, r.Tier, d.Arc, true, repeat);
-                Shift(ba, r.Tier, d.Arc, false, repeat);
+                Shift(ab, r.Tier, d.Arc, true, repeat, c.RelationshipPace);
+                Shift(ba, r.Tier, d.Arc, false, repeat, c.RelationshipPace);
             }
             else
             {
-                ChangeBond(a, b, d.Outcomes[(int)r.Tier].Initiator, now, repeat);
-                ChangeBond(b, a, d.Outcomes[(int)r.Tier].Recipient, now, repeat);
+                ChangeBond(a, b, d.Outcomes[(int)r.Tier].Initiator, now, repeat * Math.Max(0f, Math.Min(1f, c.RelationshipPace)));
+                ChangeBond(b, a, d.Outcomes[(int)r.Tier].Recipient, now, repeat * Math.Max(0f, Math.Min(1f, c.RelationshipPace)));
             }
             float noted = (r.Tier == EventTier.Great ? 1f : (r.Tier == EventTier.Good ? 0.5f : (r.Tier == EventTier.Poor ? -0.6f : 0f))) * d.Arc.Gain;
             if (d.Outcomes == null)
