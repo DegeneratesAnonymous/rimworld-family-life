@@ -319,7 +319,7 @@ namespace FamilyLife.Domain
             if ((d.Effects & EventEffect.Confronts) != 0 && c.Third != null && personById.ContainsKey(c.Third.Id))
             {
                 var toThird = EnsureBond(c.Third.Id, a, now);
-                float heat = r.Tier == EventTier.Poor ? 8f : (r.Tier == EventTier.Flat ? 1f : (r.Tier == EventTier.Good ? 4f : 3f));
+                float heat = r.Tier == EventTier.Poor ? 8f : (r.Tier == EventTier.Flat ? 1f : (r.Tier == EventTier.Good ? 3f : 2f));
                 if (toThird != null) { toThird.Tension = BondTuning.Clamp(toThird.Tension + heat); toThird.Note(BondCause.Friction, -heat * 0.3f, now); }
             }
 
