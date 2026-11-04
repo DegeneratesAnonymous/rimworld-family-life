@@ -54,6 +54,7 @@ namespace FamilyLife
         public override void AddCell(IntVec3 c)
         {
             base.AddCell(c);
+            GuestPasses.Invalidate(Map);
             var area = LinkedArea;
             if (area != null) area[c] = true;
         }
@@ -61,12 +62,14 @@ namespace FamilyLife
         public override void RemoveCell(IntVec3 c)
         {
             base.RemoveCell(c);
+            GuestPasses.Invalidate(Map);
             var area = LinkedArea;
             if (area != null) area[c] = false;
         }
 
         public override void Delete(bool playSound)
         {
+            GuestPasses.Invalidate(Map);
             var component = FamilyComponent.Current;
             var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId);
             var area = LinkedArea;
@@ -96,6 +99,7 @@ namespace FamilyLife
             (area as Area_Allowed)?.SetLabel("WFL_ZoneSuffix".Translate(component.Registry.LineageDisplayName(lineage)).ToString());
             label = area.Label;
             FamilyZones.Assign(component, lineage, area);
+            GuestPasses.Invalidate(Map);
         }
 
         public override string GetInspectString()

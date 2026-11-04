@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - performance at accelerated speeds
+- Cache family-zone work per map, invalidate on relevant changes with debounce, retain a periodic fallback, and revalidate targets. Active visits stay responsive; discovery rotates maps/sites and enforces the three-visit limit.
+- Use spatial social searches with rotating, bounded shared-activity candidates; reuse pair contexts and eligibility calculations.
+- Compare observed facts before structural reconciliation, with a full six-hour fallback and forced manual resync. Continue hourly observation and relationship simulation.
+- Group bond lookups once per sweep, stagger independent maintenance, cache family-zone member IDs and UI layouts/lists, and rank door openers before path checks.
+- Add opt-in timing/allocation diagnostics, regression and mutation checks, and a documented 3× profiling procedure. No live TPS gain is claimed.
+
 ## Unreleased - grounded relationship moments
 - Face-to-face moments require living, spawned participants on the same map; a pending third-person event cancels when its participant leaves.
 - Ordinary adjacent labor no longer masquerades as a community aid day. Deliberate aid still needs a request and beneficiary mechanic.

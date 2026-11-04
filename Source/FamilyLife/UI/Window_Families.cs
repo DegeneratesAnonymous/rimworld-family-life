@@ -33,7 +33,11 @@ namespace FamilyLife
         private float lastClickTime;
         private FamilyTree cachedTree;
         private int cachedTreeLineage;
-        private int cachedTreeTick = -9999;
+        private int cachedTreeRevision = -1;
+        private FamilyRegistry cachedTreeRegistry;
+        private List<Lineage> cachedLineages;
+        private FamilyRegistry listedRegistry;
+        private int listedRevision = -1, listedSelection;
 
         public Window_Families()
         {
@@ -63,6 +67,7 @@ namespace FamilyLife
         {
             var component = FamilyComponent.Current;
             if (component == null) return;
+            using var measurement = component.Performance.Measure("Families window");
             var registry = component.Registry;
             portraitBudget = NewPortraitsPerFrame;
 
@@ -77,11 +82,13 @@ namespace FamilyLife
 
             // Only families with at least two people living in the colony, and more than one person by descent, are listed: a lone
             // colonist whose family is elsewhere, or a founder and the spouse they married, is not a family to look after. A family that was asked for directly (surname link, Family button) is still shown.
-            var lineages = registry.Lineages
-                .Where(l => l.Id == selectedLineageId || registry.IsListedFamily(l.Id))
-                .OrderByDescending(l => registry.LivingCount(l.Id, Presence.Colony))
-                .ThenBy(l => l.Name)
-                .ToList();
+            if (cachedLineages == null || listedRegistry != registry || listedRevision != component.Revision || listedSelection != selectedLineageId)
+            {
+                cachedLineages = registry.Lineages.Where(l => l.Id == selectedLineageId || registry.IsListedFamily(l.Id))
+                    .OrderByDescending(l => registry.LivingCount(l.Id, Presence.Colony)).ThenBy(l => l.Name).ToList();
+                listedRegistry = registry; listedRevision = component.Revision; listedSelection = selectedLineageId;
+            }
+            var lineages = cachedLineages;
 
             if (lineages.Count == 0)
             {
@@ -241,12 +248,13 @@ namespace FamilyLife
 
         private FamilyTree TreeFor(FamilyRegistry registry, int lineageId)
         {
-            int now = Find.TickManager.TicksGame;
-            if (cachedTree == null || cachedTreeLineage != lineageId || now - cachedTreeTick > 120 || now < cachedTreeTick)
+            int revision = FamilyComponent.Current?.Revision ?? 0;
+            if (cachedTree == null || cachedTreeRegistry != registry || cachedTreeLineage != lineageId || cachedTreeRevision != revision)
             {
                 cachedTree = registry.BuildTree(lineageId);
+                cachedTreeRegistry = registry;
                 cachedTreeLineage = lineageId;
-                cachedTreeTick = now;
+                cachedTreeRevision = revision;
             }
             return cachedTree;
         }

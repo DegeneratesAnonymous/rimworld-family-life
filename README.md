@@ -8,7 +8,7 @@ A RimWorld mod (1.6 and 1.7) that keeps durable family records and, over later v
 
 - **Standalone.** Harmony is the only hard dependency; Biotech and other mods only enhance.
 - **No game objects in saves.** Everything is stored by pawn id with name snapshots, so dead, discarded and unloaded pawns cannot break a save.
-- **Near-zero tick cost.** No per-pawn tick work; one game component, an hourly reconcile, and a short debounce after a change.
+- **Budgeted simulation work.** Hourly observation and bond updates, cached work discovery, bounded nearby social searches, and staggered maintenance. Live TPS still needs profiling.
 
 ## Building
 
@@ -35,6 +35,10 @@ Close RimWorld before staging; it keeps the mod DLL locked.
 | `Source/FamilyLife/UI/` | Families window, pawn Family tab. |
 | `Source/FamilyLife.Tests/` | Unit and property tests for the domain, plus a guard that every model field is saved. |
 | `Defs/`, `Languages/`, `About/` | Game content. All player-facing text is in keyed language files. |
+
+## Performance
+
+The simulation uses cached work discovery, bounded social searches and staggered maintenance. See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for implementation details, local benchmark limits, and developer actions for measuring a real save at 3× speed. Live TPS gains have not yet been measured.
 
 ## License
 

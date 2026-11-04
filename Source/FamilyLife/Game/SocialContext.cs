@@ -150,6 +150,20 @@ namespace FamilyLife
             return ctx;
         }
 
+        public static void Reset() => snapshots.Clear();
+
+        /// <summary>Read the pair once, then add only the facts belonging to each third person.</summary>
+        public static PairContext AddThird(FamilyComponent component, PairContext pair, Pawn third, Map map)
+        {
+            if (third == null || !third.Spawned || third.Dead || third.Map != map || third.thingIDNumber == pair.Initiator.Id || third.thingIDNumber == pair.Recipient.Id) return null;
+            var ctx = pair.Copy();
+            ctx.Third = ActorOf(component, third, pair.Now);
+            ctx.ThirdAttachToRecipient = (int)(component.Registry.GetBond(ctx.Third.Id, pair.Recipient.Id)?.Attachment ?? -1f);
+            ctx.ThirdAttachToInitiator = (int)(component.Registry.GetBond(ctx.Third.Id, pair.Initiator.Id)?.Attachment ?? -1f);
+            ctx.ThirdOpinionOfInitiator = component.OpinionBetween(ctx.Third.Id, pair.Initiator.Id) ?? 0;
+            return ctx;
+        }
+
         /// <summary>People who might be the third party in a moment between these two: whoever wronged either of them, and their children and parents.</summary>
         public static List<Pawn> ThirdCandidates(FamilyComponent component, Pawn initiator, Pawn recipient, Map map)
         {

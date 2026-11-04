@@ -158,6 +158,9 @@ namespace FamilyLife.Domain
         public int ThirdOpinionOfInitiator;       // the third person's opinion of the initiator
         public bool RomanticallyEligible;         // the game's own rules allow a romance between them (adults, orientation, no conflicting bonds)
 
+        /// <summary>Copies the pair facts for a different third participant. Actors are read-only for this selection.</summary>
+        public PairContext Copy() => (PairContext)MemberwiseClone();
+
         public float AttachI => InitiatorBond == null ? 0f : InitiatorBond.Attachment;
         public float AttachR => RecipientBond == null ? 0f : RecipientBond.Attachment;
         public float TrustI => InitiatorBond == null ? 25f : InitiatorBond.Trust;
