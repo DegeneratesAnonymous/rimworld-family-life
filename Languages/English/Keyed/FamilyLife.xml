@@ -257,4 +257,49 @@
   <WFL_ZoneNoFamilies>No families to choose from</WFL_ZoneNoFamilies>
   <WFL_ComeIn>Come in.</WFL_ComeIn>
   <WFL_ZoneToggle>Show or hide family zones</WFL_ZoneToggle>
+  <WFL_Report_SocialMoment>talking with {0}.</WFL_Report_SocialMoment>
+  <WFL_Report_SocialListen>listening to {0}.</WFL_Report_SocialListen>
+  <WFL_Mem_Bond>{0} and {1} had a moment that mattered.</WFL_Mem_Bond>
+  <WFL_Mem_Rupture>{0} and {1} had a falling out that was not forgotten.</WFL_Mem_Rupture>
+  <WFL_S_SocialEvents>Relationship moments</WFL_S_SocialEvents>
+  <WFL_S_SocialEventsTip>People talk, comfort, quarrel, teach and make up, in family, with friends, and between families, when their circumstances give them reason to. Turn off to stop them altogether.</WFL_S_SocialEventsTip>
+  <WFL_S_EventsFamily>Within families</WFL_S_EventsFamily>
+  <WFL_S_EventsFamilyTip>Moments between relatives.</WFL_S_EventsFamilyTip>
+  <WFL_S_EventsIndividual>Between friends and others</WFL_S_EventsIndividual>
+  <WFL_S_EventsIndividualTip>Moments between people who are not family. They never involve their families unless something serious happens.</WFL_S_EventsIndividualTip>
+  <WFL_S_EventsInter>Between families</WFL_S_EventsInter>
+  <WFL_S_EventsInterTip>Moments that can change how two families stand with each other.</WFL_S_EventsInterTip>
+  <WFL_S_EventsShared>During shared activities</WFL_S_EventsShared>
+  <WFL_S_EventsSharedTip>Moments that happen while people are already playing, working or eating together.</WFL_S_EventsSharedTip>
+  <WFL_S_EventFrequency>How often: {0}x</WFL_S_EventFrequency>
+  <WFL_S_EventFrequencyTip>A multiplier on how often people reach out to each other. Nobody has more than three meaningful moments a day, whatever this is set to.</WFL_S_EventFrequencyTip>
+  <WFL_S_EventNoticesTip>Routine moments are never announced; they are in the history. This sets which of the rest you are told about.</WFL_S_EventNoticesTip>
+  <WFL_S_EventNotices_0>Tell me nothing (history only)</WFL_S_EventNotices_0>
+  <WFL_S_EventNotices_1>Tell me about moments that matter</WFL_S_EventNotices_1>
+  <WFL_S_EventNotices_2>Tell me about every notable moment</WFL_S_EventNotices_2>
+  <WFL_Gathering_Report_reconciliation>at a gathering to mend things.</WFL_Gathering_Report_reconciliation>
+  <WFL_Gathering_Title_reconciliation>Mending things</WFL_Gathering_Title_reconciliation>
+  <WFL_Gathering_Text_reconciliation>{0} is inviting two families to sit down together to put right what has come between them, and has asked {1} to come.</WFL_Gathering_Text_reconciliation>
+  <WFL_Tab_Moments>Moments</WFL_Tab_Moments>
+  <WFL_Moments_Standing>How this family stands with others</WFL_Moments_Standing>
+  <WFL_Moments_NoTies>This family has not yet had a meaningful moment with another family.</WFL_Moments_NoTies>
+  <WFL_Moments_TieNote>This comes from what has happened between particular people and families, not from averaging everyone's feelings. Individuals can feel quite differently from how their families stand.</WFL_Moments_TieNote>
+  <WFL_TieLine>{0}: {1} (goodwill {2}, grievance {3})</WFL_TieLine>
+  <WFL_TieCause>{0} was wronged by {1} on {2}.</WFL_TieCause>
+  <WFL_TieCauseMany>Several smaller things have added up.</WFL_TieCauseMany>
+  <WFL_TieMending>A gathering to mend things has been asked for.</WFL_TieMending>
+  <WFL_TieState_Strangers>strangers</WFL_TieState_Strangers>
+  <WFL_TieState_Acquainted>acquainted</WFL_TieState_Acquainted>
+  <WFL_TieState_Friendly>friendly</WFL_TieState_Friendly>
+  <WFL_TieState_Allied>allied</WFL_TieState_Allied>
+  <WFL_TieState_Strained>strained</WFL_TieState_Strained>
+  <WFL_TieState_Feuding>feuding</WFL_TieState_Feuding>
+  <WFL_Moments_Promises>Promises</WFL_Moments_Promises>
+  <WFL_Moments_NoPromises>No promises are being kept track of.</WFL_Moments_NoPromises>
+  <WFL_PromiseLine_0>{0} has promised {1} some time together by {2}.</WFL_PromiseLine_0>
+  <WFL_PromiseLine_1>{0} kept their promise to {1}.</WFL_PromiseLine_1>
+  <WFL_PromiseLine_2>{0} did not keep their promise to {1}.</WFL_PromiseLine_2>
+  <WFL_Moments_Recent>Recent moments (- meaningful, * defining)</WFL_Moments_Recent>
+  <WFL_Moments_None>No moments between these people have been recorded yet.</WFL_Moments_None>
+  <WFL_BondKind_Acquaintance>friend or acquaintance</WFL_BondKind_Acquaintance>
 </LanguageData>

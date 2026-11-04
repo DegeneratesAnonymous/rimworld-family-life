@@ -209,6 +209,30 @@ namespace FamilyLife.Domain
             return rng.NextDouble() < Math.Min(0.95f, 0.25f + chosen.Motive) ? chosen.Def : null;
         }
 
+        /// <summary>
+        /// Chooses across several possible circumstances for the same two people (with different third people, say) as one weighted draw,
+        /// so an event that needs a third person is not favoured or starved just because it was looked at first.
+        /// </summary>
+        public KeyValuePair<EventDef, PairContext>? PickEventAmong(IList<PairContext> contexts, IEnumerable<EventDef> catalog, Random rng, bool childrenEnabled, Func<EventDef, bool> enabled = null)
+        {
+            var pool = new List<KeyValuePair<EligibilityLine, PairContext>>();
+            var defs = catalog.ToList();
+            foreach (var c in contexts)
+                foreach (var l in Explain(c, defs, childrenEnabled, enabled).Where(l => l.Eligible))
+                    pool.Add(new KeyValuePair<EligibilityLine, PairContext>(l, c));
+            if (pool.Count == 0) return null;
+            double total = pool.Sum(p => p.Key.Weight);
+            double pick = rng.NextDouble() * total;
+            var chosen = pool[pool.Count - 1];
+            foreach (var p in pool)
+            {
+                pick -= p.Key.Weight;
+                if (pick <= 0) { chosen = p; break; }
+            }
+            if (rng.NextDouble() >= Math.Min(0.95f, 0.25f + chosen.Key.Motive)) return null;
+            return new KeyValuePair<EventDef, PairContext>(chosen.Key.Def, chosen.Value);
+        }
+
         // ------------------------------------------------------------------ doing it
 
         private static float Execution(EventDef d, PairContext c, Random rng)

@@ -27,6 +27,13 @@ namespace FamilyLife
         public bool affairs;
         public bool bondMessages = true;
         public bool strictRomance;
+        public bool socialEvents = true;
+        public bool eventsFamily = true;
+        public bool eventsIndividual = true;
+        public bool eventsInterFamily = true;
+        public bool sharedActivityEvents = true;
+        public int eventNotices = 1;               // 0 history only, 1 moments that matter, 2 every notable moment
+        public float eventFrequency = 1f;
 
         public override void ExposeData()
         {
@@ -47,6 +54,13 @@ namespace FamilyLife
             Scribe_Values.Look(ref affairs, "affairs");
             Scribe_Values.Look(ref bondMessages, "bondMessages", true);
             Scribe_Values.Look(ref strictRomance, "strictRomance");
+            Scribe_Values.Look(ref socialEvents, "socialEvents", true);
+            Scribe_Values.Look(ref eventsFamily, "eventsFamily", true);
+            Scribe_Values.Look(ref eventsIndividual, "eventsIndividual", true);
+            Scribe_Values.Look(ref eventsInterFamily, "eventsInterFamily", true);
+            Scribe_Values.Look(ref sharedActivityEvents, "sharedActivityEvents", true);
+            Scribe_Values.Look(ref eventNotices, "eventNotices", 1);
+            Scribe_Values.Look(ref eventFrequency, "eventFrequency", 1f);
         }
     }
 
@@ -102,6 +116,18 @@ namespace FamilyLife
                 list.CheckboxLabeled("WFL_S_Health".Translate(), ref Settings.relationshipHealth, "WFL_S_HealthTip".Translate());
                 list.CheckboxLabeled("WFL_S_Affairs".Translate(), ref Settings.affairs, "WFL_S_AffairsTip".Translate());
                 list.CheckboxLabeled("WFL_S_Strict".Translate(), ref Settings.strictRomance, "WFL_S_StrictTip".Translate());
+            }
+            list.CheckboxLabeled("WFL_S_SocialEvents".Translate(), ref Settings.socialEvents, "WFL_S_SocialEventsTip".Translate());
+            if (Settings.socialEvents)
+            {
+                list.CheckboxLabeled("WFL_S_EventsFamily".Translate(), ref Settings.eventsFamily, "WFL_S_EventsFamilyTip".Translate());
+                list.CheckboxLabeled("WFL_S_EventsIndividual".Translate(), ref Settings.eventsIndividual, "WFL_S_EventsIndividualTip".Translate());
+                list.CheckboxLabeled("WFL_S_EventsInter".Translate(), ref Settings.eventsInterFamily, "WFL_S_EventsInterTip".Translate());
+                list.CheckboxLabeled("WFL_S_EventsShared".Translate(), ref Settings.sharedActivityEvents, "WFL_S_EventsSharedTip".Translate());
+                list.Label("WFL_S_EventFrequency".Translate(Settings.eventFrequency.ToString("0.0")), tooltip: "WFL_S_EventFrequencyTip".Translate());
+                Settings.eventFrequency = Mathf.Round(list.Slider(Settings.eventFrequency, 0.25f, 2f) * 4f) / 4f;
+                list.Label(("WFL_S_EventNotices_" + Settings.eventNotices).Translate(), tooltip: "WFL_S_EventNoticesTip".Translate());
+                Settings.eventNotices = Mathf.RoundToInt(list.Slider(Settings.eventNotices, 0f, 2f));
             }
             list.CheckboxLabeled("WFL_S_BondMessages".Translate(), ref Settings.bondMessages, "WFL_S_BondMessagesTip".Translate());
             list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());

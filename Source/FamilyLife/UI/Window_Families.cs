@@ -14,7 +14,7 @@ namespace FamilyLife
     {
         public static int PendingLineageId;
 
-        private enum Tab { Overview, Relationships, Households, Zone, Traditions, History }
+        private enum Tab { Overview, Relationships, Moments, Households, Zone, Traditions, History }
 
         private const float ListWidth = 230f;
         private const float RowHeight = 28f;
@@ -154,8 +154,8 @@ namespace FamilyLife
             TooltipHandler.TipRegion(exportRect, "WFL_ExportRecordsTip".Translate());
 
             float tabY = rect.y + 36f;
-            float tabWidth = 120f;
-            var tabs = new[] { Tab.Overview, Tab.Relationships, Tab.Households, Tab.Zone, Tab.Traditions, Tab.History };
+            float tabWidth = 108f;
+            var tabs = new[] { Tab.Overview, Tab.Relationships, Tab.Moments, Tab.Households, Tab.Zone, Tab.Traditions, Tab.History };
             for (int i = 0; i < tabs.Length; i++)
             {
                 var r = new Rect(rect.x + i * (tabWidth + 4f), tabY, tabWidth, 28f);
@@ -173,6 +173,7 @@ namespace FamilyLife
             {
                 case Tab.Overview: DrawOverview(viewRect, ref y, registry, lineage); break;
                 case Tab.Relationships: DrawRelationships(viewRect, ref y, registry, lineage); break;
+                case Tab.Moments: DrawMoments(viewRect, ref y, component, registry, lineage); break;
                 case Tab.Households: DrawHouseholds(viewRect, ref y, component, registry, lineage); break;
                 case Tab.Zone: DrawZone(viewRect, ref y, component, registry, lineage); break;
                 case Tab.Traditions: DrawTraditions(viewRect, ref y, registry, lineage); break;
@@ -592,7 +593,7 @@ namespace FamilyLife
             {
                 var other = registry.GetPerson(bond.To);
                 if (other == null) continue;
-                var kind = registry.KindOf(subject, other) ?? BondKind.Housemate;
+                var kind = registry.KindOf(subject, other) ?? BondKind.Acquaintance;
                 var row = new Rect(0f, y, view.width, 24f);
                 Widgets.DrawHighlightIfMouseover(row);
                 Text.Anchor = TextAnchor.MiddleLeft;
@@ -754,6 +755,57 @@ namespace FamilyLife
                 }
                 y += 32f;
             }
+        }
+
+        // ------------------------------------------------------------------ moments and standing between families
+
+        private void DrawMoments(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
+        {
+            Heading(view, ref y, "WFL_Moments_Standing".Translate());
+            var ties = registry.TiesOf(lineage.Id);
+            if (ties.Count == 0) Line(view, ref y, "WFL_Moments_NoTies".Translate(), 0f, true);
+            foreach (var tie in ties)
+            {
+                int otherId = tie.LineageA == lineage.Id ? tie.LineageB : tie.LineageA;
+                string other = FamilyUi.LineageName(registry, otherId);
+                Line(view, ref y, "WFL_TieLine".Translate(other, ("WFL_TieState_" + tie.State).Translate(), Mathf.RoundToInt(tie.Goodwill), Mathf.RoundToInt(tie.Grievance)));
+                if (tie.Grievance >= 10f && tie.WrongedBy != 0)
+                    Line(view, ref y, "WFL_TieCause".Translate(FamilyUi.NameOf(registry, tie.WrongedPerson), FamilyUi.NameOf(registry, tie.WrongedBy), FamilyUi.Date(tie.GrievanceTick)), 14f, true);
+                else if (tie.Grievance >= 10f)
+                    Line(view, ref y, "WFL_TieCauseMany".Translate(), 14f, true);
+                if (tie.Grievance >= 20f && registry.GatheringRequests.Any(r => r.Kind == "reconciliation" && (r.LineageId == lineage.Id || r.LineageId == otherId)))
+                    Line(view, ref y, "WFL_TieMending".Translate(), 14f, true);
+            }
+            Line(view, ref y, "WFL_Moments_TieNote".Translate(), 0f, true);
+
+            var relevant = new HashSet<int>(registry.MembersOf(lineage.Id).Select(p => p.Id));
+            foreach (var a in lineage.Affiliations) relevant.Add(a.PersonId);
+
+            Heading(view, ref y, "WFL_Moments_Promises".Translate());
+            var promises = registry.Commitments.Where(p => (relevant.Contains(p.FromId) || relevant.Contains(p.ToId)) && p.State != 3).OrderByDescending(p => p.CreatedTick).Take(12).ToList();
+            if (promises.Count == 0) Line(view, ref y, "WFL_Moments_NoPromises".Translate(), 0f, true);
+            foreach (var p in promises)
+                Line(view, ref y, "WFL_PromiseLine_" + p.State, 0f, false, FamilyUi.NameOf(registry, p.FromId), FamilyUi.NameOf(registry, p.ToId), FamilyUi.Date(p.DueTick));
+
+            Heading(view, ref y, "WFL_Moments_Recent".Translate());
+            int shown = 0;
+            for (int i = registry.EventLog.Count - 1; i >= 0 && shown < 60; i--)
+            {
+                var e = registry.EventLog[i];
+                if (!relevant.Contains(e.A) && !relevant.Contains(e.B)) continue;
+                var def = EventCatalog.Get(e.EventId);
+                if (def == null) continue;
+                shown++;
+                string marker = e.Weight == EventWeight.Defining ? "* " : (e.Weight == EventWeight.Meaningful ? "- " : "  ");
+                string text = SocialMoments.Describe(def, e.Tier, FamilyUi.NameOf(registry, e.A), FamilyUi.NameOf(registry, e.B), e.Third != 0 ? FamilyUi.NameOf(registry, e.Third) : "");
+                Line(view, ref y, marker + FamilyUi.Date(e.Tick) + " - " + ("WFL_Ev_" + e.EventId.Replace('-', '_') + "_Title").Translate() + ": " + text, 0f, e.Weight == EventWeight.Ambient);
+            }
+            if (shown == 0) Line(view, ref y, "WFL_Moments_None".Translate(), 0f, true);
+        }
+
+        private static void Line(Rect view, ref float y, string key, float indent, bool dim, params string[] args)
+        {
+            Line(view, ref y, key.Translate(args.Select(a => (NamedArgument)a).ToArray()).ToString(), indent, dim);
         }
 
         // ------------------------------------------------------------------ history

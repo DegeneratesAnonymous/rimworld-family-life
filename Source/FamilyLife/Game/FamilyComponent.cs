@@ -78,6 +78,7 @@ namespace FamilyLife
             int now = Find.TickManager.TicksGame;
             if (now < retryAfter) return;
             if ((dirty && now - dirtySince >= DirtyDelay) || now - lastSync >= SyncInterval) Sync(now);
+            SocialMoments.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>
@@ -99,6 +100,9 @@ namespace FamilyLife
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
                 Registry.PruneTimeRecords(now);
+                Registry.UpdateTies(now);
+                if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
+                SocialMoments.NoteBrokenPromises(this, Registry.UpdateCommitments(now), now);
                 FamilyGatherings.Process(this, now);
                 FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)

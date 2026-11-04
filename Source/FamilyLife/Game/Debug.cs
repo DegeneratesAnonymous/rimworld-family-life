@@ -60,6 +60,31 @@ namespace FamilyLife
             Log.Message("[Wil's Family Life] Wrote " + Export(registry));
         }
 
+        [DebugAction("Wil's Family Life", "Explain relationship events for two selected pawns", allowedGameStates = AllowedGameStates.Playing)]
+        private static void ExplainEvents()
+        {
+            var component = FamilyComponent.Current;
+            var selected = Find.Selector.SelectedPawns;
+            if (component == null || selected.Count < 2) { Log.Message("[Wil's Family Life] Select two colonists first."); return; }
+            var sb = new StringBuilder();
+            sb.AppendLine("Relationship events for " + selected[0].LabelShort + " and " + selected[1].LabelShort + " (children " + (ModsConfig.BiotechActive ? "supported" : "not supported") + ")");
+            for (int order = 0; order < 2; order++)
+            {
+                var a = selected[order];
+                var b = selected[1 - order];
+                var ctx = SocialContext.Build(component, a, b, ActivityKind.None, false);
+                if (ctx == null) { sb.AppendLine(a.LabelShort + " -> " + b.LabelShort + ": not in the family records"); continue; }
+                sb.AppendLine("== " + a.LabelShort + " reaching toward " + b.LabelShort + ": " + FamilyRegistry.ScenarioOf(ctx) + ", " + (ctx.SameFamily || ctx.Related ? "family" : (ctx.DifferentFamilies ? "different families" : "outsiders"))
+                    + ", attachment " + ctx.AttachI.ToString("0") + "/" + ctx.AttachR.ToString("0") + ", trust " + ctx.TrustI.ToString("0") + "/" + ctx.TrustR.ToString("0")
+                    + ", tension " + ctx.TensionI.ToString("0") + "/" + ctx.TensionR.ToString("0") + ", opinion " + ctx.OpinionOfRecipient + "/" + ctx.OpinionOfInitiator
+                    + (ctx.Rift != null ? ", open rift" : "") + (ctx.FamilyTie != null ? ", families " + ctx.FamilyTie.State : ""));
+                var lines = component.Registry.Explain(ctx, EventCatalog.All, ModsConfig.BiotechActive, SocialMoments.EventAllowed);
+                foreach (var l in lines.OrderByDescending(x => x.Eligible).ThenBy(x => x.Def.Id))
+                    sb.AppendLine("  " + l.Def.Id + " " + l.Def.Key + ": " + (l.Eligible ? "POSSIBLE (motive " + l.Motive.ToString("0.00") + ")" : l.Reason));
+            }
+            Log.Message(sb.ToString());
+        }
+
         [DebugAction("Wil's Family Life", "Resync family records now", allowedGameStates = AllowedGameStates.Playing)]
         private static void Resync()
         {

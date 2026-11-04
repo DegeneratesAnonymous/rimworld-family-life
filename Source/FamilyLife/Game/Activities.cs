@@ -210,6 +210,7 @@ namespace FamilyLife
             component.Registry.AddFamilyTime(child.thingIDNumber, ticksRead, now);
             GainMemory(child, "WFL_HeardBedtimeStory", reader);
             GainMemory(reader, "WFL_ToldBedtimeStory", child);
+            SocialMoments.OnActivity(ActivityKind.Storytelling, reader, child, "A2-01");       // the story is the setting; how it was received is the moment
             return taught;
         }
 
@@ -235,6 +236,7 @@ namespace FamilyLife
                 GainMemory(pawn, "WFL_SharedMeal", partner);
                 GainMemory(partner, "WFL_SharedMeal", pawn);
             }
+            SocialMoments.OnMeal(pawn, roomKey, ring, now);
             ring.RemoveAll(m => m.PersonId == record.Id);
             ring.Add(new RecentMeal { PersonId = record.Id, Tick = now, RoomKey = roomKey });
             if (ring.Count > 64) ring.RemoveRange(0, ring.Count - 64);

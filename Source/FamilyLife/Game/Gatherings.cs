@@ -37,7 +37,7 @@ namespace FamilyLife
         }
 
         private ThoughtDef Mood => DefDatabase<ThoughtDef>.GetNamedSilentFail(
-            kind == "comingofage" ? "WFL_ComingOfAgeAttended" : (kind == "memorial" ? "WFL_MemorialAttended" : "WFL_TraditionAttended")) ?? ThoughtDefOf.AttendedParty;
+            kind == "comingofage" ? "WFL_ComingOfAgeAttended" : (kind == "memorial" ? "WFL_MemorialAttended" : (kind == "reconciliation" ? "WFL_ReconciliationAttended" : "WFL_TraditionAttended"))) ?? ThoughtDefOf.AttendedParty;
 
         protected override ThoughtDef AttendeeThought => Mood;
         protected override ThoughtDef OrganizerThought => Mood;
@@ -49,7 +49,7 @@ namespace FamilyLife
 
         public override string GetReport(Pawn pawn)
         {
-            return ("WFL_Gathering_Report_" + (kind == "comingofage" || kind == "memorial" ? kind : "tradition")).Translate().ToString();
+            return ("WFL_Gathering_Report_" + (kind == "comingofage" || kind == "memorial" || kind == "reconciliation" ? kind : "tradition")).Translate().ToString();
         }
 
         /// <summary>When the gathering ends, relatives who were there together grow closer.</summary>
@@ -75,6 +75,9 @@ namespace FamilyLife
                     if (a != null && b != null && component.Registry.KindOf(a, b).HasValue)
                         component.Registry.RecordTogether(a.Id, b.Id, together, now, BondCause.Gathering);
                 }
+
+            // A gathering is the setting for a few moments between the people who were there, whether or not they are family.
+            SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration);
         }
 
         public override void ExposeData()
@@ -102,7 +105,7 @@ namespace FamilyLife
         protected override void SendLetter(IntVec3 spot, Pawn organizer)
         {
             var request = FamilyGatherings.Active;
-            string key = request != null && (request.Kind == "comingofage" || request.Kind == "memorial") ? request.Kind : "tradition";
+            string key = request != null && (request.Kind == "comingofage" || request.Kind == "memorial" || request.Kind == "reconciliation") ? request.Kind : "tradition";
             string subject = request != null && request.SubjectId != 0 ? FamilyUi.NameOf(FamilyComponent.Current.Registry, request.SubjectId) : "";
             Find.LetterStack.ReceiveLetter(("WFL_Gathering_Title_" + key).Translate(), ("WFL_Gathering_Text_" + key).Translate(organizer.LabelShort, subject),
                 LetterDefOf.PositiveEvent, new TargetInfo(spot, organizer.Map));
@@ -125,6 +128,13 @@ namespace FamilyLife
                 var organizerRecord = component.Registry.GetPerson(organizer.thingIDNumber);
                 if (organizerRecord != null) hosts.AddRange(organizerRecord.PartnerIds());
                 invited = component.Registry.Invitees(request.LineageId, hosts, component.OpinionBetween);
+                if (request.Kind == "reconciliation")
+                {
+                    // The other family is asked as well: that is the whole point of it.
+                    int guestFamily = component.Registry.LineageIdFor(component.Registry.GetPerson(request.SubjectId));
+                    foreach (var p in component.Registry.Persons.Where(x => x.InColony && !invited.Contains(x.Id) && component.Registry.LineageIdFor(x) == guestFamily && guestFamily != 0))
+                        invited.Add(p.Id);
+                }
             }
             return new LordJob_FamilyGathering(spot, organizer, def, request?.Kind ?? "", request?.LineageId ?? 0, invited);
         }

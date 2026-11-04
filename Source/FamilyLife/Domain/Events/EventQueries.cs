@@ -83,6 +83,35 @@ namespace FamilyLife.Domain
             return tie;
         }
 
+        /// <summary>
+        /// Two families with a real grievance between them, both here in the colony, are brought together over a meal to mend it. The
+        /// family that gave the offence holds it when that is known. At most one per pair every twelve days, and it is only a request:
+        /// whether it happens depends on someone being free and a place being found.
+        /// </summary>
+        public List<GatheringRequest> RequestReconciliations(int now, float minGrievance = 20f)
+        {
+            EnsureIndexes();
+            var asked = new List<GatheringRequest>();
+            foreach (var tie in Ties.Where(t => t.Grievance >= minGrievance && (t.LastGatheringTick == 0 || now - t.LastGatheringTick >= 12 * ActivityTuning.TicksPerDay)).ToList())
+            {
+                var a = Persons.Where(p => p.InColony && !p.Juvenile && LineageIdFor(p) == tie.LineageA).OrderBy(p => p.Id).ToList();
+                var b = Persons.Where(p => p.InColony && !p.Juvenile && LineageIdFor(p) == tie.LineageB).OrderBy(p => p.Id).ToList();
+                if (a.Count == 0 || b.Count == 0) continue;
+                int host = tie.LineageA;
+                if (tie.WrongedBy != 0 && personById.TryGetValue(tie.WrongedBy, out var offender))
+                {
+                    int offenderFamily = LineageIdFor(offender);
+                    if (offenderFamily == tie.LineageA || offenderFamily == tie.LineageB) host = offenderFamily;
+                }
+                var guests = host == tie.LineageA ? b : a;
+                int before = GatheringRequests.Count;
+                RequestGathering("reconciliation", host, guests[0].Id, now, ActivityTuning.TicksPerDay / 4, 3 * ActivityTuning.TicksPerDay);
+                tie.LastGatheringTick = now;
+                if (GatheringRequests.Count > before) asked.Add(GatheringRequests[GatheringRequests.Count - 1]);
+            }
+            return asked;
+        }
+
         public bool LineageHasRupture(int lineageId) => Memories.Any(m => m.LineageId == lineageId && m.Kind == MemoryKind.Rupture);
 
         /// <summary>Who in a household is a child that an adult could be asked about for a promise. Used by tests and the history view.</summary>

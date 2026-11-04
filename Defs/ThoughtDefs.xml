@@ -355,4 +355,80 @@
       </li>
     </stages>
   </ThoughtDef>
+
+  <!-- How a conversation or shared moment left someone feeling about the other person. Small and short, and a moment only gives one of these. -->
+  <ThoughtDef>
+    <defName>WFL_MomentGreat</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>10</durationDays>
+    <stackLimit>12</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>a moment that mattered</label>
+        <description>Something happened between us that I will remember.</description>
+        <baseOpinionOffset>10</baseOpinionOffset>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_MomentGood</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>6</durationDays>
+    <stackLimit>12</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>a good moment</label>
+        <description>We had a good moment together.</description>
+        <baseOpinionOffset>5</baseOpinionOffset>
+        <baseMoodEffect>1</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_MomentAwkward</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>4</durationDays>
+    <stackLimit>12</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>an awkward moment</label>
+        <description>That did not go well, and I do not know why.</description>
+        <baseOpinionOffset>-3</baseOpinionOffset>
+        <baseMoodEffect>-1</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_MomentSore</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>8</durationDays>
+    <stackLimit>12</stackLimit>
+    <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
+    <stages>
+      <li>
+        <label>a bad moment</label>
+        <description>Something was said or done between us that I have not forgotten.</description>
+        <baseOpinionOffset>-8</baseOpinionOffset>
+        <baseMoodEffect>-2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_ReconciliationAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>4</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>a gathering to mend things</label>
+        <description>Two families sat down together to put things right. It was awkward, and it mattered.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
 </Defs>

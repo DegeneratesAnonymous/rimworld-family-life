@@ -197,6 +197,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref WrongedBy, "wrongedBy");
             Scribe_Values.Look(ref WrongedPerson, "wronged");
             Scribe_Values.Look(ref GrievanceTick, "grievanceTick");
+            Scribe_Values.Look(ref LastGatheringTick, "lastGathering");
         }
     }
 

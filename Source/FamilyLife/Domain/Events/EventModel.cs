@@ -86,6 +86,7 @@ namespace FamilyLife.Domain
         public int WrongedBy;                 // the person most recently at the centre of a grievance, 0 when none
         public int WrongedPerson;             // and the one wronged
         public int GrievanceTick;             // when the latest grievance was recorded
+        public int LastGatheringTick;         // when a gathering to mend things was last arranged
 
         public float Standing => Goodwill - Grievance;
 
@@ -208,7 +209,7 @@ namespace FamilyLife.Domain
             Gain = gain; Trust = trust; Relief = relief; Cost = cost; Familiarity = familiarity; Keen = keen;
         }
 
-        public static readonly Arc Story = new Arc(0.5f, 0.5f, 1f, 1f, 0f);
+        public static readonly Arc Story = new Arc(0.4f, 0.6f, 1f, 1f, 0f);       // a nuance on a bedtime story, which already has its own rewards
         public static readonly Arc Light = new Arc(1.2f, 1.0f, 3f, 3f, 1.0f);
         public static readonly Arc Warm = new Arc(2.5f, 2.0f, 5f, 4f, 1.5f);
         public static readonly Arc Deep = new Arc(4.0f, 3.5f, 10f, 6f, 2.0f);

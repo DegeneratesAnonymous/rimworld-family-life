@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- One title and four outcomes for each relationship event. {0} is the person who reaches out, {1} the one they reach, {2} a third person where there is one. -->
+  <WFL_Ev_A1_01_Title>A Needed Conversation</WFL_Ev_A1_01_Title>
+  <WFL_Ev_A1_01_Poor>{0} tried to talk things through with {1}, and it only stirred things up again.</WFL_Ev_A1_01_Poor>
+  <WFL_Ev_A1_01_Flat>{0} and {1} talked, politely, and left it unresolved.</WFL_Ev_A1_01_Flat>
+  <WFL_Ev_A1_01_Good>{0} and {1} talked honestly, and some of the distance between them closed.</WFL_Ev_A1_01_Good>
+  <WFL_Ev_A1_01_Great>{0} and {1} finally talked it through and feel close again.</WFL_Ev_A1_01_Great>
+  <WFL_Ev_A1_02_Title>A Thoughtful Gesture</WFL_Ev_A1_02_Title>
+  <WFL_Ev_A1_02_Poor>{0} tried to help {1}, who took it as interference.</WFL_Ev_A1_02_Poor>
+  <WFL_Ev_A1_02_Flat>{0} kept {1} company; {1} seemed embarrassed to be fussed over.</WFL_Ev_A1_02_Flat>
+  <WFL_Ev_A1_02_Good>{1} was glad of {0}'s company when it was needed.</WFL_Ev_A1_02_Good>
+  <WFL_Ev_A1_02_Great>{0}'s kindness meant a great deal to {1}.</WFL_Ev_A1_02_Great>
+  <WFL_Ev_A1_03_Title>A Family Disagreement</WFL_Ev_A1_03_Title>
+  <WFL_Ev_A1_03_Poor>{0} and {1} argued about what matters and neither gave ground.</WFL_Ev_A1_03_Poor>
+  <WFL_Ev_A1_03_Flat>{0} and {1} disagreed, and let it drop with some tension.</WFL_Ev_A1_03_Flat>
+  <WFL_Ev_A1_03_Good>{0} and {1} found a compromise they could both live with.</WFL_Ev_A1_03_Good>
+  <WFL_Ev_A1_03_Great>{0} and {1} disagreed, listened, and came away understanding each other better.</WFL_Ev_A1_03_Great>
+  <WFL_Ev_A1_04_Title>An Evening Together</WFL_Ev_A1_04_Title>
+  <WFL_Ev_A1_04_Poor>{0} and {1} spent an awkward evening together.</WFL_Ev_A1_04_Poor>
+  <WFL_Ev_A1_04_Flat>{0} and {1} passed a quiet, ordinary evening.</WFL_Ev_A1_04_Flat>
+  <WFL_Ev_A1_04_Good>{0} and {1} had a good evening together.</WFL_Ev_A1_04_Good>
+  <WFL_Ev_A1_04_Great>{0} and {1} laughed through the whole evening.</WFL_Ev_A1_04_Great>
+  <WFL_Ev_A1_05_Title>An Unspoken Grudge</WFL_Ev_A1_05_Title>
+  <WFL_Ev_A1_05_Poor>{0}'s cold distance turned into a sharp confrontation with {1}.</WFL_Ev_A1_05_Poor>
+  <WFL_Ev_A1_05_Flat>{0} kept their distance from {1}, saying nothing.</WFL_Ev_A1_05_Flat>
+  <WFL_Ev_A1_05_Good>{0} began to let go of the grudge against {1}.</WFL_Ev_A1_05_Good>
+  <WFL_Ev_A1_05_Great>{0} and {1} finally cleared the air.</WFL_Ev_A1_05_Great>
+  <WFL_Ev_A1_06_Title>Passing the Torch</WFL_Ev_A1_06_Title>
+  <WFL_Ev_A1_06_Poor>{0} tried to teach {1}, but they disagreed about how it should be done.</WFL_Ev_A1_06_Poor>
+  <WFL_Ev_A1_06_Flat>{0} showed {1} a few things, with little to show for it.</WFL_Ev_A1_06_Flat>
+  <WFL_Ev_A1_06_Good>{1} learned something real from {0}.</WFL_Ev_A1_06_Good>
+  <WFL_Ev_A1_06_Great>{0} passed on something valuable to {1}, and earned real respect.</WFL_Ev_A1_06_Great>
+  <WFL_Ev_A1_07_Title>Remembering Together</WFL_Ev_A1_07_Title>
+  <WFL_Ev_A1_07_Poor>{0} and {1} remembered the past, and old sorrows came back with it.</WFL_Ev_A1_07_Poor>
+  <WFL_Ev_A1_07_Flat>{0} and {1} reminisced about old times.</WFL_Ev_A1_07_Flat>
+  <WFL_Ev_A1_07_Good>{0} and {1} laughed about the old days together.</WFL_Ev_A1_07_Good>
+  <WFL_Ev_A1_07_Great>Remembering the old days brought {0} and {1} closer than they had been in a long time.</WFL_Ev_A1_07_Great>
+  <WFL_Ev_A1_08_Title>Defending a Relative</WFL_Ev_A1_08_Title>
+  <WFL_Ev_A1_08_Poor>{0} stood up for {1} against {2}, and it made things worse for everyone.</WFL_Ev_A1_08_Poor>
+  <WFL_Ev_A1_08_Flat>{0} took {1}'s side against {2}, though {1} hadn't asked.</WFL_Ev_A1_08_Flat>
+  <WFL_Ev_A1_08_Good>{0} stood up for {1} against {2}, and {1} will not forget it.</WFL_Ev_A1_08_Good>
+  <WFL_Ev_A1_08_Great>{0} stood by {1} against {2} when it counted, and made it right.</WFL_Ev_A1_08_Great>
+  <WFL_Ev_A1_09_Title>Conflicting Priorities</WFL_Ev_A1_09_Title>
+  <WFL_Ev_A1_09_Poor>{0} and {1} argued over time, and neither felt heard.</WFL_Ev_A1_09_Poor>
+  <WFL_Ev_A1_09_Flat>{0} told {1} how much they were missed, and nothing changed.</WFL_Ev_A1_09_Flat>
+  <WFL_Ev_A1_09_Good>{0} and {1} agreed on what each can give.</WFL_Ev_A1_09_Good>
+  <WFL_Ev_A1_09_Great>{0} and {1} worked out what they need from each other.</WFL_Ev_A1_09_Great>
+  <WFL_Ev_A1_10_Title>Quiet Reconciliation</WFL_Ev_A1_10_Title>
+  <WFL_Ev_A1_10_Poor>{0}'s offer of peace was turned away by {1}.</WFL_Ev_A1_10_Poor>
+  <WFL_Ev_A1_10_Flat>{0} reached out to {1}; the quarrel is easing but not over.</WFL_Ev_A1_10_Flat>
+  <WFL_Ev_A1_10_Good>{1} accepted {0}'s small gesture and the quarrel softened.</WFL_Ev_A1_10_Good>
+  <WFL_Ev_A1_10_Great>{0} and {1} made peace.</WFL_Ev_A1_10_Great>
+  <WFL_Ev_A2_01_Title>Bedtime Story</WFL_Ev_A2_01_Title>
+  <WFL_Ev_A2_01_Poor>{1} fidgeted through {0}'s story and fell asleep unsettled.</WFL_Ev_A2_01_Poor>
+  <WFL_Ev_A2_01_Flat>{0} read {1} a bedtime story.</WFL_Ev_A2_01_Flat>
+  <WFL_Ev_A2_01_Good>{1} drifted off happy after {0}'s story.</WFL_Ev_A2_01_Good>
+  <WFL_Ev_A2_01_Great>{0}'s bedtime story was the highlight of {1}'s day.</WFL_Ev_A2_01_Great>
+  <WFL_Ev_A2_02_Title>A Proud Moment</WFL_Ev_A2_02_Title>
+  <WFL_Ev_A2_02_Poor>{0} praised {1}, and the praise came across as pressure.</WFL_Ev_A2_02_Poor>
+  <WFL_Ev_A2_02_Flat>{0} noticed what {1} had achieved.</WFL_Ev_A2_02_Flat>
+  <WFL_Ev_A2_02_Good>{1} beamed when {0} said how proud they were.</WFL_Ev_A2_02_Good>
+  <WFL_Ev_A2_02_Great>{0}'s pride in {1} lit up the whole house.</WFL_Ev_A2_02_Great>
+  <WFL_Ev_A2_03_Title>Playing Favorites</WFL_Ev_A2_03_Title>
+  <WFL_Ev_A2_03_Poor>No one saw how left out {1} felt, and {1} withdrew.</WFL_Ev_A2_03_Poor>
+  <WFL_Ev_A2_03_Flat>{1} said nothing about being overlooked.</WFL_Ev_A2_03_Flat>
+  <WFL_Ev_A2_03_Good>{0} noticed that {1} had been overlooked and made some time.</WFL_Ev_A2_03_Good>
+  <WFL_Ev_A2_03_Great>{0} and {1} talked about the attention {1} had missed, and set it right.</WFL_Ev_A2_03_Great>
+  <WFL_Ev_A2_04_Title>A Lesson Learned</WFL_Ev_A2_04_Title>
+  <WFL_Ev_A2_04_Poor>{0} tried to teach {1}, but {1} wasn't in the mood to learn.</WFL_Ev_A2_04_Poor>
+  <WFL_Ev_A2_04_Flat>{0} showed {1} a thing or two.</WFL_Ev_A2_04_Flat>
+  <WFL_Ev_A2_04_Good>{1} learned something useful from {0}.</WFL_Ev_A2_04_Good>
+  <WFL_Ev_A2_04_Great>{0} and {1} spent a whole afternoon on a lesson that stuck.</WFL_Ev_A2_04_Great>
+  <WFL_Ev_A2_05_Title>Seeking Comfort</WFL_Ev_A2_05_Title>
+  <WFL_Ev_A2_05_Poor>{0} came to {1} upset, and did not find the comfort they needed.</WFL_Ev_A2_05_Poor>
+  <WFL_Ev_A2_05_Flat>{1} could only spare {0} a moment.</WFL_Ev_A2_05_Flat>
+  <WFL_Ev_A2_05_Good>{1} comforted {0} until the fear passed.</WFL_Ev_A2_05_Good>
+  <WFL_Ev_A2_05_Great>{0} felt safe at last in {1}'s company.</WFL_Ev_A2_05_Great>
+  <WFL_Ev_A2_06_Title>Growing Independence</WFL_Ev_A2_06_Title>
+  <WFL_Ev_A2_06_Poor>{0} asked {1} for more freedom and it turned into a quarrel.</WFL_Ev_A2_06_Poor>
+  <WFL_Ev_A2_06_Flat>{1} listened to {0} and said they would think about it.</WFL_Ev_A2_06_Flat>
+  <WFL_Ev_A2_06_Good>{1} agreed to let {0} do a little more alone.</WFL_Ev_A2_06_Good>
+  <WFL_Ev_A2_06_Great>{1} encouraged {0}'s new independence, and {0} walked taller for it.</WFL_Ev_A2_06_Great>
+  <WFL_Ev_A2_07_Title>A Broken Promise</WFL_Ev_A2_07_Title>
+  <WFL_Ev_A2_07_Poor>{1} was disappointed that {0} broke their promise, and {0} did little to put it right.</WFL_Ev_A2_07_Poor>
+  <WFL_Ev_A2_07_Flat>{0} admitted they had broken their promise to {1}.</WFL_Ev_A2_07_Flat>
+  <WFL_Ev_A2_07_Good>{0} apologised to {1} for the broken promise and meant it.</WFL_Ev_A2_07_Good>
+  <WFL_Ev_A2_07_Great>{0} made up for the broken promise, and {1} trusts them again.</WFL_Ev_A2_07_Great>
+  <WFL_Ev_A2_08_Title>A Shared Discovery</WFL_Ev_A2_08_Title>
+  <WFL_Ev_A2_08_Poor>{0} shared something interesting with {1}, but {1} was not interested.</WFL_Ev_A2_08_Poor>
+  <WFL_Ev_A2_08_Flat>{0} showed {1} something they found.</WFL_Ev_A2_08_Flat>
+  <WFL_Ev_A2_08_Good>{0} and {1} explored something new together.</WFL_Ev_A2_08_Good>
+  <WFL_Ev_A2_08_Great>{0} and {1} made a discovery they will both remember.</WFL_Ev_A2_08_Great>
+  <WFL_Ev_A2_09_Title>Parental Disapproval</WFL_Ev_A2_09_Title>
+  <WFL_Ev_A2_09_Poor>{0} scolded {1}, and {1} dug in.</WFL_Ev_A2_09_Poor>
+  <WFL_Ev_A2_09_Flat>{0} told {1} what they thought of their behaviour.</WFL_Ev_A2_09_Flat>
+  <WFL_Ev_A2_09_Good>{0} spoke to {1} about it, and {1} listened.</WFL_Ev_A2_09_Good>
+  <WFL_Ev_A2_09_Great>{0} explained why it matters, and {1} understood.</WFL_Ev_A2_09_Great>
+  <WFL_Ev_A2_10_Title>Making Time for Them</WFL_Ev_A2_10_Title>
+  <WFL_Ev_A2_10_Poor>{0} offered {1} time, but {1} would not have it.</WFL_Ev_A2_10_Poor>
+  <WFL_Ev_A2_10_Flat>{0} spent a little time with {1}.</WFL_Ev_A2_10_Flat>
+  <WFL_Ev_A2_10_Good>{0} set everything aside for {1}, and {1} opened up.</WFL_Ev_A2_10_Good>
+  <WFL_Ev_A2_10_Great>{0} and {1} reconnected over an afternoon, just the two of them.</WFL_Ev_A2_10_Great>
+  <WFL_Ev_A3_01_Title>Sibling Adventure</WFL_Ev_A3_01_Title>
+  <WFL_Ev_A3_01_Poor>{0} and {1} went exploring and came home grumpy.</WFL_Ev_A3_01_Poor>
+  <WFL_Ev_A3_01_Flat>{0} and {1} wandered off together.</WFL_Ev_A3_01_Flat>
+  <WFL_Ev_A3_01_Good>{0} and {1} had a small adventure together.</WFL_Ev_A3_01_Good>
+  <WFL_Ev_A3_01_Great>{0} and {1} had the best adventure of their lives.</WFL_Ev_A3_01_Great>
+  <WFL_Ev_A3_02_Title>The Favorite Toy</WFL_Ev_A3_02_Title>
+  <WFL_Ev_A3_02_Poor>{0} and {1} fought over the same thing and neither would give in.</WFL_Ev_A3_02_Poor>
+  <WFL_Ev_A3_02_Flat>{0} and {1} squabbled over who played first.</WFL_Ev_A3_02_Flat>
+  <WFL_Ev_A3_02_Good>{0} and {1} worked out how to share.</WFL_Ev_A3_02_Good>
+  <WFL_Ev_A3_02_Great>{0} and {1} found they could play together and have more fun.</WFL_Ev_A3_02_Great>
+  <WFL_Ev_A3_03_Title>Standing Up for a Sibling</WFL_Ev_A3_03_Title>
+  <WFL_Ev_A3_03_Poor>{0} stood up to {2} for {1}, and made it worse.</WFL_Ev_A3_03_Poor>
+  <WFL_Ev_A3_03_Flat>{0} stood up for {1} against {2}, a bit awkwardly.</WFL_Ev_A3_03_Flat>
+  <WFL_Ev_A3_03_Good>{0} stood up to {2} for {1}.</WFL_Ev_A3_03_Good>
+  <WFL_Ev_A3_03_Great>{0} stood up for {1}, and {1} will never forget it.</WFL_Ev_A3_03_Great>
+  <WFL_Ev_A3_04_Title>A Secret Between Them</WFL_Ev_A3_04_Title>
+  <WFL_Ev_A3_04_Poor>{0} told {1} a secret, and they disagreed about keeping it.</WFL_Ev_A3_04_Poor>
+  <WFL_Ev_A3_04_Flat>{0} and {1} shared a secret.</WFL_Ev_A3_04_Flat>
+  <WFL_Ev_A3_04_Good>{0} and {1} shared a secret only they know.</WFL_Ev_A3_04_Good>
+  <WFL_Ev_A3_04_Great>{0} and {1} swore to keep each other's secret forever.</WFL_Ev_A3_04_Great>
+  <WFL_Ev_A3_05_Title>Sibling Competition</WFL_Ev_A3_05_Title>
+  <WFL_Ev_A3_05_Poor>{0} and {1} competed, and the loser sulked.</WFL_Ev_A3_05_Poor>
+  <WFL_Ev_A3_05_Flat>{0} and {1} tested themselves against each other.</WFL_Ev_A3_05_Flat>
+  <WFL_Ev_A3_05_Good>{0} and {1} pushed each other to do better.</WFL_Ev_A3_05_Good>
+  <WFL_Ev_A3_05_Great>{0} and {1} each won something from the contest, and respect for each other.</WFL_Ev_A3_05_Great>
+  <WFL_Ev_A3_06_Title>Making Up After a Fight</WFL_Ev_A3_06_Title>
+  <WFL_Ev_A3_06_Poor>{0} tried to make up with {1}, but {1} was still sore.</WFL_Ev_A3_06_Poor>
+  <WFL_Ev_A3_06_Flat>{0} and {1} are speaking again, warily.</WFL_Ev_A3_06_Flat>
+  <WFL_Ev_A3_06_Good>{0} and {1} made up, mostly.</WFL_Ev_A3_06_Good>
+  <WFL_Ev_A3_06_Great>{0} and {1} made up completely.</WFL_Ev_A3_06_Great>
+  <WFL_Ev_A3_07_Title>The Protective Older Sibling</WFL_Ev_A3_07_Title>
+  <WFL_Ev_A3_07_Poor>{0} tried to look after {1}, who just wanted to be left alone.</WFL_Ev_A3_07_Poor>
+  <WFL_Ev_A3_07_Flat>{0} looked in on {1}.</WFL_Ev_A3_07_Flat>
+  <WFL_Ev_A3_07_Good>{0} helped {1} through a hard moment.</WFL_Ev_A3_07_Good>
+  <WFL_Ev_A3_07_Great>{1} thinks the world of {0} after being looked after so well.</WFL_Ev_A3_07_Great>
+  <WFL_Ev_A3_08_Title>Feeling Left Out</WFL_Ev_A3_08_Title>
+  <WFL_Ev_A3_08_Poor>{0} asked to join in and was brushed off.</WFL_Ev_A3_08_Poor>
+  <WFL_Ev_A3_08_Flat>{0} tried to join in with {1}.</WFL_Ev_A3_08_Flat>
+  <WFL_Ev_A3_08_Good>{1} made room for {0}.</WFL_Ev_A3_08_Good>
+  <WFL_Ev_A3_08_Great>{1} and {0} made sure {0} never feels left out again.</WFL_Ev_A3_08_Great>
+  <WFL_Ev_A3_09_Title>Imitating a Sibling</WFL_Ev_A3_09_Title>
+  <WFL_Ev_A3_09_Poor>{0} copied {1}, and {1} was annoyed.</WFL_Ev_A3_09_Poor>
+  <WFL_Ev_A3_09_Flat>{0} copied what {1} was doing.</WFL_Ev_A3_09_Flat>
+  <WFL_Ev_A3_09_Good>{0} learned something by copying {1}.</WFL_Ev_A3_09_Good>
+  <WFL_Ev_A3_09_Great>{0} followed {1}'s lead and learned a lot.</WFL_Ev_A3_09_Great>
+  <WFL_Ev_A3_10_Title>The Shared Achievement</WFL_Ev_A3_10_Title>
+  <WFL_Ev_A3_10_Poor>{0} and {1} argued about who deserved the credit.</WFL_Ev_A3_10_Poor>
+  <WFL_Ev_A3_10_Flat>{0} and {1} were pleased with themselves.</WFL_Ev_A3_10_Flat>
+  <WFL_Ev_A3_10_Good>{0} and {1} celebrated what they achieved together.</WFL_Ev_A3_10_Good>
+  <WFL_Ev_A3_10_Great>{0} and {1} were proud of each other.</WFL_Ev_A3_10_Great>
+  <WFL_Ev_B1_01_Title>An Unexpected Friendship</WFL_Ev_B1_01_Title>
+  <WFL_Ev_B1_01_Poor>{0} tried to befriend {1}, and it fell flat.</WFL_Ev_B1_01_Poor>
+  <WFL_Ev_B1_01_Flat>{0} and {1} had a nice, ordinary chat.</WFL_Ev_B1_01_Flat>
+  <WFL_Ev_B1_01_Good>{0} and {1} found they get along.</WFL_Ev_B1_01_Good>
+  <WFL_Ev_B1_01_Great>{0} and {1} have become real friends.</WFL_Ev_B1_01_Great>
+  <WFL_Ev_B1_02_Title>The Misunderstood Comment</WFL_Ev_B1_02_Title>
+  <WFL_Ev_B1_02_Poor>{1} took offence at what {0} said, and {0} did not mean it.</WFL_Ev_B1_02_Poor>
+  <WFL_Ev_B1_02_Flat>{0}'s comment landed oddly with {1}.</WFL_Ev_B1_02_Flat>
+  <WFL_Ev_B1_02_Good>{0} explained, and {1} laughed it off.</WFL_Ev_B1_02_Good>
+  <WFL_Ev_B1_02_Great>{0} and {1} turned a misunderstanding into a joke.</WFL_Ev_B1_02_Great>
+  <WFL_Ev_B1_03_Title>A Favor Remembered</WFL_Ev_B1_03_Title>
+  <WFL_Ev_B1_03_Poor>{1} was uncomfortable about owing {0} anything.</WFL_Ev_B1_03_Poor>
+  <WFL_Ev_B1_03_Flat>{1} thanked {0} for their help.</WFL_Ev_B1_03_Flat>
+  <WFL_Ev_B1_03_Good>{1} will remember {0}'s kindness.</WFL_Ev_B1_03_Good>
+  <WFL_Ev_B1_03_Great>{1} is deeply grateful to {0}.</WFL_Ev_B1_03_Great>
+  <WFL_Ev_B1_04_Title>An Awkward Apology</WFL_Ev_B1_04_Title>
+  <WFL_Ev_B1_04_Poor>{0}'s apology made things worse with {1}.</WFL_Ev_B1_04_Poor>
+  <WFL_Ev_B1_04_Flat>{0} apologised, and {1} accepted it stiffly.</WFL_Ev_B1_04_Flat>
+  <WFL_Ev_B1_04_Good>{1} accepted {0}'s apology.</WFL_Ev_B1_04_Good>
+  <WFL_Ev_B1_04_Great>{1} forgave {0}, and they are on good terms again.</WFL_Ev_B1_04_Great>
+  <WFL_Ev_B1_05_Title>A Growing Attraction</WFL_Ev_B1_05_Title>
+  <WFL_Ev_B1_05_Poor>{1} didn't return {0}'s interest.</WFL_Ev_B1_05_Poor>
+  <WFL_Ev_B1_05_Flat>{0} and {1} are friendly, nothing more.</WFL_Ev_B1_05_Flat>
+  <WFL_Ev_B1_05_Good>{0} and {1} have noticed each other.</WFL_Ev_B1_05_Good>
+  <WFL_Ev_B1_05_Great>{0} and {1} can't stop thinking about each other.</WFL_Ev_B1_05_Great>
+  <WFL_Ev_B1_06_Title>A Personal Betrayal</WFL_Ev_B1_06_Title>
+  <WFL_Ev_B1_06_Poor>{0} cut off all contact with {1} after the betrayal.</WFL_Ev_B1_06_Poor>
+  <WFL_Ev_B1_06_Flat>{0} confronted {1}, and it solved nothing.</WFL_Ev_B1_06_Flat>
+  <WFL_Ev_B1_06_Good>{0} and {1} talked about what happened, and it may yet be mended.</WFL_Ev_B1_06_Good>
+  <WFL_Ev_B1_06_Great>{0} and {1} faced what had happened and began to rebuild trust.</WFL_Ev_B1_06_Great>
+  <WFL_Ev_B1_07_Title>Friendly Competition</WFL_Ev_B1_07_Title>
+  <WFL_Ev_B1_07_Poor>{0} lost to {1} and took it badly.</WFL_Ev_B1_07_Poor>
+  <WFL_Ev_B1_07_Flat>{0} and {1} had a friendly contest.</WFL_Ev_B1_07_Flat>
+  <WFL_Ev_B1_07_Good>{0} and {1} enjoyed a friendly contest.</WFL_Ev_B1_07_Good>
+  <WFL_Ev_B1_07_Great>{0} and {1} gained respect for each other.</WFL_Ev_B1_07_Great>
+  <WFL_Ev_B1_08_Title>An Unexpected Confidant</WFL_Ev_B1_08_Title>
+  <WFL_Ev_B1_08_Poor>{0} confided in {1}, and the advice only made things worse.</WFL_Ev_B1_08_Poor>
+  <WFL_Ev_B1_08_Flat>{0} told {1} what was wrong.</WFL_Ev_B1_08_Flat>
+  <WFL_Ev_B1_08_Good>{1} listened to {0}, and it helped.</WFL_Ev_B1_08_Good>
+  <WFL_Ev_B1_08_Great>{0} told {1} everything, and felt much lighter.</WFL_Ev_B1_08_Great>
+  <WFL_Ev_B1_09_Title>Defending a Friend</WFL_Ev_B1_09_Title>
+  <WFL_Ev_B1_09_Poor>{0} defended {1} against {2}, and it blew up.</WFL_Ev_B1_09_Poor>
+  <WFL_Ev_B1_09_Flat>{0} spoke up for {1} against {2}.</WFL_Ev_B1_09_Flat>
+  <WFL_Ev_B1_09_Good>{0} defended {1} against {2}, and {1} was grateful.</WFL_Ev_B1_09_Good>
+  <WFL_Ev_B1_09_Great>{0} stood up for {1} in front of everyone.</WFL_Ev_B1_09_Great>
+  <WFL_Ev_B1_10_Title>Drifting Apart</WFL_Ev_B1_10_Title>
+  <WFL_Ev_B1_10_Poor>{0} and {1} have grown apart.</WFL_Ev_B1_10_Poor>
+  <WFL_Ev_B1_10_Flat>{0} wondered what became of {1}.</WFL_Ev_B1_10_Flat>
+  <WFL_Ev_B1_10_Good>{0} and {1} reconnected and caught up.</WFL_Ev_B1_10_Good>
+  <WFL_Ev_B1_10_Great>{0} and {1} are friends again, just like before.</WFL_Ev_B1_10_Great>
+  <WFL_Ev_B2_01_Title>The Unexpected Mentor</WFL_Ev_B2_01_Title>
+  <WFL_Ev_B2_01_Poor>{0} tried to teach {1}, and neither enjoyed it.</WFL_Ev_B2_01_Poor>
+  <WFL_Ev_B2_01_Flat>{0} showed {1} a few things.</WFL_Ev_B2_01_Flat>
+  <WFL_Ev_B2_01_Good>{1} learned something from {0}.</WFL_Ev_B2_01_Good>
+  <WFL_Ev_B2_01_Great>{1} looks up to {0}, who taught them well.</WFL_Ev_B2_01_Great>
+  <WFL_Ev_B2_02_Title>A Helpful Neighbor</WFL_Ev_B2_02_Title>
+  <WFL_Ev_B2_02_Poor>{1} was embarrassed by {0}'s help.</WFL_Ev_B2_02_Poor>
+  <WFL_Ev_B2_02_Flat>{0} helped {1} with something small.</WFL_Ev_B2_02_Flat>
+  <WFL_Ev_B2_02_Good>{1} was grateful to {0} for helping.</WFL_Ev_B2_02_Good>
+  <WFL_Ev_B2_02_Great>{0}'s help meant the world to {1}.</WFL_Ev_B2_02_Great>
+  <WFL_Ev_B2_03_Title>The Familiar Face</WFL_Ev_B2_03_Title>
+  <WFL_Ev_B2_03_Poor>{1} didn't know what to make of {0}.</WFL_Ev_B2_03_Poor>
+  <WFL_Ev_B2_03_Flat>{0} said hello to {1}.</WFL_Ev_B2_03_Flat>
+  <WFL_Ev_B2_03_Good>{1} is getting used to {0}.</WFL_Ev_B2_03_Good>
+  <WFL_Ev_B2_03_Great>{1} lights up whenever {0} is around.</WFL_Ev_B2_03_Great>
+  <WFL_Ev_B2_04_Title>The Stern Warning</WFL_Ev_B2_04_Title>
+  <WFL_Ev_B2_04_Poor>{0}'s warning made {1} resentful.</WFL_Ev_B2_04_Poor>
+  <WFL_Ev_B2_04_Flat>{0} told {1} off.</WFL_Ev_B2_04_Flat>
+  <WFL_Ev_B2_04_Good>{1} took {0}'s warning to heart.</WFL_Ev_B2_04_Good>
+  <WFL_Ev_B2_04_Great>{0} told {1} off, and {1} understood why.</WFL_Ev_B2_04_Great>
+  <WFL_Ev_B2_05_Title>A Friend of the Family</WFL_Ev_B2_05_Title>
+  <WFL_Ev_B2_05_Poor>{0} was invited in, and it was a little awkward.</WFL_Ev_B2_05_Poor>
+  <WFL_Ev_B2_05_Flat>{0} joined the family for a while.</WFL_Ev_B2_05_Flat>
+  <WFL_Ev_B2_05_Good>{0} is becoming part of the family circle.</WFL_Ev_B2_05_Good>
+  <WFL_Ev_B2_05_Great>{0} is treated as one of the family now.</WFL_Ev_B2_05_Great>
+  <WFL_Ev_B2_06_Title>The Unwelcome Influence</WFL_Ev_B2_06_Title>
+  <WFL_Ev_B2_06_Poor>{0} told {1} to stay away from {2}, and it was not taken well.</WFL_Ev_B2_06_Poor>
+  <WFL_Ev_B2_06_Flat>{0} spoke to {1} about {2}'s admiration.</WFL_Ev_B2_06_Flat>
+  <WFL_Ev_B2_06_Good>{0} and {1} reached an understanding about {2}.</WFL_Ev_B2_06_Good>
+  <WFL_Ev_B2_06_Great>{0} and {1} found they wanted the same for {2}.</WFL_Ev_B2_06_Great>
+  <WFL_Ev_B2_07_Title>Shared Curiosity</WFL_Ev_B2_07_Title>
+  <WFL_Ev_B2_07_Poor>{1} had no interest in what {0} had to share.</WFL_Ev_B2_07_Poor>
+  <WFL_Ev_B2_07_Flat>{0} told {1} about something interesting.</WFL_Ev_B2_07_Flat>
+  <WFL_Ev_B2_07_Good>{0} and {1} chatted about what they both find interesting.</WFL_Ev_B2_07_Good>
+  <WFL_Ev_B2_07_Great>{0} inspired {1} with a story.</WFL_Ev_B2_07_Great>
+  <WFL_Ev_B2_08_Title>A Reassuring Presence</WFL_Ev_B2_08_Title>
+  <WFL_Ev_B2_08_Poor>{0} tried to comfort {1}, who would not be comforted.</WFL_Ev_B2_08_Poor>
+  <WFL_Ev_B2_08_Flat>{0} sat with {1} for a while.</WFL_Ev_B2_08_Flat>
+  <WFL_Ev_B2_08_Good>{0} reassured {1}.</WFL_Ev_B2_08_Good>
+  <WFL_Ev_B2_08_Great>{1} calmed down at once in {0}'s company.</WFL_Ev_B2_08_Great>
+  <WFL_Ev_B2_09_Title>Recognition of Talent</WFL_Ev_B2_09_Title>
+  <WFL_Ev_B2_09_Poor>{0} praised {1}, who felt put on the spot.</WFL_Ev_B2_09_Poor>
+  <WFL_Ev_B2_09_Flat>{0} praised {1}'s effort.</WFL_Ev_B2_09_Flat>
+  <WFL_Ev_B2_09_Good>{1} stood a little taller when {0} praised them.</WFL_Ev_B2_09_Good>
+  <WFL_Ev_B2_09_Great>{0}'s praise has {1} determined to do even better.</WFL_Ev_B2_09_Great>
+  <WFL_Ev_B2_10_Title>An Uncomfortable Encounter</WFL_Ev_B2_10_Title>
+  <WFL_Ev_B2_10_Poor>{1} ran away from {0}.</WFL_Ev_B2_10_Poor>
+  <WFL_Ev_B2_10_Flat>{0} and {1} said nothing much to each other.</WFL_Ev_B2_10_Flat>
+  <WFL_Ev_B2_10_Good>{0} and {1} warmed up to each other a little.</WFL_Ev_B2_10_Good>
+  <WFL_Ev_B2_10_Great>{0} and {1} broke the ice.</WFL_Ev_B2_10_Great>
+  <WFL_Ev_B3_01_Title>New Playmate</WFL_Ev_B3_01_Title>
+  <WFL_Ev_B3_01_Poor>{1} turned {0} down.</WFL_Ev_B3_01_Poor>
+  <WFL_Ev_B3_01_Flat>{0} asked {1} to play, and they played for a while.</WFL_Ev_B3_01_Flat>
+  <WFL_Ev_B3_01_Good>{0} and {1} played together.</WFL_Ev_B3_01_Good>
+  <WFL_Ev_B3_01_Great>{0} and {1} played all afternoon.</WFL_Ev_B3_01_Great>
+  <WFL_Ev_B3_02_Title>Best Friends</WFL_Ev_B3_02_Title>
+  <WFL_Ev_B3_02_Poor>{0} and {1} are close, but someone else feels left out.</WFL_Ev_B3_02_Poor>
+  <WFL_Ev_B3_02_Flat>{0} and {1} spent the day together.</WFL_Ev_B3_02_Flat>
+  <WFL_Ev_B3_02_Good>{0} and {1} are inseparable.</WFL_Ev_B3_02_Good>
+  <WFL_Ev_B3_02_Great>{0} and {1} are best friends for life.</WFL_Ev_B3_02_Great>
+  <WFL_Ev_B3_03_Title>The Playground Dispute</WFL_Ev_B3_03_Title>
+  <WFL_Ev_B3_03_Poor>{0} and {1} fell out over a game.</WFL_Ev_B3_03_Poor>
+  <WFL_Ev_B3_03_Flat>{0} and {1} bickered.</WFL_Ev_B3_03_Flat>
+  <WFL_Ev_B3_03_Good>{0} and {1} sorted it out and said sorry.</WFL_Ev_B3_03_Good>
+  <WFL_Ev_B3_03_Great>{0} and {1} laughed about their quarrel.</WFL_Ev_B3_03_Great>
+  <WFL_Ev_B3_04_Title>The Newcomer</WFL_Ev_B3_04_Title>
+  <WFL_Ev_B3_04_Poor>{0} ignored {1}, the newcomer.</WFL_Ev_B3_04_Poor>
+  <WFL_Ev_B3_04_Flat>{0} said hello to {1}, the newcomer.</WFL_Ev_B3_04_Flat>
+  <WFL_Ev_B3_04_Good>{0} included {1} in their game.</WFL_Ev_B3_04_Good>
+  <WFL_Ev_B3_04_Great>{0} and {1} are becoming friends.</WFL_Ev_B3_04_Great>
+  <WFL_Ev_B3_05_Title>Standing Up to a Bully</WFL_Ev_B3_05_Title>
+  <WFL_Ev_B3_05_Poor>{0} tried to stop {2} picking on {1}, and was picked on too.</WFL_Ev_B3_05_Poor>
+  <WFL_Ev_B3_05_Flat>{0} stood up to {2}, a bit shakily.</WFL_Ev_B3_05_Flat>
+  <WFL_Ev_B3_05_Good>{0} stood up to {2} for {1}.</WFL_Ev_B3_05_Good>
+  <WFL_Ev_B3_05_Great>{0} faced down {2} and {1} will never forget it.</WFL_Ev_B3_05_Great>
+  <WFL_Ev_B3_06_Title>Drifting Apart</WFL_Ev_B3_06_Title>
+  <WFL_Ev_B3_06_Poor>{0} and {1} have grown apart.</WFL_Ev_B3_06_Poor>
+  <WFL_Ev_B3_06_Flat>{0} wondered where {1} had gone.</WFL_Ev_B3_06_Flat>
+  <WFL_Ev_B3_06_Good>{0} and {1} played together again.</WFL_Ev_B3_06_Good>
+  <WFL_Ev_B3_06_Great>{0} and {1} are friends again.</WFL_Ev_B3_06_Great>
+  <WFL_Ev_B3_07_Title>Sharing a Discovery</WFL_Ev_B3_07_Title>
+  <WFL_Ev_B3_07_Poor>{1} wasn't interested in {0}'s discovery.</WFL_Ev_B3_07_Poor>
+  <WFL_Ev_B3_07_Flat>{0} told {1} what they found.</WFL_Ev_B3_07_Flat>
+  <WFL_Ev_B3_07_Good>{0} and {1} were excited together.</WFL_Ev_B3_07_Good>
+  <WFL_Ev_B3_07_Great>{0} and {1} explored the discovery together.</WFL_Ev_B3_07_Great>
+  <WFL_Ev_B3_08_Title>The Excluded Playmate</WFL_Ev_B3_08_Title>
+  <WFL_Ev_B3_08_Poor>{1} turned {0} away, again.</WFL_Ev_B3_08_Poor>
+  <WFL_Ev_B3_08_Flat>{0} hovered near {1} and the others.</WFL_Ev_B3_08_Flat>
+  <WFL_Ev_B3_08_Good>{1} made room for {0}.</WFL_Ev_B3_08_Good>
+  <WFL_Ev_B3_08_Great>{1} brought {0} into the game for good.</WFL_Ev_B3_08_Great>
+  <WFL_Ev_B3_09_Title>Friendly Rivalry</WFL_Ev_B3_09_Title>
+  <WFL_Ev_B3_09_Poor>{0} lost to {1} and sulked.</WFL_Ev_B3_09_Poor>
+  <WFL_Ev_B3_09_Flat>{0} and {1} raced each other.</WFL_Ev_B3_09_Flat>
+  <WFL_Ev_B3_09_Good>{0} and {1} spurred each other on.</WFL_Ev_B3_09_Good>
+  <WFL_Ev_B3_09_Great>{0} and {1} pushed each other to new heights.</WFL_Ev_B3_09_Great>
+  <WFL_Ev_B3_10_Title>A Childhood Promise</WFL_Ev_B3_10_Title>
+  <WFL_Ev_B3_10_Poor>{0} and {1} could not agree on what to promise.</WFL_Ev_B3_10_Poor>
+  <WFL_Ev_B3_10_Flat>{0} and {1} made a small promise.</WFL_Ev_B3_10_Flat>
+  <WFL_Ev_B3_10_Good>{0} and {1} promised to play together soon.</WFL_Ev_B3_10_Good>
+  <WFL_Ev_B3_10_Great>{0} and {1} made a solemn promise to each other.</WFL_Ev_B3_10_Great>
+  <WFL_Ev_C1_01_Title>A Peace Offering</WFL_Ev_C1_01_Title>
+  <WFL_Ev_C1_01_Poor>{0}'s peace offering was thrown back at them by {1}.</WFL_Ev_C1_01_Poor>
+  <WFL_Ev_C1_01_Flat>{0} offered {1} a gift, and {1} took it politely.</WFL_Ev_C1_01_Flat>
+  <WFL_Ev_C1_01_Good>{1} accepted {0}'s peace offering.</WFL_Ev_C1_01_Good>
+  <WFL_Ev_C1_01_Great>{0}'s peace offering moved {1}, and relations between the families warmed.</WFL_Ev_C1_01_Great>
+  <WFL_Ev_C1_02_Title>The Reconciliation Dinner</WFL_Ev_C1_02_Title>
+  <WFL_Ev_C1_02_Poor>The dinner for {0} and {1} ended in bad feeling.</WFL_Ev_C1_02_Poor>
+  <WFL_Ev_C1_02_Flat>{0} and {1} sat through a polite dinner.</WFL_Ev_C1_02_Flat>
+  <WFL_Ev_C1_02_Good>{0} and {1} found a truce over dinner.</WFL_Ev_C1_02_Good>
+  <WFL_Ev_C1_02_Great>The dinner mended things between {0} and {1}, and their families.</WFL_Ev_C1_02_Great>
+  <WFL_Ev_C1_03_Title>A Public Slight</WFL_Ev_C1_03_Title>
+  <WFL_Ev_C1_03_Poor>{0} snubbed {1} in front of everyone, and it will not be forgotten.</WFL_Ev_C1_03_Poor>
+  <WFL_Ev_C1_03_Flat>{0} brushed {1} off in public.</WFL_Ev_C1_03_Flat>
+  <WFL_Ev_C1_03_Good>{0}'s remark to {1} was smoothed over.</WFL_Ev_C1_03_Good>
+  <WFL_Ev_C1_03_Great>{0} thought better of the snub and made light of it.</WFL_Ev_C1_03_Great>
+  <WFL_Ev_C1_04_Title>A Family Favor</WFL_Ev_C1_04_Title>
+  <WFL_Ev_C1_04_Poor>{1} suspected {0}'s favor had strings attached.</WFL_Ev_C1_04_Poor>
+  <WFL_Ev_C1_04_Flat>{0} did {1}'s family a favor.</WFL_Ev_C1_04_Flat>
+  <WFL_Ev_C1_04_Good>{1}'s family is grateful to {0}.</WFL_Ev_C1_04_Good>
+  <WFL_Ev_C1_04_Great>{0}'s favor won the goodwill of {1}'s whole family.</WFL_Ev_C1_04_Great>
+  <WFL_Ev_C1_05_Title>A Formal Disagreement</WFL_Ev_C1_05_Title>
+  <WFL_Ev_C1_05_Poor>{0} and {1} could not settle their families' differences.</WFL_Ev_C1_05_Poor>
+  <WFL_Ev_C1_05_Flat>{0} and {1} reached a stalemate.</WFL_Ev_C1_05_Flat>
+  <WFL_Ev_C1_05_Good>{0} and {1} reached a compromise.</WFL_Ev_C1_05_Good>
+  <WFL_Ev_C1_05_Great>{0} and {1} settled the matter between their families.</WFL_Ev_C1_05_Great>
+  <WFL_Ev_C1_06_Title>The Unexpected Alliance</WFL_Ev_C1_06_Title>
+  <WFL_Ev_C1_06_Poor>{0} and {1}'s alliance faltered.</WFL_Ev_C1_06_Poor>
+  <WFL_Ev_C1_06_Flat>{0} and {1} are friendly.</WFL_Ev_C1_06_Flat>
+  <WFL_Ev_C1_06_Good>{0} and {1} promised to help each other.</WFL_Ev_C1_06_Good>
+  <WFL_Ev_C1_06_Great>{0} and {1}'s families are now firm allies.</WFL_Ev_C1_06_Great>
+  <WFL_Ev_C1_07_Title>The Shared Celebration</WFL_Ev_C1_07_Title>
+  <WFL_Ev_C1_07_Poor>{0} and {1} clashed at the celebration.</WFL_Ev_C1_07_Poor>
+  <WFL_Ev_C1_07_Flat>{0} and {1} chatted at the celebration.</WFL_Ev_C1_07_Flat>
+  <WFL_Ev_C1_07_Good>{0} and {1} enjoyed the celebration together.</WFL_Ev_C1_07_Good>
+  <WFL_Ev_C1_07_Great>{0} and {1} made the celebration one to remember.</WFL_Ev_C1_07_Great>
+  <WFL_Ev_C1_08_Title>The Unwelcome Invitation</WFL_Ev_C1_08_Title>
+  <WFL_Ev_C1_08_Poor>{1} refused {0}'s invitation.</WFL_Ev_C1_08_Poor>
+  <WFL_Ev_C1_08_Flat>{1} accepted {0}'s invitation, reluctantly.</WFL_Ev_C1_08_Flat>
+  <WFL_Ev_C1_08_Good>{1} came, and it went well.</WFL_Ev_C1_08_Good>
+  <WFL_Ev_C1_08_Great>{1}'s doubts about {0} melted away.</WFL_Ev_C1_08_Great>
+  <WFL_Ev_C1_09_Title>Remembering an Old Feud</WFL_Ev_C1_09_Title>
+  <WFL_Ev_C1_09_Poor>{0} brought up an old feud with {1}, and the old anger returned.</WFL_Ev_C1_09_Poor>
+  <WFL_Ev_C1_09_Flat>{0} and {1} acknowledged the old feud.</WFL_Ev_C1_09_Flat>
+  <WFL_Ev_C1_09_Good>{0} and {1} spoke respectfully of the old feud.</WFL_Ev_C1_09_Good>
+  <WFL_Ev_C1_09_Great>{0} and {1} laid the old feud to rest.</WFL_Ev_C1_09_Great>
+  <WFL_Ev_C1_10_Title>A Third-Party Intervention</WFL_Ev_C1_10_Title>
+  <WFL_Ev_C1_10_Poor>{0} tried to bring {1} and {2} together and made things worse.</WFL_Ev_C1_10_Poor>
+  <WFL_Ev_C1_10_Flat>{0} tried to broker peace between {1} and {2}.</WFL_Ev_C1_10_Flat>
+  <WFL_Ev_C1_10_Good>{0} got {1} and {2} talking.</WFL_Ev_C1_10_Good>
+  <WFL_Ev_C1_10_Great>{0} brought {1} and {2}'s families together.</WFL_Ev_C1_10_Great>
+  <WFL_Ev_C2_01_Title>The Neighbor's Apprentice</WFL_Ev_C2_01_Title>
+  <WFL_Ev_C2_01_Poor>{0}'s teaching made {1}'s family uneasy.</WFL_Ev_C2_01_Poor>
+  <WFL_Ev_C2_01_Flat>{0} taught {1} a few things.</WFL_Ev_C2_01_Flat>
+  <WFL_Ev_C2_01_Good>{1} learned a lot from {0}.</WFL_Ev_C2_01_Good>
+  <WFL_Ev_C2_01_Great>{1} idolises {0}, who has taught them well.</WFL_Ev_C2_01_Great>
+  <WFL_Ev_C2_02_Title>The Protective Confrontation</WFL_Ev_C2_02_Title>
+  <WFL_Ev_C2_02_Poor>{0}'s confrontation with {1} about {2} blew up between the families.</WFL_Ev_C2_02_Poor>
+  <WFL_Ev_C2_02_Flat>{0} spoke to {1} about {2}.</WFL_Ev_C2_02_Flat>
+  <WFL_Ev_C2_02_Good>{0} and {1} cleared things up about {2}.</WFL_Ev_C2_02_Good>
+  <WFL_Ev_C2_02_Great>{1} apologised to {0} for how {2} was treated.</WFL_Ev_C2_02_Great>
+  <WFL_Ev_C2_03_Title>A Helping Hand</WFL_Ev_C2_03_Title>
+  <WFL_Ev_C2_03_Poor>{1} didn't know what to make of {0}'s help.</WFL_Ev_C2_03_Poor>
+  <WFL_Ev_C2_03_Flat>{0} helped {1} out.</WFL_Ev_C2_03_Flat>
+  <WFL_Ev_C2_03_Good>{1} was grateful for {0}'s help.</WFL_Ev_C2_03_Good>
+  <WFL_Ev_C2_03_Great>{0}'s help touched {1}.</WFL_Ev_C2_03_Great>
+  <WFL_Ev_C2_04_Title>An Unwelcome Friendship</WFL_Ev_C2_04_Title>
+  <WFL_Ev_C2_04_Poor>{0} forbade {2} from seeing {1}.</WFL_Ev_C2_04_Poor>
+  <WFL_Ev_C2_04_Flat>{0} was worried about {2}'s friendship with {1}.</WFL_Ev_C2_04_Flat>
+  <WFL_Ev_C2_04_Good>{0} grew more tolerant of {1}.</WFL_Ev_C2_04_Good>
+  <WFL_Ev_C2_04_Great>{0} came to see that {1} is good for {2}.</WFL_Ev_C2_04_Great>
+  <WFL_Ev_C2_05_Title>The Shared Caregiver</WFL_Ev_C2_05_Title>
+  <WFL_Ev_C2_05_Poor>{0} and {2} disagreed about how {1} should be looked after.</WFL_Ev_C2_05_Poor>
+  <WFL_Ev_C2_05_Flat>{0} looked after {1} for a while.</WFL_Ev_C2_05_Flat>
+  <WFL_Ev_C2_05_Good>{2} was grateful to {0} for looking after {1}.</WFL_Ev_C2_05_Good>
+  <WFL_Ev_C2_05_Great>{2} and {0} trust each other with their children.</WFL_Ev_C2_05_Great>
+  <WFL_Ev_C2_06_Title>The Young Ambassador</WFL_Ev_C2_06_Title>
+  <WFL_Ev_C2_06_Poor>{1} turned {0} away.</WFL_Ev_C2_06_Poor>
+  <WFL_Ev_C2_06_Flat>{0} said hello to {1}.</WFL_Ev_C2_06_Flat>
+  <WFL_Ev_C2_06_Good>{0} won {1} over.</WFL_Ev_C2_06_Good>
+  <WFL_Ev_C2_06_Great>{0} has done what the grown-ups couldn't.</WFL_Ev_C2_06_Great>
+  <WFL_Ev_C2_07_Title>A Family's Gratitude</WFL_Ev_C2_07_Title>
+  <WFL_Ev_C2_07_Poor>{1} was uneasy at {0}'s thanks.</WFL_Ev_C2_07_Poor>
+  <WFL_Ev_C2_07_Flat>{0} thanked {1} for what they did.</WFL_Ev_C2_07_Flat>
+  <WFL_Ev_C2_07_Good>{0} thanked {1} warmly.</WFL_Ev_C2_07_Good>
+  <WFL_Ev_C2_07_Great>{0} and {1} are now on the best of terms.</WFL_Ev_C2_07_Great>
+  <WFL_Ev_C2_08_Title>The Misjudged Child</WFL_Ev_C2_08_Title>
+  <WFL_Ev_C2_08_Poor>{1} proved {0}'s low opinion correct.</WFL_Ev_C2_08_Poor>
+  <WFL_Ev_C2_08_Flat>{0} watched {1} warily.</WFL_Ev_C2_08_Flat>
+  <WFL_Ev_C2_08_Good>{0} had to revise their opinion of {1}.</WFL_Ev_C2_08_Good>
+  <WFL_Ev_C2_08_Great>{0} came to respect {1}.</WFL_Ev_C2_08_Great>
+  <WFL_Ev_C2_09_Title>Encouragement Across Families</WFL_Ev_C2_09_Title>
+  <WFL_Ev_C2_09_Poor>{1} was uncomfortable at {0}'s attention.</WFL_Ev_C2_09_Poor>
+  <WFL_Ev_C2_09_Flat>{0} praised {1}.</WFL_Ev_C2_09_Flat>
+  <WFL_Ev_C2_09_Good>{1} was happy to hear {0}'s praise.</WFL_Ev_C2_09_Good>
+  <WFL_Ev_C2_09_Great>{0}'s praise made {1}'s whole family proud.</WFL_Ev_C2_09_Great>
+  <WFL_Ev_C2_10_Title>The Generational Bridge</WFL_Ev_C2_10_Title>
+  <WFL_Ev_C2_10_Poor>{0} and {1} could not get past their families' differences, despite {2}.</WFL_Ev_C2_10_Poor>
+  <WFL_Ev_C2_10_Flat>{0} and {1} met, thanks to {2}.</WFL_Ev_C2_10_Flat>
+  <WFL_Ev_C2_10_Good>{0} and {1} talked, thanks to {2}.</WFL_Ev_C2_10_Good>
+  <WFL_Ev_C2_10_Great>{2} brought {0} and {1} together at last.</WFL_Ev_C2_10_Great>
+  <WFL_Ev_C3_01_Title>Friendship Across Families</WFL_Ev_C3_01_Title>
+  <WFL_Ev_C3_01_Poor>{0} and {1}'s friendship was frowned upon.</WFL_Ev_C3_01_Poor>
+  <WFL_Ev_C3_01_Flat>{0} and {1} played together.</WFL_Ev_C3_01_Flat>
+  <WFL_Ev_C3_01_Good>{0} and {1} are becoming friends.</WFL_Ev_C3_01_Good>
+  <WFL_Ev_C3_01_Great>{0} and {1} are the best of friends.</WFL_Ev_C3_01_Great>
+  <WFL_Ev_C3_02_Title>The Family Rivalry</WFL_Ev_C3_02_Title>
+  <WFL_Ev_C3_02_Poor>{0} and {1} acted out their families' feud.</WFL_Ev_C3_02_Poor>
+  <WFL_Ev_C3_02_Flat>{0} avoided {1}.</WFL_Ev_C3_02_Flat>
+  <WFL_Ev_C3_02_Good>{0} and {1} didn't care about the feud.</WFL_Ev_C3_02_Good>
+  <WFL_Ev_C3_02_Great>{0} and {1} rejected the families' feud entirely.</WFL_Ev_C3_02_Great>
+  <WFL_Ev_C3_03_Title>A Playground Fight</WFL_Ev_C3_03_Title>
+  <WFL_Ev_C3_03_Poor>{0} and {1} had a fight, and now the families are involved.</WFL_Ev_C3_03_Poor>
+  <WFL_Ev_C3_03_Flat>{0} and {1} quarrelled.</WFL_Ev_C3_03_Flat>
+  <WFL_Ev_C3_03_Good>{0} and {1} said sorry.</WFL_Ev_C3_03_Good>
+  <WFL_Ev_C3_03_Great>{0} and {1} made up.</WFL_Ev_C3_03_Great>
+  <WFL_Ev_C3_04_Title>A Shared Victory</WFL_Ev_C3_04_Title>
+  <WFL_Ev_C3_04_Poor>{0} and {1} fell out over who deserved the credit.</WFL_Ev_C3_04_Poor>
+  <WFL_Ev_C3_04_Flat>{0} and {1} were pleased with the result.</WFL_Ev_C3_04_Flat>
+  <WFL_Ev_C3_04_Good>{0} and {1} celebrated together.</WFL_Ev_C3_04_Good>
+  <WFL_Ev_C3_04_Great>{0} and {1} told their families all about it.</WFL_Ev_C3_04_Great>
+  <WFL_Ev_C3_05_Title>The Excluded Child</WFL_Ev_C3_05_Title>
+  <WFL_Ev_C3_05_Poor>{0} was shut out by {1}'s friends.</WFL_Ev_C3_05_Poor>
+  <WFL_Ev_C3_05_Flat>{0} was left out.</WFL_Ev_C3_05_Flat>
+  <WFL_Ev_C3_05_Good>{1} made room for {0}.</WFL_Ev_C3_05_Good>
+  <WFL_Ev_C3_05_Great>{1}'s friends took {0} in.</WFL_Ev_C3_05_Great>
+  <WFL_Ev_C3_06_Title>Breaking the Cycle</WFL_Ev_C3_06_Title>
+  <WFL_Ev_C3_06_Poor>{0} and {1}'s friendship was torn between their families.</WFL_Ev_C3_06_Poor>
+  <WFL_Ev_C3_06_Flat>{0} and {1} remained friends.</WFL_Ev_C3_06_Flat>
+  <WFL_Ev_C3_06_Good>{0} and {1}'s friendship gave their families a reason to talk.</WFL_Ev_C3_06_Good>
+  <WFL_Ev_C3_06_Great>{0} and {1} led their families to make peace.</WFL_Ev_C3_06_Great>
+  <WFL_Ev_C3_07_Title>A Cross-Family Playdate</WFL_Ev_C3_07_Title>
+  <WFL_Ev_C3_07_Poor>{0} and {1}'s playdate went badly.</WFL_Ev_C3_07_Poor>
+  <WFL_Ev_C3_07_Flat>{0} and {1} played.</WFL_Ev_C3_07_Flat>
+  <WFL_Ev_C3_07_Good>{0} and {1} had fun at their playdate.</WFL_Ev_C3_07_Good>
+  <WFL_Ev_C3_07_Great>{0} and {1}'s playdate brought the adults together too.</WFL_Ev_C3_07_Great>
+  <WFL_Ev_C3_08_Title>The Competitive Families</WFL_Ev_C3_08_Title>
+  <WFL_Ev_C3_08_Poor>{0} and {1}'s rivalry turned sour.</WFL_Ev_C3_08_Poor>
+  <WFL_Ev_C3_08_Flat>{0} and {1} competed.</WFL_Ev_C3_08_Flat>
+  <WFL_Ev_C3_08_Good>{0} and {1} respect each other's skill.</WFL_Ev_C3_08_Good>
+  <WFL_Ev_C3_08_Great>{0} and {1}'s families are proud of them both.</WFL_Ev_C3_08_Great>
+  <WFL_Ev_C3_09_Title>Defending a Rival's Child</WFL_Ev_C3_09_Title>
+  <WFL_Ev_C3_09_Poor>{0}'s defence of {1} against {2} was not welcome.</WFL_Ev_C3_09_Poor>
+  <WFL_Ev_C3_09_Flat>{0} spoke up for {1} against {2}.</WFL_Ev_C3_09_Flat>
+  <WFL_Ev_C3_09_Good>{1} was grateful to {0} for sticking up for them against {2}.</WFL_Ev_C3_09_Good>
+  <WFL_Ev_C3_09_Great>{0}'s kindness changed how {1}'s family sees theirs.</WFL_Ev_C3_09_Great>
+  <WFL_Ev_C3_10_Title>The Next Generation</WFL_Ev_C3_10_Title>
+  <WFL_Ev_C3_10_Poor>The friendships between the children haven't changed the families' views.</WFL_Ev_C3_10_Poor>
+  <WFL_Ev_C3_10_Flat>The children play together, and the families look on.</WFL_Ev_C3_10_Flat>
+  <WFL_Ev_C3_10_Good>The children's friendships are warming the families.</WFL_Ev_C3_10_Good>
+  <WFL_Ev_C3_10_Great>The children have put an end to the old rivalry.</WFL_Ev_C3_10_Great>
+</LanguageData>

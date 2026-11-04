@@ -54,4 +54,19 @@
     <reportString>letting TargetA in.</reportString>
     <casualInterruptible>false</casualInterruptible>
   </JobDef>
+
+  <!-- A conversation between two people who are free: one walks up, the other gives their attention. Either gives way to a player's order. -->
+  <JobDef>
+    <defName>WFL_SocialMoment</defName>
+    <driverClass>FamilyLife.JobDriver_SocialMoment</driverClass>
+    <reportString>talking with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>WFL_SocialListen</defName>
+    <driverClass>FamilyLife.JobDriver_SocialListen</driverClass>
+    <reportString>listening to TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
 </Defs>

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 - relationship events
+- 90 relationship moments across nine groups (within a family, between friends and others, between families; adult with adult, adult with child, child with child), all built on one engine that separates opportunity, motivation, execution, reception and consequences. See docs/EVENTS.md.
+- People outside the family now get bonds of their own once something has brought them together. Two families have a standing built from incidents and shared moments, never averaged from members. Promises the mod itself records can be kept or broken.
+- Moments are real: two free people walk up and talk (or go for a short walk), or the moment happens during something already shared: a meal, a picnic, a gathering, a story, teaching, a bedside visit, a game, shared work.
+- Two families with a real grievance are invited to a gathering to mend things.
+- New Moments tab in the Families window, settings to turn groups off, set how often, and set how much you are told, and a debug action that explains why an event is or is not possible for two pawns.
+- 22 new mutation checks. Not yet verified in game; see docs/EVENTS.md for what is smaller than the design.
+
 ## 0.12.3 - furniture counts
 - Family zones can now be painted over beds, tables and other furniture (the game's own zone tool refuses them). Walls and fog are still excluded. Zones painted earlier need repainting over the furniture.
 

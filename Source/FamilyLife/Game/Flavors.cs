@@ -179,7 +179,12 @@ namespace FamilyLife
             int now = Activities.Now;
             int lineage = registry.LineageIdFor(registry.GetPerson(pawn.thingIDNumber));
 
-            if (def == WFL_FlavorDefOf.WFL_Reconcile) { CompleteReconcile(pawn, partner, registry, ticks, now); return; }
+            if (def == WFL_FlavorDefOf.WFL_Reconcile)
+            {
+                CompleteReconcile(pawn, partner, registry, ticks, now);
+                SocialMoments.OnActivity(ActivityKind.Reconciliation, pawn, partner);
+                return;
+            }
 
             Activities.CompleteFamilyTime(pawn, partner, ticks, def == WFL_FlavorDefOf.WFL_Teach ? BondCause.Teaching : BondCause.Together);
             registry.Reinforce(lineage, Dim.Hearth, 0.2f);
@@ -213,6 +218,12 @@ namespace FamilyLife
             {
                 TellFamilyStory(pawn, partner, registry, lineage);
             }
+
+            // What kind of time it was decides which moments fit: teaching is a lesson, two children are at play, the rest is shared recreation.
+            var setting = def == WFL_FlavorDefOf.WFL_Teach ? ActivityKind.Learning
+                : (def == WFL_FlavorDefOf.WFL_Date ? ActivityKind.None
+                : (pawn.DevelopmentalStage.Juvenile() && partner.DevelopmentalStage.Juvenile() ? ActivityKind.Playdate : ActivityKind.GameNight));
+            SocialMoments.OnActivity(setting, pawn, partner);
         }
 
         /// <summary>An older relative tells a younger one about the family's past. It only counts if the family has defining memories to tell.</summary>

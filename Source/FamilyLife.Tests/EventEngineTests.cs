@@ -474,5 +474,27 @@ namespace FamilyLife.Tests
             trusting.RecipientBond = new Bond { From = 2, To = 1, Trust = 95f, Attachment = 40f, Tension = 10f };
             Assert.True(def.Reception.Value(trusting, def.Skill) > def.Reception.Value(wary, def.Skill) + 0.1f);
         }
+
+        [Fact]
+        public void Two_families_with_a_real_grievance_are_asked_to_a_meal_to_mend_it_but_not_over_and_over()
+        {
+            var r = World(out int now);
+            int smith = r.LineageIdFor(r.GetPerson(1));
+            int jones = r.LineageIdFor(r.GetPerson(21));
+            var tie = r.SetTie(smith, jones, 40f, 5f, 40f, 3, now);
+            tie.WrongedBy = 21;                                  // the Joneses gave the offence, so they hold the dinner
+            var asked = r.RequestReconciliations(now);
+            var request = Assert.Single(asked);
+            Assert.Equal("reconciliation", request.Kind);
+            Assert.Equal(jones, request.LineageId);
+            Assert.Equal(smith, r.LineageIdFor(r.GetPerson(request.SubjectId)));          // and the guest asked is from the other family
+            Assert.Empty(r.RequestReconciliations(now + Day));                               // not again at once
+            r.GatheringRequests.Clear();                                                      // it was held, or it lapsed
+            Assert.Single(r.RequestReconciliations(now + 13 * Day));                         // and after a fortnight it can be tried again
+
+            var calm = World(out int now2);
+            calm.SetTie(calm.LineageIdFor(calm.GetPerson(1)), calm.LineageIdFor(calm.GetPerson(21)), 40f, 40f, 5f, 3, now2);
+            Assert.Empty(calm.RequestReconciliations(now2));                                 // nothing to mend
+        }
     }
 }

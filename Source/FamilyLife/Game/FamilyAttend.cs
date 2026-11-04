@@ -154,6 +154,7 @@ namespace FamilyLife
             {
                 Activities.GainMemory(pawn, "WFL_Bedside", target);
                 Activities.GainMemory(target, "WFL_Visited", pawn);
+                SocialMoments.OnActivity(ActivityKind.SupportVisit, pawn, target);
             }
             else
             {

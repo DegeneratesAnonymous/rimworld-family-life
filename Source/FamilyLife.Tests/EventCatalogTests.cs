@@ -135,6 +135,39 @@ namespace FamilyLife.Tests
                     Assert.False(string.IsNullOrEmpty(line.Reason), line.Def.Id);
             }
         }
+
+        private static Dictionary<string, string> KeyedText()
+        {
+            var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                var file = System.IO.Path.Combine(dir.FullName, "Languages", "English", "Keyed", "FamilyEvents.xml");
+                if (System.IO.File.Exists(file))
+                    return System.Xml.Linq.XDocument.Load(file).Root.Elements().ToDictionary(x => x.Name.LocalName, x => x.Value);
+                dir = dir.Parent;
+            }
+            throw new System.IO.FileNotFoundException("FamilyEvents.xml not found above " + AppContext.BaseDirectory);
+        }
+
+        [Fact]
+        public void Every_event_has_a_title_and_a_line_for_each_way_it_can_go()
+        {
+            var text = KeyedText();
+            foreach (var e in EventCatalog.All)
+            {
+                string key = "WFL_Ev_" + e.Id.Replace('-', '_');
+                foreach (var part in new[] { "Title", "Poor", "Flat", "Good", "Great" })
+                    Assert.True(text.ContainsKey(key + "_" + part) && text[key + "_" + part].Length > 5, key + "_" + part);
+                foreach (var part in new[] { "Poor", "Flat", "Good", "Great" })
+                {
+                    string line = text[key + "_" + part];
+                    if (e.Id != "C3-10") Assert.Contains("{0}", line.Replace("{1}", "{0}"));    // it says who (the next-generation moment is about many children)
+                    Assert.DoesNotContain("{3}", line);
+                    if (!e.NeedsThird) Assert.DoesNotContain("{2}", line);              // a third person is only named where there is one
+                }
+            }
+            Assert.Equal(90 * 5, text.Count);
+        }
     }
 
     internal static class EventEngineHelpers
