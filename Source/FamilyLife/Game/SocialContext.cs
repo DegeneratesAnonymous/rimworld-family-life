@@ -99,6 +99,12 @@ namespace FamilyLife
         /// <summary>Builds the circumstances for <paramref name="initiator"/> reaching toward <paramref name="recipient"/>. Null when either is unknown to the records.</summary>
         public static PairContext Build(FamilyComponent component, Pawn initiator, Pawn recipient, ActivityKind setting, bool fromActivity, Pawn third = null)
         {
+            // Physical social moments must have both participants on the same active map.
+            // Off-map relationships are maintained by the registry, not by face-to-face interactions.
+            if (component == null || initiator == null || recipient == null ||
+                !initiator.Spawned || !recipient.Spawned || initiator.Map == null ||
+                initiator.Map != recipient.Map || initiator.Dead || recipient.Dead)
+                return null;
             var registry = component.Registry;
             var ra = registry.GetPerson(initiator.thingIDNumber);
             var rb = registry.GetPerson(recipient.thingIDNumber);
