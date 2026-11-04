@@ -14,7 +14,7 @@ foreach ($v in "1.7", "1.6") {
 }
 
 New-Item -ItemType Directory -Force $dest | Out-Null
-foreach ($dir in "About", "Defs", "Patches", "Languages", "1.6", "1.7") {
+foreach ($dir in "About", "Defs", "Patches", "Languages", "Textures", "1.6", "1.7") {
     robocopy (Join-Path $repo $dir) (Join-Path $dest $dir) /MIR /XF PublishedFileId.txt .gitkeep /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "Copy failed for $dir - is RimWorld still running? Close it (it keeps the mod DLL locked) and run this again." }
 }

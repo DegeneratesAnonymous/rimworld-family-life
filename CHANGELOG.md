@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.0 - family doors, clearer zones, zone toggle
+- A colonist stopped from building inside another family's zone now waits at its edge until a member of that family lets them in (an adult can let anyone in; a child can only let in another child). They build, and the pass ends when they leave. Only construction (frames and blueprints) triggers this.
+- Family zones are now a faint tint (5% opacity) so everything underneath is clear.
+- New toggle in the bottom-right map controls that shows or hides only family zones.
+- Not yet verified in game.
+
 ## 0.11.0 - family zone is a real zone type
 - New **Family zone** tool in Architect > Zone (paint, then Delete Zone to shrink or remove). Choose the family from the zone's button or the Families > Zone tab; every family member, including those born or married in later, is kept to it. The zone owns a matching allowed area that follows its cells.
 - Not yet verified in game.

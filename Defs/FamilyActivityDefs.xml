@@ -40,4 +40,18 @@
     <reportString>listening to a bedtime story.</reportString>
     <casualInterruptible>false</casualInterruptible>
   </JobDef>
+
+  <JobDef>
+    <defName>WFL_WaitAtDoor</defName>
+    <driverClass>FamilyLife.JobDriver_WaitAtDoor</driverClass>
+    <reportString>waiting to be let in.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>WFL_LetGuestIn</defName>
+    <driverClass>FamilyLife.JobDriver_LetGuestIn</driverClass>
+    <reportString>letting TargetA in.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
 </Defs>

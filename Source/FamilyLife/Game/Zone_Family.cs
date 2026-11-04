@@ -16,12 +16,28 @@ namespace FamilyLife
     {
         private static readonly Color[] Colors =
         {
-            new Color(0.95f, 0.65f, 0.45f), new Color(0.55f, 0.8f, 0.95f), new Color(0.75f, 0.9f, 0.55f), new Color(0.9f, 0.6f, 0.85f), new Color(0.95f, 0.85f, 0.45f)
+            new Color(0.95f, 0.65f, 0.45f, 0.05f), new Color(0.55f, 0.8f, 0.95f, 0.05f), new Color(0.75f, 0.9f, 0.55f, 0.05f), new Color(0.9f, 0.6f, 0.85f, 0.05f), new Color(0.95f, 0.85f, 0.45f, 0.05f)
         };
 
         public int areaId;                 // the allowed area this zone owns; 0 until a family is chosen
 
         public Zone_Family() { }
+
+        // Far clearer than the game's own zones: only a faint tint, so everything underneath can be seen.
+        protected override Material CreateMaterial()
+        {
+            var material = SolidColorMaterials.SimpleSolidColorMaterial(new Color(color.r, color.g, color.b, 0.05f));
+            material.renderQueue = 3600;
+            return material;
+        }
+
+        public Lineage Family(FamilyRegistry registry) => areaId == 0 ? null : registry.Lineages.FirstOrDefault(l => l.ZoneAreaId == areaId);
+
+        public override void PostRegister()
+        {
+            base.PostRegister();
+            if (Hidden == FamilyZoneView.Show) Hidden = !FamilyZoneView.Show;
+        }
 
         public Zone_Family(ZoneManager zoneManager) : base("WFL_FamilyZone".Translate(), zoneManager) { }
 
