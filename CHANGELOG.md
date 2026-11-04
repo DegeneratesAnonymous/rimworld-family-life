@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.12.2 - roofs
+- Building and removing roofs inside another family's zone now brings a builder to the door too (roofs are cells in the roof areas, not blueprints, so they were missed).
+
 ## 0.12.1 - doors find the work themselves
 - The builder never approached another family's zone because the game never offers work outside a pawn's area, so my first hook never fired. Now the mod checks construction and repair jobs inside family zones every half second and sends an idle colonist from another family (who has Construction or Repair enabled) to the edge to be let in. Their own area is lifted for the visit and put back after, including across a save. Turn on Log events in the mod settings to see each step in the log.
 

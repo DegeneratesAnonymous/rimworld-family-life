@@ -89,17 +89,31 @@ namespace FamilyLife
         /// <summary>Finds construction and repair work inside a family zone that an idle outsider could do, and starts one visit for it.</summary>
         private static void SeekWork(FamilyComponent component, Map map, int now)
         {
-            var sites = new List<KeyValuePair<Thing, bool>>();
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<Thing, bool>(t, false));
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<Thing, bool>(t, false));
-            foreach (var t in map.listerBuildingsRepairable.RepairableBuildings(Faction.OfPlayer)) sites.Add(new KeyValuePair<Thing, bool>(t, true));
+            var sites = new List<KeyValuePair<IntVec3, bool>>();
+            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, false));
+            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)) if (t.Faction == Faction.OfPlayer) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, false));
+            foreach (var t in map.listerBuildingsRepairable.RepairableBuildings(Faction.OfPlayer)) sites.Add(new KeyValuePair<IntVec3, bool>(t.Position, true));
+            // Roofs are not things: a cell in the build-roof area with no roof, or in the no-roof area with one, is work waiting.
+            foreach (var zoneToScan in map.zoneManager.AllZones.OfType<Zone_Family>())
+            {
+                if (zoneToScan.areaId == 0) continue;
+                foreach (var cell in zoneToScan.Cells)
+                {
+                    bool roofed = map.roofGrid.Roofed(cell);
+                    if ((!roofed && map.areaManager.BuildRoof[cell] && RoofCollapseUtility.WithinRangeOfRoofHolder(cell, map)) || (roofed && map.areaManager.NoRoof[cell]))
+                    {
+                        sites.Add(new KeyValuePair<IntVec3, bool>(cell, false));
+                        break;                                                                // one waiting cell is enough to call someone
+                    }
+                }
+            }
             if (sites.Count == 0) return;
 
             var registry = component.Registry;
             var busyZones = new HashSet<Zone_Family>(ByGuest.Values.Select(p => p.Zone));
             foreach (var site in sites)
             {
-                if (!(map.zoneManager.ZoneAt(site.Key.Position) is Zone_Family zone) || zone.areaId == 0 || busyZones.Contains(zone)) continue;
+                if (!(map.zoneManager.ZoneAt(site.Key) is Zone_Family zone) || zone.areaId == 0 || busyZones.Contains(zone)) continue;
                 var lineage = zone.Family(registry);
                 if (lineage == null) continue;
                 Pawn guest = null; float bestDist = float.MaxValue;
@@ -107,10 +121,10 @@ namespace FamilyLife
                 {
                     if (ByGuest.ContainsKey(pawn.thingIDNumber) || !Available(pawn) || !IdleEnough(pawn) || !CanDoSiteWork(pawn, site.Value)) continue;
                     var restriction = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
-                    if (restriction == null || restriction.TrueCount == 0 || restriction[site.Key.Position]) continue;      // free to go there already
+                    if (restriction == null || restriction.TrueCount == 0 || restriction[site.Key]) continue;      // free to go there already
                     if (cooldown.TryGetValue(pawn.thingIDNumber, out int until) && now < until) continue;
                     if (IsFamilyMember(registry, lineage, pawn)) continue;
-                    float d = pawn.Position.DistanceToSquared(site.Key.Position);
+                    float d = pawn.Position.DistanceToSquared(site.Key);
                     if (d < bestDist) { bestDist = d; guest = pawn; }
                 }
                 if (guest == null) continue;
