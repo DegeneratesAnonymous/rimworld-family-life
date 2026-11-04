@@ -245,7 +245,8 @@ namespace FamilyLife
 
         private static bool OnActivityCore(ActivityKind kind, Pawn a, Pawn b, string forced)
         {
-            if (!Enabled || a == null || b == null || a == b || a.Map == null || a.Dead || b.Dead) return false;
+            if (!Enabled || a == null || b == null || a == b || !a.Spawned || !b.Spawned ||
+                a.Map == null || a.Map != b.Map || a.Dead || b.Dead) return false;
             var component = FamilyComponent.Current;
             if (component == null) return false;
             if (forced == null && Rand.Value > Mathf.Clamp01(0.6f * Frequency)) return false;       // most shared activities pass without any particular moment
