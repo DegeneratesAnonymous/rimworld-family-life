@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.12.3 - furniture counts
+- Family zones can now be painted over beds, tables and other furniture (the game's own zone tool refuses them). Walls and fog are still excluded. Zones painted earlier need repainting over the furniture.
+
 ## 0.12.2 - roofs
 - Building and removing roofs inside another family's zone now brings a builder to the door too (roofs are cells in the roof areas, not blueprints, so they were missed).
 

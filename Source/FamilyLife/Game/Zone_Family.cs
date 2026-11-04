@@ -144,5 +144,20 @@ namespace FamilyLife
         }
 
         protected override Zone MakeNewZone() => new Zone_Family(Find.CurrentMap.zoneManager);
+
+        /// <summary>
+        /// A home has beds, tables and other furniture in it, so unlike the game's own zones this one can be painted over things. Only fog,
+        /// the map edge, another kind of zone and solid blocks such as walls are refused.
+        /// </summary>
+        public override AcceptanceReport CanDesignateCell(IntVec3 c)
+        {
+            if (!c.InBounds(Map)) return false;
+            var existing = Map.zoneManager.ZoneAt(c);
+            if (existing != null && existing.GetType() != zoneTypeToPlace) return false;
+            if (c.Fogged(Map)) return false;
+            if (c.InNoZoneEdgeArea(Map)) return "TooCloseToMapEdge".Translate();
+            if (c.Impassable(Map)) return false;
+            return true;
+        }
     }
 }
