@@ -105,6 +105,8 @@ namespace FamilyLife
                 !initiator.Spawned || !recipient.Spawned || initiator.Map == null ||
                 initiator.Map != recipient.Map || initiator.Dead || recipient.Dead)
                 return null;
+            if (third != null && (!third.Spawned || third.Dead || third.Map != initiator.Map))
+                return null;
             var registry = component.Registry;
             var ra = registry.GetPerson(initiator.thingIDNumber);
             var rb = registry.GetPerson(recipient.thingIDNumber);
