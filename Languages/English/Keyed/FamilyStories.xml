@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_S_FamilyStories>Family stories: remembered incidents, news and consequences</WFL_S_FamilyStories>
+  <WFL_S_FamilySupplies>Families collect and negotiate for household supplies</WFL_S_FamilySupplies>
+  <WFL_S_FamilyTheft>Allow desperate or kleptomaniac supply theft</WFL_S_FamilyTheft>
+  <WFL_S_FamilyViolence>Allow adult revenge conspiracies and social fights</WFL_S_FamilyViolence>
+  <WFL_S_LethalPlots>Allow lethal revenge attacks (can kill colonists)</WFL_S_LethalPlots>
+  <WFL_PlotAttack>{0} is attacking {1} as part of a family revenge plot!</WFL_PlotAttack>
+  <WFL_PlotBegan>{0} is considering revenge against {1} over a remembered incident.</WFL_PlotBegan>
+  <WFL_PlotWarned>{1} refused {0}’s plot and may warn the intended victim.</WFL_PlotWarned>
+  <WFL_PlotJoined>{1} agreed to help {0} take revenge.</WFL_PlotJoined>
+  <WFL_PlotRefused>{1} refused to help {0} take revenge.</WFL_PlotRefused>
+  <WFL_SupplyRefused>{0} declined {1}’s request for household supplies.</WFL_SupplyRefused>
+  <WFL_SupplyTransferred>{0} obtained {1} for the household.</WFL_SupplyTransferred>
+  <WFL_Stories_Incidents>Remembered incidents</WFL_Stories_Incidents>
+  <WFL_Stories_Empty>No incidents have been recorded for this family.</WFL_Stories_Empty>
+  <WFL_Stories_Unknown>Unknown person</WFL_Stories_Unknown>
+  <WFL_Stories_Open>Unresolved</WFL_Stories_Open>
+  <WFL_Stories_Resolved>Resolved</WFL_Stories_Resolved>
+  <WFL_Stories_Incident>#{6} · {0}: {1} — {2} → {3}. Known by {4}. {5}.</WFL_Stories_Incident>
+  <WFL_Stories_Known>Knows: {0}</WFL_Stories_Known>
+  <WFL_Stories_Context>Known circumstances: {0}</WFL_Stories_Context>
+  <WFL_Stories_Forgive>Forgive this incident</WFL_Stories_Forgive>
+  <WFL_Stories_Plots>Revenge plots</WFL_Stories_Plots>
+  <WFL_Stories_Plot>{0} → {1}: {2}. Cause #{3}; {4} recruited.</WFL_Stories_Plot>
+  <WFL_Stories_Supplies>Household supplies</WFL_Stories_Supplies>
+  <WFL_Stories_Claims>{0} physical stacks currently held by this family. Ownership follows splits and transfers.</WFL_Stories_Claims>
+  <WFL_Stories_Request>{0}: {1}, {2} × {3} — {4}.</WFL_Stories_Request>
+  <WFL_Incident_Injury>Injury</WFL_Incident_Injury>
+  <WFL_Incident_Death>Death</WFL_Incident_Death>
+  <WFL_Incident_Theft>Theft</WFL_Incident_Theft>
+  <WFL_Incident_Gift>Gift</WFL_Incident_Gift>
+  <WFL_Incident_Refusal>Refusal</WFL_Incident_Refusal>
+  <WFL_Incident_Intimidation>Intimidation</WFL_Incident_Intimidation>
+  <WFL_Incident_Restitution>Restitution</WFL_Incident_Restitution>
+  <WFL_Incident_PlotExposed>Plot disclosed</WFL_Incident_PlotExposed>
+  <WFL_Incident_Insult>Insult</WFL_Incident_Insult>
+  <WFL_PlotState_Recruiting>Recruiting</WFL_PlotState_Recruiting>
+  <WFL_PlotState_Ready>Ready</WFL_PlotState_Ready>
+  <WFL_PlotState_Attempted>Attempted</WFL_PlotState_Attempted>
+  <WFL_PlotState_Completed>Completed</WFL_PlotState_Completed>
+  <WFL_PlotState_Abandoned>Abandoned</WFL_PlotState_Abandoned>
+  <WFL_PlotState_Exposed>Exposed</WFL_PlotState_Exposed>
+  <WFL_SupplyApproach_Ask>Ask</WFL_SupplyApproach_Ask>
+  <WFL_SupplyApproach_Loan>Loan</WFL_SupplyApproach_Loan>
+  <WFL_SupplyApproach_Barter>Barter</WFL_SupplyApproach_Barter>
+  <WFL_SupplyApproach_Threat>Threat</WFL_SupplyApproach_Threat>
+  <WFL_SupplyApproach_Steal>Steal</WFL_SupplyApproach_Steal>
+  <WFL_SupplyApproach_PublicClaim>Collect public surplus</WFL_SupplyApproach_PublicClaim>
+  <WFL_SupplyApproach_Return>Return</WFL_SupplyApproach_Return>
+  <WFL_SupplyApproach_Relocate>Return household stock home</WFL_SupplyApproach_Relocate>
+  <WFL_SupplyState_Pending>Pending</WFL_SupplyState_Pending>
+  <WFL_SupplyState_Granted>Granted</WFL_SupplyState_Granted>
+  <WFL_SupplyState_Refused>Refused</WFL_SupplyState_Refused>
+  <WFL_SupplyState_Exchanged>Exchanged</WFL_SupplyState_Exchanged>
+  <WFL_SupplyState_Stored>Stored</WFL_SupplyState_Stored>
+  <WFL_SupplyState_Cancelled>Cancelled</WFL_SupplyState_Cancelled>
+  <WFL_SupplyState_Repaid>Repaid</WFL_SupplyState_Repaid>
+  <WFL_SupplyState_Defaulted>Defaulted</WFL_SupplyState_Defaulted>
+  <WFL_Context_Combat>Combat</WFL_Context_Combat>
+  <WFL_Context_MentalBreak>Mental break</WFL_Context_MentalBreak>
+  <WFL_Context_Accident>Crossfire</WFL_Context_Accident>
+  <WFL_Context_Planned>Planned attack</WFL_Context_Planned>
+</LanguageData>

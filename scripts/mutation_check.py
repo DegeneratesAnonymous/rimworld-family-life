@@ -12,6 +12,23 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "Source" / "FamilyLife"
 
 MUTATIONS = [
+    ("unwitnessed family members learn the incident", "Domain/FamilyStories.cs",
+     "(witnesses ?? Enumerable.Empty<int>()).Append(actor)", "Persons.Select(p => p.Id).Append(actor)"),
+    ("family grievance multiplies with each witness", "Domain/FamilyStories.cs",
+     "&& !i.FamiliesAffected.Contains(family)", ""),
+    ("children can organize revenge", "Domain/FamilyStories.cs",
+     "|| p.Juvenile ||", "|| false ||"),
+    ("a friend joins a plot against their loved one", "Domain/FamilyStories.cs",
+     "targetLove >= 45 ||", "false ||"),
+    ("insufficient goods count as a handover", "Domain/FamilySupplies.cs",
+     "actualCount < r.Count", "false"),
+    ("theft transfers legal ownership", "Domain/FamilySupplies.cs",
+     "r.Approach == SupplyApproach.Steal ? source.OwnerFamily : receiver", "receiver"),
+    ("public collection can confiscate private stock", "Domain/FamilySupplies.cs",
+     "if (r.Approach == SupplyApproach.PublicClaim && source != null) return false;", ""),
+    ("splitting drops family ownership", "Domain/FamilySupplies.cs",
+     "if (claim != null) ClaimStock(result, claim.OwnerFamily, claim.HolderFamily, claim.MapId, claim.Kind);", ""),
+
     ("discovery runs every active-visit update", "Domain/WorkScheduling.cs",
      "now - last < interval", "false"),
     ("work changes never invalidate the discovery cache", "Domain/WorkScheduling.cs",

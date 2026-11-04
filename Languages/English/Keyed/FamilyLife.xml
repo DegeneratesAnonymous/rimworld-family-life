@@ -240,9 +240,9 @@
   <WFL_TreeNoBond>No bond is recorded between {0} and {1}.</WFL_TreeNoBond>
   <WFL_TreeDoubleClick>Double-click to find them in the colony.</WFL_TreeDoubleClick>
   <WFL_Tab_Zone>Zone</WFL_Tab_Zone>
-  <WFL_ZoneHelp>Give this family a zone of its own. Paint it from Architect > Zone > Family zone, then choose the family on the zone (or here). Everyone in the family, including children born later, is kept to it. Anyone you give a different area afterwards keeps it.</WFL_ZoneHelp>
+  <WFL_ZoneHelp>A family area marks its preferred home. Pawns still follow your allowed areas. Put shelves inside it or extend its linked allowed area over suitable stockpiles to let the family store supplies there.</WFL_ZoneHelp>
   <WFL_ZoneNone>No family has been given this zone yet.</WFL_ZoneNone>
-  <WFL_ZoneCurrent>{0}: {1} of {2} family members are kept to it.</WFL_ZoneCurrent>
+  <WFL_ZoneCurrent>Home: {0}. {2} family members in the colony. Player movement restrictions remain independent.</WFL_ZoneCurrent>
   <WFL_ZoneChoose>Use a family zone already painted</WFL_ZoneChoose>
   <WFL_ZoneNoAreas>There are no areas yet</WFL_ZoneNoAreas>
   <WFL_ZoneCreate>Paint a family zone</WFL_ZoneCreate>

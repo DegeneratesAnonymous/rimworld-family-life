@@ -4,6 +4,10 @@ A RimWorld mod (1.6 and 1.7) that keeps durable family records and, over later v
 
 **Status:** Phases 1-7 built. Phases 1 and 2 have been checked in the game; Phases 3-7 have not. See [docs/DESIGN.md](docs/DESIGN.md) for the design, [docs/PHASE1.md](docs/PHASE1.md), [docs/PHASE2.md](docs/PHASE2.md), [docs/PHASE3.md](docs/PHASE3.md) and [docs/PHASE4-7.md](docs/PHASE4-7.md) for what works, what is tested and what needs checking in the game.
 
+## Family stories and household supplies
+
+Adds 48 value-tradition episodes, witnessed incidents and shared news, family supply collection and negotiation, identifiable theft/restitution, and adult revenge conspiracies. Lethal attacks are optional and off by default. Homes now express preferences while player allowed areas remain independent. See [the feature guide and live validation checklist](docs/FAMILY-STORIES.md); this expansion has not yet been played in-game.
+
 ## Design principles
 
 - **Standalone.** Harmony is the only hard dependency; Biotech and other mods only enhance.

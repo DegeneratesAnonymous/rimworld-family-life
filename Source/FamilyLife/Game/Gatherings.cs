@@ -77,7 +77,7 @@ namespace FamilyLife
                 }
 
             // A gathering is the setting for a few moments between the people who were there, whether or not they are family.
-            SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration);
+            SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration, TraditionCatalog.IndexOf(kind) >= 0 ? kind : null);
         }
 
         public override void ExposeData()

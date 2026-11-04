@@ -122,7 +122,7 @@ namespace FamilyLife
                 foreach (var pass in ByGuest.Values.ToList()) Update(pass, now);
             if (pruneWork.Take(now))
                 foreach (var gone in work.Keys.Where(m => !Find.Maps.Contains(m)).ToList()) work.Remove(gone);
-            if (ByGuest.Count >= 3 || Find.Maps.Count == 0) return;
+            if (!FamilyZones.EnforcesAreas || ByGuest.Count >= 3 || Find.Maps.Count == 0) return;
             // One map per pass; active visits above are always maintained regardless of discovery budget.
             var map = Find.Maps[mapCursor.Take(Find.Maps.Count)];
             if (!map.zoneManager.AllZones.Any(z => z is Zone_Family f && f.areaId != 0)) { work.Remove(map); return; }
@@ -392,7 +392,7 @@ namespace FamilyLife
             for (int i = 0; i < savedPawns.Count && i < savedAreas.Count; i++)
             {
                 var pawn = savedPawns[i];
-                var area = FamilyZones.FindArea(savedAreas[i]);
+                var area = pawn?.Map == null ? null : FamilyZones.FindArea(savedAreas[i], pawn.Map.uniqueID);
                 if (pawn?.playerSettings != null && area != null && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == null) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = area;
             }
             savedPawns.Clear(); savedAreas.Clear();

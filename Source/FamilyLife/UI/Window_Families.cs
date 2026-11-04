@@ -679,7 +679,7 @@ namespace FamilyLife
         private void DrawZone(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
             Line(view, ref y, "WFL_ZoneHelp".Translate(), 0f, true);
-            var current = lineage.ZoneAreaId == 0 ? null : FamilyZones.FindArea(lineage.ZoneAreaId);
+            var current = lineage.ZoneAreaId == 0 ? null : FamilyZones.AreaFor(lineage);
             y += 4f;
             if (current == null)
                 Line(view, ref y, "WFL_ZoneNone".Translate(), 10f);
@@ -789,6 +789,29 @@ namespace FamilyLife
             var relevant = new HashSet<int>(registry.MembersOf(lineage.Id).Select(p => p.Id));
             foreach (var a in lineage.Affiliations) relevant.Add(a.PersonId);
 
+            Heading(view, ref y, "WFL_Stories_Incidents".Translate());
+            var incidents = registry.Incidents.Where(i => i.ActorFamily == lineage.Id || i.VictimFamily == lineage.Id).OrderByDescending(i => i.Tick).Take(24).ToList();
+            if (incidents.Count == 0) Line(view, ref y, "WFL_Stories_Empty".Translate(), 0f, true);
+            foreach (var i in incidents)
+            {
+                string actor = i.ActorId == 0 ? "WFL_Stories_Unknown".Translate().ToString() : FamilyUi.NameOf(registry, i.ActorId);
+                Line(view, ref y, "WFL_Stories_Incident".Translate(FamilyUi.Date(i.Tick), ("WFL_Incident_" + i.Kind).Translate(), actor, FamilyUi.NameOf(registry, i.VictimId), i.KnownBy.Count, i.Resolved ? "WFL_Stories_Resolved".Translate() : "WFL_Stories_Open".Translate(), i.Id));
+                Line(view, ref y, "WFL_Stories_Known".Translate(string.Join(", ", i.KnownBy.Take(16).Select(id => FamilyUi.NameOf(registry, id)))), 14f, true);
+                if (i.Context != IncidentContext.None) Line(view, ref y, "WFL_Stories_Context".Translate(string.Join(", ", new[] { IncidentContext.Combat, IncidentContext.MentalBreak, IncidentContext.Accident, IncidentContext.Planned }.Where(flag => (i.Context & flag) != 0).Select(flag => ("WFL_Context_" + flag).Translate().ToString()))), 14f, true);
+                if (!i.Resolved && i.VictimFamily == lineage.Id)
+                {
+                    if (Widgets.ButtonText(new Rect(14, y, 180, 26), "WFL_Stories_Forgive".Translate())) registry.ForgiveIncident(i.Id, lineage.Id);
+                    y += 30;
+                }
+            }
+            Heading(view, ref y, "WFL_Stories_Plots".Translate());
+            foreach (var p in registry.Plots.Where(p => relevant.Contains(p.OrganizerId) || relevant.Contains(p.TargetId)).OrderByDescending(p => p.CreatedTick).Take(12))
+                Line(view, ref y, "WFL_Stories_Plot".Translate(FamilyUi.NameOf(registry, p.OrganizerId), FamilyUi.NameOf(registry, p.TargetId), ("WFL_PlotState_" + p.State).Translate(), p.IncidentId, p.Recruits.Count));
+            Heading(view, ref y, "WFL_Stories_Supplies".Translate());
+            Line(view, ref y, "WFL_Stories_Claims".Translate(registry.Claims.Count(c => c.HolderFamily == lineage.Id)), 0f, true);
+            foreach (var supply in registry.Requests.Where(r => relevant.Contains(r.RequesterId) || relevant.Contains(r.DonorId)).OrderByDescending(r => r.CreatedTick).Take(16))
+                Line(view, ref y, "WFL_Stories_Request".Translate(FamilyUi.NameOf(registry, supply.RequesterId), ("WFL_SupplyApproach_" + supply.Approach).Translate(), supply.Count, supply.Definition, ("WFL_SupplyState_" + supply.State).Translate()));
+
             Heading(view, ref y, "WFL_Moments_Promises".Translate());
             var promises = registry.Commitments.Where(p => (relevant.Contains(p.FromId) || relevant.Contains(p.ToId)) && p.State != 3).OrderByDescending(p => p.CreatedTick).Take(12).ToList();
             if (promises.Count == 0) Line(view, ref y, "WFL_Moments_NoPromises".Translate(), 0f, true);
@@ -801,7 +824,7 @@ namespace FamilyLife
             {
                 var e = registry.EventLog[i];
                 if (!relevant.Contains(e.A) && !relevant.Contains(e.B)) continue;
-                var def = EventCatalog.Get(e.EventId);
+                var def = EventCatalog.Get(e.EventId) ?? TraditionMoments.Get(e.EventId);
                 if (def == null) continue;
                 shown++;
                 string marker = e.Weight == EventWeight.Defining ? "* " : (e.Weight == EventWeight.Meaningful ? "- " : "  ");

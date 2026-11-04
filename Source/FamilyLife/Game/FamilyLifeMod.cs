@@ -10,6 +10,7 @@ namespace FamilyLife
 {
     public class FamilySettings : ModSettings
     {
+        public bool familyStories = true, familySupplies = true, familyTheft = true, familyViolence = true, lethalPlots;
         public bool logEvents;
         public bool griefAmplification = true;
         public bool familyActivities = true;
@@ -38,6 +39,11 @@ namespace FamilyLife
 
         public override void ExposeData()
         {
+            Scribe_Values.Look(ref familyStories, "familyStories", true);
+            Scribe_Values.Look(ref familySupplies, "familySupplies", true);
+            Scribe_Values.Look(ref familyTheft, "familyTheft", true);
+            Scribe_Values.Look(ref familyViolence, "familyViolence", true);
+            Scribe_Values.Look(ref lethalPlots, "lethalPlots");
             Scribe_Values.Look(ref logEvents, "logEvents");
             Scribe_Values.Look(ref griefAmplification, "griefAmplification", true);
             Scribe_Values.Look(ref familyActivities, "familyActivities", true);
@@ -94,10 +100,13 @@ namespace FamilyLife
 
         public override string SettingsCategory() => "Wil's Family Life";
 
+        private Vector2 settingsScroll;
+        private float settingsHeight = 1400;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
-            list.Begin(inRect);
+            Widgets.BeginScrollView(inRect, ref settingsScroll, new Rect(0, 0, inRect.width - 20, settingsHeight));
+            list.Begin(new Rect(0, 0, inRect.width - 20, settingsHeight));
             list.CheckboxLabeled("WFL_S_Activities".Translate(), ref Settings.familyActivities, "WFL_S_ActivitiesTip".Translate());
             if (Settings.familyActivities)
             {
@@ -119,7 +128,11 @@ namespace FamilyLife
                 list.CheckboxLabeled("WFL_S_Affairs".Translate(), ref Settings.affairs, "WFL_S_AffairsTip".Translate());
                 list.CheckboxLabeled("WFL_S_Strict".Translate(), ref Settings.strictRomance, "WFL_S_StrictTip".Translate());
             }
-            list.CheckboxLabeled("WFL_S_ZonesWork".Translate(), ref Settings.zonesAllowWork, "WFL_S_ZonesWorkTip".Translate());
+            list.CheckboxLabeled("WFL_S_FamilyStories".Translate(), ref Settings.familyStories);
+            list.CheckboxLabeled("WFL_S_FamilySupplies".Translate(), ref Settings.familySupplies);
+            list.CheckboxLabeled("WFL_S_FamilyTheft".Translate(), ref Settings.familyTheft);
+            list.CheckboxLabeled("WFL_S_FamilyViolence".Translate(), ref Settings.familyViolence);
+            list.CheckboxLabeled("WFL_S_LethalPlots".Translate(), ref Settings.lethalPlots);
             list.CheckboxLabeled("WFL_S_SocialEvents".Translate(), ref Settings.socialEvents, "WFL_S_SocialEventsTip".Translate());
             if (Settings.socialEvents)
             {
@@ -135,7 +148,9 @@ namespace FamilyLife
             list.CheckboxLabeled("WFL_S_BondMessages".Translate(), ref Settings.bondMessages, "WFL_S_BondMessagesTip".Translate());
             list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());
             list.CheckboxLabeled("WFL_S_LogEvents".Translate(), ref Settings.logEvents, "WFL_S_LogEventsTip".Translate());
+            settingsHeight = list.CurHeight + 12;
             list.End();
+            Widgets.EndScrollView();
         }
     }
 }

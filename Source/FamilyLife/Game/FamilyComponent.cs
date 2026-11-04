@@ -17,6 +17,7 @@ namespace FamilyLife
         private const int DirtyDelay = 60;         // coalesce bursts of changes (a birth adds several relations)
 
         public FamilyRegistry Registry = new FamilyRegistry();
+        internal readonly FamilyEconomy Economy;
         internal readonly PerformanceProbe Performance = new PerformanceProbe();
         internal int Revision { get; private set; }
         private readonly TickGate maintenance = new TickGate(625);
@@ -44,7 +45,7 @@ namespace FamilyLife
         private int lastSync = -SyncInterval;
         private int retryAfter;
 
-        public FamilyComponent(Game game) { }
+        public FamilyComponent(Game game) { Economy = new FamilyEconomy(this); }
 
         private static Game cachedGame;
         private static FamilyComponent cachedComponent;
@@ -98,6 +99,7 @@ namespace FamilyLife
             // Keep event effects atomic; independent housekeeping runs in four staggered phases.
             if (now != lastSync && maintenance.Take(now)) Maintain(now);
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
+            Economy.Tick(now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>
