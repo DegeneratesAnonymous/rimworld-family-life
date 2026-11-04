@@ -71,6 +71,34 @@ namespace FamilyLife
             }
         }
 
+        /// <summary>
+        /// A family zone is where the family rests, eats and plays, not a cage for their work. During work hours (and 'anything') the
+        /// restriction is lifted so crops, mining, hauling and building get done; when the schedule moves to sleep or recreation it is put back.
+        /// Only members who hold the family's area, or none, are touched, and never someone in the middle of a visit through another family's door.
+        /// </summary>
+        public static void ManageWorkTime(FamilyComponent component)
+        {
+            var settings = FamilyLifeMod.Settings;
+            if (settings != null && !settings.zonesAllowWork) return;
+            var registry = component.Registry;
+            foreach (var lineage in registry.LineagesWithZones())
+            {
+                var area = FindArea(lineage.ZoneAreaId);
+                if (area == null) continue;
+                foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
+                {
+                    var pawn = component.TryGetPawn(person.Id);
+                    if (pawn?.playerSettings == null || pawn.Dead || !pawn.Spawned || pawn.Map != area.Map || GuestPasses.IsActive(pawn)) continue;
+                    var held = pawn.playerSettings.AreaRestrictionInPawnCurrentMap;
+                    if (held != null && held != area) continue;                      // the player gave them something else
+                    var now = pawn.timetable?.CurrentAssignment;
+                    bool working = now == TimeAssignmentDefOf.Work || now == TimeAssignmentDefOf.Anything;
+                    if (working && held == area) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = null;
+                    else if (!working && held == null && now != null) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = area;
+                }
+            }
+        }
+
         public static void Assign(FamilyComponent component, Lineage lineage, Area area)
         {
             var previous = lineage.ZoneAreaId == 0 ? null : FindArea(lineage.ZoneAreaId);

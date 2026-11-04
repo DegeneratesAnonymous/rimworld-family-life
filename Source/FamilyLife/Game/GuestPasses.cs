@@ -326,7 +326,7 @@ namespace FamilyLife
             if (Find.TickManager.TicksGame % 30 != 0) return;
             FamilyZoneView.Sync();
             var component = FamilyComponent.Current;
-            if (component != null) GuestPasses.Process(component);
+            if (component != null) { GuestPasses.Process(component); if (Find.TickManager.TicksGame % 120 == 0) FamilyZones.ManageWorkTime(component); }
         }
 
         public override void StartedNewGame() => GuestPasses.Reset();

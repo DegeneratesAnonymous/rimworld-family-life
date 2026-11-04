@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.3 - family zones no longer stop work
+- Pawns restricted to a small family zone could only work inside it, so they stood around. The restriction is now lifted during work and 'anything' hours and put back for sleep and recreation (checked every couple of seconds). A setting turns this off. Only people holding the family's area (or none) are touched.
+- Side effect: because workers are free during work hours, other families' workers also walk into a zone then, so the door/knock only matters outside work hours. Not yet verified in game.
+
 ## 0.13.2 - beds inside family zones
 - A bed that is even partly inside a family zone now has all of it, and the cells beside it where a sleeper stands, added to the zone (or to the family's area if another zone owns the cell). A bed with a corner outside the area could not be claimed or walked to. Checked every sync, so zones painted earlier are repaired.
 - New debug action 'Why can the selected pawn not use a bed?' lists every bed, whether it is outside the pawn's area, forbidden or unreachable, and who owns it.

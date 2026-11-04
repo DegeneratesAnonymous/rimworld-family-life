@@ -28,6 +28,7 @@ namespace FamilyLife
         public bool bondMessages = true;
         public bool strictRomance;
         public bool socialEvents = true;
+        public bool zonesAllowWork = true;
         public bool eventsFamily = true;
         public bool eventsIndividual = true;
         public bool eventsInterFamily = true;
@@ -55,6 +56,7 @@ namespace FamilyLife
             Scribe_Values.Look(ref bondMessages, "bondMessages", true);
             Scribe_Values.Look(ref strictRomance, "strictRomance");
             Scribe_Values.Look(ref socialEvents, "socialEvents", true);
+            Scribe_Values.Look(ref zonesAllowWork, "zonesAllowWork", true);
             Scribe_Values.Look(ref eventsFamily, "eventsFamily", true);
             Scribe_Values.Look(ref eventsIndividual, "eventsIndividual", true);
             Scribe_Values.Look(ref eventsInterFamily, "eventsInterFamily", true);
@@ -117,6 +119,7 @@ namespace FamilyLife
                 list.CheckboxLabeled("WFL_S_Affairs".Translate(), ref Settings.affairs, "WFL_S_AffairsTip".Translate());
                 list.CheckboxLabeled("WFL_S_Strict".Translate(), ref Settings.strictRomance, "WFL_S_StrictTip".Translate());
             }
+            list.CheckboxLabeled("WFL_S_ZonesWork".Translate(), ref Settings.zonesAllowWork, "WFL_S_ZonesWorkTip".Translate());
             list.CheckboxLabeled("WFL_S_SocialEvents".Translate(), ref Settings.socialEvents, "WFL_S_SocialEventsTip".Translate());
             if (Settings.socialEvents)
             {
