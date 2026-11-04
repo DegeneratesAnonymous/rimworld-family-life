@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.12.1 - doors find the work themselves
+- The builder never approached another family's zone because the game never offers work outside a pawn's area, so my first hook never fired. Now the mod checks construction and repair jobs inside family zones every half second and sends an idle colonist from another family (who has Construction or Repair enabled) to the edge to be let in. Their own area is lifted for the visit and put back after, including across a save. Turn on Log events in the mod settings to see each step in the log.
+
 ## 0.12.0 - family doors, clearer zones, zone toggle
 - A colonist stopped from building inside another family's zone now waits at its edge until a member of that family lets them in (an adult can let anyone in; a child can only let in another child). They build, and the pass ends when they leave. Only construction (frames and blueprints) triggers this.
 - Family zones are now a faint tint (5% opacity) so everything underneath is clear.
