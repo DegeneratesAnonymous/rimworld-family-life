@@ -13,10 +13,13 @@ namespace FamilyLife
     internal sealed class GuestPass
     {
         public Pawn Guest, Opener;
+        public int Lineage;
         public Zone_Family Zone;
         public Area OriginalArea;                 // the guest's own restriction, put back when the visit ends
         public IntVec3 Inside, Outside;
         public int Start, GrantedTick, LeftSince = -1;
+        public int ArrivedTick = -1, LastKnock = -1000000, LastSummon = -1000000;
+        public HashSet<int> Tried = new HashSet<int>();      // people already called who did not come
         public bool Granted, Entered;
     }
 
@@ -29,7 +32,7 @@ namespace FamilyLife
     /// </summary>
     internal static class GuestPasses
     {
-        public const int WaitLimit = 2500, PassLimit = 7500, NeverEnteredLimit = 1800, LeaveDelay = 240, CooldownAfterRefusal = 2500, CooldownAfterVisit = 600, CooldownNeverEntered = 5000;
+        public const int WaitLimit = 2500, PassLimit = 7500, NeverEnteredLimit = 1800, LeaveDelay = 240, CooldownAfterRefusal = 2500, CooldownAfterVisit = 600, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120;
         public static readonly Dictionary<int, GuestPass> ByGuest = new Dictionary<int, GuestPass>();
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
@@ -137,25 +140,45 @@ namespace FamilyLife
         {
             cooldown[guest.thingIDNumber] = now + CooldownAfterRefusal;                  // replaced by a shorter one if the visit goes ahead and ends well
             if (!FindDoor(zone, guest, out IntVec3 inside, out IntVec3 outside)) { Trace(guest.LabelShort + ": no edge cell found for " + zone.label); return false; }
-            Pawn best = null; float bestScore = float.MaxValue;
-            foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
-            {
-                var candidate = component.TryGetPawn(person.Id);
-                if (candidate == null || candidate == guest || !Available(candidate) || candidate.Map != guest.Map || !CanOpenFor(candidate, guest)) continue;
-                if (!candidate.CanReach(inside, PathEndMode.OnCell, Danger.Deadly)) continue;
-                float score = candidate.Position.DistanceTo(inside) + (candidate.DevelopmentalStage == DevelopmentalStage.Adult ? 0f : 40f);
-                if (score < bestScore) { bestScore = score; best = candidate; }
-            }
-            if (best == null) { Trace(guest.LabelShort + ": nobody in the family is free to let them into " + zone.label); return false; }
-
-            var pass = new GuestPass { Guest = guest, Opener = best, Zone = zone, Inside = inside, Outside = outside, Start = now, OriginalArea = guest.playerSettings.AreaRestrictionInPawnCurrentMap };
+            var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, OriginalArea = guest.playerSettings.AreaRestrictionInPawnCurrentMap, Lineage = lineage.Id };
             ByGuest[guest.thingIDNumber] = pass;
             guest.playerSettings.AreaRestrictionInPawnCurrentMap = null;                 // so the guest can walk to the door
             if (!guest.CanReach(outside, PathEndMode.OnCell, Danger.Deadly)) { Trace(guest.LabelShort + " cannot reach the edge of " + zone.label); End(pass, CooldownAfterRefusal); return false; }
-            Trace(guest.LabelShort + " waits at " + zone.label + " for " + best.LabelShort);
+            Trace(guest.LabelShort + " goes to knock at " + zone.label);
             guest.jobs.StartJob(JobMaker.MakeJob(FamilyJobDefOf.WFL_WaitAtDoor, outside), JobCondition.InterruptForced, null, false);
-            best.jobs.StartJob(JobMaker.MakeJob(FamilyJobDefOf.WFL_LetGuestIn, guest, inside), JobCondition.InterruptForced, null, true);
             return true;
+        }
+
+        /// <summary>
+        /// Calls someone in the family to the door: the nearest adult who is awake and able (a child, for a child). Whatever they are
+        /// doing, they stop and come. If the one called does not come, the next knock calls someone else.
+        /// </summary>
+        private static void Summon(GuestPass pass, FamilyComponent component, int now)
+        {
+            pass.LastSummon = now;
+            var registry = component.Registry;
+            var lineage = registry.GetLineage(pass.Lineage);
+            if (lineage == null) return;
+            var guest = pass.Guest;
+            Pawn best = null; float bestScore = float.MaxValue;
+            for (int round = 0; round < 2 && best == null; round++)
+            {
+                foreach (var person in registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct())
+                {
+                    var candidate = component.TryGetPawn(person.Id);
+                    if (candidate == null || candidate == guest || !Available(candidate) || candidate.Map != guest.Map || !CanOpenFor(candidate, guest)) continue;
+                    if (round == 0 && pass.Tried.Contains(candidate.thingIDNumber)) continue;
+                    if (!candidate.CanReach(pass.Inside, PathEndMode.OnCell, Danger.Deadly)) continue;
+                    float score = candidate.Position.DistanceTo(pass.Inside) + (candidate.DevelopmentalStage == DevelopmentalStage.Adult ? 0f : 40f);
+                    if (score < bestScore) { bestScore = score; best = candidate; }
+                }
+                if (best == null) pass.Tried.Clear();                                    // everyone has been tried: start over
+            }
+            if (best == null) { Trace(guest.LabelShort + " knocks but nobody in the family is able to come to " + pass.Zone.label); return; }
+            pass.Opener = best;
+            pass.Tried.Add(best.thingIDNumber);
+            Trace(best.LabelShort + " is called to the door of " + pass.Zone.label + " for " + guest.LabelShort);
+            best.jobs.StartJob(JobMaker.MakeJob(FamilyJobDefOf.WFL_LetGuestIn, guest, pass.Inside), JobCondition.InterruptForced, null, true);
         }
 
         /// <summary>The edge of the zone nearest the guest: a cell inside the zone and the free cell beside it.</summary>
@@ -194,10 +217,21 @@ namespace FamilyLife
             { End(pass, CooldownAfterVisit); return; }
             if (!pass.Granted)
             {
-                bool lateStart = now - pass.Start > 180;
-                if (now - pass.Start > WaitLimit || (lateStart && guest.CurJobDef != FamilyJobDefOf.WFL_WaitAtDoor)) { End(pass, CooldownAfterRefusal); return; }
+                bool atDoor = guest.CurJobDef == FamilyJobDefOf.WFL_WaitAtDoor && guest.Position.DistanceTo(pass.Outside) <= 2.5f;
+                if (atDoor && pass.ArrivedTick < 0) pass.ArrivedTick = now;
+                if (now - pass.Start > 180 && guest.CurJobDef != FamilyJobDefOf.WFL_WaitAtDoor) { End(pass, CooldownAfterRefusal); return; }     // called away
+                // They wait a reasonable while once they have arrived, and then give up and carry on with something else.
+                if ((pass.ArrivedTick >= 0 && now - pass.ArrivedTick > WaitLimit) || now - pass.Start > WalkLimit) { Trace(guest.LabelShort + " gave up waiting at " + pass.Zone.label); End(pass, CooldownAfterRefusal); return; }
+                if (!atDoor) return;
+
+                if (now - pass.LastKnock >= KnockEvery)
+                {
+                    pass.LastKnock = now;
+                    MoteMaker.ThrowText(guest.DrawPos, guest.Map, "WFL_Knock".Translate(), Color.white);
+                }
                 var op = pass.Opener;
-                if (op == null || !Available(op) || (lateStart && op.CurJobDef != FamilyJobDefOf.WFL_LetGuestIn)) { End(pass, CooldownAfterRefusal); return; }
+                bool coming = op != null && Available(op) && op.CurJobDef == FamilyJobDefOf.WFL_LetGuestIn;
+                if (!coming && now - pass.LastSummon >= SummonEvery) Summon(pass, FamilyComponent.Current, now);
                 return;
             }
             bool inside = pass.Zone.ContainsCell(guest.Position);

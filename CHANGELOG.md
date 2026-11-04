@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.1 - knocking at the door
+- A worker who needs into another family's zone now goes to the edge and knocks (a visible 'Knock, knock' every few seconds). Whoever is nearest in that family who is awake and able is called to the door and stops what they are doing to come; if they don't come, the next knock calls someone else. The worker waits a reasonable while after arriving, then gives up and carries on. Before, an adult was chosen once and the worker could be left waiting.
+- Not yet verified in game.
+
 ## 0.13.0 - relationship events
 - 90 relationship moments across nine groups (within a family, between friends and others, between families; adult with adult, adult with child, child with child), all built on one engine that separates opportunity, motivation, execution, reception and consequences. See docs/EVENTS.md.
 - People outside the family now get bonds of their own once something has brought them together. Two families have a standing built from incidents and shared moments, never averaged from members. Promises the mod itself records can be kept or broken.

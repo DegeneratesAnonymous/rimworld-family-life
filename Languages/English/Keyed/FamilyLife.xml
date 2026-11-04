@@ -255,6 +255,7 @@
   <WFL_ZoneChooseFamily>Choose family</WFL_ZoneChooseFamily>
   <WFL_ZoneChooseFamilyDesc>Choose which family this zone belongs to. Everyone in that family, including children born later, stays inside it.</WFL_ZoneChooseFamilyDesc>
   <WFL_ZoneNoFamilies>No families to choose from</WFL_ZoneNoFamilies>
+  <WFL_Knock>Knock, knock.</WFL_Knock>
   <WFL_ComeIn>Come in.</WFL_ComeIn>
   <WFL_ZoneToggle>Show or hide family zones</WFL_ZoneToggle>
   <WFL_Report_SocialMoment>talking with {0}.</WFL_Report_SocialMoment>
