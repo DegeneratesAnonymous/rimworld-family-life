@@ -103,6 +103,29 @@ namespace FamilyLife
             Log.Message(sb.ToString());
         }
 
+        [DebugAction("Wil's Family Life", "Why is the selected pawn staying in their family zone?", allowedGameStates = AllowedGameStates.Playing)]
+        private static void ExplainZoneWork()
+        {
+            var component = FamilyComponent.Current;
+            var pawn = Find.Selector.SelectedPawns.FirstOrDefault();
+            if (component == null || pawn == null) { Log.Message("[Wil's Family Life] Select a colonist first."); return; }
+            var registry = component.Registry;
+            var record = registry.GetPerson(pawn.thingIDNumber);
+            var lineage = record == null ? null : registry.GetLineage(registry.LineageIdFor(record));
+            var sb = new StringBuilder();
+            sb.AppendLine(pawn.LabelShort + ": family " + (lineage == null ? "none" : registry.LineageDisplayName(lineage)) + ", zone area id " + (lineage?.ZoneAreaId ?? 0));
+            var held = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
+            sb.AppendLine("  restriction now: " + (held == null ? "none" : held.Label + " (id " + held.ID + ")"));
+            sb.AppendLine("  schedule now: " + (pawn.timetable?.CurrentAssignment?.defName ?? "unknown") + "; current job: " + (pawn.CurJobDef?.defName ?? "none") + "; setting 'only outside work hours': " + (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.zonesAllowWork));
+            sb.AppendLine("  in a door visit: " + GuestPasses.IsActive(pawn));
+            FamilyZones.ManageWorkTime(component);
+            var after = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
+            sb.AppendLine("  after checking work time: " + (after == null ? "none" : after.Label));
+            if (pawn.workSettings != null)
+                sb.AppendLine("  active work: " + string.Join(", ", DefDatabase<WorkTypeDef>.AllDefsListForReading.Where(w => !pawn.WorkTypeIsDisabled(w) && pawn.workSettings.GetPriority(w) > 0).Select(w => w.defName + "=" + pawn.workSettings.GetPriority(w))));
+            Log.Message(sb.ToString());
+        }
+
         [DebugAction("Wil's Family Life", "Resync family records now", allowedGameStates = AllowedGameStates.Playing)]
         private static void Resync()
         {

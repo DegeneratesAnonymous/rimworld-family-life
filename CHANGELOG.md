@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.13.4 - find out why pawns stay in the zone
+- New debug action 'Why is the selected pawn staying in their family zone?': prints the pawn's family, restriction, schedule, current job and work priorities, runs the work-time check once and prints the restriction afterwards.
+
 ## 0.13.3 - family zones no longer stop work
 - Pawns restricted to a small family zone could only work inside it, so they stood around. The restriction is now lifted during work and 'anything' hours and put back for sleep and recreation (checked every couple of seconds). A setting turns this off. Only people holding the family's area (or none) are touched.
 - Side effect: because workers are free during work hours, other families' workers also walk into a zone then, so the door/knock only matters outside work hours. Not yet verified in game.
