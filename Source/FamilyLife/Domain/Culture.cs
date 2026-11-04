@@ -240,7 +240,7 @@ namespace FamilyLife.Domain
         public int Attempts;
     }
 
-    public enum MemoryKind : byte { Birth = 0, Loss = 1, Wedding = 2, Parting = 3, CameOfAge = 4, Reunion = 5, Anniversary = 6, Tradition = 7, Reconciliation = 8, Joined = 9, StepFamily = 10 }
+    public enum MemoryKind : byte { Birth = 0, Loss = 1, Wedding = 2, Parting = 3, CameOfAge = 4, Reunion = 5, Anniversary = 6, Tradition = 7, Reconciliation = 8, Joined = 9, StepFamily = 10, Bond = 11, Rupture = 12 }
 
     /// <summary>
     /// A defining moment in a lineage's history. Only moments weighty enough are kept, and only a bounded number: the rest of
@@ -535,6 +535,8 @@ namespace FamilyLife.Domain
                 case MemoryKind.CameOfAge: Reinforce(lineageId, Dim.Status, weight * 0.5f); break;
                 case MemoryKind.Joined: Reinforce(lineageId, Dim.Devotion, weight * 0.5f); break;
                 case MemoryKind.StepFamily: Reinforce(lineageId, Dim.Hearth, weight * 0.5f); break;
+                case MemoryKind.Bond: Reinforce(lineageId, Dim.Warmth, weight * 0.5f); break;
+                case MemoryKind.Rupture: Reinforce(lineageId, Dim.Warmth, -weight * 0.5f); break;
             }
         }
 

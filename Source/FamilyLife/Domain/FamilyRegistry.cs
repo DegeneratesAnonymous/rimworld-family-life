@@ -121,6 +121,7 @@ namespace FamilyLife.Domain
             RebuildChildIndex();
             RebuildBondIndex();
             RebuildTimeIndex();
+            RepairEvents();
             indexed = true;
         }
 

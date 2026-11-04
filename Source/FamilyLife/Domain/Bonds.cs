@@ -11,7 +11,8 @@ namespace FamilyLife.Domain
         Child = 2,      // the holder is the other person's child
         Sibling = 3,
         Partner = 4,
-        Ex = 5
+        Ex = 5,
+        Acquaintance = 6  // not family and not a housemate: someone the events have brought together
     }
 
     /// <summary>
@@ -49,6 +50,7 @@ namespace FamilyLife.Domain
         public const float MaxHoursPerUpdate = 48f;      // a long gap is treated as at most two days
         public const int TicksPerHour = 2500;
         public const int MaxBondsPerPerson = 24;
+        public const int MaxAcquaintances = 12;          // friends and others outside the family that keep a bond
 
         public const float FamiliarityPerHourHousehold = 0.05f;
         public const float FamiliarityPerHourTogether = 0.01f;
@@ -75,6 +77,7 @@ namespace FamilyLife.Domain
                 case BondKind.Partner: return 35f;
                 case BondKind.Sibling: return 20f;
                 case BondKind.Ex: return 10f;
+                case BondKind.Acquaintance: return 3f;
                 default: return 5f;
             }
         }

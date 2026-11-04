@@ -140,6 +140,7 @@ namespace FamilyLife.Domain
         public void RecordTogether(int a, int b, int ticks, int now, BondCause cause = BondCause.Together)
         {
             if (ticks <= 0 || a == b) return;
+            KeepPromises(a, b, ticks, now);
             float hours = ticks / (float)BondTuning.TicksPerHour;
             foreach (var pair in new[] { new[] { a, b }, new[] { b, a } })
             {

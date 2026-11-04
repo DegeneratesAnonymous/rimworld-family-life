@@ -183,6 +183,53 @@ namespace FamilyLife.Domain
         }
     }
 
+    public sealed partial class FamilyTie : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref LineageA, "a");
+            Scribe_Values.Look(ref LineageB, "b");
+            Scribe_Values.Look(ref Familiarity, "familiarity");
+            Scribe_Values.Look(ref Goodwill, "goodwill");
+            Scribe_Values.Look(ref Grievance, "grievance");
+            Scribe_Values.Look(ref Shared, "shared");
+            Scribe_Values.Look(ref LastTick, "last");
+            Scribe_Values.Look(ref WrongedBy, "wrongedBy");
+            Scribe_Values.Look(ref WrongedPerson, "wronged");
+            Scribe_Values.Look(ref GrievanceTick, "grievanceTick");
+        }
+    }
+
+    public sealed partial class Commitment : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id");
+            Scribe_Values.Look(ref FromId, "from");
+            Scribe_Values.Look(ref ToId, "to");
+            Scribe_Values.Look(ref EventId, "event", "");
+            Scribe_Values.Look(ref CreatedTick, "created");
+            Scribe_Values.Look(ref DueTick, "due");
+            Scribe_Values.Look(ref Importance, "importance", 1);
+            Scribe_Values.Look(ref State, "state");
+        }
+    }
+
+    public sealed partial class EventRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref EventId, "event", "");
+            Scribe_Values.Look(ref A, "a");
+            Scribe_Values.Look(ref B, "b");
+            Scribe_Values.Look(ref Tick, "tick");
+            Scribe_Values.Look(ref Tier, "tier", EventTier.Flat);
+            Scribe_Values.Look(ref Weight, "weight", EventWeight.Ambient);
+            Scribe_Values.Look(ref Setting, "setting");
+            Scribe_Values.Look(ref Third, "third");
+        }
+    }
+
     public sealed partial class FamilyRegistry : IExposable
     {
         public void ExposeData()
@@ -199,6 +246,10 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Rifts, "rifts", LookMode.Deep);
             Scribe_Collections.Look(ref Memories, "memories", LookMode.Deep);
             Scribe_Collections.Look(ref GatheringRequests, "gatheringRequests", LookMode.Deep);
+            Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
+            Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
+            Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
+            Scribe_Values.Look(ref NextCommitmentId, "nextCommitmentId", 1);
             Scribe_Values.Look(ref NextRiftId, "nextRiftId", 1);
             Scribe_Values.Look(ref NextRequestId, "nextRequestId", 1);
             Scribe_Values.Look(ref LastAnniversaryTick, "lastAnniversaryTick");

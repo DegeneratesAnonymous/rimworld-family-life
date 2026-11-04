@@ -200,6 +200,49 @@ MUTATIONS = [
      "total += Math.Max(0f, gap - 1.0f) * 6f;", ""),
     ("being the odd one out of the family's values costs nothing", "Domain/Insight.cs",
      "&& Math.Sign(mine) != Math.Sign(family)) total += 4f;", "&& Math.Sign(mine) != Math.Sign(family)) total += 0f;"),
+    # Relationship events
+    ("gains do not shrink as a bond grows", "Domain/Events/EventEngine.cs",
+     "private static float Room(float v) => Math.Max(0.15f, 1f - v / 100f) * 1.5f;", "private static float Room(float v) => 1f;"),
+    ("repeating an event pays the same each time", "Domain/Events/EventEngine.cs",
+     "return n == 0 ? 1f : (n == 1 ? 0.6f : (n == 2 ? 0.35f : 0.2f));", "return 1f;"),
+    ("a poor moment opens a rift at any tension", "Domain/Events/EventEngine.cs",
+     "&& (ab?.Tension ?? 0f) >= EventTuning.RiftOpensAtTension &&", "&& true &&"),
+    ("one conversation closes a neglect rift", "Domain/Events/EventEngine.cs",
+     "bool bySelf = c.Rift.Cause == RiftCause.Neglect || c.Rift.Cause == RiftCause.Rivalry;", "bool bySelf = false;"),
+    ("a promise is made on any outcome", "Domain/Events/EventEngine.cs",
+     "if ((d.Effects & EventEffect.Promise) != 0 && r.Tier >= EventTier.Good)", "if ((d.Effects & EventEffect.Promise) != 0)"),
+    ("a promise that goes unkept is never broken", "Domain/Events/EventEngine.cs",
+     "p.State = 2;\n                broken.Add(p);", "broken.Add(p);"),
+    ("spending the time does not keep a promise", "Domain/FamilyActivity.cs",
+     "            KeepPromises(a, b, ticks, now);\n", ""),
+    ("an event has no cooldown", "Domain/Events/EventEngine.cs",
+     "if (since < d.CooldownDays)", "if (false)"),
+    ("family moments happen between strangers", "Domain/Events/EventEngine.cs",
+     "case EventBucket.IntraFamily: return family;", "case EventBucket.IntraFamily: return true;"),
+    ("an event that needs a third person does not", "Domain/Events/EventEngine.cs",
+     "if (d.NeedsThird && c.Third == null)", "if (false)"),
+    ("personal moments move whole families", "Domain/Events/EventEngine.cs",
+     "&& (d.Effects & (EventEffect.TiesFamilies | EventEffect.Incident | EventEffect.Bridge)) != 0)", ")"),
+    ("every outcome becomes a defining memory", "Domain/Events/EventEngine.cs",
+     "&& (r.Tier == EventTier.Great || r.Tier == EventTier.Poor);", "&& true;"),
+    ("children do no more to a feud than adults", "Domain/Events/EventEngine.cs",
+     "float bridge = (d.Effects & EventEffect.Bridge) != 0 ? 1.5f : 1f;", "float bridge = 1f;"),
+    ("child events happen without children being supported", "Domain/Events/EventEngine.cs",
+     "if (d.NeedsChild && !childrenEnabled)", "if (false)"),
+    ("the one who knows less teaches", "Domain/Events/EventEngine.cs",
+     "bool initiatorTeaches = c.Initiator.BestSkillLevel() >= c.Recipient.BestSkillLevel();", "bool initiatorTeaches = c.Initiator.BestSkillLevel() <= c.Recipient.BestSkillLevel();"),
+    ("confronting someone costs nothing when it goes badly", "Domain/Events/EventEngine.cs",
+     "float heat = r.Tier == EventTier.Poor ? 8f :", "float heat = r.Tier == EventTier.Poor ? 1f :"),
+    ("ambient moments use up the daily allowance", "Domain/Events/EventEngine.cs",
+     "if (e.Weight != EventWeight.Ambient && (e.A == personId || e.B == personId)) n++;", "if (e.A == personId || e.B == personId) n++;"),
+    ("every outcome is a good one", "Domain/Events/EventEngine.cs",
+     "public const float GoodAt = 0.52f;", "public const float GoodAt = 0.0f;"),
+    ("what happened is not recorded", "Domain/Events/EventEngine.cs",
+     "EventLog.Add(new EventRecord { EventId = d.Id,", "var unused = (new EventRecord { EventId = d.Id,"),
+    ("a strained family tie never eases", "Domain/Events/EventEngine.cs",
+     "t.Grievance = Math.Max(0f, t.Grievance - EventTuning.TieGrievanceEasePerDay * days);", ""),
+    ("a poor reception does not depend on trust", "Domain/Events/EventCatalog.cs",
+     "Factor.RecipientTrust, 0.25f, Factor.RecipientAttachment, 0.15f,", "Factor.RecipientTrust, 0.0f, Factor.RecipientAttachment, 0.15f,"),
 ]
 
 
@@ -212,7 +255,10 @@ def run_tests():
 
 def main():
     missed = 0
+    only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None      # e.g. --only Events/ runs just those files' mutations
     for name, rel, old, new in MUTATIONS:
+        if only and only not in rel:
+            continue
         path = SRC / rel
         original = path.read_text(encoding="utf-8")
         if old not in original:

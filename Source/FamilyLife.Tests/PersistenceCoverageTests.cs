@@ -42,6 +42,9 @@ namespace FamilyLife.Tests
         [InlineData(typeof(Memory))]
         [InlineData(typeof(Rift))]
         [InlineData(typeof(BondReason))]
+        [InlineData(typeof(FamilyTie))]
+        [InlineData(typeof(Commitment))]
+        [InlineData(typeof(EventRecord))]
         [InlineData(typeof(FamilyRegistry))]
         public void Every_field_is_written_to_the_save(Type type)
         {

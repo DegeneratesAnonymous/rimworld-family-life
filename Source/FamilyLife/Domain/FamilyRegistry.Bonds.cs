@@ -81,6 +81,16 @@ namespace FamilyLife.Domain
                     .ThenBy(x => x.o.Id)
                     .Take(BondTuning.MaxBondsPerPerson);
                 foreach (var x in ranked) pairs.Add(new KeyValuePair<int, int>(holder.Id, x.o.Id));
+
+                // People the events have brought together who are not family or housemates keep a bond too, so it follows the game's opinion.
+                int extra = 0;
+                foreach (var bond in Bonds.Where(b => b.From == holder.Id).OrderByDescending(b => b.Attachment).ThenBy(b => b.To))
+                {
+                    if (extra >= BondTuning.MaxAcquaintances) break;
+                    if (!personById.TryGetValue(bond.To, out var o) || !o.InColony || KindOf(holder, o).HasValue) continue;
+                    pairs.Add(new KeyValuePair<int, int>(holder.Id, o.Id));
+                    extra++;
+                }
             }
             return pairs;
         }
@@ -101,7 +111,7 @@ namespace FamilyLife.Domain
             {
                 var holder = personById[pair.Key];
                 var other = personById[pair.Value];
-                var kind = KindOf(holder, other) ?? BondKind.Housemate;
+                var kind = KindOf(holder, other) ?? BondKind.Acquaintance;
                 var bond = GetBond(holder.Id, other.Id) ?? CreateBond(holder.Id, other.Id, kind, now);
                 if (other.Presence == Presence.Dead) { bond.LastTick = now; continue; }       // a memory: it no longer changes by itself
 
@@ -165,7 +175,7 @@ namespace FamilyLife.Domain
             var existing = GetBond(from, to);
             if (existing != null) return existing;
             if (!personById.TryGetValue(from, out var holder) || !personById.TryGetValue(to, out var other)) return null;
-            return CreateBond(from, to, KindOf(holder, other) ?? BondKind.Housemate, now);
+            return CreateBond(from, to, KindOf(holder, other) ?? BondKind.Acquaintance, now);
         }
 
         private void ApplyEventToBonds(FamilyEvent e, int now, List<Grief> griefs)
