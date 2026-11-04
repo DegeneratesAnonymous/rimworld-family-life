@@ -85,6 +85,24 @@ namespace FamilyLife
             Log.Message(sb.ToString());
         }
 
+        [DebugAction("Wil's Family Life", "Why can the selected pawn not use a bed?", allowedGameStates = AllowedGameStates.Playing)]
+        private static void ExplainBeds()
+        {
+            var pawn = Find.Selector.SelectedPawns.FirstOrDefault();
+            if (pawn == null) { Log.Message("[Wil's Family Life] Select a colonist first."); return; }
+            var area = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
+            var sb = new StringBuilder();
+            sb.AppendLine(pawn.LabelShort + ": area restriction " + (area == null ? "none" : area.Label) + ", owns " + (pawn.ownership?.OwnedBed?.LabelCap.ToString() ?? "no bed"));
+            foreach (var bed in pawn.Map.listerBuildings.AllBuildingsColonistOfClass<RimWorld.Building_Bed>())
+            {
+                string why = !RimWorld.ForbidUtility.InAllowedArea(bed.Position, pawn) ? "OUTSIDE the pawn's area at " + bed.Position
+                    : (RimWorld.ForbidUtility.IsForbidden(bed, pawn) ? "forbidden" : (!RimWorld.RestUtility.CanUseBedEver(pawn, bed.def) ? "not a bed this pawn can ever use" : (!pawn.CanReach(bed, Verse.AI.PathEndMode.OnCell, Danger.Some) ? "UNREACHABLE (a cell on the way is outside the area?)" : "usable")));
+                var owners = bed.OwnersForReading.Count == 0 ? "unowned" : string.Join(", ", bed.OwnersForReading.Select(o => o.LabelShort));
+                sb.AppendLine("  " + bed.LabelCap + " at " + bed.Position + " (" + owners + "): " + why);
+            }
+            Log.Message(sb.ToString());
+        }
+
         [DebugAction("Wil's Family Life", "Resync family records now", allowedGameStates = AllowedGameStates.Playing)]
         private static void Resync()
         {

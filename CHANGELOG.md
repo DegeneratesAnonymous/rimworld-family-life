@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.2 - beds inside family zones
+- A bed that is even partly inside a family zone now has all of it, and the cells beside it where a sleeper stands, added to the zone (or to the family's area if another zone owns the cell). A bed with a corner outside the area could not be claimed or walked to. Checked every sync, so zones painted earlier are repaired.
+- New debug action 'Why can the selected pawn not use a bed?' lists every bed, whether it is outside the pawn's area, forbidden or unreachable, and who owns it.
+- Not yet verified in game; if it still happens, run that debug action on a pawn and send me the log.
+
 ## 0.13.1 - knocking at the door
 - A worker who needs into another family's zone now goes to the edge and knocks (a visible 'Knock, knock' every few seconds). Whoever is nearest in that family who is awake and able is called to the door and stops what they are doing to come; if they don't come, the next knock calls someone else. The worker waits a reasonable while after arriving, then gives up and carries on. Before, an adult was chosen once and the worker could be left waiting.
 - Not yet verified in game.

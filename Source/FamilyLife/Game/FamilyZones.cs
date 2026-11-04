@@ -44,6 +44,31 @@ namespace FamilyLife
                 }
                 registry.MarkZoneApplied(lineage.Id, done);
             }
+            foreach (var map in Find.Maps) IncludeWholeBeds(map);
+        }
+
+        /// <summary>
+        /// A bed that is partly inside a family zone belongs to the home, so all of it is: the cells it covers and the cells beside it a
+        /// sleeper stands on. A pawn cannot claim or walk to a bed that is outside its area, and a zone painted around a bed by eye often
+        /// misses a corner. Cells that belong to no other zone join the zone itself; the rest join only the family's area.
+        /// </summary>
+        public static void IncludeWholeBeds(Map map)
+        {
+            var zones = map.zoneManager.AllZones.OfType<Zone_Family>().Where(z => z.areaId != 0).ToList();
+            if (zones.Count == 0) return;
+            foreach (var bed in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>().ToList())
+            {
+                var cells = bed.OccupiedRect().Cells.Concat(bed.InteractionCells).Distinct().Where(c => c.InBounds(map)).ToList();
+                var zone = zones.FirstOrDefault(z => cells.Any(z.ContainsCell));
+                if (zone == null) continue;
+                var area = zone.LinkedArea;
+                foreach (var c in cells)
+                {
+                    if (zone.ContainsCell(c) || c.Impassable(map)) continue;
+                    if (map.zoneManager.ZoneAt(c) == null) zone.AddCell(c);
+                    else if (area != null) area[c] = true;
+                }
+            }
         }
 
         public static void Assign(FamilyComponent component, Lineage lineage, Area area)
