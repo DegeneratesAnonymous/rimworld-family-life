@@ -45,6 +45,13 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Adding_family_effects_does_not_remove_teaching_from_an_apprenticeship()
+        {
+            Assert.All(EventCatalog.All.Where(e => e.TeachSkill != null), e => Assert.True(e.Effects.HasFlag(EventEffect.Teaches), e.Id));
+            Assert.True(EventCatalog.Get("C2-01").Effects.HasFlag(EventEffect.TiesFamilies));
+        }
+
+        [Fact]
         public void The_chapters_follow_the_design_in_where_each_kind_of_moment_can_happen()
         {
             Assert.All(EventCatalog.All.Where(e => e.Bucket == EventBucket.InterFamily), e => Assert.True(e.Effects.HasFlag(EventEffect.TiesFamilies) || e.Effects.HasFlag(EventEffect.Incident) || e.Effects.HasFlag(EventEffect.Bridge), e.Id));

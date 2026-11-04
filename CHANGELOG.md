@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased - grounded relationship moments
+- Face-to-face moments require living, spawned participants on the same map; a pending third-person event cancels when its participant leaves.
+- Ordinary adjacent labor no longer masquerades as a community aid day. Deliberate aid still needs a request and beneficiary mechanic.
+- Two-person events are no longer multiplied by the number of nearby witnesses; duplicate contexts do not add selection weight.
+- Meaningful moments respect both participants' daily limit, including during activities; ambient moments remain available. Pending conversations recheck current eligibility.
+- Lessons follow their event's teacher and learner roles and select usable skills. Cross-family apprenticeships retain both their teaching and family-standing effects.
+- Added regressions and event mutation checks; in-game validation is still required.
+
 ## 0.13.4 - find out why pawns stay in the zone
 - New debug action 'Why is the selected pawn staying in their family zone?': prints the pawn's family, restriction, schedule, current job and work priorities, runs the work-time check once and prints the restriction afterwards.
 

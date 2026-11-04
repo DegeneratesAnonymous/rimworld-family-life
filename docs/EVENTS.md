@@ -65,8 +65,14 @@ Guards against inflation and runaway hostility:
 - Gains shrink as a bond grows and as the same event repeats between the same two people within a week.
 - A minor quarrel adds a few points of tension, never a rift by itself; a rift needs tension that is already high, and never a second for one pair.
 - A neglect or rivalry rift is only ever eased by a conversation. It closes when the attention is really restored.
-- No one has more than three meaningful moments a day. Ambient moments do not count against that and are never announced.
+- No one has more than three meaningful moments a day, whether initiating or receiving them, including during shared activities. Ambient moments remain eligible and are never announced. Pending conversations recheck eligibility before applying consequences.
 - Passing near someone gives nothing. Nothing in this system is a standing mood bonus.
+
+## Selection and teaching safeguards
+
+- A two-person event enters the draw once in the plain pair context. Only events requiring a third person enter third-person contexts, and duplicate contexts do not add weight. A nearby witness cannot be attached to an unrelated two-person moment.
+- Lessons follow the teacher and learner roles in the event. Sibling imitation learns from the older recipient; the other teaching events learn from the initiator. A high unrelated skill cannot reverse the roles.
+- The taught skill must be available to the learner. Level zero is valid; a disabled or absent skill is skipped. Equal skill gaps use the skill name as a stable tie-breaker.
 
 ## What is new in the records
 
@@ -88,14 +94,14 @@ Nothing is a log line: either two people really do something, or the thing alrea
 | Learning | The existing teaching time |
 | Support visit | The existing bedside visit |
 | Game night / competition | Two people already doing the same recreation side by side (chess, horseshoes, TV). Nobody is moved |
-| Community aid | Two people already building, repairing, sowing or harvesting side by side. Nobody is moved |
+| Community aid | Reserved for deliberate aid with a known beneficiary; routine nearby work does not trigger this activity |
 | Playdate | Two children together, in family time or in a conversation |
 
 ## What is smaller than the design asked for
 
 - **Storytelling circle (G04)** is the bedtime story and the elder telling the family's history. There is no multi-listener circle around a fire.
 - **Nature walk (G07)** is two people walking a short loop in the home area. There is no longer outing.
-- **Community aid (G11)** is recognised only for building, repair, sowing and harvesting. Other shared work is not noticed.
+- **Community aid (G11)** has no live trigger yet. Adjacent work alone is insufficient evidence of a favor or an organized aid day; requested assistance and beneficiary tracking remain to be implemented.
 - **Game night / competition (G05, G08)** are recognised from what two people are really doing; the mod does not start a game.
 - **A moment never moves a pawn who is working.** If everyone is busy, nothing happens, which is intended.
 - **Promises** come from three events only. There is no general promise tracking.
@@ -121,5 +127,17 @@ and why, promises being kept track of, and recent moments.
 
 - `EventCatalogTests`: ninety events, ten per group; every event can become possible under some consistent circumstance and can go more than one way (a 30,000-circumstance sweep); none is possible for the wrong kind of pair; child events are off without Biotech; every event has all its text.
 - `EventEngineTests`: direction of consequences, diminishing returns, bounds, rift rules, promises, family standing, cooldowns, teaching, confronting, defining memories, gatherings to mend things.
-- 22 new mutation checks (`python scripts/mutation_check.py --only Events/`) each break one of those rules on purpose and confirm a test notices.
+- Event-engine regressions cover duplicate contexts, irrelevant witnesses, both sides of the daily limit, activity contexts, reversed teaching roles, and disabled skills.
+- Mutation checks (`python scripts/mutation_check.py --only Events/`) each break one of those rules on purpose and confirm a test notices.
 - Not tested outside the game: the sampling of real pawns, the two job drivers, the hooks into meals, stories, gatherings and the bedside, and the thoughts they add.
+
+## In-game regression checklist for the event safeguards
+
+1. On both tribal and spacer saves, nearby sowing, repair and construction must not generate an organized aid narrative. Shared meals, learning and recreation should still create appropriate opportunities.
+2. Compare a pair alone with the same pair surrounded by unrelated colonists. Two-person moments must not acquire irrelevant third participants.
+3. After three meaningful moments for either person in one day, shared meals and gatherings must not add more meaningful moments for that person. Ambient moments remain possible; the next day restores eligibility.
+4. Test an adult teaching Cooking to a child with a higher Artistic skill, and a younger sibling imitating an older sibling. Experience goes to the event's learner, in a usable skill; C2-01 also changes family standing.
+5. Move a participant to another map or caravan during a pending moment, including its required third person. No completed moment or relationship effects should be recorded. Normal same-map moments still complete.
+6. Save and reload around these scenarios. Check the event log, bonds and family standing, and confirm event settings still suppress disabled groups.
+
+This checklist does not validate the separate family-zone policy or establish long-term balance. Map-scoped zones and player restriction ownership remain tracked in issue #2; five-year outcome calibration remains tracked in issue #4.

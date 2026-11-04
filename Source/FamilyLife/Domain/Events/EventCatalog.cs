@@ -140,11 +140,11 @@ namespace FamilyLife.Domain
             public B When(params Cond[] conditions) { D.Opportunity = conditions; return this; }
             public B Motive(float baseValue, params object[] terms) { D.Motive = new Drive(baseValue, terms); return this; }
             public B Receives(params object[] terms) { extraReception = terms; return this; }
-            public B Fx(EventEffect fx) { D.Effects = fx; return this; }
+            public B Fx(EventEffect fx) { D.Effects |= fx; return this; }
             public B Fav(params ActivityKind[] kinds) { D.Favored = kinds; return this; }
             public B Only(params ActivityKind[] kinds) { D.Needs = kinds; return this; }
             public B Third(bool child = false) { D.NeedsThird = true; D.ThirdIsChild = child; return this; }
-            public B Teaches(string skill = "best") { D.TeachSkill = skill; D.Effects |= EventEffect.Teaches; return this; }
+            public B Teaches(string skill = "best", bool recipientTeaches = false) { D.RecipientTeaches = recipientTeaches; D.TeachSkill = skill; D.Effects |= EventEffect.Teaches; return this; }
             public B AboutPromise() { D.ConcernsPromise = true; return this; }
             public B ByActivity() { D.ActivityOnly = true; return this; }
             public B TieOfThird() { D.TieIsRecipientThird = true; return this; }
@@ -264,7 +264,7 @@ namespace FamilyLife.Domain
                 .When(C.Siblings, C.LeftOutSibling)
                 .Motive(0.25f, Factor.Attachment, 0.3f, Factor.Steadiness, -0.15f)
                 .Receives(Factor.RecipientWarmth, 0.1f).Done());
-            e.Add(new B("A3-09", "ImitatingASibling", Fam, CC, Amb, 3, Arc.Light).Teaches()
+            e.Add(new B("A3-09", "ImitatingASibling", Fam, CC, Amb, 3, Arc.Light).Teaches(recipientTeaches: true)
                 .When(C.Siblings, C.InitiatorYounger, C.Attached(35), C.Where("the older sibling is ahead", c => c.Recipient.BestSkillLevel() > c.Initiator.BestSkillLevel()))
                 .Motive(0.2f, Factor.Attachment, 0.35f, Factor.Familiarity, 0.1f).Done());
             e.Add(new B("A3-10", "TheSharedAchievement", Fam, CC, Mean, 4, Arc.Warm).Fx(EventEffect.Defines)

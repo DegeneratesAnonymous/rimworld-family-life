@@ -131,7 +131,6 @@ namespace FamilyLife
         private static bool TryStart(FamilyComponent component, Map map, Pawn initiator, Pawn recipient, ActivityKind setting, int now)
         {
             var registry = component.Registry;
-            if (registry.EventsTodayFor(initiator.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay || registry.EventsTodayFor(recipient.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay) return false;
 
             // Sometimes the two go for a short walk in the home area instead of standing where they are; that is a different setting for what follows.
             var walkCell = IntVec3.Invalid;
@@ -184,7 +183,7 @@ namespace FamilyLife
             // A third-party event cannot finish after its required witness or participant has left.
             if (p.ThirdId != 0 && (third == null || !third.Spawned || third.Map != initiator.Map || third.Dead)) return;
             var ctx = SocialContext.Build(component, initiator, recipient, p.Setting, false, third);
-            if (ctx == null) return;
+            if (ctx == null || !component.Registry.Explain(ctx, new[] { def }, ChildrenSupported, EventAllowed)[0].Eligible) return;
             Perform(component, def, ctx);
         }
 
@@ -195,7 +194,7 @@ namespace FamilyLife
         private static readonly HashSet<string> CompetitiveJoy = new HashSet<string> { "Gaming_Cerebral", "Gaming_Dexterity" };
 
         /// <summary>
-        /// Looks for two people who are, right now, doing the same thing side by side: a game, a shared piece of work. They are already
+        /// Looks for two people who are, right now, doing the same thing side by side: a recreation activity. They are already
         /// together, so the moment happens in place without sending anyone anywhere.
         /// </summary>
         private static Pawn FindShared(FamilyComponent component, List<Pawn> everyone, int now)
@@ -216,8 +215,6 @@ namespace FamilyLife
                     ActivityKind kind;
                     if (ja.def.joyKind != null && ja.def.joyKind.defName != "WFL_FamilyTime")
                         kind = CompetitiveJoy.Contains(ja.def.joyKind.defName) ? ActivityKind.Competition : ActivityKind.GameNight;
-                    else if (ja.def == JobDefOf.FinishFrame || ja.def == JobDefOf.Repair || ja.def == JobDefOf.Sow || ja.def == JobDefOf.CutPlant)
-                        kind = ActivityKind.CommunityAid;
                     else continue;
                     Activities.NoteAttempt(a.thingIDNumber, now, ActivityChannel);
                     Activities.NoteAttempt(b.thingIDNumber, now, ActivityChannel);
@@ -260,7 +257,6 @@ namespace FamilyLife
             {
                 var initiator = order == 0 ? a : b;
                 var recipient = order == 0 ? b : a;
-                if (registry.EventsTodayFor(initiator.thingIDNumber, now) >= EventTuning.MaxPerPersonPerDay && forced == null) continue;
                 var contexts = new List<PairContext>();
                 var plain = SocialContext.Build(component, initiator, recipient, kind, true);
                 if (plain == null) continue;

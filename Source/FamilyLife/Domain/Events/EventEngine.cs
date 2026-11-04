@@ -145,6 +145,10 @@ namespace FamilyLife.Domain
                 lines.Add(line);
                 var scenario = ScenarioOf(c);
                 if (enabled != null && !enabled(d)) { line.Reason = "turned off in settings"; continue; }
+                if (d.Weight != EventWeight.Ambient &&
+                    (EventsTodayFor(c.Initiator.Id, c.Now) >= EventTuning.MaxPerPersonPerDay ||
+                     EventsTodayFor(c.Recipient.Id, c.Now) >= EventTuning.MaxPerPersonPerDay))
+                { line.Reason = "daily meaningful moment allowance reached"; continue; }
                 if (d.NeedsChild && !childrenEnabled) { line.Reason = "needs children and Biotech"; continue; }
                 bool scenarioFits = d.Scenario == scenario || (d.ThirdIsChild && d.Scenario == EventScenario.AdultChild && c.Third != null && c.Third.Child && scenario == EventScenario.AdultAdult);
                 if (!scenarioFits) { line.Reason = "this pair is " + scenario + ", not " + d.Scenario; continue; }
@@ -217,9 +221,15 @@ namespace FamilyLife.Domain
         {
             var pool = new List<KeyValuePair<EligibilityLine, PairContext>>();
             var defs = catalog.ToList();
+            var seen = new HashSet<(string, int, int, int, ActivityKind, bool)>();
             foreach (var c in contexts)
                 foreach (var l in Explain(c, defs, childrenEnabled, enabled).Where(l => l.Eligible))
-                    pool.Add(new KeyValuePair<EligibilityLine, PairContext>(l, c));
+                {
+                    // Pair-only events belong to the plain context, not to every nearby witness.
+                    if (l.Def.NeedsThird != (c.Third != null)) continue;
+                    var key = (l.Def.Id, c.Initiator.Id, c.Recipient.Id, c.Third?.Id ?? 0, c.Setting, c.FromActivity);
+                    if (seen.Add(key)) pool.Add(new KeyValuePair<EligibilityLine, PairContext>(l, c));
+                }
             if (pool.Count == 0) return null;
             double total = pool.Sum(p => p.Key.Weight);
             double pick = rng.NextDouble() * total;
@@ -368,11 +378,11 @@ namespace FamilyLife.Domain
 
             if ((d.Effects & EventEffect.Teaches) != 0 && r.Tier >= EventTier.Flat)
             {
-                bool initiatorTeaches = c.Initiator.BestSkillLevel() >= c.Recipient.BestSkillLevel();
-                var teacher = initiatorTeaches ? c.Initiator : c.Recipient;
-                var learner = initiatorTeaches ? c.Recipient : c.Initiator;
+                // The event supplies the roles; an unrelated high skill must not reverse a lesson.
+                var teacher = d.RecipientTeaches ? c.Recipient : c.Initiator;
+                var learner = d.RecipientTeaches ? c.Initiator : c.Recipient;
                 string skill = d.TeachSkill == null || d.TeachSkill == "best" ? BestGap(teacher, learner) : d.TeachSkill;
-                if (skill != null && teacher.Skill(skill) > learner.Skill(skill))
+                if (skill != null && learner.Skills.ContainsKey(skill) && teacher.Skill(skill) > learner.Skill(skill))
                 {
                     r.XpSkill = skill;
                     r.XpTo = learner.Id;
@@ -427,8 +437,9 @@ namespace FamilyLife.Domain
             int gap = 2;
             foreach (var kv in teacher.Skills)
             {
+                if (!learner.Skills.ContainsKey(kv.Key)) continue; // absent means disabled or unavailable
                 int diff = kv.Value - learner.Skill(kv.Key);
-                if (diff > gap) { gap = diff; best = kv.Key; }
+                if (diff > gap || (diff == gap && best != null && string.CompareOrdinal(kv.Key, best) < 0)) { gap = diff; best = kv.Key; }
             }
             return best;
         }
