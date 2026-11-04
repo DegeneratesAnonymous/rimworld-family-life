@@ -181,6 +181,8 @@ namespace FamilyLife
             var def = EventCatalog.Get(p.DefId);
             if (component == null || def == null) return;
             var third = p.ThirdId != 0 ? component.TryGetPawn(p.ThirdId) : null;
+            // A third-party event cannot finish after its required witness or participant has left.
+            if (p.ThirdId != 0 && (third == null || !third.Spawned || third.Map != initiator.Map || third.Dead)) return;
             var ctx = SocialContext.Build(component, initiator, recipient, p.Setting, false, third);
             if (ctx == null) return;
             Perform(component, def, ctx);
