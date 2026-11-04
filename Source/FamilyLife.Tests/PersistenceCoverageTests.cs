@@ -47,6 +47,7 @@ namespace FamilyLife.Tests
         [InlineData(typeof(EventRecord))]
         [InlineData(typeof(FamilyIncident))]
         [InlineData(typeof(RevengePlot))]
+        [InlineData(typeof(AgencyRecord))]
         [InlineData(typeof(StockClaim))]
         [InlineData(typeof(SupplyRequest))]
         [InlineData(typeof(FamilyRegistry))]

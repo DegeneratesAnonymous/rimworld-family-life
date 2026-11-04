@@ -429,6 +429,7 @@ namespace FamilyLife.Domain
 
             EventLog.Add(new EventRecord { EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0 });
             TrimLog();
+            NoteAgencyMoment(r, now);
         }
 
         private void TrimLog()

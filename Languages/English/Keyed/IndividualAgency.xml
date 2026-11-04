@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+<WFL_Agency_Title>Belonging and personal aims</WFL_Agency_Title>
+<WFL_Agency_Belonging>{0}: {1} trusted family connections; {2} strained connections.</WFL_Agency_Belonging>
+<WFL_Agency_NoEvidence>No recent meaningful family moments recorded.</WFL_Agency_NoEvidence>
+<WFL_Agency_Evidence>Experienced positive moments: {0}; difficult moments: {1}. Latest: {2}, {3}. These do not prove deliberate favoritism.</WFL_Agency_Evidence>
+<WFL_Agency_Goal>{0}: {1}% — {2}.</WFL_Agency_Goal>
+<WFL_Agency_Active>Active</WFL_Agency_Active>
+<WFL_Agency_Achieved>Fulfilled</WFL_Agency_Achieved>
+<WFL_Agency_Abandoned>Set aside</WFL_Agency_Abandoned>
+<WFL_Goal_Connection>Build family connections</WFL_Goal_Connection>
+<WFL_Goal_Recognition>Find recognition within the family</WFL_Goal_Recognition>
+<WFL_Goal_Independence>Find greater independence</WFL_Goal_Independence>
+</LanguageData>

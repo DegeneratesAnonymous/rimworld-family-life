@@ -273,6 +273,23 @@ namespace FamilyLife.Domain
         }
     }
 
+    public sealed partial class AgencyRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref PersonId, "personId");
+            Scribe_Values.Look(ref FamilyId, "familyId");
+            Scribe_Values.Look(ref Included, "included");
+            Scribe_Values.Look(ref Excluded, "excluded");
+            Scribe_Values.Look(ref LastEvidenceTick, "lastEvidenceTick", -1);
+            Scribe_Values.Look(ref StartedTick, "startedTick");
+            Scribe_Values.Look(ref EndedTick, "endedTick");
+            Scribe_Values.Look(ref Goal, "goal");
+            Scribe_Values.Look(ref Progress, "progress");
+            Scribe_Values.Look(ref LastEvent, "lastEvent", "");
+        }
+    }
+
     public sealed partial class StockClaim : IExposable
     {
         public void ExposeData()
@@ -331,6 +348,7 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
             Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
             Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
+            Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
             Scribe_Collections.Look(ref Incidents, "incidents", LookMode.Deep);
             Scribe_Collections.Look(ref Plots, "plots", LookMode.Deep);
             Scribe_Collections.Look(ref Claims, "stockClaims", LookMode.Deep);

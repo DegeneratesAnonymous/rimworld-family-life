@@ -185,6 +185,7 @@ namespace FamilyLife.Domain
 
         private void RepairStories()
         {
+            Agency = (Agency ?? new List<AgencyRecord>()).Where(a => a != null && personById.ContainsKey(a.PersonId)).GroupBy(a => a.PersonId).Select(g => g.First()).ToList();
             Incidents = Incidents ?? new List<FamilyIncident>(); Plots = Plots ?? new List<RevengePlot>();
             Claims = Claims ?? new List<StockClaim>(); Requests = Requests ?? new List<SupplyRequest>();
             Incidents.RemoveAll(i => i == null || !personById.ContainsKey(i.VictimId));

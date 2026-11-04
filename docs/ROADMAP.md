@@ -50,3 +50,11 @@ Distinguish witnessed facts, received reports and suspicion. Develop discovery w
 ## Release gates
 
 Domain and persistence checks, both supported builds, Harmony checks, then live tribal/spacer and large-colony acceptance including save/reload and measured 3× TPS. Merge status is not release validation. Detailed balancing numbers remain provisional until playtested.
+
+### Milestone 1 follow-up — lived experience and personal aims
+
+Implemented on the individual-agency branch: persisted per-adult records of positive/difficult completed family moments, source event/date, and goals for connection, recognition or independence. The first qualifying moment per in-game day counts; three days establish a goal, eight further favorable days can fulfill a connection goal when a trusted connection exists, or a recognition goal through achievement-context episodes, setbacks reduce progress, a seven-day cooldown prevents immediate restarting, and fourteen days without evidence or leaving the colony sets an active aim aside. Recognition requires achievement-context episodes. Independence progress measures resolve, and cannot fulfill the goal or force a departure without a future action integration. Mixed directed outcomes can count differently for each participant. Neutral/ambient moments do not count, and lack of interaction is never automatically exclusion. Family changes reset the old context.
+
+Families → Moments now explains current trusted/strained connections, experience and aims (up to 24 current adults per family). The model does not yet infer intentional favoritism, grant prestige, force independence/departure, or manipulate elections/schemes. Those behavior integrations remain future work. The recorded experience is a foundation for perceived inclusion, not proof of anyone's intentions. No new all-pairs tick loop: evidence updates on completed events; goal maintenance joins existing staggered maintenance.
+
+Live acceptance still required: save/reload progress and cooldowns, adult transitions, changing families, mixed-result episodes, UI scrolling, and 3× performance with many families.

@@ -769,6 +769,16 @@ namespace FamilyLife
 
         private void DrawMoments(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
+            Heading(view, ref y, "WFL_Agency_Title".Translate());
+            foreach (var person in registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile).Take(24))
+            {
+                var belonging = registry.AssessBelonging(person.Id);
+                Line(view, ref y, "WFL_Agency_Belonging".Translate(FamilyUi.NameOf(registry, person.Id), belonging.TrustedConnections, belonging.StrainedConnections));
+                var agency = registry.AgencyOf(person.Id);
+                if (agency == null) { Line(view, ref y, "WFL_Agency_NoEvidence".Translate(), 14f, true); continue; }
+                Line(view, ref y, "WFL_Agency_Evidence".Translate(agency.Included, agency.Excluded, ("WFL_Ev_" + agency.LastEvent.Replace('-', '_') + "_Title").Translate(), FamilyUi.Date(agency.LastEvidenceTick)), 14f, true);
+                if (agency.Goal != PersonalGoal.None) Line(view, ref y, "WFL_Agency_Goal".Translate(("WFL_Goal_" + agency.Goal).Translate(), Mathf.RoundToInt(agency.Progress * 100), agency.Active ? "WFL_Agency_Active".Translate() : agency.Progress >= 1 ? "WFL_Agency_Achieved".Translate() : "WFL_Agency_Abandoned".Translate()), 14f);
+            }
             Heading(view, ref y, "WFL_Moments_Standing".Translate());
             var ties = registry.TiesOf(lineage.Id);
             if (ties.Count == 0) Line(view, ref y, "WFL_Moments_NoTies".Translate(), 0f, true);
