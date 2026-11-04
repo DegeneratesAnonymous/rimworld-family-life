@@ -337,7 +337,7 @@ namespace FamilyLife
         }
 
         /// <summary>A gathering is over. A few pairs among those who were there have a moment, most likely those from different families who might yet be reconciled.</summary>
-        public static void OnGathering(List<Pawn> people, ActivityKind kind)
+        public static void OnGathering(List<Pawn> people, ActivityKind kind, string tradition = null)
         {
             if (!Enabled || people == null || people.Count < 2) return;
             var component = FamilyComponent.Current;
@@ -351,6 +351,14 @@ namespace FamilyLife
             foreach (var pair in pairs.InRandomOrder().OrderByDescending(p => CrossFamily(registry, p.Key, p.Value) ? 1 : 0).Take(wanted * 3))
             {
                 if (wanted <= 0) break;
+                if (tradition != null && FamilyLifeMod.Settings.familyStories)
+                {
+                    var ctx = SocialContext.Build(component, pair.Key, pair.Value, kind, true);
+                    if (ctx == null) continue;
+                    ctx.TraditionId = tradition;
+                    var def = registry.PickEvent(ctx, TraditionMoments.All, new System.Random(Rand.Int), ChildrenSupported, d => ctx.SameFamily ? S.eventsFamily : S.eventsInterFamily);
+                    if (def != null) { Perform(component, def, ctx); wanted--; continue; }
+                }
                 if (OnActivity(kind, pair.Key, pair.Value)) wanted--;
             }
         }

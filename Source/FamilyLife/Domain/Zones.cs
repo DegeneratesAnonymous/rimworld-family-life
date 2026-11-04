@@ -5,6 +5,7 @@ namespace FamilyLife.Domain
 {
     public sealed partial class Lineage
     {
+        public int ZoneMapId = -1;                               // map-local area identity; -1 is a legacy unscoped assignment
         public int ZoneAreaId;                                   // the game's allowed area assigned to this family; 0 = none
         public List<int> ZoneApplied = new List<int>();          // who has already been given it, so a person who later chose another area is not overruled
     }
@@ -12,11 +13,12 @@ namespace FamilyLife.Domain
     public sealed partial class FamilyRegistry
     {
         /// <summary>Assigns a family an allowed area (by the game's own area id). Everyone in the family is given it again.</summary>
-        public void SetZone(int lineageId, int areaId)
+        public void SetZone(int lineageId, int areaId, int mapId = -1)
         {
             var lineage = GetLineage(lineageId);
             if (lineage == null) return;
             lineage.ZoneAreaId = areaId < 0 ? 0 : areaId;
+            lineage.ZoneMapId = mapId;
             lineage.ZoneApplied = new List<int>();
         }
 

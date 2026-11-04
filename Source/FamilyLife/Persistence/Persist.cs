@@ -68,6 +68,7 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Traditions, "traditions", LookMode.Deep);
             Scribe_Values.Look(ref StoriesTold, "storiesTold");
             Scribe_Values.Look(ref MealsShared, "mealsShared");
+            Scribe_Values.Look(ref ZoneMapId, "zoneMapId", -1);
             Scribe_Values.Look(ref ZoneAreaId, "zoneAreaId");
             Scribe_Collections.Look(ref ZoneApplied, "zoneApplied", LookMode.Value);
             if (ZoneApplied == null) ZoneApplied = new List<int>();
@@ -231,6 +232,86 @@ namespace FamilyLife.Domain
         }
     }
 
+    public sealed partial class FamilyIncident : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id");
+            Scribe_Values.Look(ref ActorId, "actorId");
+            Scribe_Values.Look(ref VictimId, "victimId");
+            Scribe_Values.Look(ref ActorFamily, "actorFamily");
+            Scribe_Values.Look(ref VictimFamily, "victimFamily");
+            Scribe_Values.Look(ref MapId, "mapId");
+            Scribe_Values.Look(ref Tick, "tick");
+            Scribe_Values.Look(ref Amount, "amount");
+            Scribe_Values.Look(ref Restored, "restored");
+            Scribe_Values.Look(ref Resource, "resource", "");
+            Scribe_Values.Look(ref Kind, "kind");
+            Scribe_Values.Look(ref Context, "context");
+            Scribe_Values.Look(ref Severity, "severity");
+            Scribe_Values.Look(ref Resolved, "resolved");
+            Scribe_Collections.Look(ref KnownBy, "knownBy", LookMode.Value);
+            Scribe_Collections.Look(ref FamiliesAffected, "familiesAffected", LookMode.Value);
+        }
+    }
+
+    public sealed partial class RevengePlot : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id");
+            Scribe_Values.Look(ref IncidentId, "incidentId");
+            Scribe_Values.Look(ref OrganizerId, "organizerId");
+            Scribe_Values.Look(ref TargetId, "targetId");
+            Scribe_Values.Look(ref CreatedTick, "createdTick");
+            Scribe_Values.Look(ref LastActionTick, "lastActionTick");
+            Scribe_Values.Look(ref Action, "action");
+            Scribe_Values.Look(ref State, "state");
+            Scribe_Collections.Look(ref Recruits, "recruits", LookMode.Value);
+            Scribe_Collections.Look(ref Asked, "asked", LookMode.Value);
+            Scribe_Collections.Look(ref AttackJobs, "attackJobs", LookMode.Value);
+        }
+    }
+
+    public sealed partial class StockClaim : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ThingId, "thingId");
+            Scribe_Values.Look(ref OwnerFamily, "ownerFamily");
+            Scribe_Values.Look(ref HolderFamily, "holderFamily");
+            Scribe_Values.Look(ref MapId, "mapId");
+            Scribe_Values.Look(ref Kind, "kind");
+        }
+    }
+
+    public sealed partial class SupplyRequest : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id");
+            Scribe_Values.Look(ref RequesterId, "requesterId");
+            Scribe_Values.Look(ref DonorId, "donorId");
+            Scribe_Values.Look(ref SourceId, "sourceId");
+            Scribe_Values.Look(ref MapId, "mapId");
+            Scribe_Values.Look(ref Count, "count");
+            Scribe_Values.Look(ref CreatedTick, "createdTick");
+            Scribe_Values.Look(ref DueTick, "dueTick");
+            Scribe_Values.Look(ref Price, "price");
+            Scribe_Values.Look(ref RootIncidentId, "rootIncidentId");
+            Scribe_Values.Look(ref HomeX, "homeX");
+            Scribe_Values.Look(ref HomeZ, "homeZ");
+            Scribe_Values.Look(ref DoorX, "doorX");
+            Scribe_Values.Look(ref DoorZ, "doorZ");
+            Scribe_Values.Look(ref Kind, "kind");
+            Scribe_Values.Look(ref Approach, "approach");
+            Scribe_Values.Look(ref State, "state");
+            Scribe_Values.Look(ref Definition, "definition");
+            Scribe_Values.Look(ref Units, "units");
+            Scribe_Values.Look(ref DebtPaid, "debtPaid");
+        }
+    }
+
     public sealed partial class FamilyRegistry : IExposable
     {
         public void ExposeData()
@@ -250,6 +331,13 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
             Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
             Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
+            Scribe_Collections.Look(ref Incidents, "incidents", LookMode.Deep);
+            Scribe_Collections.Look(ref Plots, "plots", LookMode.Deep);
+            Scribe_Collections.Look(ref Claims, "stockClaims", LookMode.Deep);
+            Scribe_Collections.Look(ref Requests, "supplyRequests", LookMode.Deep);
+            Scribe_Values.Look(ref NextIncidentId, "nextIncidentId", 1);
+            Scribe_Values.Look(ref NextPlotId, "nextPlotId", 1);
+            Scribe_Values.Look(ref NextSupplyRequestId, "nextSupplyRequestId", 1);
             Scribe_Values.Look(ref NextCommitmentId, "nextCommitmentId", 1);
             Scribe_Values.Look(ref NextRiftId, "nextRiftId", 1);
             Scribe_Values.Look(ref NextRequestId, "nextRequestId", 1);

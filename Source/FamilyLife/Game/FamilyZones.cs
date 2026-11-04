@@ -7,24 +7,26 @@ using Verse;
 
 namespace FamilyLife
 {
-    /// <summary>
-    /// A family's area: one of the game's own allowed areas, assigned to everyone in the family. Nothing new is invented here: the area is a
-    /// normal area (it shows under Areas and can be painted, renamed and deleted there) and the restriction is the game's own area restriction
-    /// on each pawn. What the mod adds is the link from a family to an area, so that new members get it too.
-    /// </summary>
+    /// <summary>Preferred family homes, linked to map-scoped vanilla areas. Player movement limits remain independent.</summary>
     internal static class FamilyZones
     {
         public static Map HomeMap() => Find.AnyPlayerHomeMap ?? Find.CurrentMap;
 
         public static IEnumerable<Area> Areas(Map map) => map.areaManager.AllAreas.Where(a => a is Area_Allowed).OrderBy(a => a.Label);
 
-        public static Area FindArea(int areaId)
+        public static bool EnforcesAreas => false;
+        public static Area FindArea(int areaId, int mapId = -1)
         {
+            Area found = null;
             foreach (var map in Find.Maps)
+            {
+                if (mapId >= 0 && map.uniqueID != mapId) continue;
                 foreach (var area in map.areaManager.AllAreas)
-                    if (area.ID == areaId) return area;
-            return null;
+                    if (area.ID == areaId) { if (found != null) return null; found = area; }
+            }
+            return found;
         }
+        public static Area AreaFor(Lineage lineage) => lineage == null ? null : FindArea(lineage.ZoneAreaId, lineage.ZoneMapId);
 
         /// <summary>Everyone in the family who has not been given the area yet gets it. An area that was deleted ends the assignment.</summary>
         public static void Apply(FamilyComponent component)
@@ -32,17 +34,22 @@ namespace FamilyLife
             var registry = component.Registry;
             foreach (var lineage in registry.LineagesWithZones())
             {
-                var area = FindArea(lineage.ZoneAreaId);
-                if (area == null) { registry.ClearZone(lineage.Id); continue; }
-                var done = new List<int>();
-                foreach (var id in registry.PendingZoneMembers(lineage.Id))
+                if (lineage.ZoneMapId < 0)
+                {
+                    var candidates = Find.Maps.SelectMany(m => m.zoneManager.AllZones.OfType<Zone_Family>())
+                        .Where(z => z.areaId == lineage.ZoneAreaId).ToList();
+                    if (candidates.Count == 1) lineage.ZoneMapId = candidates[0].Map.uniqueID;
+                }
+                var area = AreaFor(lineage);
+                if (area == null) continue; // ambiguous legacy assignments are retained for explicit reassignment
+                // One-time migration: only release the matching restriction the old mod recorded applying.
+                foreach (int id in lineage.ZoneApplied.ToList())
                 {
                     var pawn = component.TryGetPawn(id);
-                    if (pawn == null || pawn.Dead || pawn.playerSettings == null || pawn.Map != area.Map) continue;
-                    pawn.playerSettings.AreaRestrictionInPawnCurrentMap = area;
-                    done.Add(id);
+                    if (pawn?.playerSettings != null && pawn.Map == area.Map && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == area)
+                        pawn.playerSettings.AreaRestrictionInPawnCurrentMap = null;
                 }
-                registry.MarkZoneApplied(lineage.Id, done);
+                lineage.ZoneApplied.Clear();
             }
             foreach (var map in Find.Maps) IncludeWholeBeds(map);
         }
@@ -71,39 +78,14 @@ namespace FamilyLife
             }
         }
 
-        /// <summary>
-        /// A family zone is where the family rests, eats and plays, not a cage for their work. During work hours (and 'anything') the
-        /// restriction is lifted so crops, mining, hauling and building get done; when the schedule moves to sleep or recreation it is put back.
-        /// Only members who hold the family's area, or none, are touched, and never someone in the middle of a visit through another family's door.
-        /// </summary>
-        public static void ManageWorkTime(FamilyComponent component)
-        {
-            var settings = FamilyLifeMod.Settings;
-            if (settings != null && !settings.zonesAllowWork) return;
-            var registry = component.Registry;
-            foreach (var lineage in registry.LineagesWithZones())
-            {
-                var area = FindArea(lineage.ZoneAreaId);
-                if (area == null) continue;
-                foreach (var id in component.ZoneMemberIds(lineage))
-                {
-                    var pawn = component.TryGetPawn(id);
-                    if (pawn?.playerSettings == null || pawn.Dead || !pawn.Spawned || pawn.Map != area.Map || GuestPasses.IsActive(pawn)) continue;
-                    var held = pawn.playerSettings.AreaRestrictionInPawnCurrentMap;
-                    if (held != null && held != area) continue;                      // the player gave them something else
-                    var now = pawn.timetable?.CurrentAssignment;
-                    bool working = now == TimeAssignmentDefOf.Work || now == TimeAssignmentDefOf.Anything;
-                    if (working && held == area) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = null;
-                    else if (!working && held == null && now != null) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = area;
-                }
-            }
-        }
+        /// <summary>Compatibility entry point. Preferred homes never change movement restrictions.</summary>
+        public static void ManageWorkTime(FamilyComponent component) { } // Preferred homes never edit player movement schedules.
 
         public static void Assign(FamilyComponent component, Lineage lineage, Area area)
         {
-            var previous = lineage.ZoneAreaId == 0 ? null : FindArea(lineage.ZoneAreaId);
+            var previous = lineage.ZoneAreaId == 0 ? null : AreaFor(lineage);
             if (previous != null && previous != area) ReleasePawns(component, lineage, previous);
-            component.Registry.SetZone(lineage.Id, area.ID);
+            component.Registry.SetZone(lineage.Id, area.ID, area.Map.uniqueID);
             Apply(component);
         }
 
@@ -117,10 +99,10 @@ namespace FamilyLife
         private static void ReleasePawns(FamilyComponent component, Lineage lineage, Area area)
         {
             var registry = component.Registry;
-            foreach (var id in component.ZoneMemberIds(lineage))
+            foreach (var id in lineage.ZoneApplied.ToArray())
             {
                 var pawn = component.TryGetPawn(id);
-                if (pawn?.playerSettings != null && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == area)
+                if (pawn?.playerSettings != null && pawn.Map == area.Map && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == area)
                     pawn.playerSettings.AreaRestrictionInPawnCurrentMap = null;
             }
         }
@@ -149,7 +131,7 @@ namespace FamilyLife
         {
             foreach (var map in Find.Maps)
                 foreach (var zone in map.zoneManager.AllZones)
-                    if (zone is Zone_Family fz && fz.areaId != 0 && fz.areaId == lineage.ZoneAreaId) yield return fz;
+                    if (zone is Zone_Family fz && fz.areaId != 0 && fz.areaId == lineage.ZoneAreaId && fz.Map.uniqueID == lineage.ZoneMapId) yield return fz;
         }
     }
 }

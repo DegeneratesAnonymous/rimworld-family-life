@@ -7,11 +7,7 @@ using Verse;
 
 namespace FamilyLife
 {
-    /// <summary>
-    /// A family's zone, painted from Architect > Zone like a growing or stockpile zone. Pawns are kept to it through an allowed area that the
-    /// zone owns and keeps identical to its own cells, so the game's own area restriction does the work. Choosing a family on the zone
-    /// (its button, or the Families window) restricts every family member, including those born or married in later.
-    /// </summary>
+    /// <summary>A painted preferred home and its linked, map-scoped area. Movement limits remain player controlled.</summary>
     public class Zone_Family : Zone
     {
         private static readonly Color[] Colors =
@@ -31,7 +27,7 @@ namespace FamilyLife
             return material;
         }
 
-        public Lineage Family(FamilyRegistry registry) => areaId == 0 ? null : registry.Lineages.FirstOrDefault(l => l.ZoneAreaId == areaId);
+        public Lineage Family(FamilyRegistry registry) => areaId == 0 ? null : registry.Lineages.FirstOrDefault(l => l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
 
         public override void PostRegister()
         {
@@ -43,7 +39,7 @@ namespace FamilyLife
 
         protected override Color NextZoneColor => Colors[Find.CurrentMap == null ? 0 : (Find.CurrentMap.zoneManager.AllZones.Count(z => z is Zone_Family) % Colors.Length)];
 
-        public Area LinkedArea => areaId == 0 ? null : FamilyZones.FindArea(areaId);
+        public Area LinkedArea => areaId == 0 ? null : FamilyZones.FindArea(areaId, Map.uniqueID);
 
         public override void ExposeData()
         {
@@ -71,7 +67,7 @@ namespace FamilyLife
         {
             GuestPasses.Invalidate(Map);
             var component = FamilyComponent.Current;
-            var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId);
+            var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
             var area = LinkedArea;
             if (component != null && lineage != null && area != null) FamilyZones.Release(component, lineage, area);
             if (area != null) area.Delete();
@@ -79,10 +75,10 @@ namespace FamilyLife
             base.Delete(playSound);
         }
 
-        /// <summary>Gives the zone to a family: a new linked area is made, painted with the zone's cells, and everyone in the family is restricted to it.</summary>
+        /// <summary>Gives the zone to a family: a new linked area is made, painted with the zone's cells, for household activities and supply storage.</summary>
         public void SetFamily(FamilyComponent component, Lineage lineage)
         {
-            var previous = component.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId);
+            var previous = component.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
             var area = LinkedArea;
             if (area == null)
             {
@@ -105,7 +101,7 @@ namespace FamilyLife
         public override string GetInspectString()
         {
             var component = FamilyComponent.Current;
-            var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId);
+            var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
             if (lineage == null) return "WFL_ZoneNone".Translate();
             var area = LinkedArea;
             return "WFL_ZoneCurrent".Translate(component.Registry.LineageDisplayName(lineage),

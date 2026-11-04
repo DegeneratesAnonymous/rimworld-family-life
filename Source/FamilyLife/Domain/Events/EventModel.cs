@@ -149,6 +149,8 @@ namespace FamilyLife.Domain
         public Commitment Broken;             // a recorded promise from the initiator to the recipient that went unkept and has not been talked about
         public FamilyTie FamilyTie;           // the standing between their two families, if they belong to different ones
         public ActivityKind Setting;
+        public string TraditionId;
+        public bool ResourcePressure;
         public bool FromActivity;             // reported by a game activity (a story, a meal, a gathering) rather than sampled from two people being near
         public int Now;
         public int OpinionOfRecipient;        // the game's own opinion, initiator about recipient
@@ -325,6 +327,11 @@ namespace FamilyLife.Domain
         public bool ActivityOnly;                          // happens only when the game's own activity reports it, never from idle sampling
         public bool ThirdIsChild;                          // the child in an adult-child event is the third person, not one of the pair
         public bool TieIsRecipientThird;                   // family standing moves between the recipient's and third person's families
+
+        public string RequiredTradition;
+        public bool AnyParticipants;
+        public Dim? ValueAffinity;
+        public MomentOutcome[] Outcomes;
 
         public bool NeedsChild => Scenario != EventScenario.AdultAdult;
     }

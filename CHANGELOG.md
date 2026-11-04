@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — family stories and supplies
+
+- Add 48 tradition episodes with independent directed bond outcomes and real-context eligibility.
+- Record witnessed harm, death, theft, refusals and restitution; share news through physical conversations.
+- Add household supplies, ownership-preserving stack handling, collection, boundary negotiation, debts and desperate theft.
+- Add adult revenge recruitment and social fights; optional lethal melee plots default off.
+- Make family areas preferred homes with map-scoped identity and conservative legacy restriction migration.
+- Add incident/plot/supply history, forgiveness controls, settings and bounded story planning.
+- Domain tests and offline builds do not replace the live acceptance pass in docs/FAMILY-STORIES.md.
+
 ## Unreleased - performance at accelerated speeds
 - Cache family-zone work per map, invalidate on relevant changes with debounce, retain a periodic fallback, and revalidate targets. Active visits stay responsive; discovery rotates maps/sites and enforces the three-visit limit.
 - Use spatial social searches with rotating, bounded shared-activity candidates; reuse pair contexts and eligibility calculations.

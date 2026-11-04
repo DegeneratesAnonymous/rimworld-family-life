@@ -123,6 +123,7 @@ namespace FamilyLife
                 Now = now,
                 Setting = setting,
                 FromActivity = fromActivity,
+                ResourcePressure = component.Economy.Pressure(ia.LineageId) || component.Economy.Pressure(ib.LineageId),
                 InitiatorBond = registry.GetBond(ia.Id, ib.Id),
                 RecipientBond = registry.GetBond(ib.Id, ia.Id),
                 Kind = registry.KindOf(ra, rb),

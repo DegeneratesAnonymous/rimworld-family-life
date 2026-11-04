@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef><defName>WFL_CollectSupply</defName><driverClass>FamilyLife.JobDriver_FamilySupply</driverClass><reportString>collecting family supplies.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_ExchangeSupply</defName><driverClass>FamilyLife.JobDriver_FamilySupply</driverClass><reportString>requesting supplies from TargetB.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_StealSupply</defName><driverClass>FamilyLife.JobDriver_FamilySupply</driverClass><reportString>taking supplies for the family.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_StoryTalk</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>talking with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_StoryListen</defName><driverClass>FamilyLife.JobDriver_StoryListen</driverClass><reportString>listening to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+</Defs>

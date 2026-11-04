@@ -27,7 +27,7 @@ namespace FamilyLife.Tests
         }
 
         // Indexes and caches are rebuilt on load, so they are not saved.
-        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep" };
+        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing" };
 
         [Theory]
         [InlineData(typeof(FamilyEvent))]
@@ -45,6 +45,10 @@ namespace FamilyLife.Tests
         [InlineData(typeof(FamilyTie))]
         [InlineData(typeof(Commitment))]
         [InlineData(typeof(EventRecord))]
+        [InlineData(typeof(FamilyIncident))]
+        [InlineData(typeof(RevengePlot))]
+        [InlineData(typeof(StockClaim))]
+        [InlineData(typeof(SupplyRequest))]
         [InlineData(typeof(FamilyRegistry))]
         public void Every_field_is_written_to_the_save(Type type)
         {

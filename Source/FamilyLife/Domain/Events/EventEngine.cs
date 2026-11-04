@@ -151,8 +151,9 @@ namespace FamilyLife.Domain
                 { line.Reason = "daily meaningful moment allowance reached"; continue; }
                 if (d.NeedsChild && !childrenEnabled) { line.Reason = "needs children and Biotech"; continue; }
                 bool scenarioFits = d.Scenario == scenario || (d.ThirdIsChild && d.Scenario == EventScenario.AdultChild && c.Third != null && c.Third.Child && scenario == EventScenario.AdultAdult);
-                if (!scenarioFits) { line.Reason = "this pair is " + scenario + ", not " + d.Scenario; continue; }
-                if (!BucketAllows(d.Bucket, c)) { line.Reason = d.Bucket == EventBucket.IntraFamily ? "they are not relatives" : (d.Bucket == EventBucket.InterFamily ? "they do not belong to two different families" : "they are family, not outsiders to each other"); continue; }
+                if (d.RequiredTradition != null && c.TraditionId != d.RequiredTradition) { line.Reason = "needs its family tradition"; continue; }
+                if (!d.AnyParticipants && !scenarioFits) { line.Reason = "this pair is " + scenario + ", not " + d.Scenario; continue; }
+                if (!d.AnyParticipants && !BucketAllows(d.Bucket, c)) { line.Reason = d.Bucket == EventBucket.IntraFamily ? "they are not relatives" : (d.Bucket == EventBucket.InterFamily ? "they do not belong to two different families" : "they are family, not outsiders to each other"); continue; }
                 if (d.ActivityOnly && !c.FromActivity) { line.Reason = "only happens as part of an activity"; continue; }
                 if (d.Needs.Length > 0 && !d.Needs.Contains(c.Setting)) { line.Reason = "only happens during " + string.Join("/", d.Needs.Select(n => n.ToString())); continue; }
                 if (d.NeedsThird && c.Third == null) { line.Reason = "needs a third person involved"; continue; }
@@ -162,6 +163,7 @@ namespace FamilyLife.Domain
                 var failed = d.Opportunity.FirstOrDefault(o => !o.Test(c));
                 if (failed != null) { line.Reason = "needs: " + failed.Name; continue; }
                 line.Motive = d.Motive.Value(c, d.Skill);
+                if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
                 line.Weight = d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive;
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
@@ -261,6 +263,11 @@ namespace FamilyLife.Domain
                 case EventTier.Flat: r.InitiatorFeeling = d.Arc.Keen ? 0.2f : 0f; r.RecipientFeeling = d.Arc.Keen ? -0.1f : 0f; break;
                 default: r.InitiatorFeeling = d.Arc.Keen ? 0.1f : -0.6f; r.RecipientFeeling = d.Arc.Keen ? -0.7f : -0.6f; break;
             }
+            if (d.Outcomes != null)
+            {
+                r.InitiatorFeeling = d.Outcomes[(int)r.Tier].Initiator.Feeling;
+                r.RecipientFeeling = d.Outcomes[(int)r.Tier].Recipient.Feeling;
+            }
             return r;
         }
 
@@ -306,12 +313,23 @@ namespace FamilyLife.Domain
             var ab = EnsureBond(a, b, now);
             var ba = EnsureBond(b, a, now);
             var cause = CauseFor(d, r.Tier);
-            Shift(ab, r.Tier, d.Arc, true, repeat);
-            Shift(ba, r.Tier, d.Arc, false, repeat);
+            if (d.Outcomes == null)
+            {
+                Shift(ab, r.Tier, d.Arc, true, repeat);
+                Shift(ba, r.Tier, d.Arc, false, repeat);
+            }
+            else
+            {
+                ChangeBond(a, b, d.Outcomes[(int)r.Tier].Initiator, now, repeat);
+                ChangeBond(b, a, d.Outcomes[(int)r.Tier].Recipient, now, repeat);
+            }
             float noted = (r.Tier == EventTier.Great ? 1f : (r.Tier == EventTier.Good ? 0.5f : (r.Tier == EventTier.Poor ? -0.6f : 0f))) * d.Arc.Gain;
-            if (ab != null) ab.Note(cause, noted, now);
-            if (ba != null) ba.Note(cause, d.Arc.Keen && r.Tier <= EventTier.Flat ? -Math.Abs(noted) - 0.3f : noted, now);
-            if (r.Tier >= EventTier.Good)
+            if (d.Outcomes == null)
+            {
+                if (ab != null) ab.Note(cause, noted, now);
+                if (ba != null) ba.Note(cause, d.Arc.Keen && r.Tier <= EventTier.Flat ? -Math.Abs(noted) - 0.3f : noted, now);
+            }
+            if (r.Tier >= EventTier.Good && (d.Outcomes == null || r.InitiatorFeeling > 0 && r.RecipientFeeling > 0))
             {
                 float hours = r.Tier == EventTier.Great ? 0.8f : 0.4f;     // meaningful attention counts toward who has had time lately
                 if (ab != null) { ab.LastQualityTick = now; ab.QualityRecent += hours; }
@@ -363,6 +381,13 @@ namespace FamilyLife.Domain
                 foreach (var e in events) { Chronicle.Add(e); }
                 if (Chronicle.Count > MaxChronicle) Chronicle.RemoveRange(0, Chronicle.Count - MaxChronicle);
                 if (NextRiftId != before) r.RiftOpened = before;
+            }
+
+            // Forgiveness requires the injured family's informed participation and a successful reconciliation.
+            if ((d.Id == "T6-03" || d.Id == "T8-06") && r.Tier == EventTier.Great)
+            {
+                var root = Incidents.LastOrDefault(i => !i.Resolved && i.ActorId == a && i.VictimFamily == FamilyOf(b) && i.KnownBy.Contains(b));
+                if (root != null) ForgiveIncident(root.Id, FamilyOf(b));
             }
 
             if ((d.Effects & EventEffect.Promise) != 0 && r.Tier >= EventTier.Good)
