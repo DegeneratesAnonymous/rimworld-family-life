@@ -12,6 +12,13 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "Source" / "FamilyLife"
 
 MUTATIONS = [
+    ("area resolution ignores map identity", "Domain/ContextPolicies.cs",
+     "map >= 0 && mapId(candidate) != map", "false"),
+    ("ambiguous legacy areas pick an arbitrary home", "Domain/ContextPolicies.cs",
+     "if (found != null) return null;", "if (false) return null;"),
+    ("unrelated recreation targets become a shared activity", "Domain/ContextPolicies.cs",
+     "first > 0 && first == second", "true"),
+
     ("unwitnessed family members learn the incident", "Domain/FamilyStories.cs",
      "(witnesses ?? Enumerable.Empty<int>()).Append(actor)", "Persons.Select(p => p.Id).Append(actor)"),
     ("family grievance multiplies with each witness", "Domain/FamilyStories.cs",

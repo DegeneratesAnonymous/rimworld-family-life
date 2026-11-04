@@ -44,6 +44,10 @@ Close RimWorld before staging; it keeps the mod DLL locked.
 | `Source/FamilyLife.Tests/` | Unit and property tests for the domain, plus a guard that every model field is saved. |
 | `Defs/`, `Languages/`, `About/` | Game content. All player-facing text is in keyed language files. |
 
+## Open work and calibration
+
+[Open-item inventory](docs/OPEN-ITEMS.md) distinguishes implemented fixes, offline evidence, live acceptance and future milestones. [Seeded calibration results](docs/calibration/summary.md) compare five-year synthetic histories; they do not measure live TPS.
+
 ## Performance
 
 The simulation uses cached work discovery, bounded social searches and staggered maintenance. See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for implementation details, local benchmark limits, and developer actions for measuring a real save at 3× speed. Live TPS gains have not yet been measured.

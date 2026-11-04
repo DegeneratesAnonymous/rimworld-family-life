@@ -17,14 +17,7 @@ namespace FamilyLife
         public static bool EnforcesAreas => false;
         public static Area FindArea(int areaId, int mapId = -1)
         {
-            Area found = null;
-            foreach (var map in Find.Maps)
-            {
-                if (mapId >= 0 && map.uniqueID != mapId) continue;
-                foreach (var area in map.areaManager.AllAreas)
-                    if (area.ID == areaId) { if (found != null) return null; found = area; }
-            }
-            return found;
+            return FamilyAreaPolicy.Resolve(Find.Maps.SelectMany(m => m.areaManager.AllAreas), areaId, mapId, a => a.ID, a => a.Map.uniqueID);
         }
         public static Area AreaFor(Lineage lineage) => lineage == null ? null : FindArea(lineage.ZoneAreaId, lineage.ZoneMapId);
 
