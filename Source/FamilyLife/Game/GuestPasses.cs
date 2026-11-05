@@ -264,6 +264,7 @@ namespace FamilyLife
             if (component == null) return;
             using var measurement = component.Performance.Measure("Zone tick");
             GuestPasses.Process(component);
+            FamilyMeals.Tick(component, Find.TickManager.TicksGame);
         }
 
         public override void StartedNewGame() => GuestPasses.Reset();
