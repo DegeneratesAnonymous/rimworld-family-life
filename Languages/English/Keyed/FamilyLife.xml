@@ -32,13 +32,14 @@
   <WFL_Tab_Overview>Overview</WFL_Tab_Overview>
   <WFL_Tab_Members>Members</WFL_Tab_Members>
   <WFL_Tab_Households>Households</WFL_Tab_Households>
-  <WFL_Tab_Manage>Manage</WFL_Tab_Manage>
-  <WFL_Manage_Help>Who is joining, leaving or leading this family, and what it asks of others. Choose who you are acting as first; greyed buttons need a different standing or someone chosen.</WFL_Manage_Help>
+  <WFL_Tab_Manage>House</WFL_Tab_Manage>
+  <WFL_Manage_Help>People in a house act on their own: they ask to join, invite those they trust, seek standing and offer help as the relationships allow. To act as one of them yourself, select that colonist and right-click another colonist; the options that pawn could take toward them appear in the menu.</WFL_Manage_Help>
   <WFL_Manage_Membership>Who belongs</WFL_Manage_Membership>
   <WFL_Manage_Standing>Standing and help</WFL_Manage_Standing>
   <WFL_Manage_Leadership>Leadership</WFL_Manage_Leadership>
   <WFL_Manage_Crest>Crest</WFL_Manage_Crest>
-  <WFL_Manage_Petitions>Requests</WFL_Manage_Petitions>
+  <WFL_Manage_Petitions>Requests and invitations</WFL_Manage_Petitions>
+  <WFL_Manage_NoPetitions>Nothing has been asked of this house lately.</WFL_Manage_NoPetitions>
   <WFL_Tab_History>History</WFL_Tab_History>
   <WFL_FoundedBy>Founded by {0}, {1}.</WFL_FoundedBy>
   <WFL_Counts>{0} in the colony, {1} elsewhere, {2} dead.</WFL_Counts>

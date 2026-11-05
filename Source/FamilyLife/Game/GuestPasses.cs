@@ -209,7 +209,7 @@ namespace FamilyLife
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
+        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]

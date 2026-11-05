@@ -104,6 +104,7 @@ namespace FamilyLife
             if (now != lastSync && maintenance.Take(now)) Maintain(now);
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
             Economy.Tick(now);
+            HouseAgency.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>

@@ -203,9 +203,9 @@ namespace FamilyLife
             }
             catch (Exception ex) { if (!warned) { warned = true; Log.Warning("[Wil's Family Life] Family supply planner skipped: " + ex); } }
         }
-        internal bool OfferAid(Pawn donor,int family)
+        internal bool OfferAid(Pawn donor,int family,bool byPlayer=false)
         {
-            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || donor==null || !donor.Spawned || !Activities.IsFree(donor) || donor.CurJob?.playerForced==true || R.FamilyOf(donor.thingIDNumber)==0 || family==R.FamilyOf(donor.thingIDNumber)) return false;
+            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || donor==null || !donor.Spawned || !byPlayer && (!Activities.IsFree(donor) || donor.CurJob?.playerForced==true) || R.FamilyOf(donor.thingIDNumber)==0 || family==R.FamilyOf(donor.thingIDNumber)) return false;
             var recipient=component.TryGetPawn(R.HeadOf(family));var home=FamilyZones.AreaFor(R.GetLineage(family));
             if(recipient?.Map!=donor.Map || home?.Map!=donor.Map || !Activities.IsFree(recipient) || recipient.CurJob?.playerForced==true) return false;
             var need=new Need{Kind=SupplyKind.Food,ForPawn=recipient,Target=1.6f,Urgency=.4f};
@@ -213,9 +213,9 @@ namespace FamilyLife
             var source=Stock(donor.Map,Activities.Now).FirstOrDefault(t=>Fits(t,need) && R.ClaimFor(t.thingIDNumber)?.HolderFamily==own && R.ClaimFor(t.thingIDNumber)?.OwnerFamily==own && recipient.CanReserve(t));
             return source!=null && Start(recipient,donor,source,Math.Min(source.stackCount,Math.Max(1,(int)System.Math.Ceiling(1.6f/Units(source,SupplyKind.Food)))),need,SupplyApproach.Offer,home,Activities.Now);
         }
-        internal bool RequestAid(Pawn requester,int donorFamily)
+        internal bool RequestAid(Pawn requester,int donorFamily,bool byPlayer=false)
         {
-            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || requester==null || !requester.Spawned || !Activities.IsFree(requester) || requester.CurJob?.playerForced==true || R.FamilyOf(requester.thingIDNumber)==0 || donorFamily==R.FamilyOf(requester.thingIDNumber)) return false;
+            if(!FamilyLifeMod.Settings.familyStories || !FamilyLifeMod.Settings.familySupplies || requester==null || !requester.Spawned || !byPlayer && (!Activities.IsFree(requester) || requester.CurJob?.playerForced==true) || R.FamilyOf(requester.thingIDNumber)==0 || donorFamily==R.FamilyOf(requester.thingIDNumber)) return false;
             var home=FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(requester.thingIDNumber)));
             var donor=component.TryGetPawn(R.HeadOf(donorFamily));
             if(home?.Map!=requester.Map || donor?.Map!=requester.Map || !Activities.IsFree(donor) || donor.CurJob?.playerForced==true) return false;

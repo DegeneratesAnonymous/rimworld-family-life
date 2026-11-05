@@ -68,4 +68,16 @@
 <WFL_Associates_Help>Sustained positive contact can make someone a family friend. Delivered supplies, aid, protection and repayment earn the service respect needed to become an associate. Neither status grants ownership of a house’s stores or authority over its members.</WFL_Associates_Help>
 <WFL_Perspective_UnknownCause>Your colonist does not know a recorded cause of this grievance.</WFL_Perspective_UnknownCause>
 <WFL_House_Chosen>Chosen family member</WFL_House_Chosen>
+<WFL_Petition_Waiting>{0} has come to speak with {1}, who is waiting on your word. Select {1} and right-click {0}.</WFL_Petition_Waiting>
+<WFL_Act_Accept>Accept {0}'s request ({1})</WFL_Act_Accept>
+<WFL_Act_Decline>Decline {0}'s request ({1})</WFL_Act_Decline>
+<WFL_Act_AskToJoin>{0}: ask to join the {1}</WFL_Act_AskToJoin>
+<WFL_Act_Invite>Invite {0} into the {1}</WFL_Act_Invite>
+<WFL_Act_Unite>Propose uniting the {0} with the {1}</WFL_Act_Unite>
+<WFL_Act_Recognition>Ask {0} for standing in the house</WFL_Act_Recognition>
+<WFL_Act_Appoint>Appoint {0} a steward</WFL_Act_Appoint>
+<WFL_Act_Revoke>Revoke {0}'s stewardship</WFL_Act_Revoke>
+<WFL_Act_Release>Release {0} from the family</WFL_Act_Release>
+<WFL_Act_AskFood>Ask {0}'s house for food</WFL_Act_AskFood>
+<WFL_Act_OfferFood>Offer food from my house to {0}</WFL_Act_OfferFood>
 </LanguageData>

@@ -7,9 +7,14 @@ namespace FamilyLife
 {
     internal static class HouseInteractions
     {
-        internal static bool StartPetition(Pawn actor,int family,PetitionKind kind,bool invitation=false,Pawn invitee=null)
+        /// <summary>
+        /// A pawn walks over and raises a petition (or, as head, an invitation). Pawns do this on their own (see <see cref="HouseAgency"/>);
+        /// <paramref name="byPlayer"/> is the player choosing it for the pawn they have selected, which may interrupt what that pawn is doing.
+        /// </summary>
+        internal static bool StartPetition(Pawn actor,int family,PetitionKind kind,bool invitation=false,Pawn invitee=null,bool byPlayer=false)
         {
-            var c=FamilyComponent.Current;if(c==null || !FamilyLifeMod.Settings.familyStories || actor==null || !Activities.IsFree(actor) || actor.CurJob?.playerForced==true || !Activities.CanSpareAttention(actor)) return false;
+            var c=FamilyComponent.Current;if(c==null || !FamilyLifeMod.Settings.familyStories || actor==null) return false;
+            if(!byPlayer && (!Activities.IsFree(actor) || actor.CurJob?.playerForced==true || !Activities.CanSpareAttention(actor))) return false;
             var r=c.Registry;int head=r.HeadOf(family);
             var other=invitation?invitee:c.TryGetPawn(head);
             if(other==null || other==actor || !other.Spawned || other.Map!=actor.Map || !Activities.IsFree(other) || other.CurJob?.playerForced==true || !Activities.CanSpareAttention(other) || !actor.CanReach(other,PathEndMode.Touch,Danger.None)) return false;
@@ -26,17 +31,20 @@ namespace FamilyLife
             if(q==null || q.PersonId!=(invitation?other.thingIDNumber:speaker.thingIDNumber)) return;
             int head=invitation?speaker.thingIDNumber:other.thingIDNumber;
             if(!r.HearPetition(q.Id,head,Activities.Now)) return;
-            if(!invitation && c.PerspectivePawnId==head) return; // The player's representative decides through the panel.
-            bool accept;
-            if(invitation)
+            // The player is playing the head: the petition waits for them (select the head, right-click the petitioner) instead of being settled for them.
+            if(!invitation && Find.Selector.IsSelected(other))
             {
-                float trust=r.GetBond(other.thingIDNumber,speaker.thingIDNumber)?.Trust??0;
-                float attachment=r.GetBond(other.thingIDNumber,speaker.thingIDNumber)?.Attachment??0;
-                accept=(trust>=40 || (r.ContactOf(other.thingIDNumber,q.FamilyId)?.Respect??0)>=6) &&
-                    (r.FamilyOf(other.thingIDNumber)==0 || r.AssessBelonging(other.thingIDNumber).Attachment<=attachment+15);
+                Messages.Message("WFL_Petition_Waiting".Translate(speaker.LabelShort,other.LabelShort),speaker,MessageTypeDefOf.NeutralEvent,false);
+                return;
             }
+            bool accept;
+            if(invitation) accept=HouseAgency.WouldAcceptInvitation(r,other.thingIDNumber,speaker.thingIDNumber,q.FamilyId);
             else accept=r.WouldAcceptPetition(q,head);
-            r.DecidePetition(q.Id,head,accept,Activities.Now);c.FamilyMembershipChanged();
+            Decide(c,q,head,accept,speaker,other);
+        }
+        internal static void Decide(FamilyComponent c,HousePetition q,int head,bool accept,Pawn speaker,Pawn other)
+        {
+            c.Registry.DecidePetition(q.Id,head,accept,Activities.Now);c.FamilyMembershipChanged();
             Messages.Message((q.State==PetitionState.Accepted?"WFL_Petition_Accepted":"WFL_Petition_Denied").Translate(speaker.LabelShort,other.LabelShort),speaker,MessageTypeDefOf.NeutralEvent,false);
         }
     }

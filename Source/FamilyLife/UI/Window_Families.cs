@@ -167,8 +167,8 @@ namespace FamilyLife
             }
             TooltipHandler.TipRegion(exportRect, "WFL_ExportRecordsTip".Translate());
 
-            Widgets.Label(new Rect(rect.x,rect.y+32,rect.width,24),"WFL_Perspective_Acting".Translate(component.PerspectivePawnId==0?"WFL_Perspective_Overseer".Translate().ToString():FamilyUi.NameOf(registry,component.PerspectivePawnId)));
-            float tabY = rect.y + 60f;
+            float tabY = rect.y + 36f;
+            if (Find.Selector.SingleSelectedThing is Pawn picked && picked.IsColonist) component.PerspectivePawnId = picked.thingIDNumber;     // the pawn you play is the one you have selected
             float tabWidth = Mathf.Min(108f, (rect.width - 4f * 7f) / 8f);
             var tabs = new[] { Tab.Overview, Tab.Relationships, Tab.Moments, Tab.Households, Tab.Manage, Tab.Zone, Tab.Traditions, Tab.History };
             for (int i = 0; i < tabs.Length; i++)
@@ -234,110 +234,41 @@ namespace FamilyLife
 
         private void DrawManage(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
-            int actor = component.PerspectivePawnId;
-            bool acting = actor > 0;
-            float w = Mathf.Min(view.width - 20f, 620f), half = (w - 8f) / 2f;
-            Rect Left(float yy) => new Rect(10f, yy, half, 28f);
-            Rect Right(float yy) => new Rect(10f + half + 8f, yy, half, 28f);
-            Rect Full(float yy) => new Rect(10f, yy, w, 28f);
-
+            float w = Mathf.Min(view.width - 20f, 620f);
             Line(view, ref y, "WFL_Manage_Help".Translate(), 0f, true);
-            string name = acting ? FamilyUi.NameOf(registry, actor) : "WFL_Perspective_Overseer".Translate().ToString();
-            if (Widgets.ButtonText(Full(y), "WFL_Perspective_Acting".Translate(name)))
-            {
-                var options = registry.Persons.Where(p => p.InColony && !p.Juvenile).Take(200).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => component.PerspectivePawnId = p.Id)).ToList();
-                options.Add(new FloatMenuOption("WFL_Perspective_Overseer".Translate(), () => component.PerspectivePawnId = 0));
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
-            y += 34f;
-            if (acting)
-                Line(view, ref y, "WFL_Perspective_Role".Translate(("WFL_HouseRole_" + registry.RoleInHouse(actor, lineage.Id)).Translate(), registry.ContactOf(actor, lineage.Id)?.Respect.ToString("0") ?? "0"), 0f, true);
-            y += 4f;
 
-            // Who belongs to the family.
-            Heading(view, ref y, "WFL_Manage_Membership".Translate());
-            bool inFamily = acting && registry.FamilyOf(actor) == lineage.Id;
-            if (ActionButton(Left(y), "WFL_Petition_Admission".Translate(), acting && !registry.BelongsToFamily(registry.GetPerson(actor), lineage.Id)))
-                ReportHouseAction(HouseInteractions.StartPetition(component.TryGetPawn(actor), lineage.Id, PetitionKind.Admission));
-            if (ActionButton(Right(y), "WFL_Perspective_Withdraw".Translate(), inFamily)) { registry.SetSocialFamily(actor, -1, Activities.Now); component.FamilyMembershipChanged(); }
-            y += 34f;
-            if (HouseButton(Left(y), "WFL_House_Admit".Translate(), registry, lineage, true))
-            {
-                var options = registry.Persons.Where(p => p.InColony && registry.FamilyOf(p.Id) != lineage.Id).Take(200).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => { if (component.PerspectivePawnId > 0) HouseInteractions.StartPetition(component.TryGetPawn(component.PerspectivePawnId), lineage.Id, PetitionKind.Admission, true, component.TryGetPawn(p.Id)); else { registry.SetSocialFamily(p.Id, lineage.Id, Activities.Now); component.FamilyMembershipChanged(); } })).ToList();
-                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
-            }
-            if (HouseButton(Right(y), "WFL_House_Leave".Translate(), registry, lineage, true))
-            {
-                var options = registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Where(p => p.InColony).Distinct().Take(200).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => { registry.SetSocialFamily(p.Id, -1, Activities.Now); component.FamilyMembershipChanged(); })).ToList();
-                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
-            }
-            y += 34f;
-            if (HouseButton(Full(y), "WFL_House_Unite".Translate(), registry, lineage, true))
-            {
-                var options = registry.Lineages.Where(l => l.Id != lineage.Id && registry.LivingCount(l.Id, Presence.Colony) > 0).Take(100).Select(l => new FloatMenuOption(registry.LineageDisplayName(l), () => { if (component.PerspectivePawnId > 0) HouseInteractions.StartPetition(component.TryGetPawn(component.PerspectivePawnId), l.Id, PetitionKind.Union); else { registry.UniteFamilies(l.Id, lineage.Id, Activities.Now); component.FamilyMembershipChanged(); } })).ToList();
-                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
-            }
-            y += 34f;
-            branchName = Widgets.TextField(Left(y), branchName);
-            if (HouseButton(Right(y), "WFL_House_Branch".Translate(), registry, lineage))
-            {
-                var options = registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Where(p => p.InColony && !p.Juvenile && (component.PerspectivePawnId == 0 || p.Id == component.PerspectivePawnId)).Distinct().Take(100).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => { var branch = registry.CreateFamilyBranch(p.Id, lineage.Id, branchName, Activities.Now); if (branch != null) { selectedLineageId = branch.Id; branchName = ""; component.FamilyMembershipChanged(); } })).ToList();
-                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
-            }
-            y += 38f;
+            // Requests and invitations this house is dealing with. People raise these themselves; nothing here needs pressing.
+            Heading(view, ref y, "WFL_Manage_Petitions".Translate());
+            var petitions = registry.HousePetitions.Where(q => q.FamilyId == lineage.Id || q.SourceFamilyId == lineage.Id).OrderByDescending(q => q.CreatedTick).Take(10).ToList();
+            if (petitions.Count == 0) Line(view, ref y, "WFL_Manage_NoPetitions".Translate(), 0f, true);
+            foreach (var q in petitions)
+                Line(view, ref y, "WFL_Petition_Status".Translate(FamilyUi.NameOf(registry, q.PersonId), ("WFL_PetitionKind_" + q.Kind).Translate(), ("WFL_PetitionState_" + q.State).Translate(), registry.LineageDisplayName(registry.GetLineage(q.FamilyId))), 10f);
 
-            // Standing and help between houses.
-            Heading(view, ref y, "WFL_Manage_Standing".Translate());
-            if (ActionButton(Left(y), "WFL_Petition_Recognition".Translate(), acting && registry.RoleInHouse(actor, lineage.Id) == HouseRole.Member))
-                ReportHouseAction(HouseInteractions.StartPetition(component.TryGetPawn(actor), lineage.Id, PetitionKind.Recognition));
-            if (ActionButton(Right(y), "WFL_Petition_Aid".Translate(), acting)) ReportHouseAction(component.Economy.RequestAid(component.TryGetPawn(actor), lineage.Id));
-            y += 34f;
-            if (ActionButton(Full(y), "WFL_Perspective_OfferAid".Translate(), acting)) ReportHouseAction(component.Economy.OfferAid(component.TryGetPawn(actor), lineage.Id));
-            y += 34f;
+            // Friends and associates of the house.
+            Heading(view, ref y, "WFL_Associates_Title".Translate());
+            Line(view, ref y, "WFL_Associates_Help".Translate(), 0f, true);
+            foreach (var c in registry.HouseContacts.Where(c => c.FamilyId == lineage.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId), lineage.Id)).OrderByDescending(c => c.Respect).Take(12))
+                Line(view, ref y, "WFL_Associates_Line".Translate(FamilyUi.NameOf(registry, c.PersonId), ("WFL_HouseRole_" + registry.RoleInHouse(c.PersonId, lineage.Id)).Translate(), c.Respect.ToString("0")), 10f, true);
 
-            // Who leads.
-            Heading(view, ref y, "WFL_Manage_Leadership".Translate());
-            if (ActionButton(Full(y), "WFL_Perspective_Delegate".Translate(), acting && registry.HeadOf(lineage.Id) == actor))
-            {
-                var options = registry.Persons.Where(p => p.InColony && !p.Juvenile && p.Id != actor && registry.BelongsToFamily(p, lineage.Id)).Take(100).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => registry.DelegateHouse(actor, p.Id, lineage.Id, !lineage.Stewards.Contains(p.Id)))).ToList();
-                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
-            }
-            y += 34f;
-
-            // The crest.
+            // The house's look and branches: the player's own to shape.
             Heading(view, ref y, "WFL_Manage_Crest".Translate());
             FamilyCrest.Draw(new Rect(10f, y + 4f, 64f, 76f), lineage);
             var crestLeft = new Rect(86f, 0f, 150f, 30f); var crestRight = new Rect(242f, 0f, 150f, 30f);
             crestLeft.y = crestRight.y = y + 4f;
-            if (HouseButton(crestLeft, "WFL_Crest_Primary".Translate(), registry, lineage)) lineage.CrestPrimary = (CrestStyle.Index(lineage.CrestPrimary, lineage.Id, CrestStyle.Colors) + 1) % CrestStyle.Colors;
-            if (HouseButton(crestRight, "WFL_Crest_Secondary".Translate(), registry, lineage)) lineage.CrestSecondary = (CrestStyle.Index(lineage.CrestSecondary, 7, CrestStyle.Colors) + 1) % CrestStyle.Colors;
+            if (Widgets.ButtonText(crestLeft, "WFL_Crest_Primary".Translate())) lineage.CrestPrimary = (CrestStyle.Index(lineage.CrestPrimary, lineage.Id, CrestStyle.Colors) + 1) % CrestStyle.Colors;
+            if (Widgets.ButtonText(crestRight, "WFL_Crest_Secondary".Translate())) lineage.CrestSecondary = (CrestStyle.Index(lineage.CrestSecondary, 7, CrestStyle.Colors) + 1) % CrestStyle.Colors;
             crestLeft.y = crestRight.y = y + 40f;
-            if (HouseButton(crestLeft, ("WFL_Crest_Mark_" + CrestStyle.Index(lineage.CrestMark, lineage.Id / CrestStyle.Colors, CrestStyle.Marks)).Translate(), registry, lineage)) lineage.CrestMark = (CrestStyle.Index(lineage.CrestMark, lineage.Id / CrestStyle.Colors, CrestStyle.Marks) + 1) % CrestStyle.Marks;
-            if (HouseButton(crestRight, ("WFL_Crest_Pattern_" + CrestStyle.Index(lineage.CrestPattern, 0, CrestStyle.Patterns)).Translate(), registry, lineage)) lineage.CrestPattern = (CrestStyle.Index(lineage.CrestPattern, 0, CrestStyle.Patterns) + 1) % CrestStyle.Patterns;
+            if (Widgets.ButtonText(crestLeft, ("WFL_Crest_Mark_" + CrestStyle.Index(lineage.CrestMark, lineage.Id / CrestStyle.Colors, CrestStyle.Marks)).Translate())) lineage.CrestMark = (CrestStyle.Index(lineage.CrestMark, lineage.Id / CrestStyle.Colors, CrestStyle.Marks) + 1) % CrestStyle.Marks;
+            if (Widgets.ButtonText(crestRight, ("WFL_Crest_Pattern_" + CrestStyle.Index(lineage.CrestPattern, 0, CrestStyle.Patterns)).Translate())) lineage.CrestPattern = (CrestStyle.Index(lineage.CrestPattern, 0, CrestStyle.Patterns) + 1) % CrestStyle.Patterns;
             y += 90f;
-
-            // Requests waiting.
-            var petitions = registry.HousePetitions.Where(q => q.PersonId == actor || q.FamilyId == lineage.Id && q.HeardBy == actor && registry.HeadOf(lineage.Id) == actor).OrderByDescending(q => q.CreatedTick).Take(8).ToList();
-            if (acting && petitions.Count > 0)
+            float half = (w - 8f) / 2f;
+            branchName = Widgets.TextField(new Rect(10f, y, half, 28f), branchName);
+            if (Widgets.ButtonText(new Rect(10f + half + 8f, y, half, 28f), "WFL_House_Branch".Translate()))
             {
-                Heading(view, ref y, "WFL_Manage_Petitions".Translate());
-                foreach (var q in petitions)
-                {
-                    Line(view, ref y, "WFL_Petition_Status".Translate(FamilyUi.NameOf(registry, q.PersonId), ("WFL_PetitionKind_" + q.Kind).Translate(), ("WFL_PetitionState_" + q.State).Translate(), registry.LineageDisplayName(registry.GetLineage(q.FamilyId))));
-                    if (q.State == PetitionState.Heard && registry.HeadOf(q.FamilyId) == actor)
-                    {
-                        if (Widgets.ButtonText(Left(y), "WFL_Petition_Accept".Translate())) { registry.DecidePetition(q.Id, actor, true, Activities.Now); component.FamilyMembershipChanged(); }
-                        if (Widgets.ButtonText(Right(y), "WFL_Petition_Decline".Translate())) registry.DecidePetition(q.Id, actor, false, Activities.Now);
-                        y += 32f;
-                    }
-                }
+                var options = registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile).Take(100).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () => { var branch = registry.CreateFamilyBranch(p.Id, lineage.Id, branchName, Activities.Now); if (branch != null) { selectedLineageId = branch.Id; branchName = ""; component.FamilyMembershipChanged(); } })).ToList();
+                if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));
             }
-
-            // Friends of the house.
-            Heading(view, ref y, "WFL_Associates_Title".Translate());
-            Line(view, ref y, "WFL_Associates_Help".Translate(), 0f, true);
-            foreach (var c in registry.HouseContacts.Where(c => c.FamilyId == lineage.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId), lineage.Id)).OrderByDescending(c => c.Respect).Take(12))
-                Line(view, ref y, "WFL_Associates_Line".Translate(FamilyUi.NameOf(registry, c.PersonId), ("WFL_HouseRole_" + registry.RoleInHouse(c.PersonId, lineage.Id)).Translate(), c.Respect.ToString("0")), 0f, true);
+            y += 38f;
         }
 
         // ------------------------------------------------------------------ overview
