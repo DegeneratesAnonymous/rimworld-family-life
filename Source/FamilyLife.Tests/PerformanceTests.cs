@@ -102,8 +102,8 @@ namespace FamilyLife.Tests
             double appetite = Measure("FamilyTimeAppetite x1000", 20, () => { for (int i = 0; i < 1000; i++) r.FamilyTimeAppetite(biggest.Id, null); });
             double together = Measure("RecordTogether x1000", 20, () => { for (int i = 0; i < 1000; i++) r.RecordTogether(a, b, 1500, tick); });
 
-            for(int i=0;i<EventTuning.MaxLog;i++) r.EventLog.Add(new EventRecord{EventId=EventCatalog.All[i%EventCatalog.All.Length].Id,A=i%3==0?a:colonists[(i+2)%colonists.Count],B=i%2==0?b:colonists[(i+7)%colonists.Count],Tick=tick-(EventTuning.MaxLog-1-i)*500});
-            var contexts=Enumerable.Range(0,7).Select(i=>new PairContext{Registry=r,Initiator=new Actor{Id=a,Mood=.5f},Recipient=new Actor{Id=b,Mood=.5f},Third=i==0?null:new Actor{Id=colonists[i+2],Mood=.5f},Now=tick,SameFamily=true,Related=true}).ToList();
+            for(int i=0;i<EventTuning.MaxLog;i++) r.EventLog.Add(new EventRecord{EventId=EventCatalog.All[i%EventCatalog.All.Count].Id,A=i%3==0?a:colonists[(i+2)%colonists.Count],B=i%2==0?b:colonists[(i+7)%colonists.Count],Tick=tick-(EventTuning.MaxLog-1-i)*500});
+            var contexts=Enumerable.Range(0,7).Select(i=>new PairContext{Registry=r,Initiator=new Actor{Id=a,Mood=.5f},Recipient=new Actor{Id=b,Mood=.5f},Third=i==0?null:new Actor{Id=colonists[i+2],Mood=.5f},Now=tick,SameFamily=true,Kind=BondKind.Sibling}).ToList();
             double eventSelection=Measure("Full event selection with history",100,()=>r.PickEventAmong(contexts,EventCatalog.All,new Random(17),true));
 
             report.Insert(0, $"{r.Persons.Count} people, {r.Lineages.Count} lineages, {r.Bonds.Count} bonds, {r.Households.Count} households");
