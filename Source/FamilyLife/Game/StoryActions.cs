@@ -90,8 +90,10 @@ namespace FamilyLife
             {
                 var other=c.TryGetPawn(incident.ActorId);
                 if(!Available(other) || other.Map!=map) continue;
-                var speaker=free.FirstOrDefault(p=>p!=other && r.FamilyOf(p.thingIDNumber)==incident.VictimFamily && incident.KnownBy.Contains(p.thingIDNumber) &&
+                var speakers=free.Where(p=>p!=other && r.FamilyOf(p.thingIDNumber)==incident.VictimFamily && incident.KnownBy.Contains(p.thingIDNumber) &&
                     (c.ProfileOf(p.thingIDNumber)?[(int)Dim.Warmth]??0)>.4f && Activities.AttemptAllowed(p.thingIDNumber,now,ActivityTuning.TicksPerDay,10));
+                if(incident.RepairSteps>=2) speakers=speakers.Where(p=>r.CanManageHouse(p.thingIDNumber,incident.VictimFamily));
+                var speaker=speakers.OrderByDescending(p=>r.CanManageHouse(p.thingIDNumber,incident.VictimFamily)).FirstOrDefault();
                 if(speaker==null || !speaker.CanReach(other,PathEndMode.Touch,Danger.None)) continue;
                 var talk=JobMaker.MakeJob(WFL_StoryDefOf.WFL_ReconcileStory,other);talk.count=incident.Id;
                 Activities.NoteAttempt(speaker.thingIDNumber,now,10);

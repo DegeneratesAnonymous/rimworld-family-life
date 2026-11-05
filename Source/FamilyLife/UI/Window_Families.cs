@@ -949,7 +949,7 @@ namespace FamilyLife
                 if (i.Context != IncidentContext.None) Line(view, ref y, "WFL_Stories_Context".Translate(string.Join(", ", new[] { IncidentContext.Combat, IncidentContext.MentalBreak, IncidentContext.Accident, IncidentContext.Planned }.Where(flag => (i.Context & flag) != 0).Select(flag => ("WFL_Context_" + flag).Translate().ToString()))), 14f, true);
                 if (!i.Resolved && i.VictimFamily == lineage.Id)
                 {
-                    if (HouseButton(new Rect(14, y, 180, 26), "WFL_Stories_Forgive".Translate(),registry,lineage)) registry.ForgiveIncident(i.Id, lineage.Id);
+                    if (HouseButton(new Rect(14, y, 180, 26), "WFL_Stories_Forgive".Translate(),registry,lineage)) registry.ForgiveIncident(i.Id, lineage.Id,Activities.Now);
                     y += 30;
                 }
             }

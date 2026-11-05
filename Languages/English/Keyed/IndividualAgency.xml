@@ -49,6 +49,7 @@
 <WFL_Associates_Title>Friends and associates of the house</WFL_Associates_Title>
 <WFL_Associates_Line>{0}: {1}, respect {2}</WFL_Associates_Line>
 <WFL_HouseRole_Outsider>Outsider</WFL_HouseRole_Outsider>
+<WFL_HouseRole_FamilyFriend>Family friend</WFL_HouseRole_FamilyFriend>
 <WFL_HouseRole_Associate>Associate</WFL_HouseRole_Associate>
 <WFL_HouseRole_TrustedAssociate>Trusted associate</WFL_HouseRole_TrustedAssociate>
 <WFL_HouseRole_Member>Member</WFL_HouseRole_Member>
@@ -64,7 +65,7 @@
 <WFL_PetitionState_Expired>Expired</WFL_PetitionState_Expired>
 <WFL_House_ActionUnavailable>No discussion or transfer could begin. Check that both pawns are available on the same map, that the request is eligible and not already pending, and that any supply transfer has a home with suitable storage and available goods.</WFL_House_ActionUnavailable>
 <WFL_Perspective_OfferAid>Offer food aid from my house</WFL_Perspective_OfferAid>
-<WFL_Associates_Help>Earn respect through delivered supplies, aid, repayment and sustained positive contact. Associates receive invitations and can seek admission. Trust does not grant ownership of a house’s stores or authority over its members.</WFL_Associates_Help>
+<WFL_Associates_Help>Sustained positive contact can make someone a family friend. Delivered supplies, aid, protection and repayment earn the service respect needed to become an associate. Neither status grants ownership of a house’s stores or authority over its members.</WFL_Associates_Help>
 <WFL_Perspective_UnknownCause>Your colonist does not know a recorded cause of this grievance.</WFL_Perspective_UnknownCause>
 <WFL_House_Chosen>Chosen family member</WFL_House_Chosen>
 </LanguageData>

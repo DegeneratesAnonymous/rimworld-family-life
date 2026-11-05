@@ -10,10 +10,11 @@ namespace FamilyLife.Domain
         public const int MaxLog = 300;
         public const int MaxTies = 60;
         public const int MaxCommitments = 80;
-        public const float GreatAt = 0.70f;
-        public const float GoodAt = 0.52f;
-        public const float FlatAt = 0.34f;
-        public const float Noise = 0.14f;
+        public const float GreatAt = 0.84f;
+        public const float GoodAt = 0.56f;
+        public const float FlatAt = 0.32f;
+        public const float Noise = 0.18f;
+        public const float SurpriseChance = 0.04f;
         public const int RepeatWindowTicks = 7 * ActivityTuning.TicksPerDay;
         public const int MaxPerPersonPerDay = 3;
         public const float RiftOpensAtTension = ConflictTuning.TensionOpens;
@@ -135,6 +136,13 @@ namespace FamilyLife.Domain
             return n == 0 ? 1f : (n == 1 ? 0.6f : (n == 2 ? 0.35f : 0.2f));
         }
 
+        private float SelectionFatigue(string eventId,int a,int b,int now)
+        {
+            int since=now-14*ActivityTuning.TicksPerDay;
+            int n=EventLog.Count(e=>e.EventId==eventId && e.Tick>=since && (e.A==a || e.B==a || e.A==b || e.B==b));
+            return n==0?1.2f:n==1?.65f:n==2?.35f:.18f;
+        }
+
         // ------------------------------------------------------------------ what is possible, and why not
 
         public List<EligibilityLine> Explain(PairContext c, IEnumerable<EventDef> catalog, bool childrenEnabled, Func<EventDef, bool> enabled = null)
@@ -165,7 +173,7 @@ namespace FamilyLife.Domain
                 if (failed != null) { line.Reason = "needs: " + failed.Name; continue; }
                 line.Motive = d.Motive.Value(c, d.Skill);
                 if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
-                line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d);
+                line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(d.Id,c.Initiator.Id,c.Recipient.Id,c.Now);
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
                 line.Reason = "possible";
@@ -256,6 +264,9 @@ namespace FamilyLife.Domain
             r.Execution = Execution(d, c, rng);
             r.Reception = d.Reception.Value(c, d.Skill);
             r.Score = d.SkillShare * r.Execution + (1f - d.SkillShare) * r.Reception + (float)(rng.NextDouble() * 2 - 1) * EventTuning.Noise;
+            double surprise=rng.NextDouble();
+            if(surprise<EventTuning.SurpriseChance) r.Score-=.42f;
+            else if(surprise>1f-EventTuning.SurpriseChance && (d.Arc==Arc.Warm || d.Arc==Arc.Deep || d.Arc==Arc.Repair || d.Arc==Arc.Light || d.Arc==Arc.Story)) r.Score+=.35f;
             r.Tier = r.Score >= EventTuning.GreatAt ? EventTier.Great : (r.Score >= EventTuning.GoodAt ? EventTier.Good : (r.Score >= EventTuning.FlatAt ? EventTier.Flat : EventTier.Poor));
             switch (r.Tier)
             {

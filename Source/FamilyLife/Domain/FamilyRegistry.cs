@@ -74,6 +74,23 @@ namespace FamilyLife.Domain
             }
             Lineages = uniqueLineages;
 
+            // Absorption links are historical pointers, not arbitrary graphs. Repair damaged saves before family queries run.
+            foreach(var lineage in Lineages)
+            {
+                lineage.ZoneApplied=lineage.ZoneApplied??new List<int>();lineage.Stewards=lineage.Stewards??new List<int>();
+                if(lineage.AbsorbedIntoId==lineage.Id || lineage.AbsorbedIntoId!=0 && !lineageById.ContainsKey(lineage.AbsorbedIntoId)) lineage.AbsorbedIntoId=0;
+                var seen=new HashSet<int>{lineage.Id};int next=lineage.AbsorbedIntoId;
+                while(next!=0 && lineageById.TryGetValue(next,out var house))
+                {
+                    if(!seen.Add(next)){lineage.AbsorbedIntoId=0;break;}
+                    next=house.AbsorbedIntoId;
+                }
+                if(lineage.AbsorbedIntoId!=0)
+                {
+                    lineage.ZoneAreaId=0;lineage.ZoneMapId=-1;lineage.ZoneApplied.Clear();lineage.HeadId=0;lineage.Stewards.Clear();
+                }
+            }
+
             Households.RemoveAll(h => h == null);
             var uniqueHouseholds = new List<Household>(Households.Count);
             foreach (var h in Households)
@@ -191,6 +208,7 @@ namespace FamilyLife.Domain
         public List<PersonRecord> MembersOf(int lineageId)
         {
             EnsureIndexes();
+            if(!IsActiveHouse(lineageId)) return new List<PersonRecord>();
             return Persons.Where(p => p.SocialFamilyId>0 ? p.SocialFamilyId==lineageId : p.SocialFamilyId==0 && p.PrimaryLineageId == lineageId).OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
         }
 
@@ -231,10 +249,10 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             if (person == null) return 0;
-            if (person.SocialFamilyId!=0) return person.SocialFamilyId>0 && GetLineage(person.SocialFamilyId)!=null ? person.SocialFamilyId : 0;
-            if (person.PrimaryLineageId != 0) return person.PrimaryLineageId;
+            if (person.SocialFamilyId!=0) return person.SocialFamilyId>0 ? ActiveHouseId(person.SocialFamilyId) : 0;
+            if (person.PrimaryLineageId != 0) return ActiveHouseId(person.PrimaryLineageId);
             foreach (var lineage in Lineages)
-                if (lineage.HasAffiliate(person.Id)) return lineage.Id;
+                if (lineage.AbsorbedIntoId==0 && lineage.HasAffiliate(person.Id)) return lineage.Id;
             return 0;
         }
 

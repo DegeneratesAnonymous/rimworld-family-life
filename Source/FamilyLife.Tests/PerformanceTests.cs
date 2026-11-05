@@ -77,6 +77,8 @@ namespace FamilyLife.Tests
             Measure("Compare unchanged observations", 200, () => observations.Update(people));
             double bonds = Measure("UpdateBonds (hourly)", 20, () => { tick += BondTuning.TicksPerHour; r.UpdateBonds(opinion, tick, new List<FamilyEvent>(), profile); });
             double culture = Measure("UpdateCulture", 20, () => r.UpdateCulture(profile, tick));
+            int dailyCultureTick=tick;
+            double dailyCulture=Measure("UpdateCulture (daily work)",20,()=>{dailyCultureTick+=Day;r.UpdateCulture(profile,dailyCultureTick);});
             double trad = Measure("UpdateTraditions", 20, () => r.UpdateTraditions(tick));
             double rifts = Measure("UpdateRifts", 20, () => r.UpdateRifts(tick, true, new List<FamilyEvent>()));
             double miles = Measure("UpdateBondMilestones", 20, () => r.UpdateBondMilestones(tick));
@@ -104,11 +106,24 @@ namespace FamilyLife.Tests
             Console.WriteLine(string.Join("\n", report));
 
             // Loose ceilings: a sweep happens once an in-game hour, a hook call must be negligible.
-            Assert.True(sweep < 250, "the hourly sweep is slow:\n" + string.Join("\n", report));
+            Assert.True(sweep < 100, "the hourly sweep is slow:\n" + string.Join("\n", report));
+            Assert.True(culture < 5 && dailyCulture < 25, "culture aggregation is slow:\n" + string.Join("\n", report));
             Assert.True(tree < 25, "the tree takes too long to lay out:\n" + string.Join("\n", report));
             Assert.True(stage / 1000 < 0.01, "the breakup hook is too slow per call:\n" + string.Join("\n", report));
             Assert.True(getPerson / 1000 < 0.005, "the romance hook lookup is too slow per call:\n" + string.Join("\n", report));
             Assert.True(rank < 2, "choosing a companion is too slow:\n" + string.Join("\n", report));
+        }
+
+        [Fact]
+        public void Repeated_house_unions_do_not_leave_active_simulation_work_behind()
+        {
+            var people=BigColony(24,4,out var colonists);var r=new FamilyRegistry();int now=5*Day;r.Apply(people,now);
+            var active=r.Lineages.Where(l=>r.IsListedFamily(l.Id)).Select(l=>l.Id).ToList();int target=active[0];
+            foreach(int source in active.Skip(1)) Assert.True(r.UniteFamilies(source,target,++now));
+            Assert.Single(r.Lineages.Where(l=>r.IsListedFamily(l.Id)));
+            Assert.All(active.Skip(1),id=>Assert.False(r.IsListedFamily(id)));
+            Func<int,float[]> profile=id=>new float[DimInfo.Count];
+            int cultureTick=now;Assert.True(TimeMs(20,()=>{cultureTick+=Day;r.UpdateCulture(profile,cultureTick);})<25);
         }
     }
 }

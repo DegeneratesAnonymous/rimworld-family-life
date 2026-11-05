@@ -14,13 +14,14 @@ namespace FamilyLife.Domain
             var incident=Incidents.FirstOrDefault(i=>i.Id==incidentId);
             if(incident==null || incident.Resolved || incident.ActorId!=actor || incident.VictimFamily==0 || FamilyOf(injuredSpeaker)!=incident.VictimFamily ||
                 GetPerson(injuredSpeaker)?.InColony!=true || GetPerson(actor)?.InColony!=true || GetPerson(injuredSpeaker).Juvenile || GetPerson(actor).Juvenile ||
-                !incident.KnownBy.Contains(injuredSpeaker) || !incident.KnownBy.Contains(actor) || now-incident.LastRepairTick<ActivityTuning.TicksPerDay) return false;
+                !incident.KnownBy.Contains(injuredSpeaker) || !incident.KnownBy.Contains(actor) || now-incident.LastRepairTick<ActivityTuning.TicksPerDay ||
+                incident.RepairSteps>=2 && !CanManageHouse(injuredSpeaker,incident.VictimFamily)) return false;
             incident.LastRepairTick=now;
             if(!mutualConsent) {ChangeBond(injuredSpeaker,actor,new BondChange(0,-.5f,.5f,1),now);return false;}
             incident.RepairSteps=Math.Min(3,incident.RepairSteps+1);
             ChangeBond(injuredSpeaker,actor,new BondChange(.25f,1,-1,1),now);
             ChangeBond(actor,injuredSpeaker,new BondChange(.25f,.5f,-1,1),now);
-            if(incident.RepairSteps>=3 && CanManageHouse(injuredSpeaker,incident.VictimFamily)) ForgiveIncident(incident.Id,incident.VictimFamily);
+            if(incident.RepairSteps>=3) ForgiveIncident(incident.Id,incident.VictimFamily,now);
             return true;
         }
     }

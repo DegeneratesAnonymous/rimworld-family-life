@@ -74,7 +74,7 @@ namespace FamilyLife.Domain
         public bool IsListedFamily(int lineageId)
         {
             EnsureIndexes();
-            if (GetLineage(lineageId) == null) return false;
+            if (!IsActiveHouse(lineageId)) return false;
             if((GetLineage(lineageId).ParentHouseId>0 || Persons.Any(p=>p.SocialFamilyId==lineageId)) && LivingCount(lineageId,Presence.Colony)>0) return true;
             if (LivingCount(lineageId, Presence.Colony) < 2) return false;
             int byDescent = 0;

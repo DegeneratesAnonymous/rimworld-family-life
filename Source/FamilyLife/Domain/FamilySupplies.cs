@@ -38,7 +38,8 @@ namespace FamilyLife.Domain
         }
         public void ClaimStock(int thingId, int owner, int holder, int map, SupplyKind kind)
         {
-            if (GetLineage(owner) == null || GetLineage(holder) == null || thingId <= 0) return;
+            owner=ActiveHouseId(owner);holder=ActiveHouseId(holder);
+            if (owner==0 || holder==0 || thingId <= 0) return;
             var claim = ClaimFor(thingId);
             if (claim == null) { claim = new StockClaim { ThingId = thingId }; Claims.Add(claim); claimByThing[thingId] = claim; }
             claim.OwnerFamily = owner; claim.HolderFamily = holder; claim.MapId = map; claim.Kind = kind;
@@ -102,12 +103,10 @@ namespace FamilyLife.Domain
         public bool ExchangeSupply(int requestId, int carriedThingId, int actualCount, IEnumerable<int> witnesses, int now)
         {
             var r = Requests.FirstOrDefault(x => x.Id == requestId);
-            if (r == null || r.State != SupplyState.Granted || carriedThingId<=0 || GetPerson(r.RequesterId)?.InColony!=true || FamilyOf(r.RequesterId)==0 || actualCount < r.Count) return false;
+            if (!CanExchangeSupply(r,carriedThingId,actualCount)) return false;
             int receiver = FamilyOf(r.RequesterId), donor = FamilyOf(r.DonorId);
             var source = ClaimFor(carriedThingId);
-            if (r.Approach == SupplyApproach.PublicClaim && source != null) return false;
             if (r.Approach == SupplyApproach.Relocate) return source != null && source.HolderFamily == receiver && MarkRelocated(r, carriedThingId);
-            if (r.Approach != SupplyApproach.PublicClaim && (source == null || source.HolderFamily != donor)) return false;
             int owner = r.Approach == SupplyApproach.Steal || source != null && source.OwnerFamily != source.HolderFamily ? source.OwnerFamily : receiver;
             ClaimStock(carriedThingId, owner, receiver, r.MapId, r.Kind);
             r.State = SupplyState.Exchanged; r.SourceId = carriedThingId;
@@ -128,7 +127,7 @@ namespace FamilyLife.Domain
                 RecordIncident(IncidentKind.Restitution, r.DonorId, r.RequesterId, r.MapId, now, 15, new[] { r.RequesterId, r.DonorId });
                 var root = Incidents.FirstOrDefault(i => i.Id == r.RootIncidentId);
                 if (root != null && root.Kind == IncidentKind.Theft && root.VictimFamily == receiver && root.Resource == r.Definition)
-                { root.Restored += r.Count; if (root.Restored >= root.Amount) ForgiveIncident(root.Id, receiver); }
+                { root.Restored += r.Count; if (root.Restored >= root.Amount) ForgiveIncident(root.Id, receiver,now); }
             }
             else if (r.Approach != SupplyApproach.Repay)
             {
@@ -136,10 +135,20 @@ namespace FamilyLife.Domain
                 ChangeBond(r.DonorId, r.RequesterId, new BondChange(1, 1, -1, 2), now);
             }
             // Repayment needs the reverse, actually completed transfer of the same resource category.
-            var debt = r.Approach == SupplyApproach.Steal || r.Approach == SupplyApproach.Threat ? null : Requests.FirstOrDefault(x => x.Id != r.Id && (r.Approach != SupplyApproach.Repay || x.Id == r.DebtId) && x.Approach == SupplyApproach.Loan && !x.DebtPaid &&
+            var debt = r.Approach != SupplyApproach.Repay ? null : Requests.FirstOrDefault(x => x.Id == r.DebtId && x.Id != r.Id && x.Approach == SupplyApproach.Loan && !x.DebtPaid &&
                 (x.State == SupplyState.Exchanged || x.State == SupplyState.Stored) && x.RequesterId == r.DonorId && x.DonorId == r.RequesterId && x.Kind == r.Kind && (r.Kind == SupplyKind.Food ? r.Units >= x.Units : r.Definition == x.Definition && r.Count >= x.Count));
             if (debt != null) { NoteHouseService(debt.RequesterId,FamilyOf(debt.DonorId),2,now); debt.DebtPaid = true; debt.State = SupplyState.Repaid; ChangeBond(debt.DonorId, debt.RequesterId, new BondChange(1, 4, -3, 1), now); }
             return true;
+        }
+
+        /// <summary>Side-effect-free final validation, used before barter money changes hands.</summary>
+        public bool CanExchangeSupply(SupplyRequest r,int carriedThingId,int actualCount)
+        {
+            if(r==null || r.State!=SupplyState.Granted || carriedThingId<=0 || GetPerson(r.RequesterId)?.InColony!=true || FamilyOf(r.RequesterId)==0 || actualCount<r.Count) return false;
+            int receiver=FamilyOf(r.RequesterId),donor=FamilyOf(r.DonorId);var source=ClaimFor(carriedThingId);
+            if(r.Approach==SupplyApproach.PublicClaim) return source==null;
+            if(r.Approach==SupplyApproach.Relocate) return source!=null && source.HolderFamily==receiver;
+            return source!=null && source.HolderFamily==donor;
         }
 
         private static bool MarkRelocated(SupplyRequest r, int thing)

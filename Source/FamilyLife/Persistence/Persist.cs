@@ -76,6 +76,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref EmergencySharing, "emergencySharing", true);
             Scribe_Values.Look(ref UsePublicBarterFunds, "usePublicBarterFunds");
             Scribe_Values.Look(ref ParentHouseId, "parentHouse");
+            Scribe_Values.Look(ref AbsorbedIntoId, "absorbedInto");
+            Scribe_Values.Look(ref RetiredTick, "retiredTick");
             Scribe_Values.Look(ref HeadId,"head");
             Scribe_Collections.Look(ref Stewards, "stewards", LookMode.Value);
             Scribe_Values.Look(ref CrestPrimary, "crestPrimary", -1);
@@ -258,6 +260,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref VictimFamily, "victimFamily");
             Scribe_Values.Look(ref MapId, "mapId");
             Scribe_Values.Look(ref Tick, "tick");
+            Scribe_Values.Look(ref ResolvedTick, "resolvedTick");
             Scribe_Values.Look(ref Amount, "amount");
             Scribe_Values.Look(ref Restored, "restored");
             Scribe_Values.Look(ref RepairSteps, "repairSteps");
@@ -296,7 +299,9 @@ namespace FamilyLife.Domain
         {
             Scribe_Values.Look(ref PersonId,"personId");
             Scribe_Values.Look(ref FamilyId,"familyId");
+            Scribe_Values.Look(ref ContactDays,"contactDays");
             Scribe_Values.Look(ref ServiceDays,"serviceDays");
+            Scribe_Values.Look(ref LastContactDay,"lastContactDay",-1);
             Scribe_Values.Look(ref LastPositiveDay,"lastPositiveDay",-1);
             Scribe_Values.Look(ref LastTick,"lastTick");
             Scribe_Values.Look(ref Respect,"respect");

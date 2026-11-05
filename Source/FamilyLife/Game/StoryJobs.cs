@@ -68,7 +68,8 @@ namespace FamilyLife
             {
                 var carried = pawn.carryTracker.CarriedThing;
                 var r = Request;
-                if (carried == null || carried.stackCount < r.Count || carried.def.defName != r.Definition || (r.Approach == SupplyApproach.Barter && Component.Registry.ClaimFor(carried.thingIDNumber)?.HolderFamily != Component.Registry.FamilyOf(r.DonorId)) || (r.Approach == SupplyApproach.Barter && (Donor == null || !Component.Economy.Pay(pawn, Donor, r.Price))))
+                if (carried == null || carried.stackCount < r.Count || carried.def.defName != r.Definition || !Component.Registry.CanExchangeSupply(r,carried.thingIDNumber,carried.stackCount) ||
+                    (r.Approach == SupplyApproach.Barter && (Donor == null || !Component.Economy.Pay(pawn, Donor, r.Price))))
                 { EndJobWith(JobCondition.Incompletable); return; }
                 var witnesses = StoryActions.Witnesses(pawn.Map, pawn, pawn.Position);
                 if (!Component.Registry.ExchangeSupply(r.Id, carried.thingIDNumber, carried.stackCount, witnesses, Activities.Now)) { EndJobWith(JobCondition.Incompletable); return; }
@@ -84,7 +85,6 @@ namespace FamilyLife
                 { EndJobWith(JobCondition.Incompletable); return; }
                 if(pawn.carryTracker.CarriedThing!=null) {EndJobWith(JobCondition.Incompletable);return;}
                 Request.State = SupplyState.Stored;
-                Component.Registry.NoteHouseService(pawn.thingIDNumber,Component.Registry.FamilyOf(pawn.thingIDNumber),1,Activities.Now);
                 Component.Economy.Invalidate(pawn.Map);
             }};
         }

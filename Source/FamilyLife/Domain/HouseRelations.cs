@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 namespace FamilyLife.Domain
 {
-    public enum HouseRole : byte { Outsider, Associate, TrustedAssociate, Member, Steward, Head }
+    public enum HouseRole : byte { Outsider, FamilyFriend, Associate, TrustedAssociate, Member, Steward, Head }
     public enum PetitionKind : byte { Admission, Recognition, Union }
     public enum PetitionState : byte { Proposed, Heard, Accepted, Denied, Expired }
     public sealed partial class HouseContact
     {
-        public int PersonId, FamilyId, ServiceDays, LastPositiveDay = -1, LastTick;
+        public int PersonId, FamilyId, ContactDays, ServiceDays, LastContactDay = -1, LastPositiveDay = -1, LastTick;
         public float Respect;
     }
     public sealed partial class HousePetition
@@ -28,18 +28,27 @@ namespace FamilyLife.Domain
         public List<HousePetition> HousePetitions = new List<HousePetition>();
         public int NextPetitionId = 1;
         public HouseContact ContactOf(int person,int family) => HouseContacts.FirstOrDefault(c=>c.PersonId==person && c.FamilyId==family);
+        private HouseContact EnsureContact(int person,int family)
+        {
+            var c=ContactOf(person,family);
+            if(c!=null) return c;
+            if(HouseContacts.Count>=1024) return null;
+            c=new HouseContact{PersonId=person,FamilyId=family};HouseContacts.Add(c);return c;
+        }
+        public void NoteHouseContact(int person,int family,int now)
+        {
+            if(GetPerson(person)?.IsAlive!=true || !IsActiveHouse(family) || BelongsToFamily(GetPerson(person),family)) return;
+            var c=EnsureContact(person,family);if(c==null)return;int day=now/ActivityTuning.TicksPerDay;
+            if(c.LastContactDay<day){c.LastContactDay=day;c.ContactDays++;}c.LastTick=now;
+        }
         public void NoteHouseService(int person,int family,float value,int now)
         {
-            if(GetPerson(person)?.IsAlive!=true || GetLineage(family)==null || value==0 || float.IsNaN(value)) return;
-            var c=ContactOf(person,family);
-            if(c==null)
-            {
-                if(HouseContacts.Count>=1024) return;
-                c=new HouseContact{PersonId=person,FamilyId=family};HouseContacts.Add(c);
-            }
+            if(GetPerson(person)?.IsAlive!=true || !IsActiveHouse(family) || BelongsToFamily(GetPerson(person),family) || value==0 || float.IsNaN(value)) return;
+            var c=EnsureContact(person,family);if(c==null)return;
             if(value>0)
             {
                 int day=now/ActivityTuning.TicksPerDay;
+                if(c.LastContactDay<day){c.LastContactDay=day;c.ContactDays++;}
                 if(c.LastPositiveDay>=day) return;
                 c.LastPositiveDay=day;c.ServiceDays++;c.Respect=Math.Min(100,c.Respect+Math.Min(2,value));
             }
@@ -65,7 +74,7 @@ namespace FamilyLife.Domain
                 return HouseRole.Member;
             }
             var contact=ContactOf(person,family);
-            return contact?.Respect>=20 && contact.ServiceDays>=10 ? HouseRole.TrustedAssociate : contact?.Respect>=6 && contact.ServiceDays>=3 ? HouseRole.Associate : HouseRole.Outsider;
+            return contact?.Respect>=20 && contact.ServiceDays>=10 ? HouseRole.TrustedAssociate : contact?.Respect>=6 && contact.ServiceDays>=3 ? HouseRole.Associate : contact?.ContactDays>=3 ? HouseRole.FamilyFriend : HouseRole.Outsider;
         }
         public bool CanManageHouse(int person,int family) => GetPerson(person)?.InColony==true && RoleInHouse(person,family)>=HouseRole.Steward;
         public bool DelegateHouse(int leader,int member,int family,bool appoint)

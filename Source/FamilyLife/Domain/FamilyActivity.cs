@@ -169,7 +169,7 @@ namespace FamilyLife.Domain
                 bond.LastQualityTick = now;
                 bond.QualityRecent += hours;
                 if(bond.LastOpinion>0 && bond.Attachment>=35 && bond.Trust>=35)
-                    NoteHouseService(pair[1],FamilyOf(pair[0]),2,now);
+                    NoteHouseContact(pair[1],FamilyOf(pair[0]),now);
             }
         }
 

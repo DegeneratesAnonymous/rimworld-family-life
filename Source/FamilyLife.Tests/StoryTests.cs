@@ -95,8 +95,8 @@ namespace FamilyLife.Tests
         }
         [Fact] public void Refusal_for_essential_donor_needs_is_a_smaller_slight()
         {var r=World();var q=Supply(r);Assert.False(r.NegotiateSupply(q,1,1,false,Now));Assert.Equal(2,r.Incidents.Single().Severity);Assert.False(r.ExchangeSupply(q.Id,100,2,new[]{1},Now));}
-        [Theory] [InlineData(SupplyApproach.Ask, true)] [InlineData(SupplyApproach.Steal, false)]
-        public void Only_a_voluntary_reverse_transfer_repays_a_loan(SupplyApproach approach, bool repaid)
+        [Theory] [InlineData(SupplyApproach.Ask)] [InlineData(SupplyApproach.Steal)] [InlineData(SupplyApproach.Barter)]
+        public void Only_an_explicit_matching_repayment_repays_a_loan(SupplyApproach approach)
         {
             var r=World();var loan=Supply(r,SupplyApproach.Loan);loan.State=SupplyState.Granted;
             r.ExchangeSupply(loan.Id,100,2,new[]{1,11},Now);loan.State=SupplyState.Stored;
@@ -104,7 +104,7 @@ namespace FamilyLife.Tests
             var back=r.OpenSupplyRequest(11,1,200,7,3,SupplyKind.Food,approach,Now+1);
             back.Definition="MealFine";back.Units=2.7f;back.State=SupplyState.Granted;
             Assert.True(r.ExchangeSupply(back.Id,200,3,new[]{1,11},Now+1));
-            Assert.Equal(repaid,loan.DebtPaid);Assert.Equal(repaid?SupplyState.Repaid:SupplyState.Stored,loan.State);
+            Assert.False(loan.DebtPaid);Assert.Equal(SupplyState.Stored,loan.State);
         }
         [Fact] public void Two_matching_partial_returns_resolve_the_original_theft()
         {

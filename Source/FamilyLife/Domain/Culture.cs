@@ -316,13 +316,16 @@ namespace FamilyLife.Domain
         public void UpdateCulture(Func<int, float[]> profileOf, int now)
         {
             EnsureIndexes();
+            var membersByHouse=ActiveColonyMembers();
             foreach (var lineage in Lineages)
             {
+                if(lineage.AbsorbedIntoId!=0) continue;
+                if(lineage.LastCultureTick>0 && now-lineage.LastCultureTick<ActivityTuning.TicksPerDay) continue;
                 var sum = new float[DimInfo.Count];
                 float weight = 0f;
-                foreach (var p in Persons)
+                if(!membersByHouse.TryGetValue(lineage.Id,out var members)) members=new List<PersonRecord>();
+                foreach (var p in members)
                 {
-                    if (!p.InColony || !(BelongsToFamily(p,lineage.Id))) continue;
                     var profile = profileOf?.Invoke(p.Id);
                     if (profile == null) continue;
                     float w = p.Juvenile ? CultureTuning.JuvenileWeight : CultureTuning.AdultWeight;
@@ -399,11 +402,13 @@ namespace FamilyLife.Domain
         public List<FamilyEvent> UpdateTraditions(int now)
         {
             EnsureIndexes();
+            var membersByHouse=ActiveColonyMembers();
             var events = new List<FamilyEvent>();
             GatheringRequests.RemoveAll(r => r == null || r.Expires < now);
             foreach (var lineage in Lineages)
             {
-                int people = ColonyPeopleOf(lineage.Id);
+                if(lineage.AbsorbedIntoId!=0) continue;
+                int people = membersByHouse.TryGetValue(lineage.Id,out var members)?members.Count:0;
                 if (people == 0) continue;
                 for (int i = 0; i < TraditionCatalog.All.Length; i++)
                 {
@@ -434,6 +439,23 @@ namespace FamilyLife.Domain
                 }
             }
             return events;
+        }
+
+        private Dictionary<int,List<PersonRecord>> ActiveColonyMembers()
+        {
+            var result=Lineages.Where(l=>l.AbsorbedIntoId==0).ToDictionary(l=>l.Id,l=>new List<PersonRecord>());
+            foreach(var person in Persons.Where(p=>p.InColony))
+            {
+                int main=LineageIdFor(person);
+                if(main>0 && result.TryGetValue(main,out var primary)) primary.Add(person);
+            }
+            foreach(var lineage in Lineages.Where(l=>l.AbsorbedIntoId==0))
+                foreach(var affiliation in lineage.Affiliations)
+                {
+                    var person=GetPerson(affiliation.PersonId);
+                    if(person?.InColony==true && person.SocialFamilyId==0 && LineageIdFor(person)!=lineage.Id && result.TryGetValue(lineage.Id,out var affiliated)) affiliated.Add(person);
+                }
+            return result;
         }
 
         /// <summary>Asks for a one-off gathering (a coming of age, a memorial). A second request for the same thing is ignored.</summary>
@@ -499,7 +521,8 @@ namespace FamilyLife.Domain
             {
                 bool family = BelongsToFamily(p,lineageId);
                 bool friend = hosts.Count > 0 && hosts.All(h => h == p.Id || (opinionOf?.Invoke(p.Id, h) ?? int.MinValue) >= minOpinion);
-                if (family || friend || RoleInHouse(p.Id,lineageId)==HouseRole.Associate || RoleInHouse(p.Id,lineageId)==HouseRole.TrustedAssociate) result.Add(p.Id);
+                var role=RoleInHouse(p.Id,lineageId);
+                if (family || friend || role>=HouseRole.FamilyFriend && role<HouseRole.Member) result.Add(p.Id);
             }
             return result;
         }

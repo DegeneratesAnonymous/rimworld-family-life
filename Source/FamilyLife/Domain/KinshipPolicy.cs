@@ -32,7 +32,7 @@ namespace FamilyLife.Domain
             var found=new Dictionary<int,int>();var queue=new Queue<(int,int)>();queue.Enqueue((id,0));incomplete=false;
             while(queue.Count>0)
             {
-                var item=queue.Dequeue();var p=GetPerson(item.Item1);if(p==null) continue;
+                var item=queue.Dequeue();var p=GetPerson(item.Item1);if(p==null){incomplete=true;continue;}
                 if(item.Item2>=32 && p.ParentIds.Count>0) {incomplete=true;continue;}
                 foreach(int parent in p.ParentIds)
                 {

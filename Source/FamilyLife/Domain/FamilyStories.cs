@@ -12,7 +12,7 @@ namespace FamilyLife.Domain
 
     public sealed partial class FamilyIncident
     {
-        public int Id, ActorId, VictimId, ActorFamily, VictimFamily, MapId, Tick, Amount, Restored;
+        public int Id, ActorId, VictimId, ActorFamily, VictimFamily, MapId, Tick, ResolvedTick, Amount, Restored;
         public string Resource = "";
         public IncidentKind Kind;
         public IncidentContext Context;
@@ -125,11 +125,11 @@ namespace FamilyLife.Domain
             return true;
         }
 
-        public void ForgiveIncident(int incidentId, int familyId)
+        public void ForgiveIncident(int incidentId, int familyId, int now=0)
         {
             var i = Incidents.FirstOrDefault(x => x.Id == incidentId && x.VictimFamily == familyId);
             if (i == null || i.Resolved) return;
-            i.Resolved = true;
+            i.Resolved = true;i.ResolvedTick=now>0?now:Math.Max(i.Tick,i.LastRepairTick);
             foreach (var plot in Plots.Where(p => p.Active && p.IncidentId == i.Id)) plot.State = PlotState.Abandoned;
             var tie = GetTie(i.ActorFamily, i.VictimFamily);
             if (tie != null) tie.Grievance = Math.Max(0, tie.Grievance - i.Severity * 0.3f);
@@ -186,7 +186,7 @@ namespace FamilyLife.Domain
 
         private void RepairStories()
         {
-            foreach(var p in Persons) if(p.SocialFamilyId>0 && !lineageById.ContainsKey(p.SocialFamilyId)) p.SocialFamilyId=0;
+            foreach(var p in Persons) if(p.SocialFamilyId>0) p.SocialFamilyId=ActiveHouseIdIndexed(p.SocialFamilyId);
             HouseContacts = (HouseContacts ?? new List<HouseContact>()).Where(c=>c!=null && personById.ContainsKey(c.PersonId) && lineageById.ContainsKey(c.FamilyId)).GroupBy(c=>(c.PersonId,c.FamilyId)).Select(g=>g.First()).Take(1024).ToList();
             HousePetitions = (HousePetitions ?? new List<HousePetition>()).Where(q=>q!=null && personById.ContainsKey(q.PersonId) && lineageById.ContainsKey(q.FamilyId)).Take(128).ToList();
             foreach(var q in HousePetitions) NextPetitionId=Math.Max(NextPetitionId,q.Id+1);
@@ -199,7 +199,7 @@ namespace FamilyLife.Domain
             Claims = Claims ?? new List<StockClaim>(); Requests = Requests ?? new List<SupplyRequest>();
             Incidents.RemoveAll(i => i == null || !personById.ContainsKey(i.VictimId));
             Plots.RemoveAll(p => p == null || !personById.ContainsKey(p.OrganizerId) || !Incidents.Any(i => i.Id == p.IncidentId));
-            Claims.RemoveAll(c => c == null || !lineageById.ContainsKey(c.OwnerFamily));
+            Claims.RemoveAll(c => c == null || !lineageById.ContainsKey(c.OwnerFamily) || !lineageById.ContainsKey(c.HolderFamily));
             claimByThing.Clear();
             Requests.RemoveAll(r => r == null || !personById.ContainsKey(r.RequesterId));
             foreach (var i in Incidents) { i.KnownBy = (i.KnownBy ?? new List<int>()).Distinct().Take(64).ToList(); i.FamiliesAffected = i.FamiliesAffected ?? new List<int>(); NextIncidentId = Math.Max(NextIncidentId, i.Id + 1); }

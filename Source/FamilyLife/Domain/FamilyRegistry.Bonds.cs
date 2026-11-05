@@ -108,6 +108,7 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             var griefs = new List<Grief>();
+            var scars=RelationshipScars(now);
 
             foreach (var pair in RelevantPairs())
             {
@@ -137,6 +138,8 @@ namespace FamilyLife.Domain
                 float trustTarget = BondTuning.Clamp(25f + 0.4f * bond.Familiarity + opinionValue * 0.3f - 0.5f * bond.Tension);
                 float tensionTarget = opinion.HasValue && opinion.Value < 0 ? BondTuning.Clamp(-opinion.Value * BondTuning.EmbitteredTension) : 0f;
                 if (together && profileOf != null) tensionTarget = BondTuning.Clamp(tensionTarget + Friction(holder.Id, profileOf(holder.Id), profileOf(other.Id)));
+                if(scars.TryGetValue((holder.Id,other.Id),out var scar))
+                {trustTarget=Math.Min(trustTarget,100f-scar*.5f);tensionTarget=Math.Max(tensionTarget,scar*.12f);}
 
                 bond.Attachment = Approach(bond.Attachment, attachmentTarget, BondTuning.AttachmentRate, hours);
                 bond.Trust = Approach(bond.Trust, trustTarget, BondTuning.TrustRate, hours);
@@ -148,6 +151,33 @@ namespace FamilyLife.Domain
 
             PruneBonds();
             return griefs;
+        }
+
+        private Dictionary<(int,int),float> RelationshipScars(int now)
+        {
+            var result=new Dictionary<(int,int),float>();
+            foreach(var incident in Incidents)
+            {
+                if(incident.ActorId==0 || incident.Severity<20 || incident.Kind==IncidentKind.Gift || incident.Kind==IncidentKind.Restitution) continue;
+                float blame=(incident.Context&IncidentContext.Accident)!=0?.4f:(incident.Context&IncidentContext.MentalBreak)!=0?.65f:1f;
+                float remaining=1f;
+                if(incident.Resolved)
+                {
+                    int resolved=incident.ResolvedTick>0?incident.ResolvedTick:incident.Tick;
+                    remaining=Math.Max(0f,1f-(now-resolved)/(30f*ActivityTuning.TicksPerDay));
+                    remaining*=Math.Max(.25f,1f-incident.RepairSteps*.2f);
+                }
+                float scar=incident.Severity*blame*remaining;if(scar<=0)continue;
+                int victimHouse=ActiveHouseId(incident.VictimFamily);
+                foreach(int observer in incident.KnownBy)
+                {
+                    if(observer==incident.ActorId)continue;
+                    bool involved=observer==incident.VictimId || victimHouse>0 && FamilyOf(observer)==victimHouse || (GetBond(observer,incident.VictimId)?.Attachment??0)>=40;
+                    if(!involved)continue;var key=(observer,incident.ActorId);
+                    if(!result.TryGetValue(key,out float old) || scar>old) result[key]=scar;
+                }
+            }
+            return result;
         }
 
         private static int? SafeOpinion(Func<int, int, int?> opinionOf, int from, int to)
