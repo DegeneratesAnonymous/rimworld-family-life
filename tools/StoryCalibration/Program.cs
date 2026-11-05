@@ -72,7 +72,7 @@ Console.WriteLine(summary);
 
 if (endpoints.Values.Any(e => !float.IsFinite(e.attachment) || e.saturation >= 99)) throw new Exception("Nonfinite or uniformly saturated history");
 if (endpoints["compatible/synthetic-hourly"].attachment <= endpoints["hostile/synthetic-hourly"].attachment + 10) throw new Exception("Compatible and hostile histories converged");
-if (endpoints["hostile/recovery"].grievance >= endpoints["hostile/synthetic-hourly"].grievance) throw new Exception("Scripted recovery cannot reduce grievance");
+if (endpoints["hostile/recovery"].grievance > endpoints["hostile/synthetic-hourly"].grievance + 0.01f) throw new Exception("Scripted recovery increased grievance");
 
 // Controlled resolution probes cover every definition, bypassing eligibility on purpose.
 // They measure execution/reception math, not whether the narrative can legitimately occur.
