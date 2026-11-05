@@ -21,7 +21,12 @@ jobs:
         run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.7 -v minimal
       - name: Build RimWorld 1.6
         run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.6 -v minimal
-      - name: Reproduce calibration
-        run: |
-          dotnet run --project tools/StoryCalibration -- /tmp/family-life-calibration
-          diff -ru docs/calibration /tmp/family-life-calibration
+      - name: Generate calibration
+        run: dotnet run --project tools/StoryCalibration -- /tmp/family-life-calibration
+      - name: Upload calibration
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-life-calibration
+          path: /tmp/family-life-calibration
+      - name: Verify calibration snapshots
+        run: diff -ru docs/calibration /tmp/family-life-calibration
