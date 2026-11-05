@@ -234,7 +234,7 @@ namespace FamilyLife.Domain
             e.Add(new B("A2-09", "ParentalDisapproval", Fam, AC, Mean, 5, Arc.Clash).Skill("Social", 0.35f).Fx(EventEffect.StrainsRift)
                 .When(C.InitiatorIsAdult, C.InitiatorCaresFor, C.Where("conduct at odds with the parent's values", c => c.Initiator.Wronged.Contains(c.Recipient.Id) || new[] { Dim.Warmth, Dim.Steadiness, Dim.Devotion, Dim.Status }.Any(d => Math.Abs(c.Initiator.Axis(d) - c.Recipient.Axis(d)) >= 0.9f)))
                 .Motive(0.12f, Factor.Pride, 0.2f, Factor.Steadiness, -0.15f, Factor.Tension, 0.2f).Done());
-            e.Add(new B("A2-10", "MakingTimeForThem", Fam, AC, Mean, 4, Arc.Warm).Fx(EventEffect.Promise | EventEffect.EasesRift)
+            e.Add(new B("A2-10", "MakingTimeForThem", Fam, AC, Mean, 8, Arc.Warm).Fx(EventEffect.Promise | EventEffect.EasesRift)
                 .When(C.InitiatorIsAdult, C.InitiatorCaresFor, C.ChildNeglected)
                 .Motive(0.2f, Factor.Warmth, 0.2f, Factor.Devotion, 0.25f, Factor.Attachment, 0.15f, Factor.Apart, 0.2f).Done());
 
