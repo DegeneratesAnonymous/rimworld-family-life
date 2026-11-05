@@ -1,0 +1,27 @@
+name: Family Life CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Test domain
+        run: dotnet test Source/FamilyLife.Tests/FamilyLife.Tests.csproj -c Release
+      - name: Build RimWorld 1.7
+        run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.7 -v minimal
+      - name: Build RimWorld 1.6
+        run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.6 -v minimal
+      - name: Reproduce calibration
+        run: |
+          dotnet run --project tools/StoryCalibration -- /tmp/family-life-calibration
+          diff -ru docs/calibration /tmp/family-life-calibration
