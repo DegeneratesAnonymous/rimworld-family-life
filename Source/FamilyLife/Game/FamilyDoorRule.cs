@@ -36,10 +36,17 @@ namespace FamilyLife
             if (map == null || !cell.InBounds(map)) return false;
             var zone = map.zoneManager.ZoneAt(cell) as Zone_Family;
             if (zone == null || zone.areaId == 0) return false;
-            if (pawn.Faction != Faction.OfPlayer || !pawn.RaceProps.Humanlike || pawn.Drafted || pawn.Downed || pawn.InMentalState || pawn.IsPrisoner || pawn.IsSlave) return false;
+            if (pawn.Faction != Faction.OfPlayer || pawn.Drafted || pawn.Downed || pawn.InMentalState || pawn.IsPrisoner || pawn.IsSlave) return false;
             var component = FamilyComponent.Current;
             var lineage = component == null ? null : zone.Family(component.Registry);
             if (lineage == null) return false;
+            if (!pawn.RaceProps.Humanlike)
+            {
+                // A tame animal follows its master: it may go where its master may, and nowhere else in a home. It cannot knock.
+                var master = pawn.playerSettings?.Master;
+                if (master == null || master.Dead) return true;
+                return Blocks(cell, master, false);
+            }
             if (IsMember(component, lineage, pawn)) return false;
             if (GuestPasses.HasPassFor(pawn, zone)) return false;
             var bed = pawn.ownership?.OwnedBed;
@@ -78,6 +85,30 @@ namespace FamilyLife
             if (!__result) return;
             try { if (FamilyDoorRule.Blocks(c, forPawn, true)) __result = false; }
             catch (System.Exception ex) { HookSafety.Report("family door rule", ex); }
+        }
+    }
+
+    /// <summary>
+    /// The allowed-area test only covers the work people pick; joy, play, hauling and visits choose their own destination. Any walk that would end
+    /// in someone else's home is refused here, whatever job it belongs to. The player's own orders and this mod's own social jobs are not stopped.
+    /// </summary>
+    [HarmonyPatch(typeof(Pawn_PathFollower), nameof(Pawn_PathFollower.StartPath))]
+    internal static class Patch_FamilyDoorStartPath
+    {
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, Pawn> PawnRef = AccessTools.FieldRefAccess<Pawn_PathFollower, Pawn>("pawn");
+
+        private static bool Prefix(Pawn_PathFollower __instance, LocalTargetInfo dest)
+        {
+            try
+            {
+                var pawn = PawnRef(__instance);
+                var job = pawn?.CurJob;
+                if (job == null || job.playerForced || !dest.IsValid || dest.Thing is Pawn || job.def.defName.StartsWith("WFL_")) return true;
+                if (!FamilyDoorRule.Blocks(dest.Cell, pawn, true)) return true;
+                pawn.jobs.curDriver?.Notify_PatherFailed();
+                return false;
+            }
+            catch (System.Exception ex) { HookSafety.Report("family door path", ex); return true; }
         }
     }
 
