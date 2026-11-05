@@ -598,8 +598,8 @@ namespace FamilyLife.Domain
                         {
                             var kind = e.Kind == FamilyEventKind.FamiliesJoined ? MemoryKind.Joined : MemoryKind.StepFamily;
                             personById.TryGetValue(e.B, out var other);
-                            int lineageB = other != null ? other.PrimaryLineageId : 0;
-                            int lineageA = a != null ? a.PrimaryLineageId : 0;
+                            int lineageB = other != null ? LineageIdFor(other) : 0;
+                            int lineageA = a != null ? LineageIdFor(a) : 0;
                             if (lineageA != 0) Remember(lineageA, kind, now, e.A, e.B, 1.5f);
                             if (lineageB != 0 && lineageB != lineageA) Remember(lineageB, kind, now, e.A, e.B, 1.5f);
                             break;

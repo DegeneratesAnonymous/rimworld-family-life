@@ -66,8 +66,6 @@ namespace FamilyLife
                 Profile = component.ProfileOf(p.thingIDNumber),
                 Mood = p.needs?.mood != null ? p.needs.mood.CurLevel : 0.5f
             };
-            if (actor.LineageId == 0 && record != null) actor.LineageId = record.PrimaryLineageId;
-
             if (p.skills != null)
                 foreach (var s in p.skills.skills)
                     if (!s.TotallyDisabled) actor.Skills[s.def.defName] = s.Level;
@@ -139,7 +137,7 @@ namespace FamilyLife
 
             if (!ia.Child && !ib.Child)
             {
-                try { ctx.RomanticallyEligible = initiator.ageTracker.AgeBiologicalYears>=18 && recipient.ageTracker.AgeBiologicalYears>=18 && !registry.AssessKinship(ia.Id,ib.Id).BlocksRomance && RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
+                try { ctx.RomanticallyEligible = initiator.DevelopmentalStage==DevelopmentalStage.Adult && recipient.DevelopmentalStage==DevelopmentalStage.Adult && !registry.AssessKinship(ia.Id,ib.Id).BlocksRomance && RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
                 catch (Exception) { ctx.RomanticallyEligible = false; }
             }
 

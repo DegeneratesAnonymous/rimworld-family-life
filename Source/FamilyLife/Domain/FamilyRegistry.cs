@@ -209,7 +209,7 @@ namespace FamilyLife.Domain
         {
             EnsureIndexes();
             if(!IsActiveHouse(lineageId)) return new List<PersonRecord>();
-            return Persons.Where(p => p.SocialFamilyId>0 ? p.SocialFamilyId==lineageId : p.SocialFamilyId==0 && p.PrimaryLineageId == lineageId).OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
+            return Persons.Where(p => BelongsToFamily(p,lineageId)).OrderBy(p => p.BirthAbsTick).ThenBy(p => p.Id).ToList();
         }
 
         public List<PersonRecord> AffiliatesOf(int lineageId)

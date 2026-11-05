@@ -85,7 +85,7 @@ namespace FamilyLife
         public static bool IsFamilyMember(FamilyRegistry registry, Lineage lineage, Pawn pawn)
         {
             var person = registry.GetPerson(pawn.thingIDNumber);
-            return person != null && (person.PrimaryLineageId == lineage.Id || lineage.HasAffiliate(person.Id));
+            return registry.BelongsToFamily(person, lineage.Id);
         }
 
         /// <summary>An adult can let anyone in. A child can only let another child in.</summary>

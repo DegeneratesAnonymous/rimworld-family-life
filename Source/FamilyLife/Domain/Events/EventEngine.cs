@@ -136,16 +136,41 @@ namespace FamilyLife.Domain
             return n == 0 ? 1f : (n == 1 ? 0.6f : (n == 2 ? 0.35f : 0.2f));
         }
 
-        private float SelectionFatigue(string eventId,int a,int b,int now)
+        private sealed class SelectionHistory
         {
-            int since=now-14*ActivityTuning.TicksPerDay;
-            int n=EventLog.Count(e=>e.EventId==eventId && e.Tick>=since && (e.A==a || e.B==a || e.A==b || e.B==b));
+            public readonly Dictionary<string,int> LastPairTick=new Dictionary<string,int>();
+            public readonly Dictionary<string,int> RecentParticipants=new Dictionary<string,int>();
+        }
+
+        private SelectionHistory BuildSelectionHistory(int a,int b,int now)
+        {
+            var history=new SelectionHistory();int since=now-14*ActivityTuning.TicksPerDay;
+            foreach(var e in EventLog)
+            {
+                if((e.A==a && e.B==b)||(e.A==b && e.B==a))
+                {
+                    if(!history.LastPairTick.TryGetValue(e.EventId,out int last)||e.Tick>last) history.LastPairTick[e.EventId]=e.Tick;
+                }
+                if(e.Tick>=since&&(e.A==a||e.B==a||e.A==b||e.B==b))
+                    history.RecentParticipants[e.EventId]=history.RecentParticipants.TryGetValue(e.EventId,out int count)?count+1:1;
+            }
+            return history;
+        }
+
+        private static float SelectionFatigue(SelectionHistory history,string eventId)
+        {
+            int n=history.RecentParticipants.TryGetValue(eventId,out int count)?count:0;
             return n==0?1.2f:n==1?.65f:n==2?.35f:.18f;
         }
 
         // ------------------------------------------------------------------ what is possible, and why not
 
         public List<EligibilityLine> Explain(PairContext c, IEnumerable<EventDef> catalog, bool childrenEnabled, Func<EventDef, bool> enabled = null)
+        {
+            return Explain(c,catalog,childrenEnabled,enabled,BuildSelectionHistory(c.Initiator.Id,c.Recipient.Id,c.Now));
+        }
+
+        private List<EligibilityLine> Explain(PairContext c, IEnumerable<EventDef> catalog, bool childrenEnabled, Func<EventDef, bool> enabled, SelectionHistory history)
         {
             var lines = new List<EligibilityLine>();
             var scenario = ScenarioOf(c);
@@ -167,13 +192,13 @@ namespace FamilyLife.Domain
                 if (d.Needs.Length > 0 && !d.Needs.Contains(c.Setting)) { line.Reason = "only happens during " + string.Join("/", d.Needs.Select(n => n.ToString())); continue; }
                 if (d.NeedsThird && c.Third == null) { line.Reason = "needs a third person involved"; continue; }
                 if (d.ConcernsPromise && c.Broken == null) { line.Reason = "no recorded promise was broken"; continue; }
-                int since = DaysSinceEvent(d.Id, c.Initiator.Id, c.Recipient.Id, c.Now);
+                int since = history.LastPairTick.TryGetValue(d.Id,out int lastTick)?Math.Max(0,c.Now-lastTick)/ActivityTuning.TicksPerDay:int.MaxValue;
                 if (since < d.CooldownDays) { line.Reason = "happened " + since + " day(s) ago (cooldown " + d.CooldownDays + ")"; continue; }
                 var failed = d.Opportunity.FirstOrDefault(o => !o.Test(c));
                 if (failed != null) { line.Reason = "needs: " + failed.Name; continue; }
                 line.Motive = d.Motive.Value(c, d.Skill);
                 if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
-                line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(d.Id,c.Initiator.Id,c.Recipient.Id,c.Now);
+                line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(history,d.Id);
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
                 line.Reason = "possible";
@@ -226,13 +251,18 @@ namespace FamilyLife.Domain
             var pool = new List<KeyValuePair<EligibilityLine, PairContext>>();
             var defs = catalog.ToList();
             var seen = new HashSet<(string, int, int, int, ActivityKind, bool)>();
+            var histories = new Dictionary<(int,int,int),SelectionHistory>();
             foreach (var c in contexts)
-                foreach (var l in Explain(c, defs.Where(d => d.NeedsThird == (c.Third != null)), childrenEnabled, enabled).Where(l => l.Eligible))
+            {
+                var historyKey=(c.Initiator.Id,c.Recipient.Id,c.Now);
+                if(!histories.TryGetValue(historyKey,out var history)) histories[historyKey]=history=BuildSelectionHistory(c.Initiator.Id,c.Recipient.Id,c.Now);
+                foreach (var l in Explain(c, defs.Where(d => d.NeedsThird == (c.Third != null)), childrenEnabled, enabled,history).Where(l => l.Eligible))
                 {
                     // Pair-only events belong to the plain context, not to every nearby witness.
                     var key = (l.Def.Id, c.Initiator.Id, c.Recipient.Id, c.Third?.Id ?? 0, c.Setting, c.FromActivity);
                     if (seen.Add(key)) pool.Add(new KeyValuePair<EligibilityLine, PairContext>(l, c));
                 }
+            }
             if (pool.Count == 0) return null;
             double total = pool.Sum(p => p.Key.Weight);
             double pick = rng.NextDouble() * total;

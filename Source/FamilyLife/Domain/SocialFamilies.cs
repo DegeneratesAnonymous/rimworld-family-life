@@ -21,8 +21,8 @@ namespace FamilyLife.Domain
         {
             if(person==null || family<=0) return false;
             if(!IsActiveHouse(family)) return false;
-            if(person.SocialFamilyId!=0) return person.SocialFamilyId==family;
-            return person.PrimaryLineageId==family || GetLineage(family)?.HasAffiliate(person.Id)==true;
+            if(person.SocialFamilyId!=0) return person.SocialFamilyId>0 && ActiveHouseIdIndexed(person.SocialFamilyId)==family;
+            return ActiveHouseIdIndexed(person.PrimaryLineageId)==family || GetLineage(family)?.HasAffiliate(person.Id)==true;
         }
         public bool IsActiveHouse(int family)
         {
@@ -76,20 +76,26 @@ namespace FamilyLife.Domain
         {
             if(source==target || !IsActiveHouse(source) || !IsActiveHouse(target)) return false;
             var sourceHouse=GetLineage(source);var targetHouse=GetLineage(target);
-            var members=Persons.Where(p=>p.InColony && BelongsToFamily(p,source)).Select(p=>p.Id).ToList();
-            if(members.Count==0) return false;
+            int sourceColonyMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,source));
+            if(sourceColonyMembers==0) return false;
+            var members=Persons.Where(p=>BelongsToFamily(p,source)).Select(p=>p.Id).ToList();
             int targetMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,target));
-            int total=Math.Max(1,members.Count+targetMembers);
+            int total=Math.Max(1,sourceColonyMembers+targetMembers);
             while(sourceHouse.Culture.Count<DimInfo.Count) sourceHouse.Culture.Add(0);
             while(targetHouse.Culture.Count<DimInfo.Count) targetHouse.Culture.Add(0);
-            for(int i=0;i<DimInfo.Count;i++) targetHouse.Culture[i]=(targetHouse.Culture[i]*targetMembers+sourceHouse.Culture[i]*members.Count)/total;
+            for(int i=0;i<DimInfo.Count;i++) targetHouse.Culture[i]=(targetHouse.Culture[i]*targetMembers+sourceHouse.Culture[i]*sourceColonyMembers)/total;
             foreach(var tradition in sourceHouse.Traditions)
             {
                 var held=targetHouse.Traditions.FirstOrDefault(t=>t.Id==tradition.Id);
                 if(held==null) targetHouse.Traditions.Add(new TraditionRecord{Id=tradition.Id,AdoptedTick=tradition.AdoptedTick,LastHeldTick=tradition.LastHeldTick,TimesHeld=tradition.TimesHeld,Muted=tradition.Muted});
                 else {held.AdoptedTick=Math.Min(held.AdoptedTick,tradition.AdoptedTick);held.LastHeldTick=Math.Max(held.LastHeldTick,tradition.LastHeldTick);held.TimesHeld+=tradition.TimesHeld;held.Muted&=tradition.Muted;}
             }
-            foreach(int id in members) SetSocialFamily(id,target,now,false);
+            foreach(int id in members)
+            {
+                var member=GetPerson(id);
+                if(member.InColony) SetSocialFamily(id,target,now,false);
+                else member.SocialFamilyId=target;
+            }
             foreach(var claim in Claims) {if(claim.OwnerFamily==source) claim.OwnerFamily=target;if(claim.HolderFamily==source) claim.HolderFamily=target;}
             MergeAbsorbedHouseRelations(source,target);
             foreach(var contact in HouseContacts.Where(c=>c.FamilyId==source).ToList())
