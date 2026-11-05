@@ -81,12 +81,23 @@ namespace FamilyLife.Domain
             }
 
             // The young next, then everyone else: the most comfortable bed left, the nearer a parent the better when it is a tie.
-            var rest = sleepers.Where(s => !result.ContainsKey(s.Id)).OrderBy(s => s.Stage == SleeperStage.Adult ? 1 : 0).ThenBy(s => s.Stage).ThenBy(s => s.Id).ToList();
+            // Children pick first. A parent on their own then picks to be with them (the same room, else the nearest bed, else the most comfortable); other adults pick last.
+            var parentIds = new HashSet<int>(sleepers.Where(k => k.Stage != SleeperStage.Adult).SelectMany(k => k.ParentIds));
+            int Turn(BedSleeper s) => s.Stage != SleeperStage.Adult ? 0 : parentIds.Contains(s.Id) ? 1 : 2;
+            var rest = sleepers.Where(s => !result.ContainsKey(s.Id)).OrderBy(Turn).ThenBy(s => s.Stage).ThenBy(s => s.Id).ToList();
             foreach (var s in rest)
             {
                 var anchors = s.ParentIds.Select(BedOf).Where(b => b != null).ToList();
                 float Near(BedSlot b) => anchors.Count == 0 ? 0f : anchors.Min(a => Dist(a, b));
-                var pick = left.Where(b => Usable(s, b)).OrderByDescending(b => b.Comfort).ThenBy(Near).FirstOrDefault();
+                var children = sleepers.Where(k => k.Stage != SleeperStage.Adult && k.ParentIds.Contains(s.Id)).Select(k => BedOf(k.Id)).Where(b => b != null).ToList();
+                BedSlot pick;
+                if (s.Stage == SleeperStage.Adult && children.Count > 0)
+                {
+                    float Closest(BedSlot b) => children.Min(c => Dist(c, b));
+                    bool WithChild(BedSlot b) => b.RoomId >= 0 && children.Any(c => c.RoomId == b.RoomId);
+                    pick = left.Where(b => Usable(s, b)).OrderByDescending(WithChild).ThenBy(Closest).ThenByDescending(b => b.Comfort).FirstOrDefault();
+                }
+                else pick = left.Where(b => Usable(s, b)).OrderByDescending(b => b.Comfort).ThenBy(Near).FirstOrDefault();
                 if (pick != null) { result[s.Id] = pick.Id; left.Remove(pick); }
             }
             return result;

@@ -91,6 +91,17 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void A_single_parent_is_housed_with_or_near_their_child()
+        {
+            // The child picks first. The parent then takes the bed in the child's room, ahead of an equally comfortable one elsewhere.
+            var plan = BedPlan.Deal(new[] { Kid(1, SleeperStage.Child, 5), Adult(5), Adult(9) },
+                new[] { Bed(10, 70, 1, x: 0), Bed(11, 50, 2, x: 1), Bed(12, 40, 1, x: 30) });
+            Assert.Equal(10, plan[1]);
+            Assert.Equal(12, plan[5]);      // same room, though less comfortable than the other
+            Assert.Equal(11, plan[9]);
+        }
+
+        [Fact]
         public void The_same_input_gives_the_same_answer()
         {
             var sleepers = new[] { Adult(3), Adult(1, 2), Adult(2, 1), Kid(8, SleeperStage.Child, 1) };
