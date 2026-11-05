@@ -31,6 +31,7 @@ namespace FamilyLife
         public bool socialEvents = true;
         public bool zonesAllowWork = true;
         public bool familyDoors = true;
+        public bool familyMeals = true;
         public bool eventsFamily = true;
         public bool eventsIndividual = true;
         public bool eventsInterFamily = true;
@@ -65,6 +66,7 @@ namespace FamilyLife
             Scribe_Values.Look(ref socialEvents, "socialEvents", true);
             Scribe_Values.Look(ref zonesAllowWork, "zonesAllowWork", true);
             Scribe_Values.Look(ref familyDoors, "familyDoors", true);
+            Scribe_Values.Look(ref familyMeals, "familyMeals", true);
             Scribe_Values.Look(ref eventsFamily, "eventsFamily", true);
             Scribe_Values.Look(ref eventsIndividual, "eventsIndividual", true);
             Scribe_Values.Look(ref eventsInterFamily, "eventsInterFamily", true);
@@ -149,6 +151,7 @@ namespace FamilyLife
             }
             list.CheckboxLabeled("WFL_S_BondMessages".Translate(), ref Settings.bondMessages, "WFL_S_BondMessagesTip".Translate());
             list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());
+            list.CheckboxLabeled("WFL_S_FamilyMeals".Translate(), ref Settings.familyMeals, "WFL_S_FamilyMealsTip".Translate());
             list.CheckboxLabeled("WFL_S_FamilyDoors".Translate(), ref Settings.familyDoors, "WFL_S_FamilyDoorsTip".Translate());
             list.CheckboxLabeled("WFL_S_LogEvents".Translate(), ref Settings.logEvents, "WFL_S_LogEventsTip".Translate());
             settingsHeight = list.CurHeight + 12;
