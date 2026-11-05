@@ -131,7 +131,7 @@ namespace FamilyLife
                     var component = FamilyComponent.Current;
                     var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
                     if (lineage == null) { Messages.Message("WFL_ZoneNone".Translate(), MessageTypeDefOf.RejectInput, false); return; }
-                    DealBeds(component, lineage);
+                    Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation("WFL_ZoneDealBedsConfirm".Translate(component.Registry.LineageDisplayName(lineage)), () => DealBeds(component, lineage)));
                 }
             };
             yield return new Command_Action

@@ -87,6 +87,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref ZoneAreaId, "zoneAreaId");
             Scribe_Collections.Look(ref ZoneApplied, "zoneApplied", LookMode.Value);
             if (ZoneApplied == null) ZoneApplied = new List<int>();
+            Scribe_Collections.Look(ref BedDeals, "bedDeals", LookMode.Value);
+            if (BedDeals == null) BedDeals = new List<int>();
         }
     }
 

@@ -8,6 +8,7 @@ namespace FamilyLife.Domain
         public int ZoneMapId = -1;                               // map-local area identity; -1 is a legacy unscoped assignment
         public int ZoneAreaId;                                   // the game's allowed area assigned to this family; 0 = none
         public List<int> ZoneApplied = new List<int>();          // who has already been given it, so a person who later chose another area is not overruled
+        public List<int> BedDeals = new List<int>();             // pawn id, bed id, pawn id, bed id...: the beds this mod handed out, so a later share-out leaves beds the player set by hand
     }
 
     public sealed partial class FamilyRegistry

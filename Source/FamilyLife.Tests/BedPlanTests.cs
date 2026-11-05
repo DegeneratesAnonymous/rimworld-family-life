@@ -94,11 +94,10 @@ namespace FamilyLife.Tests
         public void A_single_parent_is_housed_with_or_near_their_child()
         {
             // The child picks first. The parent then takes the bed in the child's room, ahead of an equally comfortable one elsewhere.
-            var plan = BedPlan.Deal(new[] { Kid(1, SleeperStage.Child, 5), Adult(5), Adult(9) },
+            var plan = BedPlan.Deal(new[] { Kid(1, SleeperStage.Child, 5), Adult(5) },
                 new[] { Bed(10, 70, 1, x: 0), Bed(11, 50, 2, x: 1), Bed(12, 40, 1, x: 30) });
             Assert.Equal(10, plan[1]);
             Assert.Equal(12, plan[5]);      // same room, though less comfortable than the other
-            Assert.Equal(11, plan[9]);
         }
 
         [Fact]
@@ -134,6 +133,60 @@ namespace FamilyLife.Tests
             var plan = BedPlan.Deal(new[] { Adult(1), Kid(7, SleeperStage.Child, 1) },
                 new[] { Bed(10, 40, 1, 1, 0), Bed(11, 90, 2, 1, 20), Bed(12, 30, 1, 1, 1) });
             Assert.Equal(11, plan[7]);
+        }
+
+        private static BedSleeper Aged(BedSleeper s, float age) { s.AgeYears = age; return s; }
+
+        [Fact]
+        public void The_couple_with_a_baby_then_the_eldest_couple_choose_first()
+        {
+            var sleepers = new[] { Aged(Adult(1, 2), 25), Aged(Adult(2, 1), 25), Aged(Adult(3, 4), 70), Aged(Adult(4, 3), 70), Aged(Adult(5, 6), 30), Aged(Adult(6, 5), 30), Kid(9, SleeperStage.Baby, 5, 6) };
+            var beds = new[] { Bed(10, 90, 1, 2, 0), Bed(11, 80, 2, 2, 10), Bed(12, 70, 3, 2, 20), Bed(13, 10, 1, 1, 1), Bed(14, 10, 4, 1, 99) };
+            var plan = BedPlan.Deal(sleepers, beds);
+            Assert.Equal(10, plan[5]);      // the couple with the baby
+            Assert.Equal(11, plan[3]);      // then the eldest
+            Assert.Equal(12, plan[1]);      // then the young couple
+        }
+
+        [Fact]
+        public void An_adult_with_no_dependants_picks_before_a_child()
+        {
+            var plan = BedPlan.Deal(new[] { Aged(Adult(1), 60), Aged(Kid(6, SleeperStage.Child, 9), 10) }, new[] { Bed(10, 90), Bed(11, 40) });
+            Assert.Equal(10, plan[1]);
+            Assert.Equal(11, plan[6]);
+        }
+
+        [Fact]
+        public void A_small_child_stays_within_reach_of_a_parent_but_an_older_one_does_not()
+        {
+            var couple = new[] { Aged(Adult(1, 2), 30), Aged(Adult(2, 1), 30) };
+            var beds = new[] { Bed(10, 50, 1, 2, 0), Bed(11, 40, 2, 1, 5), Bed(12, 95, 3, 1, 80) };
+            var small = BedPlan.Deal(couple.Concat(new[] { Aged(Kid(6, SleeperStage.Child, 1, 2), 4) }).ToList(), beds);
+            Assert.Equal(11, small[6]);
+            var older = BedPlan.Deal(couple.Concat(new[] { Aged(Kid(6, SleeperStage.Child, 1, 2), 9) }).ToList(), beds);
+            Assert.Equal(12, older[6]);
+        }
+
+        [Fact]
+        public void Brothers_and_sisters_lean_towards_one_room()
+        {
+            var sleepers = new[] { Adult(1, 2), Adult(2, 1), Aged(Kid(6, SleeperStage.Child, 1, 2), 10), Aged(Kid(7, SleeperStage.Child, 1, 2), 11) };
+            var beds = new[] { Bed(10, 90, 1, 2, 0), Bed(11, 60, 2, 1, 30), Bed(12, 58, 3, 1, 50), Bed(13, 50, 2, 1, 31) };
+            var plan = BedPlan.Deal(sleepers, beds);
+            Assert.Equal(11, plan[6]);
+            Assert.Equal(13, plan[7]);      // the same room as their sister, though the other bed is a little more comfortable
+        }
+
+        private static int RoomOf(BedSlot[] beds, int id) => beds.First(b => b.Id == id).RoomId;
+
+        [Fact]
+        public void Someone_already_housed_is_not_moved_and_a_new_baby_joins_their_room()
+        {
+            var beds = new[] { Bed(10, 90, 1, 2, 0), Bed(11, 20, 1, 1, 1), Bed(12, 60, 2, 1, 40) };
+            var fixedBeds = new Dictionary<int, int> { { 1, 10 }, { 2, 10 } };
+            var plan = BedPlan.Deal(new[] { Kid(9, SleeperStage.Baby, 1, 2) }, beds, null, fixedBeds);
+            Assert.Single(plan);
+            Assert.Equal(11, plan[9]);
         }
 
         [Fact]
