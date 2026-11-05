@@ -308,5 +308,5 @@
   <WFL_ZoneBedsDealt>{0} people in {1} were given a bed in the new home.</WFL_ZoneBedsDealt>
   <WFL_ZoneBedsNone>No beds in this zone could be shared out: none is free of other owners, or nobody in the family can use them.</WFL_ZoneBedsNone>
   <WFL_ZoneDealBeds>Share out beds</WFL_ZoneDealBeds>
-  <WFL_ZoneDealBedsDesc>Unassign the family's beds in this zone and give them out again: couples to double beds, babies to cribs, children to the bed nearest a parent, the rest to single beds. Beds owned by anyone outside the family stay as they are.</WFL_ZoneDealBedsDesc>
+  <WFL_ZoneDealBedsDesc>Unassign the family's beds in this zone and give them out again: couples first, to the most comfortable place they can sleep together, then the children, then everyone else, to the most comfortable beds left. Any kind of bed. Beds owned by anyone outside the family stay as they are.</WFL_ZoneDealBedsDesc>
 </LanguageData>

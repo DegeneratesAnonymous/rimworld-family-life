@@ -9,65 +9,75 @@ namespace FamilyLife.Tests
     {
         private static BedSleeper Adult(int id, params int[] partners) => new BedSleeper { Id = id, Stage = SleeperStage.Adult, PartnerIds = partners.ToList() };
         private static BedSleeper Kid(int id, SleeperStage stage, params int[] parents) => new BedSleeper { Id = id, Stage = stage, ParentIds = parents.ToList() };
-        private static BedSlot Single(int id, float x, float z = 0) => new BedSlot { Id = id, Capacity = 1, X = x, Z = z };
-        private static BedSlot Double(int id, float x, float z = 0) => new BedSlot { Id = id, Capacity = 2, X = x, Z = z };
-        private static BedSlot Crib(int id, float x, float z = 0) => new BedSlot { Id = id, Capacity = 1, Crib = true, X = x, Z = z };
+        private static BedSlot Bed(int id, float comfort, int room = -1, int capacity = 1, float x = 0) => new BedSlot { Id = id, Comfort = comfort, RoomId = room, Capacity = capacity, X = x };
 
         [Fact]
-        public void A_couple_shares_the_double_bed_and_others_get_singles()
+        public void A_couple_takes_the_most_comfortable_place_to_sleep_together()
         {
-            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Adult(3) }, new[] { Single(10, 0), Double(11, 5), Single(12, 9) });
-            Assert.Equal(11, plan[1]);
-            Assert.Equal(11, plan[2]);
+            // A modest double, a fine double, and two singles in the best room of all.
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1) },
+                new[] { Bed(10, 20, 1, 2), Bed(11, 50, 2, 2), Bed(12, 80, 3), Bed(13, 80, 3) });
+            Assert.Equal(12, plan[1]);
+            Assert.Equal(13, plan[2]);
+        }
+
+        [Fact]
+        public void A_double_bed_is_chosen_when_it_is_the_better_room()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1) },
+                new[] { Bed(10, 60, 1, 2), Bed(12, 40, 3), Bed(13, 40, 3) });
+            Assert.Equal(10, plan[1]);
+            Assert.Equal(10, plan[2]);
+        }
+
+        [Fact]
+        public void Two_beds_in_different_rooms_do_not_count_as_together()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1) }, new[] { Bed(10, 90, 1), Bed(11, 90, 2) });
+            // No place to sleep together: they are not treated as a couple, and each simply gets a bed of their own.
+            Assert.Equal(2, plan.Count);
+            Assert.NotEqual(plan[1], plan[2]);
+        }
+
+        [Fact]
+        public void Couples_choose_before_anyone_else()
+        {
+            // The single adult has the lower id and would otherwise take the best bed.
+            var plan = BedPlan.Deal(new[] { Adult(1), Adult(2, 3), Adult(3, 2) }, new[] { Bed(10, 90, 1, 2), Bed(11, 10, 2) });
+            Assert.Equal(10, plan[2]);
             Assert.Equal(10, plan[3]);
+            Assert.Equal(11, plan[1]);
         }
 
         [Fact]
-        public void A_couple_without_a_double_gets_two_beds_side_by_side()
-        {
-            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1) }, new[] { Single(10, 0), Single(11, 30), Single(12, 1) });
-            Assert.Equal(10, plan[1]);
-            Assert.Equal(12, plan[2]);       // the one beside it, not the one across the room
-        }
-
-        [Fact]
-        public void Partner_listed_by_one_side_only_still_counts()
-        {
-            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2) }, new[] { Double(10, 0) });
-            Assert.Equal(plan[1], plan[2]);
-        }
-
-        [Fact]
-        public void A_single_adult_uses_a_double_only_when_no_single_is_left()
-        {
-            var one = BedPlan.Deal(new[] { Adult(1) }, new[] { Double(10, 0), Single(11, 5) });
-            Assert.Equal(11, one[1]);
-            var two = BedPlan.Deal(new[] { Adult(1) }, new[] { Double(10, 0) });
-            Assert.Equal(10, two[1]);
-        }
-
-        [Fact]
-        public void A_baby_gets_the_crib_nearest_a_parent_and_never_an_adult_bed_before_a_crib()
-        {
-            var plan = BedPlan.Deal(new[] { Adult(1), Kid(5, SleeperStage.Baby, 1) },
-                new[] { Single(10, 0), Crib(20, 40), Crib(21, 2), Single(11, 1) });
-            Assert.Equal(10, plan[1]);
-            Assert.Equal(21, plan[5]);
-        }
-
-        [Fact]
-        public void A_child_gets_the_bed_nearest_a_parent_and_never_a_crib()
+        public void A_child_takes_the_most_comfortable_bed_left_whatever_kind_it_is()
         {
             var plan = BedPlan.Deal(new[] { Adult(1), Kid(6, SleeperStage.Child, 1) },
-                new[] { Single(10, 0), Crib(20, 1), Single(11, 50), Single(12, 3) });
+                new[] { Bed(10, 30), Bed(11, 95, capacity: 2, room: 2), Bed(12, 60) });
+            Assert.Equal(11, plan[6]);          // a double bed is fine for a child
+            Assert.Equal(12, plan[1]);
+        }
+
+        [Fact]
+        public void Equally_comfortable_beds_go_to_the_one_nearer_a_parent()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Kid(6, SleeperStage.Child, 1, 2) },
+                new[] { Bed(10, 50, 1, 2, 0), Bed(11, 50, x: 40), Bed(12, 50, x: 1) });
+            Assert.Equal(10, plan[1]);
             Assert.Equal(12, plan[6]);
+        }
+
+        [Fact]
+        public void A_bed_a_person_cannot_use_is_skipped_for_them()
+        {
+            var plan = BedPlan.Deal(new[] { Kid(5, SleeperStage.Baby, 1) }, new[] { Bed(10, 90), Bed(11, 10) }, (s, b) => b == 11);
+            Assert.Equal(11, plan[5]);
         }
 
         [Fact]
         public void Nobody_is_given_a_bed_that_another_has_and_the_surplus_go_without()
         {
-            var sleepers = new[] { Adult(1), Adult(2), Adult(3) };
-            var plan = BedPlan.Deal(sleepers, new[] { Single(10, 0), Single(11, 1) });
+            var plan = BedPlan.Deal(new[] { Adult(1), Adult(2), Adult(3) }, new[] { Bed(10, 5), Bed(11, 6) });
             Assert.Equal(2, plan.Count);
             Assert.Equal(2, plan.Values.Distinct().Count());
         }
@@ -75,23 +85,16 @@ namespace FamilyLife.Tests
         [Fact]
         public void A_double_holds_only_the_couple()
         {
-            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Kid(6, SleeperStage.Child, 1, 2) }, new[] { Double(10, 0), Single(11, 4) });
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Kid(6, SleeperStage.Child, 1, 2) }, new[] { Bed(10, 90, 1, 2), Bed(11, 20, 2) });
             Assert.Equal(plan[1], plan[2]);
             Assert.Equal(11, plan[6]);
-        }
-
-        [Fact]
-        public void A_bed_a_person_cannot_use_is_skipped()
-        {
-            var plan = BedPlan.Deal(new[] { Adult(1) }, new[] { Single(10, 0), Single(11, 1) }, (s, b) => b != 10);
-            Assert.Equal(11, plan[1]);
         }
 
         [Fact]
         public void The_same_input_gives_the_same_answer()
         {
             var sleepers = new[] { Adult(3), Adult(1, 2), Adult(2, 1), Kid(8, SleeperStage.Child, 1) };
-            var beds = new[] { Single(12, 4), Double(10, 0), Single(11, 2) };
+            var beds = new[] { Bed(12, 50, x: 4), Bed(10, 70, 1, 2, 0), Bed(11, 50, x: 2) };
             var a = BedPlan.Deal(sleepers, beds);
             var b = BedPlan.Deal(sleepers.Reverse().ToList(), beds.Reverse().ToList());
             Assert.Equal(a.OrderBy(k => k.Key), b.OrderBy(k => k.Key));

@@ -35,7 +35,19 @@ namespace FamilyLife
             catch (Exception) { return false; }
         }
 
-        private static bool IsCrib(Building_Bed bed) => bed.ForHumanBabies || bed.def.building.bed_crib;
+        private static int RoomOf(Building_Bed bed)
+        {
+            var room = bed.GetRoom();
+            return room == null || room.PsychologicallyOutdoors ? -1 : room.ID;
+        }
+
+        /// <summary>How good it is to sleep in this bed: how impressive the room is, plus the bed's own comfort. A bed outdoors is the worst.</summary>
+        private static float Comfort(Building_Bed bed)
+        {
+            var room = bed.GetRoom();
+            float impressiveness = room == null || room.PsychologicallyOutdoors ? -50f : room.GetStat(RoomStatDefOf.Impressiveness);
+            return impressiveness + 30f * bed.GetStatValue(StatDefOf.Comfort) + 10f * bed.GetStatValue(StatDefOf.BedRestEffectiveness);
+        }
 
         /// <returns>How many people were given a bed.</returns>
         public static int Deal(FamilyComponent component, Lineage lineage, Zone_Family zone)
@@ -80,7 +92,8 @@ namespace FamilyLife
             {
                 Id = b.thingIDNumber,
                 Capacity = Math.Max(1, b.SleepingSlotsCount),
-                Crib = IsCrib(b),
+                RoomId = RoomOf(b),
+                Comfort = Comfort(b),
                 X = b.Position.x,
                 Z = b.Position.z
             }).ToList();
