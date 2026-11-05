@@ -305,6 +305,8 @@
   <WFL_BondKind_Acquaintance>friend or acquaintance</WFL_BondKind_Acquaintance>
   <WFL_S_ZonesWork>Family zones only apply outside work hours</WFL_S_ZonesWork>
   <WFL_S_ZonesWorkTip>During work (and anything) time a family's members are free to go where the work is; the zone holds them for sleep and recreation. Turn off to keep them in the zone at all times (they will only do work inside it).</WFL_S_ZonesWorkTip>
+  <WFL_S_FamilyDoors>Outsiders knock before entering a family zone</WFL_S_FamilyDoors>
+  <WFL_S_FamilyDoorsTip>A family zone is a home. Colonists from outside the family do not wander into it or take work inside it; when they would, they go to the edge and knock, an adult of the family comes to let them in, and if nobody comes they give up and do something else. Family members, someone who sleeps there, and orders you give are not affected. Turn off to let everyone go anywhere.</WFL_S_FamilyDoorsTip>
   <WFL_ZoneBedsDealt>{0} people in {1} were given a bed in the new home.</WFL_ZoneBedsDealt>
   <WFL_ZoneBedsNone>No beds in this zone could be shared out: none is free of other owners, or nobody in the family can use them.</WFL_ZoneBedsNone>
   <WFL_ZoneDealBedsConfirm>Take back the beds in this zone that were given out to {0} and share them out again? Beds you gave to someone yourself since, beds locked in Better Beds, and beds owned by people outside the family stay as they are.</WFL_ZoneDealBedsConfirm>

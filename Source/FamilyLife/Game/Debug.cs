@@ -118,7 +118,6 @@ namespace FamilyLife
             sb.AppendLine("  restriction now: " + (held == null ? "none" : held.Label + " (id " + held.ID + ")"));
             sb.AppendLine("  schedule now: " + (pawn.timetable?.CurrentAssignment?.defName ?? "unknown") + "; current job: " + (pawn.CurJobDef?.defName ?? "none") + "; setting 'only outside work hours': " + (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.zonesAllowWork));
             sb.AppendLine("  in a door visit: " + GuestPasses.IsActive(pawn));
-            FamilyZones.ManageWorkTime(component);
             var after = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
             sb.AppendLine("  after checking work time: " + (after == null ? "none" : after.Label));
             if (pawn.workSettings != null)

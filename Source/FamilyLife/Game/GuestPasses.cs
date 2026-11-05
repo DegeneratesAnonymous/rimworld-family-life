@@ -15,7 +15,6 @@ namespace FamilyLife
         public Pawn Guest, Opener;
         public int Lineage;
         public Zone_Family Zone;
-        public Area OriginalArea;                 // the guest's own restriction, put back when the visit ends
         public IntVec3 Inside, Outside;
         public int Start, GrantedTick, LeftSince = -1;
         public int ArrivedTick = -1, LastKnock = -1000000, LastSummon = -1000000;
@@ -24,58 +23,24 @@ namespace FamilyLife
     }
 
     /// <summary>
-    /// Family zones keep each family to its own area, which also keeps an outside builder out of someone else's zone, and the game never even
-    /// offers them the work. This is the door. Every half second the construction and repair jobs inside family zones are checked; when an
-    /// idle colonist from another family could do one, an adult of the zone's family (or, for a child guest, another child) walks to the
-    /// edge and lets them in. The guest waits outside until then, does the work, and the visit ends when they leave the zone.
-    /// While visiting, the guest's own area restriction is lifted and then put back. Visits are not saved; the restriction is.
+    /// The door. A family zone is a home, and someone from outside the family does not walk into it (see <see cref="FamilyDoorRule"/>). When an
+    /// outsider who is free would do something inside one (the work they would pick is in it), they walk to the edge and knock, an adult of
+    /// the family (or, for a child guest, another child) is called to the door and lets them in, and the visit lasts until they leave the
+    /// zone. If nobody comes in a reasonable time they give up and do something else. A visit never changes anyone's area restriction.
     /// </summary>
     internal static class GuestPasses
     {
-        public const int WaitLimit = 2500, PassLimit = 7500, NeverEnteredLimit = 1800, LeaveDelay = 240, CooldownAfterRefusal = 2500, CooldownAfterVisit = 600, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120;
+        public const int WaitLimit = 2500, PassLimit = 7500, NeverEnteredLimit = 1800, LeaveDelay = 240, CooldownAfterRefusal = 2500, CooldownAfterVisit = 600, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
         public static readonly Dictionary<int, GuestPass> ByGuest = new Dictionary<int, GuestPass>();
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
 
-        private sealed class WorkSite
-        {
-            public IntVec3 Cell;
-            public Thing Thing;
-            public bool Repair;
-            public bool IsCurrent(Map map)
-            {
-                if (Thing != null) return Thing.Spawned && Thing.Map == map && Thing.Position == Cell && Thing.Faction == Faction.OfPlayer &&
-                    (Repair ? Thing.HitPoints < Thing.MaxHitPoints : Thing is Blueprint || Thing is Frame);
-                return RoofWork(map, Cell);
-            }
-        }
-        private static bool RoofWork(Map map, IntVec3 cell)
-        {
-            if (!cell.InBounds(map)) return false;
-            bool roofed = map.roofGrid.Roofed(cell);
-            return (!roofed && map.areaManager.BuildRoof[cell] && RoofCollapseUtility.WithinRangeOfRoofHolder(cell, map)) ||
-                   (roofed && map.areaManager.NoRoof[cell]);
-        }
-        private sealed class MapWork
-        {
-            public readonly TickGate Refresh = new TickGate(300, 60);
-            public readonly List<WorkSite> Sites = new List<WorkSite>();
-            public readonly SearchCursor Cursor = new SearchCursor();
-        }
-        // Map objects scope caches to the actual map, never to map-local area IDs.
-        private static readonly Dictionary<Map, MapWork> work = new Dictionary<Map, MapWork>();
-        private static readonly SearchCursor mapCursor = new SearchCursor();
-        private static readonly TickGate pruneWork = new TickGate(2500);
-        public static void Invalidate(Map map) { if (map != null && work.TryGetValue(map, out var cached)) cached.Refresh.Invalidate(); }
-
-        internal static void WorkChanged(Map map, IntVec3 cell)
-        {
-            if (map != null && work.ContainsKey(map) && cell.InBounds(map) && map.zoneManager.ZoneAt(cell) is Zone_Family)
-                Invalidate(map);
-        }
+        public static void Invalidate(Map map) => FamilyDoorRule.ClearCaches();
 
         public static bool IsActive(Pawn pawn) => pawn != null && ByGuest.ContainsKey(pawn.thingIDNumber);
         public static bool IsGranted(Pawn pawn) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted;
+        /// <summary>Whether this pawn has been let into this zone and the visit is still going.</summary>
+        public static bool HasPassFor(Pawn pawn, Zone_Family zone) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted && p.Zone == zone;
 
         private static void Trace(string text)
         {
@@ -101,101 +66,39 @@ namespace FamilyLife
 
         private static bool IdleEnough(Pawn p) => p.CurJob == null || IdleJobs.Contains(p.CurJobDef.defName);
 
-        private static bool CanDoSiteWork(Pawn p, bool repair)
-        {
-            if (p.workSettings == null) return false;
-            if (WorkAllowed(p, WorkTypeDefOf.Construction)) return true;
-            if (repair)
-            {
-                var repairType = DefDatabase<WorkTypeDef>.GetNamedSilentFail("Repair");
-                if (repairType != null && WorkAllowed(p, repairType)) return true;
-            }
-            return false;
-        }
-
-        private static bool WorkAllowed(Pawn p, WorkTypeDef def) => !p.WorkTypeIsDisabled(def) && p.workSettings.WorkIsActive(def);
-
         public static void Process(FamilyComponent component)
         {
             int now = Find.TickManager.TicksGame;
             if (ByGuest.Count != 0)
                 foreach (var pass in ByGuest.Values.ToList()) Update(pass, now);
-            if (pruneWork.Take(now))
-                foreach (var gone in work.Keys.Where(m => !Find.Maps.Contains(m)).ToList()) work.Remove(gone);
-            if (!FamilyZones.EnforcesAreas || ByGuest.Count >= 3 || Find.Maps.Count == 0) return;
-            // One map per pass; active visits above are always maintained regardless of discovery budget.
-            var map = Find.Maps[mapCursor.Take(Find.Maps.Count)];
-            if (!map.zoneManager.AllZones.Any(z => z is Zone_Family f && f.areaId != 0)) { work.Remove(map); return; }
-            using (component.Performance.Measure("Zone work discovery")) SeekWork(component, map, now);
-        }
-
-        private static void RefreshWork(Map map, MapWork cached)
-        {
-            cached.Sites.Clear();
-            void Add(Thing thing, bool repair)
-            {
-                if (thing.Faction == Faction.OfPlayer && map.zoneManager.ZoneAt(thing.Position) is Zone_Family z && z.areaId != 0)
-                    cached.Sites.Add(new WorkSite { Cell = thing.Position, Thing = thing, Repair = repair });
-            }
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)) Add(t, false);
-            foreach (var t in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)) Add(t, false);
-            foreach (var t in map.listerBuildingsRepairable.RepairableBuildings(Faction.OfPlayer)) Add(t, true);
-            foreach (var zone in map.zoneManager.AllZones.OfType<Zone_Family>())
-            {
-                if (zone.areaId == 0) continue;
-                foreach (var cell in zone.Cells)
-                {
-                    if (!RoofWork(map, cell)) continue;
-                    cached.Sites.Add(new WorkSite { Cell = cell });
-                    break; // one roof task per zone is enough to arrange access
-                }
-            }
-        }
-
-        /// <summary>Cached work refreshes every 300 ticks. Try at most four rotating sites per pass, revalidating before use.</summary>
-        private static void SeekWork(FamilyComponent component, Map map, int now)
-        {
-            if (!work.TryGetValue(map, out var cached)) work[map] = cached = new MapWork();
-            if (cached.Refresh.Take(now))
-                using (component.Performance.Measure("Zone work refresh")) RefreshWork(map, cached);
-            if (cached.Sites.Count == 0) return;
-            var workers = map.mapPawns.FreeColonistsSpawned.Where(p => !ByGuest.ContainsKey(p.thingIDNumber) && Available(p) && IdleEnough(p)).ToList();
-            if (workers.Count == 0) return;
+            var wishes = FamilyDoorRule.TakeWishes(now);
+            if (wishes.Count == 0 || ByGuest.Count >= MaxVisits) return;
             var registry = component.Registry;
-            var busyZones = new HashSet<Zone_Family>(ByGuest.Values.Select(p => p.Zone));
-            int start = cached.Cursor.Take(cached.Sites.Count);
-            for (int offset = 0; offset < System.Math.Min(4, cached.Sites.Count); offset++)
+            using (component.Performance.Measure("Zone knocks"))
             {
-                int index = (start + offset) % cached.Sites.Count;
-                cached.Cursor.ResumeAfter(index, cached.Sites.Count);
-                var site = cached.Sites[index];
-                if (!site.IsCurrent(map) || !(map.zoneManager.ZoneAt(site.Cell) is Zone_Family zone) || zone.areaId == 0 || busyZones.Contains(zone)) continue;
-                var lineage = zone.Family(registry);
-                if (lineage == null) continue;
-                Pawn guest = null; float bestDist = float.MaxValue;
-                foreach (var pawn in workers)
+                foreach (var wish in wishes)
                 {
-                    if (ByGuest.ContainsKey(pawn.thingIDNumber) || !CanDoSiteWork(pawn, site.Repair)) continue;
-                    var restriction = pawn.playerSettings?.AreaRestrictionInPawnCurrentMap;
-                    if (restriction == null || restriction.TrueCount == 0 || restriction[site.Cell]) continue;
+                    if (ByGuest.Count >= MaxVisits) break;
+                    var pawn = wish.Pawn; var zone = wish.Zone;
+                    // Someone who has since found something else to do has no need of the door.
+                    if (pawn == null || zone == null || ByGuest.ContainsKey(pawn.thingIDNumber) || !Available(pawn) || !IdleEnough(pawn)) continue;
                     if (cooldown.TryGetValue(pawn.thingIDNumber, out int until) && now < until) continue;
-                    if (IsFamilyMember(registry, lineage, pawn)) continue;
-                    float d = pawn.Position.DistanceToSquared(site.Cell);
-                    if (d < bestDist) { bestDist = d; guest = pawn; }
+                    if (zone.Map != pawn.Map || !zone.Map.zoneManager.AllZones.Contains(zone)) continue;
+                    var lineage = zone.Family(registry);
+                    if (lineage == null || IsFamilyMember(registry, lineage, pawn)) continue;
+                    if (ByGuest.Values.Any(p => p.Zone == zone && p.Lineage == lineage.Id && !p.Granted)) continue;      // someone is already at this door
+                    Begin(registry, component, pawn, zone, lineage, now);
                 }
-                if (guest != null && Begin(registry, component, guest, zone, lineage, now)) busyZones.Add(zone);
-                if (ByGuest.Count >= 3) return;
             }
         }
 
         private static bool Begin(FamilyRegistry registry, FamilyComponent component, Pawn guest, Zone_Family zone, Lineage lineage, int now)
         {
-            if (ByGuest.Count >= 3) return false;
+            if (ByGuest.Count >= MaxVisits) return false;
             cooldown[guest.thingIDNumber] = now + CooldownAfterRefusal;                  // replaced by a shorter one if the visit goes ahead and ends well
             if (!FindDoor(zone, guest, out IntVec3 inside, out IntVec3 outside)) { Trace(guest.LabelShort + ": no edge cell found for " + zone.label); return false; }
-            var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, OriginalArea = guest.playerSettings.AreaRestrictionInPawnCurrentMap, Lineage = lineage.Id };
+            var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, Lineage = lineage.Id };
             ByGuest[guest.thingIDNumber] = pass;
-            guest.playerSettings.AreaRestrictionInPawnCurrentMap = null;                 // so the guest can walk to the door
             if (!guest.CanReach(outside, PathEndMode.OnCell, Danger.Deadly)) { Trace(guest.LabelShort + " cannot reach the edge of " + zone.label); End(pass, CooldownAfterRefusal); return false; }
             Trace(guest.LabelShort + " goes to knock at " + zone.label);
             guest.jobs.StartJob(JobMaker.MakeJob(FamilyJobDefOf.WFL_WaitAtDoor, outside), JobCondition.InterruptForced, null, false);
@@ -300,12 +203,11 @@ namespace FamilyLife
             if (guest == null) return;
             ByGuest.Remove(guest.thingIDNumber);
             cooldown[guest.thingIDNumber] = Find.TickManager.TicksGame + cooldownTicks;
-            if (guest.playerSettings != null && guest.playerSettings.AreaRestrictionInPawnCurrentMap == null) guest.playerSettings.AreaRestrictionInPawnCurrentMap = pass.OriginalArea;
             if (guest.CurJobDef == FamilyJobDefOf.WFL_WaitAtDoor) guest.jobs.EndCurrentJob(JobCondition.Incompletable);
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); work.Clear(); mapCursor.Reset(); pruneWork.Invalidate(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
+        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]
@@ -348,30 +250,10 @@ namespace FamilyLife
         }
     }
 
-    /// <summary>Runs the guest passes a couple of times a second and keeps family zones shown or hidden to match the toggle.</summary>
+    /// <summary>Runs the guest passes a couple of times a second.</summary>
     public class GameComponent_FamilyDoors : GameComponent
     {
-        private List<Pawn> savedPawns = new List<Pawn>();
-        private List<int> savedAreas = new List<int>();
-
         public GameComponent_FamilyDoors(Game game) { }
-
-        public override void ExposeData()
-        {
-            if (Scribe.mode == LoadSaveMode.Saving)
-            {
-                var visiting = GuestPasses.ByGuest.Values.Where(p => p.OriginalArea != null && p.Guest != null).ToList();
-                savedPawns = visiting.Select(p => p.Guest).ToList();
-                savedAreas = visiting.Select(p => p.OriginalArea.ID).ToList();
-            }
-            Scribe_Collections.Look(ref savedPawns, "wflGuestPawns", LookMode.Reference);
-            Scribe_Collections.Look(ref savedAreas, "wflGuestAreas", LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                savedPawns = savedPawns ?? new List<Pawn>();
-                savedAreas = savedAreas ?? new List<int>();
-            }
-        }
 
         public override void GameComponentTick()
         {
@@ -380,23 +262,10 @@ namespace FamilyLife
             if (component == null) return;
             using var measurement = component.Performance.Measure("Zone tick");
             GuestPasses.Process(component);
-            if (Find.TickManager.TicksGame % 120 == 0)
-                using (component.Performance.Measure("Zone work schedules")) FamilyZones.ManageWorkTime(component);
         }
 
         public override void StartedNewGame() => GuestPasses.Reset();
-        public override void LoadedGame()
-        {
-            GuestPasses.Reset();
-            // A save made mid-visit holds the guest's own restriction; put it back.
-            for (int i = 0; i < savedPawns.Count && i < savedAreas.Count; i++)
-            {
-                var pawn = savedPawns[i];
-                var area = pawn?.Map == null ? null : FamilyZones.FindArea(savedAreas[i], pawn.Map.uniqueID);
-                if (pawn?.playerSettings != null && area != null && pawn.playerSettings.AreaRestrictionInPawnCurrentMap == null) pawn.playerSettings.AreaRestrictionInPawnCurrentMap = area;
-            }
-            savedPawns.Clear(); savedAreas.Clear();
-        }
+        public override void LoadedGame() => GuestPasses.Reset();
     }
 
     /// <summary>The map toggle for family zones, kept beside the game's own zone toggle.</summary>
