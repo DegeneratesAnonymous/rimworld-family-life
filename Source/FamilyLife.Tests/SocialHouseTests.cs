@@ -48,6 +48,8 @@ namespace FamilyLife.Tests
         {var r=new FamilyRegistry();r.Apply(new[]{T.P(1),T.P(2,parents:new[]{1}),T.P(3,parents:new[]{1}),T.P(4,parents:new[]{2}),T.P(5,parents:new[]{3}),T.P(6,parents:new[]{4}),T.P(7,parents:new[]{5})},10*Day);Assert.Equal(4,r.AssessKinship(4,5).Distance);Assert.True(r.AssessKinship(4,5).BlocksRomance);Assert.Equal(6,r.AssessKinship(6,7).Distance);Assert.False(r.AssessKinship(6,7).BlocksRomance);Assert.True(r.AssessKinship(1,7).DirectAncestor);}
         [Fact] public void Missing_parent_records_conservatively_block_romance()
         {var r=new FamilyRegistry();r.Apply(new[]{T.P(1,parents:new[]{999}),T.P(2)},10*Day);var assessment=r.AssessKinship(1,2);Assert.True(assessment.Incomplete);Assert.True(assessment.BlocksRomance);}
+        [Fact] public void Missing_people_conservatively_block_romance()
+        {var r=World();var assessment=r.AssessKinship(1,999);Assert.True(assessment.Incomplete);Assert.True(assessment.CloseAncestryUnknown);Assert.True(assessment.BlocksRomance);}
         [Fact] public void Distant_missing_ancestry_is_reported_without_blocking_unrelated_adults()
         {var r=new FamilyRegistry();r.Apply(new[]{T.P(1,parents:new[]{2}),T.P(2,parents:new[]{3}),T.P(3,parents:new[]{4}),T.P(4,parents:new[]{999}),T.P(10)},10*Day);var assessment=r.AssessKinship(1,10);Assert.True(assessment.Incomplete);Assert.False(assessment.CloseAncestryUnknown);Assert.False(assessment.BlocksRomance);}
         [Fact] public void Former_step_parents_remain_guardians_for_romance_policy()

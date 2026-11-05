@@ -17,7 +17,7 @@ namespace FamilyLife.Domain
             var key=(Math.Min(first,second),Math.Max(first,second));
             if(kinshipCache.TryGetValue(key,out var known)) return known;
             var result=new KinshipAssessment();var a=GetPerson(first);var b=GetPerson(second);
-            if(a==null || b==null) {result.Incomplete=true;return result;}
+            if(a==null || b==null) {result.Incomplete=true;result.CloseAncestryUnknown=true;return result;}
             if(first==second) {result.Distance=0;return result;}
             var aa=Ancestors(first,out bool incompleteA,out bool closeUnknownA);var bb=Ancestors(second,out bool incompleteB,out bool closeUnknownB);
             result.Incomplete=incompleteA||incompleteB;

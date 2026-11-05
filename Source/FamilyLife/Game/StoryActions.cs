@@ -25,7 +25,7 @@ namespace FamilyLife
             if (FamilyComponent.Current?.Registry.Plots.Any(p => p.State == PlotState.Attempted && p.TargetId == victim.thingIDNumber && (p.OrganizerId == actor.thingIDNumber || p.Recruits.Contains(actor.thingIDNumber))) == true) context |= IncidentContext.Planned;
             return context;
         }
-        private static bool Available(Pawn p) => p != null && p.Spawned && !p.Dead && !p.DevelopmentalStage.Juvenile() && p.ageTracker.AgeBiologicalYears >= 18 && Activities.IsFree(p) && p.CurJob?.playerForced != true && Activities.CanSpareAttention(p);
+        private static bool Available(Pawn p) => p != null && p.Spawned && !p.Dead && p.DevelopmentalStage == DevelopmentalStage.Adult && Activities.IsFree(p) && p.CurJob?.playerForced != true && Activities.CanSpareAttention(p);
         internal static void CancelUnsafeAttacks(FamilyComponent c)
         {
             foreach (var plot in c.Registry.Plots.Where(p => p.AttackJobs.Count > 0))
