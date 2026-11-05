@@ -305,4 +305,8 @@
   <WFL_BondKind_Acquaintance>friend or acquaintance</WFL_BondKind_Acquaintance>
   <WFL_S_ZonesWork>Family zones only apply outside work hours</WFL_S_ZonesWork>
   <WFL_S_ZonesWorkTip>During work (and anything) time a family's members are free to go where the work is; the zone holds them for sleep and recreation. Turn off to keep them in the zone at all times (they will only do work inside it).</WFL_S_ZonesWorkTip>
+  <WFL_ZoneBedsDealt>{0} people in {1} were given a bed in the new home.</WFL_ZoneBedsDealt>
+  <WFL_ZoneBedsNone>No beds in this zone could be shared out: none is free of other owners, or nobody in the family can use them.</WFL_ZoneBedsNone>
+  <WFL_ZoneDealBeds>Share out beds</WFL_ZoneDealBeds>
+  <WFL_ZoneDealBedsDesc>Unassign the family's beds in this zone and give them out again: couples to double beds, babies to cribs, children to the bed nearest a parent, the rest to single beds. Beds owned by anyone outside the family stay as they are.</WFL_ZoneDealBedsDesc>
 </LanguageData>

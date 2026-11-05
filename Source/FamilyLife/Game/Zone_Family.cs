@@ -96,6 +96,16 @@ namespace FamilyLife
             label = area.Label;
             FamilyZones.Assign(component, lineage, area);
             GuestPasses.Invalidate(Map);
+            if (previous != lineage) DealBeds(component, lineage);
+        }
+
+        /// <summary>Shares out the beds in this zone among the family and says how it went.</summary>
+        public void DealBeds(FamilyComponent component, Lineage lineage)
+        {
+            int given = ZoneBeds.Deal(component, lineage, this);
+            var look = cells.Count > 0 ? new LookTargets(cells[0], Map) : LookTargets.Invalid;
+            Messages.Message(given > 0 ? "WFL_ZoneBedsDealt".Translate(given, component.Registry.LineageDisplayName(lineage)) : "WFL_ZoneBedsNone".Translate(),
+                look, given > 0 ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.NeutralEvent, false);
         }
 
         public override string GetInspectString()
@@ -111,6 +121,19 @@ namespace FamilyLife
         public override IEnumerable<Gizmo> GetGizmos()
         {
             foreach (var g in base.GetGizmos()) yield return g;
+            yield return new Command_Action
+            {
+                defaultLabel = "WFL_ZoneDealBeds".Translate(),
+                defaultDesc = "WFL_ZoneDealBedsDesc".Translate(),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/AssignOwner", false) ?? BaseContent.BadTex,
+                action = () =>
+                {
+                    var component = FamilyComponent.Current;
+                    var lineage = component?.Registry.Lineages.FirstOrDefault(l => l.ZoneAreaId != 0 && l.ZoneAreaId == areaId && l.ZoneMapId == Map.uniqueID);
+                    if (lineage == null) { Messages.Message("WFL_ZoneNone".Translate(), MessageTypeDefOf.RejectInput, false); return; }
+                    DealBeds(component, lineage);
+                }
+            };
             yield return new Command_Action
             {
                 defaultLabel = "WFL_ZoneChooseFamily".Translate(),
