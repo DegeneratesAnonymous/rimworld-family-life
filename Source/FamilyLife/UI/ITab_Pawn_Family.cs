@@ -59,6 +59,8 @@ namespace FamilyLife
                 if (Widgets.ButtonText(new Rect(0f, y, 180f, 26f), "WFL_OpenFamilies".Translate()))
                     FamilyUi.OpenFamilies(lineage.Id);
                 y += 32f;
+                FamilyCrest.Draw(new Rect(view.width - 56f, 0f, 48f, 58f), lineage);
+                y = Mathf.Max(y, 66f);
             }
 
             var household = registry.GetHousehold(record.HouseholdId);
