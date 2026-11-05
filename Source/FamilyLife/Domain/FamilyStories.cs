@@ -12,7 +12,7 @@ namespace FamilyLife.Domain
 
     public sealed partial class FamilyIncident
     {
-        public int Id, ActorId, VictimId, ActorFamily, VictimFamily, MapId, Tick, Amount, Restored;
+        public int Id, ActorId, VictimId, ActorFamily, VictimFamily, MapId, Tick, ResolvedTick, Amount, Restored;
         public string Resource = "";
         public IncidentKind Kind;
         public IncidentContext Context;
@@ -110,9 +110,10 @@ namespace FamilyLife.Domain
             float size = i.Severity / 10f * (good ? 1f : blame);
             ChangeBond(observerId, i.ActorId, good ? new BondChange(size * 0.4f, size, -size, 1) : new BondChange(-size * 0.4f, -size, size * 1.5f, 1), now);
             int family = FamilyOf(observerId);
-            if (family != 0 && family == i.VictimFamily && i.ActorFamily != 0 && family != i.ActorFamily && !i.FamiliesAffected.Contains(family))
+            if (family != 0 && family == i.VictimFamily && !i.FamiliesAffected.Contains(family))
             {
                 i.FamiliesAffected.Add(family);
+                NoteHouseService(i.ActorId,family,good ? Math.Min(2,size*2) : -Math.Min(20,size*2),now);
                 var tie = EnsureTie(family, i.ActorFamily);
                 if (tie != null)
                 {
@@ -124,11 +125,11 @@ namespace FamilyLife.Domain
             return true;
         }
 
-        public void ForgiveIncident(int incidentId, int familyId)
+        public void ForgiveIncident(int incidentId, int familyId, int now=0)
         {
             var i = Incidents.FirstOrDefault(x => x.Id == incidentId && x.VictimFamily == familyId);
             if (i == null || i.Resolved) return;
-            i.Resolved = true;
+            i.Resolved = true;i.ResolvedTick=now>0?now:Math.Max(i.Tick,i.LastRepairTick);
             foreach (var plot in Plots.Where(p => p.Active && p.IncidentId == i.Id)) plot.State = PlotState.Abandoned;
             var tie = GetTie(i.ActorFamily, i.VictimFamily);
             if (tie != null) tie.Grievance = Math.Max(0, tie.Grievance - i.Severity * 0.3f);
@@ -185,11 +186,20 @@ namespace FamilyLife.Domain
 
         private void RepairStories()
         {
+            foreach(var p in Persons) if(p.SocialFamilyId>0) p.SocialFamilyId=ActiveHouseIdIndexed(p.SocialFamilyId);
+            HouseContacts = (HouseContacts ?? new List<HouseContact>()).Where(c=>c!=null && personById.ContainsKey(c.PersonId) && lineageById.ContainsKey(c.FamilyId)).GroupBy(c=>(c.PersonId,c.FamilyId)).Select(g=>g.First()).Take(1024).ToList();
+            HousePetitions = (HousePetitions ?? new List<HousePetition>()).Where(q=>q!=null && personById.ContainsKey(q.PersonId) && lineageById.ContainsKey(q.FamilyId)).Take(128).ToList();
+            foreach(var q in HousePetitions) NextPetitionId=Math.Max(NextPetitionId,q.Id+1);
+            foreach(var house in Lineages) house.Stewards=(house.Stewards??new List<int>()).Where(personById.ContainsKey).Distinct().ToList();
+            kinshipCache.Clear();
+            agencyByPerson.Clear();
+            Attention = (Attention ?? new List<AttentionRecord>()).Where(a => a != null && personById.ContainsKey(a.Giver) && personById.ContainsKey(a.Recipient)).Take(4096).ToList();
+            Agency = (Agency ?? new List<AgencyRecord>()).Where(a => a != null && personById.ContainsKey(a.PersonId)).GroupBy(a => a.PersonId).Select(g => g.First()).ToList();
             Incidents = Incidents ?? new List<FamilyIncident>(); Plots = Plots ?? new List<RevengePlot>();
             Claims = Claims ?? new List<StockClaim>(); Requests = Requests ?? new List<SupplyRequest>();
             Incidents.RemoveAll(i => i == null || !personById.ContainsKey(i.VictimId));
             Plots.RemoveAll(p => p == null || !personById.ContainsKey(p.OrganizerId) || !Incidents.Any(i => i.Id == p.IncidentId));
-            Claims.RemoveAll(c => c == null || !lineageById.ContainsKey(c.OwnerFamily));
+            Claims.RemoveAll(c => c == null || !lineageById.ContainsKey(c.OwnerFamily) || !lineageById.ContainsKey(c.HolderFamily));
             claimByThing.Clear();
             Requests.RemoveAll(r => r == null || !personById.ContainsKey(r.RequesterId));
             foreach (var i in Incidents) { i.KnownBy = (i.KnownBy ?? new List<int>()).Distinct().Take(64).ToList(); i.FamiliesAffected = i.FamiliesAffected ?? new List<int>(); NextIncidentId = Math.Max(NextIncidentId, i.Id + 1); }

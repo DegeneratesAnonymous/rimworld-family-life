@@ -21,7 +21,7 @@ namespace FamilyLife
     {
         private static void Postfix(Thing __instance, Thing other, ref bool __result)
         {
-            try { if (__result && other != null && FamilyLifeMod.Settings.familySupplies && FamilyComponent.Current is FamilyComponent c) __result = c.Registry.SameOwnership(__instance.thingIDNumber, other.thingIDNumber); }
+            try { if (__result && other != null && FamilyComponent.Current is FamilyComponent c) __result = c.Registry.SameOwnership(__instance.thingIDNumber, other.thingIDNumber); }
             catch (Exception ex) { HookSafety.Report("supply stack", ex); }
         }
     }

@@ -103,6 +103,17 @@ namespace FamilyLife.Tests
             Assert.True(r.Explain(c, new[] { meaningful }, true)[0].Eligible);
         }
 
+        [Fact]
+        public void Repeating_an_event_with_other_partners_reduces_its_selection_weight()
+        {
+            var r=World(out int now);var c=Pair(r,now,1,2);
+            var d=new EventDef{Id="repeatable",Weight=EventWeight.Meaningful,Motive=new Drive(.9f)};
+            float fresh=r.Explain(c,new[]{d},true)[0].Weight;
+            r.EventLog.Add(new EventRecord{EventId=d.Id,A=1,B=21,Tick=now-2*Day,Weight=EventWeight.Meaningful});
+            float repeated=r.Explain(c,new[]{d},true)[0].Weight;
+            Assert.True(repeated<fresh);
+        }
+
         [Theory]
         [InlineData("A2-04", 1, 10, false)]
         [InlineData("B2-01", 1, 30, false)]

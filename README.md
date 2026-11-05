@@ -8,6 +8,10 @@ A RimWorld mod (1.6 and 1.7) that keeps durable family records and, over later v
 
 Adds 48 value-tradition episodes, witnessed incidents and shared news, family supply collection and negotiation, identifiable theft/restitution, and adult revenge conspiracies. Lethal attacks are optional and off by default. Homes now express preferences while player allowed areas remain independent. See [the feature guide and live validation checklist](docs/FAMILY-STORIES.md); this expansion has not yet been played in-game.
 
+## Development roadmap
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The current development PR adds chosen houses, earned associates, colonist-based actions, crests, gradual relationship updates and household recovery. See [the implementation guide](docs/HOUSES-AND-ROLEPLAY.md) for supported play styles and limits. Prestige, succession disputes, elections and coups remain future work; the new jobs and UI still require live acceptance.
+
 ## Design principles
 
 - **Standalone.** Harmony is the only hard dependency; Biotech and other mods only enhance.
@@ -39,6 +43,10 @@ Close RimWorld before staging; it keeps the mod DLL locked.
 | `Source/FamilyLife/UI/` | Families window, pawn Family tab. |
 | `Source/FamilyLife.Tests/` | Unit and property tests for the domain, plus a guard that every model field is saved. |
 | `Defs/`, `Languages/`, `About/` | Game content. All player-facing text is in keyed language files. |
+
+## Open work and calibration
+
+[Open-item inventory](docs/OPEN-ITEMS.md) distinguishes implemented fixes, offline evidence, live acceptance and future milestones. [Seeded calibration results](docs/calibration/summary.md) compare five-year synthetic histories; they do not measure live TPS.
 
 ## Performance
 

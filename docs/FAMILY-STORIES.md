@@ -84,3 +84,7 @@ Known scope limits: no fabricated investigations to identify an unwitnessed thie
 - Release builds pass for 1.6 and 1.7 with zero warnings/errors; offline metadata checks match all 18 Harmony patch definitions in both versions.
 - XML parses, keyed labels are unique, and all 240 new tradition localization keys exist.
 - No live game, save/reload playtest or TPS benchmark was run here. The tests do not execute Verse job/pathing code.
+
+## Chosen houses and colonist actions
+
+The current development expansion adds social membership separate from genealogy, associates, heads/stewards, physical petitions, chosen-perspective actions, crests and economy/recovery controls. See [HOUSES-AND-ROLEPLAY.md](HOUSES-AND-ROLEPLAY.md) for behavior and its additional live acceptance checklist. This supplements the checks above; offline tests do not establish live compatibility or TPS.

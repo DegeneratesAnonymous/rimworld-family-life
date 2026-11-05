@@ -25,7 +25,7 @@ namespace FamilyLife
         }
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOn(() => Component == null || Request == null || pawn.Drafted || pawn.InMentalState || pawn.Downed || !FamilyLifeMod.Settings.familySupplies || Request.State == SupplyState.Cancelled);
+            this.FailOn(() => Component == null || Request == null || pawn.Drafted || pawn.InMentalState || pawn.Downed || !FamilyLifeMod.Settings.familySupplies || !FamilyLifeMod.Settings.familyStories || Request.Approach == SupplyApproach.Steal && !FamilyLifeMod.Settings.familyTheft || Request.State == SupplyState.Cancelled);
             AddFinishAction(condition =>
             {
                 var r = Request;
@@ -49,7 +49,7 @@ namespace FamilyLife
                     if (++talking < 180) return;
                     if (Request.State == SupplyState.Pending && !Component.Registry.NegotiateSupply(Request, Component.ProfileOf(Donor.thingIDNumber)?[(int)Dim.Warmth] ?? 0,
                         Component.Economy.DonorNeed(Donor, Request), FamilyEconomy.InventorySilver(pawn) >= Request.Price, Activities.Now))
-                    { Messages.Message("WFL_SupplyRefused".Translate(Donor.LabelShort, pawn.LabelShort), pawn, MessageTypeDefOf.NeutralEvent, false); EndJobWith(JobCondition.Incompletable); return; }
+                    { if(Request.State != SupplyState.Cancelled) Messages.Message("WFL_SupplyRefused".Translate(Donor.LabelShort, pawn.LabelShort), pawn, MessageTypeDefOf.NeutralEvent, false); EndJobWith(JobCondition.Incompletable); return; }
                     ReadyForNextToil();
                 };
                 yield return talk;
@@ -68,7 +68,8 @@ namespace FamilyLife
             {
                 var carried = pawn.carryTracker.CarriedThing;
                 var r = Request;
-                if (carried == null || carried.stackCount < r.Count || carried.def.defName != r.Definition || (r.Approach == SupplyApproach.Barter && Component.Registry.ClaimFor(carried.thingIDNumber)?.HolderFamily != Component.Registry.FamilyOf(r.DonorId)) || (r.Approach == SupplyApproach.Barter && (Donor == null || !Component.Economy.Pay(pawn, Donor, r.Price))))
+                if (carried == null || carried.stackCount < r.Count || carried.def.defName != r.Definition || !Component.Registry.CanExchangeSupply(r,carried.thingIDNumber,carried.stackCount) ||
+                    (r.Approach == SupplyApproach.Barter && (Donor == null || !Component.Economy.Pay(pawn, Donor, r.Price))))
                 { EndJobWith(JobCondition.Incompletable); return; }
                 var witnesses = StoryActions.Witnesses(pawn.Map, pawn, pawn.Position);
                 if (!Component.Registry.ExchangeSupply(r.Id, carried.thingIDNumber, carried.stackCount, witnesses, Activities.Now)) { EndJobWith(JobCondition.Incompletable); return; }
@@ -82,7 +83,9 @@ namespace FamilyLife
                 var home = FamilyZones.AreaFor(Component.Registry.GetLineage(Component.Registry.FamilyOf(pawn.thingIDNumber)));
                 if (home?.Map != pawn.Map || !home[job.targetC.Cell] || job.targetC.Cell.IsForbidden(pawn) || pawn.carryTracker.CarriedThing == null || !StoreUtility.IsValidStorageFor(job.targetC.Cell, pawn.Map, pawn.carryTracker.CarriedThing) || !pawn.carryTracker.TryDropCarriedThing(job.targetC.Cell, ThingPlaceMode.Direct, out _))
                 { EndJobWith(JobCondition.Incompletable); return; }
-                Request.State = SupplyState.Stored; Component.Economy.Invalidate(pawn.Map);
+                if(pawn.carryTracker.CarriedThing!=null) {EndJobWith(JobCondition.Incompletable);return;}
+                Request.State = SupplyState.Stored;
+                Component.Economy.Invalidate(pawn.Map);
             }};
         }
     }
@@ -101,13 +104,15 @@ namespace FamilyLife
             var talk = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             talk.initAction = () =>
             {
+                if (Other?.CurJobDef == WFL_StoryDefOf.WFL_StoryListen && Other.CurJob.targetA.Pawn == pawn) return;
                 if (!Activities.IsFree(Other) || Other.CurJob?.playerForced == true) { EndJobWith(JobCondition.Incompletable); return; }
                 Other.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_StoryListen, pawn), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             };
             talk.tickAction = () =>
             {
                 if (++waited > 600 || Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen || Other.Position.DistanceTo(pawn.Position) > 3) { EndJobWith(JobCondition.Incompletable); return; }
-                if (waited >= 180) { StoryActions.FinishTalk(pawn, Other, job.count); ReadyForNextToil(); }
+                if (waited >= 180) { if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
+                    else StoryActions.FinishTalk(pawn, Other, job.count, job.def == WFL_StoryDefOf.WFL_ReconcileStory); ReadyForNextToil(); }
             };
             yield return talk;
         }
@@ -119,9 +124,62 @@ namespace FamilyLife
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || job.targetA.Pawn?.CurJob == null ||
-                (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply));
+                (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite));
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             yield return Toils_General.Wait(1200);
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    public class JobDriver_PersonalTime : Verse.AI.JobDriver
+    {
+        private int spent;
+        public override void ExposeData() { base.ExposeData(); Verse.Scribe_Values.Look(ref spent,"personalTicks"); }
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
+        protected override System.Collections.Generic.IEnumerable<Verse.AI.Toil> MakeNewToils()
+        {
+            this.FailOn(() => pawn.Drafted || pawn.Downed || pawn.InMentalState || !FamilyLifeMod.Settings.familyStories || !Activities.CanSpareAttention(pawn));
+            var wait = Verse.AI.Toils_General.Wait(1801);
+            wait.tickAction = () => spent++;
+            AddFinishAction(condition => { if(condition==Verse.AI.JobCondition.Succeeded) FamilyComponent.Current?.Registry.CompletePersonalTime(pawn.thingIDNumber,spent,Activities.Now); });
+            yield return wait;
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    public class JobDriver_BarterFunds : JobDriver
+    {
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => pawn.Reserve(job.targetA,job,1,job.count,null,errorOnFailed);
+        protected override IEnumerable<Toil> MakeNewToils()
+        {
+            this.FailOnDespawnedNullOrForbidden(TargetIndex.A);
+            this.FailOn(() => pawn.Drafted || pawn.InMentalState || !FamilyLifeMod.Settings.familySupplies || !FamilyLifeMod.Settings.familyStories);
+            AddFinishAction(c => { if(pawn.carryTracker.CarriedThing!=null) pawn.carryTracker.TryDropCarriedThing(pawn.Position,ThingPlaceMode.Near,out _); });
+            yield return Toils_Goto.GotoThing(TargetIndex.A,PathEndMode.Touch);
+            yield return new Toil{initAction=()=>
+            {
+                var r=FamilyComponent.Current?.Registry;var source=job.targetA.Thing;
+                int family=r?.FamilyOf(pawn.thingIDNumber)??0;
+                var claim=r?.ClaimFor(source.thingIDNumber);
+                if(r==null || source.def!=ThingDefOf.Silver || family==0 || claim!=null && (claim.OwnerFamily!=family || claim.HolderFamily!=family) || claim==null && r.GetLineage(family)?.UsePublicBarterFunds!=true) EndJobWith(JobCondition.Incompletable);
+            }};
+            yield return Toils_Haul.StartCarryThing(TargetIndex.A,false,false,false,false);
+            yield return new Toil{initAction=()=>
+            {
+                var r=FamilyComponent.Current?.Registry;var money=pawn.carryTracker.CarriedThing;
+                if(r==null || money==null || money.def!=ThingDefOf.Silver || money.stackCount<job.count || pawn.inventory==null) {EndJobWith(JobCondition.Incompletable);return;}
+                int family=r.FamilyOf(pawn.thingIDNumber);var claim=r.ClaimFor(money.thingIDNumber);
+                if(family==0 || claim!=null && (claim.OwnerFamily!=family || claim.HolderFamily!=family)) {EndJobWith(JobCondition.Incompletable);return;}
+                if (claim == null && (r.GetLineage(family)?.UsePublicBarterFunds != true || pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver).Where(t=>t.def==ThingDefOf.Silver && r.ClaimFor(t.thingIDNumber)==null).Sum(t=>t.stackCount) < 100)) {EndJobWith(JobCondition.Incompletable);return;}
+                // Claim before moving into inventory so ownership-aware stack merging cannot erase identity.
+                r.ClaimStock(money.thingIDNumber,family,family,pawn.Map.uniqueID,SupplyKind.Currency);
+                if(pawn.carryTracker.innerContainer.TryTransferToContainer(money,pawn.inventory.innerContainer,job.count) != job.count) EndJobWith(JobCondition.Incompletable);
+                FamilyComponent.Current.Economy.Invalidate(pawn.Map);
+            }};
         }
     }
 }

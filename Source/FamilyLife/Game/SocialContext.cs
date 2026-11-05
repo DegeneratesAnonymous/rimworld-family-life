@@ -66,8 +66,6 @@ namespace FamilyLife
                 Profile = component.ProfileOf(p.thingIDNumber),
                 Mood = p.needs?.mood != null ? p.needs.mood.CurLevel : 0.5f
             };
-            if (actor.LineageId == 0 && record != null) actor.LineageId = record.PrimaryLineageId;
-
             if (p.skills != null)
                 foreach (var s in p.skills.skills)
                     if (!s.TotallyDisabled) actor.Skills[s.def.defName] = s.Level;
@@ -123,6 +121,8 @@ namespace FamilyLife
                 Now = now,
                 Setting = setting,
                 FromActivity = fromActivity,
+                QualityHours = fromActivity ? 0f : EventTuning.ConversationTicks / (float)BondTuning.TicksPerHour,
+                RelationshipPace = 0.25f, // Provisional ordinary-event pace; incident shocks use their own path.
                 ResourcePressure = component.Economy.Pressure(ia.LineageId) || component.Economy.Pressure(ib.LineageId),
                 InitiatorBond = registry.GetBond(ia.Id, ib.Id),
                 RecipientBond = registry.GetBond(ib.Id, ia.Id),
@@ -137,7 +137,7 @@ namespace FamilyLife
 
             if (!ia.Child && !ib.Child)
             {
-                try { ctx.RomanticallyEligible = RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
+                try { ctx.RomanticallyEligible = initiator.DevelopmentalStage==DevelopmentalStage.Adult && recipient.DevelopmentalStage==DevelopmentalStage.Adult && !registry.AssessKinship(ia.Id,ib.Id).BlocksRomance && RelationsUtility.RomanceEligiblePair(initiator, recipient, forOpinionExplanation: false).Accepted; }
                 catch (Exception) { ctx.RomanticallyEligible = false; }
             }
 

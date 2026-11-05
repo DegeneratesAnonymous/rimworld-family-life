@@ -16,7 +16,7 @@ namespace FamilyLife.Domain
         public void SetZone(int lineageId, int areaId, int mapId = -1)
         {
             var lineage = GetLineage(lineageId);
-            if (lineage == null) return;
+            if (lineage == null || lineage.AbsorbedIntoId!=0 && areaId>0) return;
             lineage.ZoneAreaId = areaId < 0 ? 0 : areaId;
             lineage.ZoneMapId = mapId;
             lineage.ZoneApplied = new List<int>();
@@ -34,7 +34,7 @@ namespace FamilyLife.Domain
             var lineage = GetLineage(lineageId);
             if (lineage == null || lineage.ZoneAreaId == 0) return new List<int>();
             lineage.ZoneApplied = lineage.ZoneApplied ?? new List<int>();
-            return Persons.Where(p => p.InColony && (p.PrimaryLineageId == lineageId || lineage.HasAffiliate(p.Id)) && !lineage.ZoneApplied.Contains(p.Id))
+            return Persons.Where(p => p.InColony && (BelongsToFamily(p,lineageId)) && !lineage.ZoneApplied.Contains(p.Id))
                 .Select(p => p.Id).OrderBy(i => i).ToList();
         }
 
@@ -47,6 +47,6 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>The families that have an area assigned.</summary>
-        public List<Lineage> LineagesWithZones() => Lineages.Where(l => l.ZoneAreaId != 0).ToList();
+        public List<Lineage> LineagesWithZones() => Lineages.Where(l => l.AbsorbedIntoId==0 && l.ZoneAreaId != 0).ToList();
     }
 }

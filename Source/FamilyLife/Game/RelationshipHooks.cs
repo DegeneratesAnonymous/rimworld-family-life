@@ -55,6 +55,7 @@ namespace FamilyLife
         {
             if (__result <= 0f || initiator == null || recipient == null) return;
             var settings = FamilyLifeMod.Settings;
+            if(initiator.DevelopmentalStage!=DevelopmentalStage.Adult || recipient.DevelopmentalStage!=DevelopmentalStage.Adult || FamilyComponent.Current?.Registry.AssessKinship(initiator.thingIDNumber,recipient.thingIDNumber).BlocksRomance==true) {__result=0f;return;}
             if (settings != null && !settings.conflicts && !settings.strictRomance) return;
             var component = FamilyComponent.Current;
             if (component == null) return;

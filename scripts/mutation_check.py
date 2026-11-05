@@ -12,6 +12,22 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "Source" / "FamilyLife"
 
 MUTATIONS = [
+    ("uncompleted personal time fulfills independence", "Domain/AgencyBehavior.cs",
+     "ticks < 1800 ||", "false ||"),
+    ("associates gain management authority", "Domain/HouseRelations.cs",
+     "RoleInHouse(person,family)>=HouseRole.Steward", "RoleInHouse(person,family)>=HouseRole.Associate"),
+    ("repeated same-day favors farm family standing", "Domain/HouseRelations.cs",
+     "if(c.LastPositiveDay>=day) return;", ""),
+    ("social admission overwrites biological lineage", "Domain/SocialFamilies.cs",
+     "p.SocialFamilyId=family;", "p.SocialFamilyId=family;p.PrimaryLineageId=family;"),
+
+    ("area resolution ignores map identity", "Domain/ContextPolicies.cs",
+     "map >= 0 && mapId(candidate) != map", "false"),
+    ("ambiguous legacy areas pick an arbitrary home", "Domain/ContextPolicies.cs",
+     "if (found != null) return null;", "if (false) return null;"),
+    ("unrelated recreation targets become a shared activity", "Domain/ContextPolicies.cs",
+     "first > 0 && first == second", "true"),
+
     ("unwitnessed family members learn the incident", "Domain/FamilyStories.cs",
      "(witnesses ?? Enumerable.Empty<int>()).Append(actor)", "Persons.Select(p => p.Id).Append(actor)"),
     ("family grievance multiplies with each witness", "Domain/FamilyStories.cs",
@@ -23,7 +39,7 @@ MUTATIONS = [
     ("insufficient goods count as a handover", "Domain/FamilySupplies.cs",
      "actualCount < r.Count", "false"),
     ("theft transfers legal ownership", "Domain/FamilySupplies.cs",
-     "r.Approach == SupplyApproach.Steal ? source.OwnerFamily : receiver", "receiver"),
+     "r.Approach == SupplyApproach.Steal || source != null && source.OwnerFamily != source.HolderFamily ? source.OwnerFamily : receiver", "receiver"),
     ("public collection can confiscate private stock", "Domain/FamilySupplies.cs",
      "if (r.Approach == SupplyApproach.PublicClaim && source != null) return false;", ""),
     ("splitting drops family ownership", "Domain/FamilySupplies.cs",

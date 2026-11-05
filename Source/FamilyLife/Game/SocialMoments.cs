@@ -200,7 +200,6 @@ namespace FamilyLife
 
         // ------------------------------------------------------------------ people already doing something together
 
-        private static readonly HashSet<string> CompetitiveJoy = new HashSet<string> { "Gaming_Cerebral", "Gaming_Dexterity" };
 
         /// <summary>
         /// Looks for two people who are, right now, doing the same thing side by side: a recreation activity. They are already
@@ -214,7 +213,7 @@ namespace FamilyLife
             foreach (var pawn in everyone)
             {
                 var job = pawn.CurJob;
-                if (pawn.Drafted || pawn.InMentalState || job?.def.joyKind == null || job.def.joyKind.defName == "WFL_FamilyTime") continue;
+                if (pawn.Drafted || pawn.InMentalState || SharedActivityPolicy.Discover(job?.def.joyKind?.defName) == ActivityKind.None) continue;
                 if (!groups.TryGetValue(job.def, out var group)) groups[job.def] = group = new NearbyIndex<Pawn>(6);
                 group.Add(pawn, pawn.Position.x, pawn.Position.z);
             }
@@ -237,7 +236,8 @@ namespace FamilyLife
                     if (b == a || a.Position.DistanceToSquared(b.Position) > 36f) continue;
                     if (++perPawn > 8) break;
                     if (b.CurJobDef != ja.def || b.Drafted || b.InMentalState) continue;
-                    var kind = CompetitiveJoy.Contains(ja.def.joyKind.defName) ? ActivityKind.Competition : ActivityKind.GameNight;
+                    if (!SharedActivityPolicy.SameTarget(ja.targetA.Thing?.thingIDNumber ?? 0, b.CurJob.targetA.Thing?.thingIDNumber ?? 0)) continue;
+                    var kind = SharedActivityPolicy.Discover(ja.def.joyKind.defName);
                     Activities.NoteAttempt(a.thingIDNumber, now, ActivityChannel);
                     Activities.NoteAttempt(b.thingIDNumber, now, ActivityChannel);
                     if (Rand.Value > 0.5f * Frequency) continue;
@@ -343,10 +343,7 @@ namespace FamilyLife
             var component = FamilyComponent.Current;
             if (component == null) return;
             var registry = component.Registry;
-            var pairs = new List<KeyValuePair<Pawn, Pawn>>();
-            for (int i = 0; i < people.Count; i++)
-                for (int j = i + 1; j < people.Count; j++)
-                    pairs.Add(new KeyValuePair<Pawn, Pawn>(people[i], people[j]));
+            var pairs = GatheringBudget.Pairs(people.InRandomOrder().ToList(),60,0);
             int wanted = Mathf.Clamp(Mathf.RoundToInt(3 * Frequency), 1, 5);
             foreach (var pair in pairs.InRandomOrder().OrderByDescending(p => CrossFamily(registry, p.Key, p.Value) ? 1 : 0).Take(wanted * 3))
             {
@@ -461,7 +458,7 @@ namespace FamilyLife
     /// <summary>One person walks up to another and talks. When it has gone on long enough, the event is settled and shown.</summary>
     public class JobDriver_SocialMoment : JobDriver
     {
-        private const int TalkTicks = 700;
+        private const int TalkTicks = EventTuning.ConversationTicks;
         private int talkedTicks;
         private bool greeted;
 

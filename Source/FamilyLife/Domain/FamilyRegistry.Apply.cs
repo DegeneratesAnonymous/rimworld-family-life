@@ -46,6 +46,15 @@ namespace FamilyLife.Domain
             RebuildChildIndex();
 
             AssignLineages(nowTick, events);
+            kinshipCache.Clear();
+            foreach(int id in newlyRecorded)
+            {
+                var child=GetPerson(id);
+                if(!child.Juvenile || child.ParentIds.Count==0) continue;
+                var parents=child.ParentIds.Select(GetPerson).ToList();
+                if(parents.All(p=>p!=null && p.SocialFamilyId>0) && parents.Select(p=>p.SocialFamilyId).Distinct().Count()==1)
+                    child.SocialFamilyId=parents[0].SocialFamilyId;
+            }
             AffiliateLateParents(obs, prevParents, newlyRecorded, nowTick, events);
             AffiliateSpouses(nowTick, events);
             ReportPartnershipChanges(obs, prevPartners, newlyRecorded, nowTick, events);

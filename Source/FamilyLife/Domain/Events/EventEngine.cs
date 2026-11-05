@@ -6,13 +6,15 @@ namespace FamilyLife.Domain
 {
     public static class EventTuning
     {
+        public const int ConversationTicks = 700;
         public const int MaxLog = 300;
         public const int MaxTies = 60;
         public const int MaxCommitments = 80;
-        public const float GreatAt = 0.70f;
-        public const float GoodAt = 0.52f;
-        public const float FlatAt = 0.34f;
-        public const float Noise = 0.14f;
+        public const float GreatAt = 0.84f;
+        public const float GoodAt = 0.56f;
+        public const float FlatAt = 0.32f;
+        public const float Noise = 0.18f;
+        public const float SurpriseChance = 0.04f;
         public const int RepeatWindowTicks = 7 * ActivityTuning.TicksPerDay;
         public const int MaxPerPersonPerDay = 3;
         public const float RiftOpensAtTension = ConflictTuning.TensionOpens;
@@ -134,9 +136,41 @@ namespace FamilyLife.Domain
             return n == 0 ? 1f : (n == 1 ? 0.6f : (n == 2 ? 0.35f : 0.2f));
         }
 
+        private sealed class SelectionHistory
+        {
+            public readonly Dictionary<string,int> LastPairTick=new Dictionary<string,int>();
+            public readonly Dictionary<string,int> RecentParticipants=new Dictionary<string,int>();
+        }
+
+        private SelectionHistory BuildSelectionHistory(int a,int b,int now)
+        {
+            var history=new SelectionHistory();int since=now-14*ActivityTuning.TicksPerDay;
+            foreach(var e in EventLog)
+            {
+                if((e.A==a && e.B==b)||(e.A==b && e.B==a))
+                {
+                    if(!history.LastPairTick.TryGetValue(e.EventId,out int last)||e.Tick>last) history.LastPairTick[e.EventId]=e.Tick;
+                }
+                if(e.Tick>=since&&(e.A==a||e.B==a||e.A==b||e.B==b))
+                    history.RecentParticipants[e.EventId]=history.RecentParticipants.TryGetValue(e.EventId,out int count)?count+1:1;
+            }
+            return history;
+        }
+
+        private static float SelectionFatigue(SelectionHistory history,string eventId)
+        {
+            int n=history.RecentParticipants.TryGetValue(eventId,out int count)?count:0;
+            return n==0?1.2f:n==1?.65f:n==2?.35f:.18f;
+        }
+
         // ------------------------------------------------------------------ what is possible, and why not
 
         public List<EligibilityLine> Explain(PairContext c, IEnumerable<EventDef> catalog, bool childrenEnabled, Func<EventDef, bool> enabled = null)
+        {
+            return Explain(c,catalog,childrenEnabled,enabled,BuildSelectionHistory(c.Initiator.Id,c.Recipient.Id,c.Now));
+        }
+
+        private List<EligibilityLine> Explain(PairContext c, IEnumerable<EventDef> catalog, bool childrenEnabled, Func<EventDef, bool> enabled, SelectionHistory history)
         {
             var lines = new List<EligibilityLine>();
             var scenario = ScenarioOf(c);
@@ -158,13 +192,13 @@ namespace FamilyLife.Domain
                 if (d.Needs.Length > 0 && !d.Needs.Contains(c.Setting)) { line.Reason = "only happens during " + string.Join("/", d.Needs.Select(n => n.ToString())); continue; }
                 if (d.NeedsThird && c.Third == null) { line.Reason = "needs a third person involved"; continue; }
                 if (d.ConcernsPromise && c.Broken == null) { line.Reason = "no recorded promise was broken"; continue; }
-                int since = DaysSinceEvent(d.Id, c.Initiator.Id, c.Recipient.Id, c.Now);
+                int since = history.LastPairTick.TryGetValue(d.Id,out int lastTick)?Math.Max(0,c.Now-lastTick)/ActivityTuning.TicksPerDay:int.MaxValue;
                 if (since < d.CooldownDays) { line.Reason = "happened " + since + " day(s) ago (cooldown " + d.CooldownDays + ")"; continue; }
                 var failed = d.Opportunity.FirstOrDefault(o => !o.Test(c));
                 if (failed != null) { line.Reason = "needs: " + failed.Name; continue; }
                 line.Motive = d.Motive.Value(c, d.Skill);
                 if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
-                line.Weight = d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive;
+                line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(history,d.Id);
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
                 line.Reason = "possible";
@@ -217,13 +251,18 @@ namespace FamilyLife.Domain
             var pool = new List<KeyValuePair<EligibilityLine, PairContext>>();
             var defs = catalog.ToList();
             var seen = new HashSet<(string, int, int, int, ActivityKind, bool)>();
+            var histories = new Dictionary<(int,int,int),SelectionHistory>();
             foreach (var c in contexts)
-                foreach (var l in Explain(c, defs.Where(d => d.NeedsThird == (c.Third != null)), childrenEnabled, enabled).Where(l => l.Eligible))
+            {
+                var historyKey=(c.Initiator.Id,c.Recipient.Id,c.Now);
+                if(!histories.TryGetValue(historyKey,out var history)) histories[historyKey]=history=BuildSelectionHistory(c.Initiator.Id,c.Recipient.Id,c.Now);
+                foreach (var l in Explain(c, defs.Where(d => d.NeedsThird == (c.Third != null)), childrenEnabled, enabled,history).Where(l => l.Eligible))
                 {
                     // Pair-only events belong to the plain context, not to every nearby witness.
                     var key = (l.Def.Id, c.Initiator.Id, c.Recipient.Id, c.Third?.Id ?? 0, c.Setting, c.FromActivity);
                     if (seen.Add(key)) pool.Add(new KeyValuePair<EligibilityLine, PairContext>(l, c));
                 }
+            }
             if (pool.Count == 0) return null;
             double total = pool.Sum(p => p.Key.Weight);
             double pick = rng.NextDouble() * total;
@@ -255,6 +294,9 @@ namespace FamilyLife.Domain
             r.Execution = Execution(d, c, rng);
             r.Reception = d.Reception.Value(c, d.Skill);
             r.Score = d.SkillShare * r.Execution + (1f - d.SkillShare) * r.Reception + (float)(rng.NextDouble() * 2 - 1) * EventTuning.Noise;
+            double surprise=rng.NextDouble();
+            if(surprise<EventTuning.SurpriseChance) r.Score-=.42f;
+            else if(surprise>1f-EventTuning.SurpriseChance && (d.Arc==Arc.Warm || d.Arc==Arc.Deep || d.Arc==Arc.Repair || d.Arc==Arc.Light || d.Arc==Arc.Story)) r.Score+=.35f;
             r.Tier = r.Score >= EventTuning.GreatAt ? EventTier.Great : (r.Score >= EventTuning.GoodAt ? EventTier.Good : (r.Score >= EventTuning.FlatAt ? EventTier.Flat : EventTier.Poor));
             switch (r.Tier)
             {
@@ -273,9 +315,10 @@ namespace FamilyLife.Domain
 
         private static float Room(float v) => Math.Max(0.15f, 1f - v / 100f) * 1.5f;
 
-        private void Shift(Bond b, EventTier tier, Arc arc, bool initiator, float repeat)
+        private void Shift(Bond b, EventTier tier, Arc arc, bool initiator, float repeat, float pace = 1f)
         {
             if (b == null) return;
+            float oldA = b.Attachment, oldT = b.Trust, oldN = b.Tension, oldF = b.Familiarity;
             float room = Room(b.Attachment);
             float trustRoom = Room(b.Trust);
             switch (tier)
@@ -293,6 +336,9 @@ namespace FamilyLife.Domain
                     b.Familiarity += arc.Familiarity * 0.2f;
                     break;
             }
+            pace = Math.Max(0f, Math.Min(1f, pace));
+            b.Attachment = oldA + (b.Attachment - oldA) * pace; b.Trust = oldT + (b.Trust - oldT) * pace;
+            b.Tension = oldN + (b.Tension - oldN) * pace; b.Familiarity = oldF + (b.Familiarity - oldF) * pace;
             b.Attachment = BondTuning.Clamp(b.Attachment); b.Trust = BondTuning.Clamp(b.Trust);
             b.Tension = BondTuning.Clamp(b.Tension); b.Familiarity = BondTuning.Clamp(b.Familiarity);
         }
@@ -315,13 +361,13 @@ namespace FamilyLife.Domain
             var cause = CauseFor(d, r.Tier);
             if (d.Outcomes == null)
             {
-                Shift(ab, r.Tier, d.Arc, true, repeat);
-                Shift(ba, r.Tier, d.Arc, false, repeat);
+                Shift(ab, r.Tier, d.Arc, true, repeat, c.RelationshipPace);
+                Shift(ba, r.Tier, d.Arc, false, repeat, c.RelationshipPace);
             }
             else
             {
-                ChangeBond(a, b, d.Outcomes[(int)r.Tier].Initiator, now, repeat);
-                ChangeBond(b, a, d.Outcomes[(int)r.Tier].Recipient, now, repeat);
+                ChangeBond(a, b, d.Outcomes[(int)r.Tier].Initiator, now, repeat * Math.Max(0f, Math.Min(1f, c.RelationshipPace)));
+                ChangeBond(b, a, d.Outcomes[(int)r.Tier].Recipient, now, repeat * Math.Max(0f, Math.Min(1f, c.RelationshipPace)));
             }
             float noted = (r.Tier == EventTier.Great ? 1f : (r.Tier == EventTier.Good ? 0.5f : (r.Tier == EventTier.Poor ? -0.6f : 0f))) * d.Arc.Gain;
             if (d.Outcomes == null)
@@ -331,7 +377,7 @@ namespace FamilyLife.Domain
             }
             if (r.Tier >= EventTier.Good && (d.Outcomes == null || r.InitiatorFeeling > 0 && r.RecipientFeeling > 0))
             {
-                float hours = r.Tier == EventTier.Great ? 0.8f : 0.4f;     // meaningful attention counts toward who has had time lately
+                float hours = c.QualityHours >= 0 ? Math.Min(2f,c.QualityHours) : (r.Tier == EventTier.Great ? 0.8f : 0.4f);     // meaningful attention counts toward who has had time lately
                 if (ab != null) { ab.LastQualityTick = now; ab.QualityRecent += hours; }
                 if (ba != null) { ba.LastQualityTick = now; ba.QualityRecent += hours; }
             }
@@ -340,15 +386,15 @@ namespace FamilyLife.Domain
             {
                 var toThird = EnsureBond(c.Third.Id, a, now);
                 float heat = r.Tier == EventTier.Poor ? 8f : (r.Tier == EventTier.Flat ? 1f : (r.Tier == EventTier.Good ? 3f : 2f));
-                if (toThird != null) { toThird.Tension = BondTuning.Clamp(toThird.Tension + heat); toThird.Note(BondCause.Friction, -heat * 0.3f, now); }
+                if (toThird != null) { toThird.Tension = BondTuning.Clamp(toThird.Tension + heat * Math.Max(0f,Math.Min(1f,c.RelationshipPace))); toThird.Note(BondCause.Friction, -heat * 0.3f, now); }
             }
 
             if (d.TieIsRecipientThird && c.Third != null && personById.ContainsKey(c.Third.Id))
             {
                 var rt = EnsureBond(b, c.Third.Id, now);
                 var tr = EnsureBond(c.Third.Id, b, now);
-                Shift(rt, r.Tier, Arc.Light, false, 1f);
-                Shift(tr, r.Tier, Arc.Light, false, 1f);
+                Shift(rt, r.Tier, Arc.Light, false, 1f, c.RelationshipPace);
+                Shift(tr, r.Tier, Arc.Light, false, 1f, c.RelationshipPace);
             }
 
             if (d.ConcernsPromise && c.Broken != null)
@@ -356,14 +402,16 @@ namespace FamilyLife.Domain
                 var promise = Commitments.FirstOrDefault(p => p.Id == c.Broken.Id);
                 if (promise != null) promise.State = 3;
                 float repair = r.Tier == EventTier.Great ? 6f : (r.Tier == EventTier.Good ? 3f : (r.Tier == EventTier.Flat ? 0f : -4f));
-                if (ba != null) ba.Trust = BondTuning.Clamp(ba.Trust + repair);
+                if (ba != null) ba.Trust = BondTuning.Clamp(ba.Trust + repair * Math.Max(0f, Math.Min(1f,c.RelationshipPace)));
             }
 
             if ((d.Effects & EventEffect.EasesRift) != 0 && c.Rift != null && c.Rift.IsOpen)
             {
                 // Neglect and rivalry close when the attention is really restored, not because of one conversation; this only helps.
                 bool bySelf = c.Rift.Cause == RiftCause.Neglect || c.Rift.Cause == RiftCause.Rivalry;
-                if (r.Tier == EventTier.Great && !bySelf) { TryReconcile(c.Rift.Id, true, now); r.RiftResolved = true; }
+                if (r.Tier == EventTier.Great && !bySelf && c.RelationshipPace < 1f && (c.Rift.LastTryTick <= 0 || c.Rift.Severity > 20f || now-c.Rift.LastTryTick < ActivityTuning.TicksPerDay))
+                { c.Rift.Severity = Math.Max(5f,c.Rift.Severity*.6f); c.Rift.LastTryTick = now; r.RiftEased = true; }
+                else if (r.Tier == EventTier.Great && !bySelf) { TryReconcile(c.Rift.Id, true, now); r.RiftResolved = true; }
                 else if (r.Tier >= EventTier.Good && bySelf) { c.Rift.Severity = Math.Max(5f, c.Rift.Severity * 0.7f); r.RiftEased = true; }
                 else if (r.Tier == EventTier.Good)
                 {
@@ -387,7 +435,7 @@ namespace FamilyLife.Domain
             if ((d.Id == "T6-03" || d.Id == "T8-06") && r.Tier == EventTier.Great)
             {
                 var root = Incidents.LastOrDefault(i => !i.Resolved && i.ActorId == a && i.VictimFamily == FamilyOf(b) && i.KnownBy.Contains(b));
-                if (root != null) ForgiveIncident(root.Id, FamilyOf(b));
+                if (root != null) DiscussReparation(root.Id,b,a,true,now);
             }
 
             if ((d.Effects & EventEffect.Promise) != 0 && r.Tier >= EventTier.Good)
@@ -425,6 +473,7 @@ namespace FamilyLife.Domain
 
             EventLog.Add(new EventRecord { EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0 });
             TrimLog();
+            NoteAgencyMoment(r, now);
         }
 
         private void TrimLog()
@@ -467,10 +516,11 @@ namespace FamilyLife.Domain
             var d = r.Def;
             var tie = d.TieIsRecipientThird && c.Third != null ? EnsureTie(c.Recipient.LineageId, c.Third.LineageId) : EnsureTie(c.Initiator.LineageId, c.Recipient.LineageId);
             if (tie == null) return;
-            float bridge = (d.Effects & EventEffect.Bridge) != 0 ? 1.5f : 1f;
+            float pace = Math.Max(0f, Math.Min(1f,c.RelationshipPace));
+            float bridge = ((d.Effects & EventEffect.Bridge) != 0 ? 1.5f : 1f) * pace;
             tie.Shared++;
             tie.LastTick = now;
-            tie.Familiarity = BondTuning.Clamp(tie.Familiarity + (r.Tier == EventTier.Poor ? 0.5f : 1.5f));
+            tie.Familiarity = BondTuning.Clamp(tie.Familiarity + (r.Tier == EventTier.Poor ? 0.5f : 1.5f) * pace);
             switch (r.Tier)
             {
                 case EventTier.Great:
@@ -482,13 +532,13 @@ namespace FamilyLife.Domain
                     tie.Grievance = Math.Max(0f, tie.Grievance - 2f * bridge);
                     break;
                 case EventTier.Flat:
-                    tie.Goodwill = BondTuning.Clamp(tie.Goodwill + 0.3f);
+                    tie.Goodwill = BondTuning.Clamp(tie.Goodwill + 0.3f * pace);
                     break;
                 default:
-                    tie.Goodwill = Math.Max(0f, tie.Goodwill - 1f);
+                    tie.Goodwill = Math.Max(0f, tie.Goodwill - 1f * pace);
                     if ((d.Effects & EventEffect.Incident) != 0)
                     {
-                        tie.Grievance = BondTuning.Clamp(tie.Grievance + 6f);
+                        tie.Grievance = BondTuning.Clamp(tie.Grievance + 6f * pace);
                         tie.WrongedBy = c.Initiator.Id;
                         tie.WrongedPerson = c.Recipient.Id;
                         tie.GrievanceTick = now;
