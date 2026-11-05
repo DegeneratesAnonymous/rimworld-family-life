@@ -26,11 +26,13 @@ namespace FamilyLife
     /// The door. A family zone is a home, and someone from outside the family does not walk into it (see <see cref="FamilyDoorRule"/>). When an
     /// outsider who is free would do something inside one (the work they would pick is in it), they walk to the edge and knock, an adult of
     /// the family (or, for a child guest, another child) is called to the door and lets them in, and the visit lasts until they leave the
-    /// zone. If nobody comes in a reasonable time they give up and do something else. A visit never changes anyone's area restriction.
+    /// zone, or an hour after they last were inside it (LeaveDelay), so a trip out for materials and back, or several jobs in a row, need only
+    /// the one knock; a visit never lasts more than PassLimit in all. If nobody comes in a reasonable time they give up and do something else.
+    /// A visit never changes anyone's area restriction.
     /// </summary>
     internal static class GuestPasses
     {
-        public const int WaitLimit = 2500, PassLimit = 7500, NeverEnteredLimit = 1800, LeaveDelay = 240, CooldownAfterRefusal = 2500, CooldownAfterVisit = 600, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
+        public const int WaitLimit = 2500, PassLimit = 15000, NeverEnteredLimit = 1800, LeaveDelay = 2500, CooldownAfterRefusal = 2500, CooldownAfterVisit = 0, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
         public static readonly Dictionary<int, GuestPass> ByGuest = new Dictionary<int, GuestPass>();
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
