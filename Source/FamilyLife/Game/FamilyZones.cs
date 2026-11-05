@@ -45,6 +45,7 @@ namespace FamilyLife
                 lineage.ZoneApplied.Clear();
             }
             foreach (var map in Find.Maps) IncludeWholeBeds(map);
+            FamilyHome.Ensure(component);
         }
 
         /// <summary>
