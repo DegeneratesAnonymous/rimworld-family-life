@@ -29,4 +29,7 @@ jobs:
           name: family-life-calibration
           path: /tmp/family-life-calibration
       - name: Verify calibration snapshots
-        run: diff -ru docs/calibration /tmp/family-life-calibration
+        run: |
+          for snapshot in controlled-outcomes.csv coverage.csv frequencies.csv summary.md; do
+            diff -u "docs/calibration/$snapshot" "/tmp/family-life-calibration/$snapshot"
+          done

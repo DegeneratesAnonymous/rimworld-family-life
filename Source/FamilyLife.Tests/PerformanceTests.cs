@@ -120,7 +120,7 @@ namespace FamilyLife.Tests
             var people=BigColony(24,4,out var colonists);var r=new FamilyRegistry();int now=5*Day;r.Apply(people,now);
             var active=r.Lineages.Where(l=>r.IsListedFamily(l.Id)).Select(l=>l.Id).ToList();int target=active[0];
             foreach(int source in active.Skip(1)) Assert.True(r.UniteFamilies(source,target,++now));
-            Assert.Single(r.Lineages.Where(l=>r.IsListedFamily(l.Id)));
+            Assert.Single(r.Lineages, l=>r.IsListedFamily(l.Id));
             Assert.All(active.Skip(1),id=>Assert.False(r.IsListedFamily(id)));
             Func<int,float[]> profile=id=>new float[DimInfo.Count];
             int cultureTick=now;Assert.True(TimeMs(20,()=>{cultureTick+=Day;r.UpdateCulture(profile,cultureTick);})<25);
