@@ -172,7 +172,7 @@ namespace FamilyLife
                         break;
                     case 1: SocialMoments.NoteBrokenPromises(this, Registry.UpdateCommitments(now), now); break;
                     case 2: FamilyGatherings.Process(this, now); break;
-                    case 3: FamilyZones.Apply(this); break;
+                    case 3: FamilyZones.Apply(this); ZoneBeds.GrowOut(this); break;
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Maintenance phase " + phase + " failed; will retry next cycle: " + ex); }

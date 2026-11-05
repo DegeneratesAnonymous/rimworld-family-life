@@ -49,6 +49,55 @@ namespace FamilyLife
             return impressiveness + 30f * bed.GetStatValue(StatDefOf.Comfort) + 10f * bed.GetStatValue(StatDefOf.BedRestEffectiveness);
         }
 
+        /// <summary>
+        /// A baby sleeps in its parents' room. Once it has grown past that stage, a child who is still in a parent's room moves to the most
+        /// comfortable free bed in the family's zone that is in another room. Nothing moves if there is no such bed, or the child's bed is locked.
+        /// </summary>
+        public static void GrowOut(FamilyComponent component)
+        {
+            var registry = component.Registry;
+            int moved = 0;
+            foreach (var lineage in registry.LineagesWithZones())
+            {
+                foreach (int id in component.ZoneMemberIds(lineage))
+                {
+                    if (moved >= 2) return;
+                    var child = component.TryGetPawn(id);
+                    if (child == null || !child.Spawned || child.Dead || !child.IsColonist || child.ownership?.OwnedBed == null) continue;
+                    if (child.DevelopmentalStage != DevelopmentalStage.Child) continue;
+                    var bed = child.ownership.OwnedBed;
+                    if (bed.Medical || IsLocked(bed, child)) continue;
+                    var record = registry.GetPerson(id);
+                    if (record == null) continue;
+                    int room = RoomOf(bed);
+                    if (room < 0) continue;
+                    var parentRooms = new HashSet<int>();
+                    foreach (int parentId in record.ParentIds)
+                    {
+                        var parentBed = component.TryGetPawn(parentId)?.ownership?.OwnedBed;
+                        if (parentBed != null && parentBed.Spawned && parentBed.Map == bed.Map) parentRooms.Add(RoomOf(parentBed));
+                    }
+                    if (!parentRooms.Contains(room)) continue;           // already in a room of their own
+
+                    var zones = FamilyZones.ZonesOf(lineage).Where(z => z.Map == bed.Map).ToList();
+                    float here = Comfort(bed);
+                    Building_Bed best = null; float bestComfort = here;
+                    foreach (var candidate in bed.Map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>())
+                    {
+                        if (candidate == bed || candidate.Medical || !candidate.ForColonists || !candidate.Spawned || candidate.OwnersForReading.Count > 0) continue;
+                        if (!zones.Any(z => candidate.OccupiedRect().Cells.Any(z.ContainsCell))) continue;
+                        if (parentRooms.Contains(RoomOf(candidate)) || !RestUtility.CanUseBedEver(child, candidate.def)) continue;
+                        float comfort = Comfort(candidate);
+                        if (comfort > bestComfort) { bestComfort = comfort; best = candidate; }
+                    }
+                    if (best == null) continue;
+                    child.ownership.UnclaimBed();
+                    if (child.ownership.ClaimBedIfNonMedical(best)) moved++;
+                    else child.ownership.ClaimBedIfNonMedical(bed);       // exactly as they were
+                }
+            }
+        }
+
         /// <returns>How many people were given a bed.</returns>
         public static int Deal(FamilyComponent component, Lineage lineage, Zone_Family zone)
         {

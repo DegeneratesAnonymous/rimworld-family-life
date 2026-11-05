@@ -431,4 +431,25 @@
       </li>
     </stages>
   </ThoughtDef>
+  <!--
+    A parent whose baby sleeps in their room, or close by, does not have far to go in the night. Stops by itself once the child
+    has grown past the baby stage.
+  -->
+  <ThoughtDef>
+    <defName>WFL_BabyCloseBy</defName>
+    <workerClass>FamilyLife.ThoughtWorker_BabyCloseBy</workerClass>
+    <requiredCapacities />
+    <stages>
+      <li>
+        <label>baby in my room</label>
+        <description>My baby sleeps right beside me. I do not have to go far to see to them.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+      <li>
+        <label>baby close by</label>
+        <description>My baby sleeps close to my room, so I am never far from them.</description>
+        <baseMoodEffect>2</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
 </Defs>

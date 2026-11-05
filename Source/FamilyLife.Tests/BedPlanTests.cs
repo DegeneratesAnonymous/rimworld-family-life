@@ -102,6 +102,41 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void A_couple_picks_a_room_with_a_bed_for_their_baby_even_over_a_better_room_without_one()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Kid(7, SleeperStage.Baby, 1, 2) },
+                new[] { Bed(10, 90, 1, 2, 0), Bed(11, 60, 2, 2, 20), Bed(12, 10, 2, 1, 21), Bed(13, 95, 3, 1, 50) });
+            Assert.Equal(11, plan[1]);
+            Assert.Equal(12, plan[7]);      // in the room with them, though the other room is better
+        }
+
+        [Fact]
+        public void A_baby_is_still_housed_as_near_as_possible_when_no_room_has_space()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1, 2), Adult(2, 1), Kid(7, SleeperStage.Baby, 1, 2) },
+                new[] { Bed(10, 90, 1, 2, 0), Bed(11, 30, 2, 1, 5), Bed(12, 80, 3, 1, 60) });
+            Assert.Equal(10, plan[1]);
+            Assert.Equal(11, plan[7]);
+        }
+
+        [Fact]
+        public void A_single_parent_and_their_baby_share_a_room_when_one_has_space_for_both()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1), Kid(7, SleeperStage.Baby, 1) },
+                new[] { Bed(10, 90, 1, 1, 0), Bed(11, 50, 2, 1, 20), Bed(12, 20, 2, 1, 21) });
+            Assert.Equal(11, plan[1]);
+            Assert.Equal(12, plan[7]);
+        }
+
+        [Fact]
+        public void A_child_past_the_baby_stage_finds_the_most_comfortable_bed_not_its_parents_room()
+        {
+            var plan = BedPlan.Deal(new[] { Adult(1), Kid(7, SleeperStage.Child, 1) },
+                new[] { Bed(10, 40, 1, 1, 0), Bed(11, 90, 2, 1, 20), Bed(12, 30, 1, 1, 1) });
+            Assert.Equal(11, plan[7]);
+        }
+
+        [Fact]
         public void The_same_input_gives_the_same_answer()
         {
             var sleepers = new[] { Adult(3), Adult(1, 2), Adult(2, 1), Kid(8, SleeperStage.Child, 1) };
