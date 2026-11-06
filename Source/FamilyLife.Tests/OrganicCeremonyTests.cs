@@ -177,6 +177,30 @@ namespace FamilyLife.Tests
             Assert.False(Eligible(scene,context));
         }
 
+        [Fact]
+        public void Adult_responsibility_scenes_do_not_cast_children()
+        {
+            var registry=Family(out int family);
+            var context=Context(registry,1,3,family,subject:1,subjectB:2);
+            context.Recipient.Child=true;
+            context.Initiator.Profile[(int)Dim.Devotion]=-1.5f;
+            context.Recipient.Profile[(int)Dim.Devotion]=1.5f;
+
+            Assert.False(Eligible(CeremonyMoments.Get("CW-04"),context));
+            Assert.True(Eligible(CeremonyMoments.Get("CW-01"),context));
+        }
+
+        [Fact]
+        public void A_social_branch_remains_connected_to_its_parent_reunion()
+        {
+            var registry=Family(out int family);
+            var branch=registry.CreateFamilyBranch(3,family,"Casey's branch",2000);
+            Assert.NotNull(branch);
+
+            var context=Context(registry,1,3,family);
+            Assert.True(Eligible(CeremonyMoments.Get("CR-10"),context));
+        }
+
         private static PairContext Context(FamilyRegistry registry,int a,int b,int family,int second=0,int subject=0,int subjectB=0,int[] visitors=null)
         {
             var first=registry.GetPerson(a);var secondPerson=registry.GetPerson(b);

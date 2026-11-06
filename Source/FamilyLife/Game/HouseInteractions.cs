@@ -7,6 +7,28 @@ namespace FamilyLife
 {
     internal static class HouseInteractions
     {
+        internal static bool StartRiftRepair(Pawn actor,Pawn other)
+        {
+            var c=FamilyComponent.Current;var r=c?.Registry;
+            var rift=r?.OpenRiftBetween(actor?.thingIDNumber??0,other?.thingIDNumber??0);
+            if(rift==null||actor?.Map==null||other?.Map!=actor.Map||!FamilyLifeMod.Settings.conflicts||
+                !r.MayTryReconcile(rift.Id,Activities.Now)||!Activities.IsFree(other)||other.CurJob?.playerForced==true||
+                !actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            actor.jobs.StartJob(JobMaker.MakeJob(WFL_FlavorDefOf.WFL_Reconcile,other),JobCondition.InterruptForced,null,false,tag:JobTag.Misc);
+            return true;
+        }
+
+        internal static bool StartIncidentRepair(Pawn actor,Pawn other,int incidentId)
+        {
+            var c=FamilyComponent.Current;var incident=c?.Registry.Incidents.FirstOrDefault(i=>i.Id==incidentId&&!i.Resolved);
+            if(incident==null||actor?.Map==null||other?.Map!=actor.Map||incident.ActorId!=other.thingIDNumber||
+                !incident.KnownBy.Contains(actor.thingIDNumber)||!Activities.IsFree(other)||other.CurJob?.playerForced==true||
+                !actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_ReconcileStory,other);job.count=incident.Id;
+            actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);
+            return true;
+        }
+
         /// <summary>
         /// A pawn walks over and raises a petition (or, as head, an invitation). Pawns do this on their own (see <see cref="HouseAgency"/>);
         /// <paramref name="byPlayer"/> is the player choosing it for the pawn they have selected, which may interrupt what that pawn is doing.

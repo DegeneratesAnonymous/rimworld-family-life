@@ -15,6 +15,7 @@ namespace FamilyLife
         private static Type stateType;
         private static Pawn avatar;
         private static bool installed;
+        private static int lastRefreshTick=-60;
 
         internal static void Install(Harmony harmony)
         {
@@ -35,7 +36,10 @@ namespace FamilyLife
         internal static bool TrySync(FamilyComponent component)
         {
             if(!installed||component==null)return false;
-            if(avatar==null||avatar.Discarded)Refresh();
+            int now=Find.TickManager?.TicksGame??0;
+            // SetAvatar normally keeps this current. The bounded fallback covers versions that expose
+            // state but not that method, without reflecting every UI frame in Director mode.
+            if(avatar?.Discarded==true||avatar==null&&now-lastRefreshTick>=60)Refresh();
             if(avatar==null)return false; // Perspective Shift's director mode has no singular character.
             component.PerspectivePawnId=avatar.thingIDNumber;
             component.PerspectiveInitialized=true;
@@ -54,6 +58,7 @@ namespace FamilyLife
 
         private static void Refresh()
         {
+            lastRefreshTick=Find.TickManager?.TicksGame??0;
             if(stateType==null){avatar=null;return;}
             avatar=stateType.GetFields(BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic)
                 .Where(f=>LooksRelevant(f.Name)).Select(f=>Safe(()=>f.GetValue(null))).Select(ExtractPawn).FirstOrDefault(p=>p!=null);

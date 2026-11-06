@@ -123,11 +123,21 @@ namespace FamilyLife
             var r = c.Registry;
             var me = r.GetPerson(actor.thingIDNumber); var them = r.GetPerson(clicked.thingIDNumber);
             if (me == null || them == null) yield break;
+            int myFamily=r.FamilyOf(me.Id),theirFamily=r.FamilyOf(them.Id);
             string a = actor.LabelShort, b = clicked.LabelShort;
             if(actor!=clicked)
                 yield return Act("WFL_Act_SocialMoment".Translate(b),()=>SocialMoments.TryPlayerMoment(actor,clicked));
+            var rift=r.OpenRiftBetween(me.Id,them.Id);
+            if(rift!=null&&FamilyLifeMod.Settings.conflicts&&r.MayTryReconcile(rift.Id,Activities.Now))
+                yield return Act("WFL_Act_MakePeace".Translate(b),()=>HouseInteractions.StartRiftRepair(actor,clicked));
+            var repair=r.Incidents.Where(i=>!i.Resolved&&i.ActorId==them.Id&&i.KnownBy.Contains(me.Id)&&
+                (i.VictimId==me.Id||i.VictimFamily==myFamily&&myFamily!=0)).OrderByDescending(i=>i.Tick).FirstOrDefault();
+            if(repair!=null)
+            {
+                int incidentId=repair.Id;
+                yield return Act("WFL_Act_DiscussIncident".Translate(b),()=>HouseInteractions.StartIncidentRepair(actor,clicked,incidentId));
+            }
             if(me.Juvenile)yield break;
-            int myFamily = r.FamilyOf(me.Id), theirFamily = r.FamilyOf(them.Id);
             bool iLead = myFamily != 0 && r.HeadOf(myFamily) == me.Id, theyLead = theirFamily != 0 && r.HeadOf(theirFamily) == them.Id;
 
             // A petition waiting on this pawn's word.

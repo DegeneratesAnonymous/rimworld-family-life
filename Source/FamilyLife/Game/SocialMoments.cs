@@ -98,8 +98,11 @@ namespace FamilyLife
             // Perspective Shift owns the avatar's immediate actions. Family Life can still observe moments
             // from activities they chose, but does not pull that pawn into an unsolicited conversation.
             var free = everyone.Where(p => !PerspectiveShiftBridge.IsAvatar(p) && Activities.IsFree(p) && Activities.CanSpareAttention(p) && !pending.ContainsKey(p.thingIDNumber)).InRandomOrder().ToList();
+            var targets=free.ToList();
+            var avatar=everyone.FirstOrDefault(PerspectiveShiftBridge.IsAvatar);
+            if(avatar!=null&&!avatar.Dead&&!avatar.Downed&&!avatar.Drafted&&!avatar.InMentalState)targets.Add(avatar);
             var nearby = new NearbyIndex<Pawn>((int)MaxDistance);
-            foreach (var pawn in free) nearby.Add(pawn, pawn.Position.x, pawn.Position.z);
+            foreach (var pawn in targets) nearby.Add(pawn, pawn.Position.x, pawn.Position.z);
             int tried = 0;
             foreach (var a in free)
             {
@@ -111,6 +114,7 @@ namespace FamilyLife
                 foreach (var b in nearby.Within(a.Position.x, a.Position.z, (int)MaxDistance).Where(o => o != a && !pending.ContainsKey(o.thingIDNumber)).Take(3))
                 {
                     if (tried++ >= MaxPairsPerSample) return;
+                    if(PerspectiveShiftBridge.IsAvatar(b)&&!Activities.AttemptAllowed(b.thingIDNumber,now,StartedCooldown,StartChannel))continue;
                     if (!a.CanReach(b, PathEndMode.Touch, Danger.None)) continue;
                     if (TryStart(component, map, a, b, ActivityKind.None, now)) return;
                     if (TryStart(component, map, b, a, ActivityKind.None, now)) return;
@@ -146,7 +150,8 @@ namespace FamilyLife
             // Sometimes the two go for a short walk in the home area instead of standing where they are; that is a different setting for what follows.
             var walkCell = IntVec3.Invalid;
             if (setting == ActivityKind.None)
-                setting = Rand.Chance(0.2f) && WalkIsSafe(map, initiator, recipient, out walkCell) ? ActivityKind.NatureWalk : SettingBetween(initiator, recipient);
+                setting = !PerspectiveShiftBridge.IsAvatar(recipient)&&Rand.Chance(0.2f)&&WalkIsSafe(map,initiator,recipient,out walkCell)
+                    ?ActivityKind.NatureWalk:SettingBetween(initiator,recipient);
             var contexts = new List<PairContext>();
             var first = SocialContext.Build(component, initiator, recipient, setting, false);
             if (first == null) return false;
@@ -168,6 +173,7 @@ namespace FamilyLife
 
             Begin(initiator, recipient, def, chosen, setting == ActivityKind.NatureWalk ? walkCell : IntVec3.Invalid);
             Activities.NoteAttempt(initiator.thingIDNumber, now, StartChannel);
+            if(PerspectiveShiftBridge.IsAvatar(recipient))Activities.NoteAttempt(recipient.thingIDNumber,now,StartChannel);
             return true;
         }
 
@@ -188,8 +194,11 @@ namespace FamilyLife
             pending[initiator.thingIDNumber] = new Pending { DefId = def.Id, RecipientId = recipient.thingIDNumber, ThirdId = ctx.Third?.Id ?? 0, Setting = ctx.Setting, Tick = Activities.Now };
             var talk = JobMaker.MakeJob(WFL_MomentDefOf.WFL_SocialMoment, recipient);
             if (walkCell.IsValid) talk.targetB = walkCell;
-            var listen = JobMaker.MakeJob(WFL_MomentDefOf.WFL_SocialListen, initiator);
-            recipient.jobs.TryTakeOrderedJob(listen, JobTag.Misc);
+            if(!PerspectiveShiftBridge.IsAvatar(recipient))
+            {
+                var listen = JobMaker.MakeJob(WFL_MomentDefOf.WFL_SocialListen, initiator);
+                recipient.jobs.TryTakeOrderedJob(listen, JobTag.Misc);
+            }
             initiator.jobs.TryTakeOrderedJob(talk, JobTag.Misc);
             if (S != null && S.logEvents) Log.Message("[Wil's Family Life] moment " + def.Id + " " + initiator.LabelShort + " -> " + recipient.LabelShort + " (" + ctx.Setting + ")");
         }
@@ -361,7 +370,9 @@ namespace FamilyLife
             var pairs = GatheringBudget.Pairs(people.InRandomOrder().ToList(),60,0);
             int wanted = Mathf.Clamp(Mathf.RoundToInt(3 * Frequency), 1, 5);
             int completed=0;
-            foreach (var pair in pairs.InRandomOrder().OrderByDescending(p => CrossFamily(registry, p.Key, p.Value) ? 1 : 0).Take(wanted * 3))
+            foreach(var pair in pairs.Where(p=>p.Key.Map==p.Value.Map&&p.Key.Position.DistanceTo(p.Value.Position)<=12&&
+                GenSight.LineOfSight(p.Key.Position,p.Value.Position,p.Key.Map)).InRandomOrder()
+                .OrderByDescending(p=>CrossFamily(registry,p.Key,p.Value)?1:0).Take(wanted*3))
             {
                 if (wanted <= 0) break;
                 if (tradition != null && (S == null || S.familyStories))

@@ -36,7 +36,8 @@ namespace FamilyLife.Domain
                 Id=id,Key=id,RequiredTradition=kind,AnyParticipants=true,Bucket=EventBucket.IntraFamily,Scenario=EventScenario.AdultAdult,
                 Weight=EventWeight.Meaningful,CooldownDays=5,Skill="Social",SkillShare=.25f,Motive=new Drive(.5f),
                 Reception=new Drive(.45f,Factor.RecipientTrust,.25f,Factor.RecipientTension,-.2f,Factor.RecipientWarmth,.1f),
-                Opportunity=new[]{new Cond("both people have a reason to be part of this scene",c=>ParticipantsFit(id,kind,c)),new Cond(need,c=>Fits(id,kind,need,c))},Outcomes=Outcomes(style),ConcernsPromise=need=="Promise",
+                Opportunity=new[]{new Cond("both people have a reason to be part of this scene",c=>ParticipantsFit(id,kind,c)),
+                    new Cond("their ages fit the roles in this scene",c=>RolesFit(id,c)),new Cond(need,c=>Fits(id,kind,need,c))},Outcomes=Outcomes(style),ConcernsPromise=need=="Promise",
                 Effects=style=="Repair"?EventEffect.EasesRift:EventEffect.None,ValueAffinity=value
             };
         }
@@ -46,8 +47,8 @@ namespace FamilyLife.Domain
             bool a=Connected(c,c.Initiator.Id),b=Connected(c,c.Recipient.Id);
             // The welcome scenes deliberately pair a host with a guest. Other scenes stay among the
             // people whose relationship to the occasion can be explained from the records.
-            if(id=="CW-02") return InFamily(c,c.Initiator.Id,c.OccasionFamilyId)&&InFamily(c,c.Recipient.Id,c.OccasionSecondFamilyId)
-                || InFamily(c,c.Recipient.Id,c.OccasionFamilyId)&&InFamily(c,c.Initiator.Id,c.OccasionSecondFamilyId);
+            if(id=="CW-02") return InOccasionHouse(c,c.Initiator.Id,c.OccasionFamilyId)&&InOccasionHouse(c,c.Recipient.Id,c.OccasionSecondFamilyId)
+                || InOccasionHouse(c,c.Recipient.Id,c.OccasionFamilyId)&&InOccasionHouse(c,c.Initiator.Id,c.OccasionSecondFamilyId);
             if(id=="CF-07") return a!=b;
             if(id=="CR-02") return a&&b&&(IsVisitor(c,c.Initiator.Id)!=IsVisitor(c,c.Recipient.Id));
             return a&&b;
@@ -56,7 +57,7 @@ namespace FamilyLife.Domain
         private static bool Connected(PairContext c,int person)
         {
             if(person==0||c.Registry==null)return false;
-            if(InFamily(c,person,c.OccasionFamilyId)||InFamily(c,person,c.OccasionSecondFamilyId)||IsVisitor(c,person))return true;
+            if(InOccasionHouse(c,person,c.OccasionFamilyId)||InOccasionHouse(c,person,c.OccasionSecondFamilyId)||IsVisitor(c,person))return true;
             if(person==c.OccasionSubjectId||person==c.OccasionSubjectBId)return true;
             return RelatedTo(c,person,c.OccasionSubjectId)||RelatedTo(c,person,c.OccasionSubjectBId);
         }
@@ -65,6 +66,45 @@ namespace FamilyLife.Domain
         {
             var record=c.Registry?.GetPerson(person);
             return family>0&&record!=null&&c.Registry.BelongsToFamily(record,family);
+        }
+
+        private static bool InOccasionHouse(PairContext c,int person,int family)
+        {
+            if(InFamily(c,person,family))return true;
+            int own=c.Registry.FamilyOf(person);
+            return own>0&&family>0&&SameHouseTree(c.Registry,own,family);
+        }
+
+        private static bool SameHouseTree(FamilyRegistry registry,int first,int second)
+        {
+            var ancestors=new HashSet<int>();
+            for(int id=first,guard=0;id>0&&guard++<16;)
+            {
+                if(!ancestors.Add(id))break;
+                id=registry.GetLineage(id)?.ParentHouseId??0;
+            }
+            for(int id=second,guard=0;id>0&&guard++<16;)
+            {
+                if(ancestors.Contains(id))return true;
+                var next=registry.GetLineage(id)?.ParentHouseId??0;
+                if(next==id)break;
+                id=next;
+            }
+            return false;
+        }
+
+        private static bool RolesFit(string id,PairContext c)
+        {
+            switch(id)
+            {
+                // These scenes assign adult responsibilities: public blame, consequential promises,
+                // house custom disputes, branch fortunes and resource comparisons.
+                case "CW-04":case "CW-06":case "CF-04":case "CF-06":case "CR-05":case "CR-06":case "CR-07":
+                    return !c.Initiator.Child&&!c.Recipient.Child;
+                // A child can meaningfully discuss what someone stood for, but an adult should anchor it.
+                case "CF-05":return !c.Initiator.Child||!c.Recipient.Child;
+                default:return true;
+            }
         }
 
         private static bool IsVisitor(PairContext c,int person)=>c.OccasionVisitorIds?.Contains(person)==true;

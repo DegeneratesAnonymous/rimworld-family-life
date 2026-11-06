@@ -188,7 +188,10 @@ namespace FamilyLife
             }
             if(request!=null)
             {
-                request.InvitedIds=invited.Distinct().Take(64).ToList();
+                // Attendance is judged only against people who could physically attend this map.
+                invited=invited.Where(id=>id==organizer.thingIDNumber||
+                    component.TryGetPawn(id) is Pawn pawn&&pawn.Spawned&&!pawn.Dead&&pawn.Map==organizer.Map).Distinct().Take(64).ToList();
+                request.InvitedIds=invited;
                 if(organizer.Map.zoneManager.ZoneAt(spot) is Zone_Family)request.Influences|=CeremonyInfluence.SuitableVenue;
             }
             return new LordJob_FamilyGathering(spot, organizer, def, request?.Id??0, request?.Kind ?? "", request?.LineageId ?? 0, invited, request?.VisitorIds);

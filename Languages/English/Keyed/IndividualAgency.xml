@@ -81,4 +81,6 @@
 <WFL_Act_AskFood>Ask {0}'s house for food</WFL_Act_AskFood>
 <WFL_Act_OfferFood>Offer food from my house to {0}</WFL_Act_OfferFood>
 <WFL_Act_SocialMoment>Spend time with {0}</WFL_Act_SocialMoment>
+<WFL_Act_MakePeace>Try to make peace with {0}</WFL_Act_MakePeace>
+<WFL_Act_DiscussIncident>Discuss what happened with {0}</WFL_Act_DiscussIncident>
 </LanguageData>
