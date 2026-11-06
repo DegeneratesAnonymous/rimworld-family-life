@@ -117,7 +117,9 @@ namespace FamilyLife
                     if(PerspectiveShiftBridge.IsAvatar(b)&&!Activities.AttemptAllowed(b.thingIDNumber,now,StartedCooldown,StartChannel))continue;
                     if (!a.CanReach(b, PathEndMode.Touch, Danger.None)) continue;
                     if (TryStart(component, map, a, b, ActivityKind.None, now)) return;
-                    if (TryStart(component, map, b, a, ActivityKind.None, now)) return;
+                    // The avatar may receive an approach, but only the player's explicit action may
+                    // make the avatar the initiating pawn and replace its current job.
+                    if(!PerspectiveShiftBridge.IsAvatar(b)&&TryStart(component,map,b,a,ActivityKind.None,now))return;
                 }
             }
         }
