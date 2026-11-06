@@ -40,10 +40,17 @@ namespace FamilyLife
             this.visitors = visitors ?? new List<int>();
         }
 
-        private ThoughtDef Mood => DefDatabase<ThoughtDef>.GetNamedSilentFail(
-            kind == "comingofage" ? "WFL_ComingOfAgeAttended" : (kind == "funeral" || kind == "memorial" ? "WFL_FuneralAttended" :
-            (kind == "wedding" ? "WFL_WeddingAttended" : (kind == "grandreunion" ? "WFL_GrandReunionAttended" :
-            (kind == "reconciliation" ? "WFL_ReconciliationAttended" : "WFL_TraditionAttended")))) ?? ThoughtDefOf.AttendedParty;
+        private ThoughtDef Mood => DefDatabase<ThoughtDef>.GetNamedSilentFail(MoodDefName(kind)) ?? ThoughtDefOf.AttendedParty;
+
+        private static string MoodDefName(string occasion)
+        {
+            if(occasion=="comingofage")return "WFL_ComingOfAgeAttended";
+            if(occasion=="funeral"||occasion=="memorial")return "WFL_FuneralAttended";
+            if(occasion=="wedding")return "WFL_WeddingAttended";
+            if(occasion=="grandreunion")return "WFL_GrandReunionAttended";
+            if(occasion=="reconciliation")return "WFL_ReconciliationAttended";
+            return "WFL_TraditionAttended";
+        }
 
         protected override ThoughtDef AttendeeThought => Mood;
         protected override ThoughtDef OrganizerThought => Mood;
