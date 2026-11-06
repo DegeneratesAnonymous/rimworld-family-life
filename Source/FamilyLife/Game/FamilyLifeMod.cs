@@ -102,6 +102,7 @@ namespace FamilyLife
                     Log.Warning("[Wil's Family Life] Skipped hook " + type.Name + ": " + e.Message);
                 }
             }
+            PerspectiveShiftBridge.Install(harmony);
             LongEventHandler.ExecuteWhenFinished(FamilyTabs.RegisterOnHumanlikes);
             Log.Message("[Wil's Family Life] Loaded (" + applied.Count + " hooks" + (failed.Count > 0 ? ", " + failed.Count + " skipped" : "") + ").");
         }

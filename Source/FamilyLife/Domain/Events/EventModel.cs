@@ -152,6 +152,14 @@ namespace FamilyLife.Domain
         public float QualityHours = -1f; // -1 retains legacy domain-call credit; runtime supplies actual duration or zero for already-recorded activities.
         public float RelationshipPace = 1f; // Runtime tuning; contexts created by older callers retain existing behavior.
         public string TraditionId;
+        // The public occasion that supplied this context. Ceremony moments use these facts instead of
+        // treating every attendee as interchangeable: whose wedding/funeral it is, which houses are
+        // hosting, and which people actually travelled for a reunion.
+        public int OccasionFamilyId;
+        public int OccasionSecondFamilyId;
+        public int OccasionSubjectId;
+        public int OccasionSubjectBId;
+        public IReadOnlyCollection<int> OccasionVisitorIds = Array.Empty<int>();
         public bool ResourcePressure;
         public bool FromActivity;             // reported by a game activity (a story, a meal, a gathering) rather than sampled from two people being near
         public int Now;

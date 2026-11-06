@@ -83,15 +83,15 @@ namespace FamilyLife
                 if(request!=null)
                 {
                     request.MomentsResolved+=moments;
-                    if(TraditionCatalog.IndexOf(request.Kind)>=0)component.Registry.MarkGatheringHeld(requestId,Activities.Now);
+                    float support=(request.Influences.HasFlag(CeremonyInfluence.SuitableVenue) ? .1f : 0f)
+                        +(request.Influences.HasFlag(CeremonyInfluence.HeadSupport) ? .1f : 0f)
+                        +(request.Influences.HasFlag(CeremonyInfluence.Hospitality) ? .1f : 0f);
+                    float outcome=System.Math.Max(-1,System.Math.Min(1,attendance*1.2f-.5f+support));
+                    if(TraditionCatalog.IndexOf(request.Kind)>=0)
+                        component.Registry.MarkGatheringHeld(requestId,Activities.Now,people.Count,request.MomentsResolved,outcome);
                     else
-                    {
-                        float support=(request.Influences.HasFlag(CeremonyInfluence.SuitableVenue) ? .1f : 0f)
-                            +(request.Influences.HasFlag(CeremonyInfluence.HeadSupport) ? .1f : 0f)
-                            +(request.Influences.HasFlag(CeremonyInfluence.Hospitality) ? .1f : 0f);
                         component.Registry.CompleteCeremony(requestId,Activities.Now,people.Count,request.MomentsResolved,
-                            System.Math.Max(-1,System.Math.Min(1,attendance*1.2f-.5f+support)));
-                    }
+                            outcome);
                 }
             }
         }
@@ -114,7 +114,9 @@ namespace FamilyLife
 
             // A gathering is the setting for a few moments between the people who were there, whether or not they are family.
             string occasion=TraditionCatalog.IndexOf(kind)>=0||CeremonyMoments.Supports(kind)?kind:null;
-            return SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration, occasion);
+            var request=requestId==0?null:component.Registry.GatheringRequests.FirstOrDefault(r=>r.Id==requestId);
+            return SocialMoments.OnGathering(people,kind=="reconciliation"?ActivityKind.Reconciliation:ActivityKind.Celebration,occasion,
+                request?.LineageId??lineageId,request?.SecondLineageId??0,request?.SubjectId??0,request?.SubjectBId??0,request?.VisitorIds??visitors);
         }
 
         public override void ExposeData()
@@ -196,7 +198,9 @@ namespace FamilyLife
         public static void Process(FamilyComponent component, int now)
         {
             var settings = FamilyLifeMod.Settings;
-            var due = component.Registry.DueRequests(now).Where(r=>settings==null||(r.Ceremony==CeremonyKind.Tradition?settings.traditions:settings.ceremonies)).ToList();
+            var due = component.Registry.DueRequests(now).Where(r=>settings==null||
+                (r.Ceremony==CeremonyKind.Wedding||r.Ceremony==CeremonyKind.Funeral||r.Ceremony==CeremonyKind.GrandReunion
+                    ?settings.ceremonies:settings.traditions)).ToList();
             if (due.Count == 0) return;
             var requestedHouse=component.Registry.GetLineage(due[0].LineageId);
             var map = requestedHouse==null?Find.AnyPlayerHomeMap:Find.Maps.FirstOrDefault(m=>m.uniqueID==requestedHouse.ZoneMapId)??Find.AnyPlayerHomeMap;
@@ -221,12 +225,8 @@ namespace FamilyLife
                 if(component.Registry.HeadOf(request.LineageId)==organizer.thingIDNumber||component.Registry.RoleInHouse(organizer.thingIDNumber,request.LineageId)==HouseRole.Steward)
                     request.Influences|=CeremonyInfluence.HeadSupport;
                 component.Registry.MarkCeremonyStarted(request.Id,organizer.thingIDNumber,map.uniqueID,now,request.InvitedIds);
-                var arrivals=request.InvitedIds.Select(component.TryGetPawn).Where(p=>p!=null&&p.Spawned&&p.Map==map&&!p.Dead).ToList();
-                if(arrivals.Count>=2)
-                {
-                    string occasion=TraditionCatalog.IndexOf(request.Kind)>=0||CeremonyMoments.Supports(request.Kind)?request.Kind:null;
-                    request.MomentsResolved+=SocialMoments.OnGathering(arrivals,ActivityKind.Celebration,occasion);
-                }
+                // Relationship scenes are resolved from the lord's actual attendees in Cleanup, never
+                // from every invited pawn who merely happens to be somewhere on the map.
             }
             else component.Registry.PostponeRequest(request.Id, now, 2500);
         }

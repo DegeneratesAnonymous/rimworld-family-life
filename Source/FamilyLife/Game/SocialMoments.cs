@@ -95,7 +95,9 @@ namespace FamilyLife
             using (component.Performance.Measure("Shared recreation search")) together = FindShared(component, everyone, now);
             if (together != null) return;
 
-            var free = everyone.Where(p => Activities.IsFree(p) && Activities.CanSpareAttention(p) && !pending.ContainsKey(p.thingIDNumber)).InRandomOrder().ToList();
+            // Perspective Shift owns the avatar's immediate actions. Family Life can still observe moments
+            // from activities they chose, but does not pull that pawn into an unsolicited conversation.
+            var free = everyone.Where(p => !PerspectiveShiftBridge.IsAvatar(p) && Activities.IsFree(p) && Activities.CanSpareAttention(p) && !pending.ContainsKey(p.thingIDNumber)).InRandomOrder().ToList();
             var nearby = new NearbyIndex<Pawn>((int)MaxDistance);
             foreach (var pawn in free) nearby.Add(pawn, pawn.Position.x, pawn.Position.z);
             int tried = 0;
@@ -167,6 +169,18 @@ namespace FamilyLife
             Begin(initiator, recipient, def, chosen, setting == ActivityKind.NatureWalk ? walkCell : IntVec3.Invalid);
             Activities.NoteAttempt(initiator.thingIDNumber, now, StartChannel);
             return true;
+        }
+
+        /// <summary>The played character deliberately reaches out. The actual scene and outcome still come from current relationships and circumstances.</summary>
+        public static bool TryPlayerMoment(Pawn initiator,Pawn recipient)
+        {
+            var component=FamilyComponent.Current;
+            if(component==null||!Enabled||initiator==null||recipient==null||initiator==recipient||!PerspectiveShiftBridge.CanActAs(initiator)
+                ||!initiator.Spawned||!recipient.Spawned||initiator.Map==null||initiator.Map!=recipient.Map||initiator.Dead||recipient.Dead
+                ||!Activities.IsFree(recipient)||recipient.CurJob?.playerForced==true||!Activities.CanSpareAttention(recipient)
+                ||pending.ContainsKey(initiator.thingIDNumber)||pending.ContainsKey(recipient.thingIDNumber)
+                ||!initiator.CanReach(recipient,PathEndMode.Touch,Danger.None))return false;
+            return TryStart(component,initiator.Map,initiator,recipient,ActivityKind.None,Activities.Now);
         }
 
         private static void Begin(Pawn initiator, Pawn recipient, EventDef def, PairContext ctx, IntVec3 walkCell)
@@ -337,7 +351,8 @@ namespace FamilyLife
         }
 
         /// <summary>A gathering is over. A few pairs among those who were there have a moment, most likely those from different families who might yet be reconciled.</summary>
-        public static int OnGathering(List<Pawn> people, ActivityKind kind, string tradition = null)
+        public static int OnGathering(List<Pawn> people,ActivityKind kind,string tradition=null,int family=0,int secondFamily=0,
+            int subject=0,int subjectB=0,IReadOnlyCollection<int> visitors=null)
         {
             if (!Enabled || people == null || people.Count < 2) return 0;
             var component = FamilyComponent.Current;
@@ -354,6 +369,11 @@ namespace FamilyLife
                     var ctx = SocialContext.Build(component, pair.Key, pair.Value, kind, true);
                     if (ctx == null) continue;
                     ctx.TraditionId = tradition;
+                    ctx.OccasionFamilyId=family;
+                    ctx.OccasionSecondFamilyId=secondFamily;
+                    ctx.OccasionSubjectId=subject;
+                    ctx.OccasionSubjectBId=subjectB;
+                    ctx.OccasionVisitorIds=visitors??System.Array.Empty<int>();
                     var catalog=CeremonyMoments.Supports(tradition)?CeremonyMoments.For(tradition):TraditionMoments.All;
                     var def = registry.PickEvent(ctx, catalog, new System.Random(Rand.Int), ChildrenSupported, d => ctx.SameFamily ? S.eventsFamily : S.eventsInterFamily);
                     if (def != null) { Perform(component, def, ctx); wanted--;completed++; continue; }

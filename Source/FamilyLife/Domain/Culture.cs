@@ -496,14 +496,14 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>The gathering took place: the tradition's clock restarts, the culture it expresses grows, and it is remembered.</summary>
-        public FamilyEvent MarkGatheringHeld(int requestId, int now)
+        public FamilyEvent MarkGatheringHeld(int requestId,int now,int attendees=-1,int moments=-1,float outcome=2f)
         {
             var request = GatheringRequests.FirstOrDefault(r => r.Id == requestId);
             if (request == null) return null;
             var lineage = GetLineage(request.LineageId);
             if (lineage == null) return null;
             int index = TraditionCatalog.IndexOf(request.Kind);
-            CompleteCeremony(requestId,now,request.InvitedIds.Count,request.MomentsResolved,0.5f);
+            CompleteCeremony(requestId,now,attendees<0?request.InvitedIds.Count:attendees,moments<0?request.MomentsResolved:moments,outcome>1?0.5f:outcome);
             if (index < 0) return null;
             var record = lineage.Traditions.FirstOrDefault(t => t.Id == request.Kind);
             if (record != null) { record.LastHeldTick = now; record.TimesHeld++; }
@@ -606,10 +606,10 @@ namespace FamilyLife.Domain
                     case FamilyEventKind.CameOfAge: Remember(lineage, MemoryKind.CameOfAge, now, e.A, 0, 1.0f); break;
                     case FamilyEventKind.Reunion: Remember(lineage, MemoryKind.Reunion, now, e.A, 0, 1.0f); break;
                     case FamilyEventKind.PartnershipFormed:
-                        if (a != null && a.SpouseIds.Contains(e.B)) Remember(lineage, MemoryKind.Wedding, now, e.A, e.B, 1.5f);
+                        if (a != null && a.SpouseIds.Contains(e.B)) RememberWedding(lineage,now,e.A,e.B);
                         break;
                     case FamilyEventKind.MarriageFormed:
-                        Remember(lineage,MemoryKind.Wedding,now,e.A,e.B,1.5f);
+                        RememberWedding(lineage,now,e.A,e.B);
                         break;
                     case FamilyEventKind.PartnershipEnded: Remember(lineage, MemoryKind.Parting, now, e.A, e.B, 2.0f); break;
                     case FamilyEventKind.Died:
@@ -632,6 +632,14 @@ namespace FamilyLife.Domain
                         }
                 }
             }
+        }
+
+        private void RememberWedding(int lineage,int now,int a,int b)
+        {
+            if(lineage==0)return;
+            bool duplicate=Memories.Any(m=>m.LineageId==lineage&&m.Kind==MemoryKind.Wedding&&m.Tick==now&&
+                (m.A==a&&m.B==b||m.A==b&&m.B==a));
+            if(!duplicate)Remember(lineage,MemoryKind.Wedding,now,a,b,1.5f);
         }
 
         // ------------------------------------------------------------------ milestones

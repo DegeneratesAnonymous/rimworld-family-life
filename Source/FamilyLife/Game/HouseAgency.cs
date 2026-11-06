@@ -51,7 +51,7 @@ namespace FamilyLife
                 foreach (var person in people.InRandomOrder())
                 {
                     var pawn = c.TryGetPawn(person.Id);
-                    if (pawn == null || !pawn.Spawned || Find.Selector.IsSelected(pawn)) continue;
+                    if (pawn == null || !pawn.Spawned || Find.Selector.IsSelected(pawn) || PerspectiveShiftBridge.IsAvatar(pawn)) continue;
                     if (TryAct(c, r, people, person, pawn)) return;     // one thing per sweep keeps a colony from feeling like a committee
                 }
             }
@@ -119,11 +119,14 @@ namespace FamilyLife
         {
             var actor = context.FirstSelectedPawn;
             var c = FamilyComponent.Current;
-            if (c == null || actor == null || clicked == null || !actor.IsColonistPlayerControlled || !clicked.IsColonist || clicked.HostFaction != null) yield break;
+            if (c == null || actor == null || clicked == null || !PerspectiveShiftBridge.CanActAs(actor) || !actor.IsColonistPlayerControlled || !clicked.IsColonist || clicked.HostFaction != null) yield break;
             var r = c.Registry;
             var me = r.GetPerson(actor.thingIDNumber); var them = r.GetPerson(clicked.thingIDNumber);
-            if (me == null || them == null || me.Juvenile) yield break;
+            if (me == null || them == null) yield break;
             string a = actor.LabelShort, b = clicked.LabelShort;
+            if(actor!=clicked)
+                yield return Act("WFL_Act_SocialMoment".Translate(b),()=>SocialMoments.TryPlayerMoment(actor,clicked));
+            if(me.Juvenile)yield break;
             int myFamily = r.FamilyOf(me.Id), theirFamily = r.FamilyOf(them.Id);
             bool iLead = myFamily != 0 && r.HeadOf(myFamily) == me.Id, theyLead = theirFamily != 0 && r.HeadOf(theirFamily) == them.Id;
 

@@ -32,7 +32,7 @@ namespace FamilyLife
             int head=invitation?speaker.thingIDNumber:other.thingIDNumber;
             if(!r.HearPetition(q.Id,head,Activities.Now)) return;
             // The player is playing the head: the petition waits for them (select the head, right-click the petitioner) instead of being settled for them.
-            if(!invitation && Find.Selector.IsSelected(other))
+            if(!invitation && (Find.Selector.IsSelected(other)||PerspectiveShiftBridge.IsAvatar(other)))
             {
                 Messages.Message("WFL_Petition_Waiting".Translate(speaker.LabelShort,other.LabelShort),speaker,MessageTypeDefOf.NeutralEvent,false);
                 return;

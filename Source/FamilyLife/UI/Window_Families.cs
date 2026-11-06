@@ -57,7 +57,7 @@ namespace FamilyLife
         {
             base.PreOpen();
             var c=FamilyComponent.Current;
-            if(c!=null && !c.PerspectiveInitialized)
+            if(c!=null&&!PerspectiveShiftBridge.TrySync(c)&&!c.PerspectiveInitialized)
             {
                 c.PerspectivePawnId=Find.Selector.SingleSelectedThing is Pawn selected && selected.IsColonist ? selected.thingIDNumber : c.Registry.Persons.FirstOrDefault(p=>p.InColony && !p.Juvenile)?.Id??0;
                 c.PerspectiveInitialized=true;
@@ -168,7 +168,8 @@ namespace FamilyLife
             TooltipHandler.TipRegion(exportRect, "WFL_ExportRecordsTip".Translate());
 
             float tabY = rect.y + 36f;
-            if (Find.Selector.SingleSelectedThing is Pawn picked && picked.IsColonist) component.PerspectivePawnId = picked.thingIDNumber;     // the pawn you play is the one you have selected
+            if(!PerspectiveShiftBridge.TrySync(component)&&Find.Selector.SingleSelectedThing is Pawn picked&&picked.IsColonist)
+                component.PerspectivePawnId=picked.thingIDNumber; // without a character mod, the pawn you selected is the acting perspective
             float tabWidth = Mathf.Min(108f, (rect.width - 4f * 7f) / 8f);
             var tabs = new[] { Tab.Overview, Tab.Relationships, Tab.Moments, Tab.Households, Tab.Manage, Tab.Zone, Tab.Traditions, Tab.History };
             for (int i = 0; i < tabs.Length; i++)
@@ -990,7 +991,7 @@ namespace FamilyLife
                 var e = registry.EventLog[i];
                 if (!relevant.Contains(e.A) && !relevant.Contains(e.B)) continue;
                 if(perspective>0 && e.A!=perspective && e.B!=perspective && e.Third!=perspective) continue;
-                var def = EventCatalog.Get(e.EventId) ?? TraditionMoments.Get(e.EventId);
+                var def = EventCatalog.Get(e.EventId) ?? TraditionMoments.Get(e.EventId) ?? CeremonyMoments.Get(e.EventId);
                 if (def == null) continue;
                 shown++;
                 string marker = e.Weight == EventWeight.Defining ? "* " : (e.Weight == EventWeight.Meaningful ? "- " : "  ");
