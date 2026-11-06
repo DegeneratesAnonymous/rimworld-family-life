@@ -131,6 +131,7 @@ namespace FamilyLife
                 using (Performance.Measure("Update bonds")) griefs = Registry.UpdateBonds(OpinionOf, now, events, ProfileOf);
                 var s = FamilyLifeMod.Settings;
                 Registry.UpdateCulture(ProfileOf, now);
+                if(s==null||s.ceremonies)Registry.UpdateOrganicCeremonies(now,s==null||s.visitingKin);
                 events.AddRange(Registry.UpdateMilestones(now));
                 if (s == null || s.traditions) events.AddRange(Registry.UpdateTraditions(now));
                 if (s == null || s.conflicts) events.AddRange(Registry.UpdateRifts(now, s == null || s.rivalry, events));

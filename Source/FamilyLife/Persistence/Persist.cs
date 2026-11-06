@@ -69,6 +69,9 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Traditions, "traditions", LookMode.Deep);
             Scribe_Values.Look(ref StoriesTold, "storiesTold");
             Scribe_Values.Look(ref MealsShared, "mealsShared");
+            Scribe_Values.Look(ref LastGrandReunionTick,"lastGrandReunion");
+            Scribe_Values.Look(ref NextCeremonyCheckTick,"nextCeremonyCheck");
+            Scribe_Values.Look(ref Standing,"standing");
             Scribe_Values.Look(ref ZoneMapId, "zoneMapId", -1);
             Scribe_Values.Look(ref FoodReserveDays, "foodReserveDays", 1f);
             Scribe_Values.Look(ref FuelReserveDays, "fuelReserveDays", 2f);
@@ -150,7 +153,45 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref NotBefore, "notBefore");
             Scribe_Values.Look(ref Expires, "expires");
             Scribe_Values.Look(ref Attempts, "attempts");
+            Scribe_Values.Look(ref Ceremony,"ceremony",CeremonyKind.None);
+            Scribe_Values.Look(ref State,"ceremonyState",CeremonyState.Planned);
+            Scribe_Values.Look(ref Influences,"influences",CeremonyInfluence.None);
+            Scribe_Values.Look(ref SecondLineageId,"secondLineage");
+            Scribe_Values.Look(ref SubjectBId,"subjectB");
+            Scribe_Values.Look(ref CreatedTick,"created");
+            Scribe_Values.Look(ref StartedTick,"started");
+            Scribe_Values.Look(ref OrganizerId,"organizer");
+            Scribe_Values.Look(ref MapId,"map",-1);
+            Scribe_Values.Look(ref Seed,"seed");
+            Scribe_Values.Look(ref MomentBudget,"momentBudget");
+            Scribe_Values.Look(ref MomentsResolved,"momentsResolved");
+            Scribe_Collections.Look(ref InvitedIds,"invited",LookMode.Value);
+            Scribe_Collections.Look(ref VisitorIds,"visitors",LookMode.Value);
+            if(Scribe.mode==LoadSaveMode.PostLoadInit)
+            {
+                InvitedIds=InvitedIds??new List<int>();VisitorIds=VisitorIds??new List<int>();
+                if(Ceremony==CeremonyKind.None)Ceremony=FamilyRegistry.CeremonyOf(Kind);
+            }
         }
+    }
+
+    public sealed partial class CeremonyRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id,"id");Scribe_Values.Look(ref Kind,"kind",CeremonyKind.None);
+            Scribe_Values.Look(ref LineageId,"lineage");Scribe_Values.Look(ref SecondLineageId,"secondLineage");
+            Scribe_Values.Look(ref SubjectId,"subject");Scribe_Values.Look(ref SubjectBId,"subjectB");Scribe_Values.Look(ref OrganizerId,"organizer");
+            Scribe_Values.Look(ref StartedTick,"started");Scribe_Values.Look(ref CompletedTick,"completed");Scribe_Values.Look(ref Attendees,"attendees");
+            Scribe_Values.Look(ref Visitors,"visitors");Scribe_Values.Look(ref Moments,"moments");Scribe_Values.Look(ref Influences,"influences",CeremonyInfluence.None);
+            Scribe_Values.Look(ref Outcome,"outcome");
+        }
+    }
+
+    public sealed partial class PrestigeRecord : IExposable
+    {
+        public void ExposeData()
+        {Scribe_Values.Look(ref PersonId,"person");Scribe_Values.Look(ref LastTick,"last");Scribe_Values.Look(ref CeremoniesOrganized,"ceremonies");Scribe_Values.Look(ref Value,"value");}
     }
 
     public sealed partial class Memory : IExposable
@@ -413,6 +454,8 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Rifts, "rifts", LookMode.Deep);
             Scribe_Collections.Look(ref Memories, "memories", LookMode.Deep);
             Scribe_Collections.Look(ref GatheringRequests, "gatheringRequests", LookMode.Deep);
+            Scribe_Collections.Look(ref Ceremonies,"ceremonies",LookMode.Deep);
+            Scribe_Collections.Look(ref Prestige,"prestige",LookMode.Deep);
             Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
             Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
             Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
@@ -439,6 +482,7 @@ namespace FamilyLife.Domain
                     Log.Warning("[Wil's Family Life] This save was written by a newer version of the mod (data v" + DataVersion
                         + ", this is v" + CurrentDataVersion + "). Some family data may be ignored.");
                 RebuildIndexes();
+                Ceremonies=Ceremonies??new List<CeremonyRecord>();Prestige=Prestige??new List<PrestigeRecord>();
             }
         }
     }

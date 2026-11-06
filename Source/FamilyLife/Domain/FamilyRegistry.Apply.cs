@@ -29,12 +29,14 @@ namespace FamilyLife.Domain
             obs.Sort((a, b) => a.Id.CompareTo(b.Id));
 
             var prevPartners = new Dictionary<int, HashSet<int>>();
+            var prevSpouses = new Dictionary<int, HashSet<int>>();
             var prevParents = new Dictionary<int, HashSet<int>>();
             foreach (var o in obs)
             {
                 if (personById.TryGetValue(o.Id, out var existing))
                 {
                     prevPartners[o.Id] = new HashSet<int>(existing.PartnerIds());
+                    prevSpouses[o.Id] = new HashSet<int>(existing.SpouseIds);
                     prevParents[o.Id] = new HashSet<int>(existing.ParentIds);
                 }
             }
@@ -58,6 +60,7 @@ namespace FamilyLife.Domain
             AffiliateLateParents(obs, prevParents, newlyRecorded, nowTick, events);
             AffiliateSpouses(nowTick, events);
             ReportPartnershipChanges(obs, prevPartners, newlyRecorded, nowTick, events);
+            ReportMarriages(obs,prevSpouses,newlyRecorded,nowTick,events);
             ReportJoinings(events, nowTick, bootstrapping);
             PlanHouseholds(obs, prevPartners, newlyRecorded, nowTick, events);
 
@@ -397,6 +400,19 @@ namespace FamilyLife.Domain
                 foreach (var other in before.Except(current).Where(id => person.ExIds.Contains(id)))
                     if (reported.Add(PairKey(o.Id, other, false)))
                         events.Add(new FamilyEvent(FamilyEventKind.PartnershipEnded, now, Math.Min(o.Id, other), Math.Max(o.Id, other)));
+            }
+        }
+
+        private void ReportMarriages(List<PersonObservation> obs,Dictionary<int,HashSet<int>> previous,
+            HashSet<int> newlyRecorded,int now,List<FamilyEvent> events)
+        {
+            var reported=new HashSet<long>();
+            foreach(var observation in obs)
+            {
+                if(newlyRecorded.Contains(observation.Id)||!previous.TryGetValue(observation.Id,out var before))continue;
+                foreach(int spouse in personById[observation.Id].SpouseIds.Except(before))
+                    if(reported.Add(PairKey(observation.Id,spouse,true)))
+                        events.Add(new FamilyEvent(FamilyEventKind.MarriageFormed,now,Math.Min(observation.Id,spouse),Math.Max(observation.Id,spouse)));
             }
         }
 

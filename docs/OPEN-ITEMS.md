@@ -13,6 +13,7 @@ Inventory taken from GitHub issues #2, #3, #4, PR #6, and ROADMAP.md. Implementa
 | Crests | Saved editable colors/mark/pattern; shared cached masks; branch variation. | Live rendering/layout acceptance. |
 | Associates and colonist agency | Earned per-house standing; associates/trusted associates; persisted heads and delegated stewards; actual admission/recognition/union conversations; acting-as controls and knowledge-filtered story records. | Live permissions, interruption, successor/reload and secrecy checks; richer associate duties/contracts. This is an initial authority model, not full prestige/succession. |
 | Prestige/succession | Earned house respect and initial head/steward authority provide a foundation. | Rank vs legitimacy, leadership expectations, succession disputes and inheritance. |
+| Organic ceremonies | Autonomous funerals, post-marriage family wedding receptions and annual reunion plans; 26 occasion interactions; bounded history; venue/culture/attendance influence; organizer prestige and house standing. | Live interruption/save-reload acceptance. A later quest slice must safely bring eligible non-hostile distant relatives to the map and return them without teleporting caravans, faction leaders or quest pawns. Dedicated multi-day visits are not claimed by the current gathering implementation. |
 | Political institutions | Design roadmap. Explicit unions require both heads in colonist mode. | Individual elections, family councils, hereditary regimes, individual loyalties and bounded political schemes. |
 | Evidence depth | Witness knowledge/news, measured attention differences, private perspective records and actual repair steps. | Report vs fact vs suspicion, discovery, observed resource inequality, deeper tradition actions and positive story chains. |
 
@@ -34,7 +35,7 @@ Use the existing performance capture to compare the same 30/60/100-pawn save at 
 
 1. Run the expanded live checklist in HOUSES-AND-ROLEPLAY.md, including save/reload, interruptions and measured 3× TPS; complete missing calibration contexts.
 2. Refine evidence, positive cooperation, associate duties and compensation using playtest findings.
-3. Build prestige/legitimacy and succession before elections, coups and deeper political schemes.
+3. Complete safe visiting-relative travel, then build prestige/legitimacy and succession before elections, coups and deeper political schemes.
 
 ## Offline checks for this pass
 

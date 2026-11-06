@@ -39,6 +39,8 @@ namespace FamilyLife.Tests
         [InlineData(typeof(TimeRecord))]
         [InlineData(typeof(TraditionRecord))]
         [InlineData(typeof(GatheringRequest))]
+        [InlineData(typeof(CeremonyRecord))]
+        [InlineData(typeof(PrestigeRecord))]
         [InlineData(typeof(Memory))]
         [InlineData(typeof(Rift))]
         [InlineData(typeof(BondReason))]

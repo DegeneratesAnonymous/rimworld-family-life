@@ -24,20 +24,26 @@ namespace FamilyLife
     {
         private string kind = "";
         private int lineageId;
+        private int requestId;
         private List<int> invited = new List<int>();
+        private List<int> visitors = new List<int>();
 
         public LordJob_FamilyGathering() { }
 
-        public LordJob_FamilyGathering(IntVec3 spot, Pawn organizer, GatheringDef def, string kind, int lineageId, List<int> invited)
+        public LordJob_FamilyGathering(IntVec3 spot, Pawn organizer, GatheringDef def, int requestId, string kind, int lineageId, List<int> invited, List<int> visitors)
             : base(spot, organizer, def)
         {
+            this.requestId = requestId;
             this.kind = kind;
             this.lineageId = lineageId;
             this.invited = invited ?? new List<int>();
+            this.visitors = visitors ?? new List<int>();
         }
 
         private ThoughtDef Mood => DefDatabase<ThoughtDef>.GetNamedSilentFail(
-            kind == "comingofage" ? "WFL_ComingOfAgeAttended" : (kind == "memorial" ? "WFL_MemorialAttended" : (kind == "reconciliation" ? "WFL_ReconciliationAttended" : "WFL_TraditionAttended"))) ?? ThoughtDefOf.AttendedParty;
+            kind == "comingofage" ? "WFL_ComingOfAgeAttended" : (kind == "funeral" || kind == "memorial" ? "WFL_FuneralAttended" :
+            (kind == "wedding" ? "WFL_WeddingAttended" : (kind == "grandreunion" ? "WFL_GrandReunionAttended" :
+            (kind == "reconciliation" ? "WFL_ReconciliationAttended" : "WFL_TraditionAttended")))) ?? ThoughtDefOf.AttendedParty;
 
         protected override ThoughtDef AttendeeThought => Mood;
         protected override ThoughtDef OrganizerThought => Mood;
@@ -49,22 +55,44 @@ namespace FamilyLife
 
         public override string GetReport(Pawn pawn)
         {
-            return ("WFL_Gathering_Report_" + (kind == "comingofage" || kind == "memorial" || kind == "reconciliation" ? kind : "tradition")).Translate().ToString();
+            return ("WFL_Gathering_Report_" + ReportKey(kind)).Translate().ToString();
         }
+
+        internal static string ReportKey(string value) => value=="comingofage"||value=="funeral"||value=="wedding"||value=="grandreunion"||value=="reconciliation"?value:"tradition";
 
         /// <summary>When the gathering ends, relatives who were there together grow closer.</summary>
         public override void Cleanup()
         {
-            base.Cleanup();
-            try { BondAttendees(); }
+            var people=lord?.ownedPawns.Where(p=>p!=null&&p.Spawned&&!p.Dead).ToList()??new List<Pawn>();
+            int moments=0;
+            try { moments=BondAttendees(people); }
             catch (System.Exception e) { Log.Warning("[Wil's Family Life] Could not record who attended a gathering: " + e.Message); }
+            base.Cleanup();
+            var component=FamilyComponent.Current;
+            if(component!=null&&requestId!=0)
+            {
+                float attendance=invited.Count==0?0:people.Count/(float)invited.Count;
+                var request=component.Registry.GatheringRequests.FirstOrDefault(r=>r.Id==requestId);
+                if(request!=null)
+                {
+                    request.MomentsResolved+=moments;
+                    if(TraditionCatalog.IndexOf(request.Kind)>=0)component.Registry.MarkGatheringHeld(requestId,Activities.Now);
+                    else
+                    {
+                        float support=(request.Influences.HasFlag(CeremonyInfluence.SuitableVenue) ? .1f : 0f)
+                            +(request.Influences.HasFlag(CeremonyInfluence.HeadSupport) ? .1f : 0f)
+                            +(request.Influences.HasFlag(CeremonyInfluence.Hospitality) ? .1f : 0f);
+                        component.Registry.CompleteCeremony(requestId,Activities.Now,people.Count,request.MomentsResolved,
+                            System.Math.Max(-1,System.Math.Min(1,attendance*1.2f-.5f+support)));
+                    }
+                }
+            }
         }
 
-        private void BondAttendees()
+        private int BondAttendees(List<Pawn> people)
         {
             var component = FamilyComponent.Current;
-            if (component == null || lord == null) return;
-            var people = lord.ownedPawns.Where(p => p != null && p.Spawned && !p.Dead).ToList();
+            if (component == null) return 0;
             int now = Activities.Now;
             int together = System.Math.Min(durationTicks, 6000);
             // A party does not give everyone a full private conversation with every other attendee.
@@ -78,7 +106,8 @@ namespace FamilyLife
             }
 
             // A gathering is the setting for a few moments between the people who were there, whether or not they are family.
-            SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration, TraditionCatalog.IndexOf(kind) >= 0 ? kind : null);
+            string occasion=TraditionCatalog.IndexOf(kind)>=0||CeremonyMoments.Supports(kind)?kind:null;
+            return SocialMoments.OnGathering(people, kind == "reconciliation" ? ActivityKind.Reconciliation : ActivityKind.Celebration, occasion);
         }
 
         public override void ExposeData()
@@ -86,8 +115,11 @@ namespace FamilyLife
             base.ExposeData();
             Scribe_Values.Look(ref kind, "kind", "");
             Scribe_Values.Look(ref lineageId, "lineageId");
+            Scribe_Values.Look(ref requestId,"requestId");
             Scribe_Collections.Look(ref invited, "invited", LookMode.Value);
+            Scribe_Collections.Look(ref visitors,"visitors",LookMode.Value);
             if (invited == null) invited = new List<int>();
+            if (visitors == null) visitors = new List<int>();
         }
     }
 
@@ -106,7 +138,7 @@ namespace FamilyLife
         protected override void SendLetter(IntVec3 spot, Pawn organizer)
         {
             var request = FamilyGatherings.Active;
-            string key = request != null && (request.Kind == "comingofage" || request.Kind == "memorial" || request.Kind == "reconciliation") ? request.Kind : "tradition";
+            string key = request==null?"tradition":LordJob_FamilyGathering.ReportKey(request.Kind);
             string subject = request != null && request.SubjectId != 0 ? FamilyUi.NameOf(FamilyComponent.Current.Registry, request.SubjectId) : "";
             Find.LetterStack.ReceiveLetter(("WFL_Gathering_Title_" + key).Translate(), ("WFL_Gathering_Text_" + key).Translate(organizer.LabelShort, subject),
                 LetterDefOf.PositiveEvent, new TargetInfo(spot, organizer.Map));
@@ -129,6 +161,14 @@ namespace FamilyLife
                 var organizerRecord = component.Registry.GetPerson(organizer.thingIDNumber);
                 if (organizerRecord != null) hosts.AddRange(organizerRecord.PartnerIds());
                 invited = component.Registry.Invitees(request.LineageId, hosts, component.OpinionBetween);
+                if(request.SecondLineageId!=0)
+                    foreach(var member in component.Registry.MembersOf(request.SecondLineageId).Where(p=>p.InColony))
+                        if(!invited.Contains(member.Id))invited.Add(member.Id);
+                foreach(int id in request.VisitorIds)
+                {
+                    var visitor=component.TryGetPawn(id);
+                    if(visitor!=null&&visitor.Spawned&&visitor.Map==organizer.Map&&!invited.Contains(id))invited.Add(id);
+                }
                 if (request.Kind == "reconciliation")
                 {
                     // The other family is asked as well: that is the whole point of it.
@@ -137,17 +177,22 @@ namespace FamilyLife
                         invited.Add(p.Id);
                 }
             }
-            return new LordJob_FamilyGathering(spot, organizer, def, request?.Kind ?? "", request?.LineageId ?? 0, invited);
+            if(request!=null)
+            {
+                request.InvitedIds=invited.Distinct().Take(64).ToList();
+                if(organizer.Map.zoneManager.ZoneAt(spot) is Zone_Family)request.Influences|=CeremonyInfluence.SuitableVenue;
+            }
+            return new LordJob_FamilyGathering(spot, organizer, def, request?.Id??0, request?.Kind ?? "", request?.LineageId ?? 0, invited, request?.VisitorIds);
         }
 
         /// <summary>Starts at most one due gathering. A gathering that cannot start now is tried again a little later.</summary>
         public static void Process(FamilyComponent component, int now)
         {
             var settings = FamilyLifeMod.Settings;
-            if (settings != null && !settings.traditions) return;
-            var due = component.Registry.DueRequests(now);
+            var due = component.Registry.DueRequests(now).Where(r=>settings==null||(r.Ceremony==CeremonyKind.Tradition?settings.traditions:settings.ceremonies)).ToList();
             if (due.Count == 0) return;
-            var map = Find.AnyPlayerHomeMap;
+            var requestedHouse=component.Registry.GetLineage(due[0].LineageId);
+            var map = requestedHouse==null?Find.AnyPlayerHomeMap:Find.Maps.FirstOrDefault(m=>m.uniqueID==requestedHouse.ZoneMapId)??Find.AnyPlayerHomeMap;
             var def = WFL_GatheringDefOf.WFL_FamilyGathering;
             if (map == null || def == null) return;
             if (GatheringsUtility.AnyLordJobPreventsNewGatherings(map) || !GatheringsUtility.AcceptableGameConditionsToStartGathering(map, def)) return;
@@ -161,7 +206,21 @@ namespace FamilyLife
                 try { started = def.Worker.TryExecute(map, organizer); }
                 finally { Active = null; }
             }
-            if (started) component.Registry.MarkGatheringHeld(request.Id, now);
+            if (started)
+            {
+                var house=component.Registry.GetLineage(request.LineageId);
+                if(house!=null&&(house.CultureOf(Dim.Hearth)>=20||house.CultureOf(Dim.Revelry)>=20))
+                    request.Influences|=CeremonyInfluence.Hospitality;
+                if(component.Registry.HeadOf(request.LineageId)==organizer.thingIDNumber||component.Registry.RoleInHouse(organizer.thingIDNumber,request.LineageId)==HouseRole.Steward)
+                    request.Influences|=CeremonyInfluence.HeadSupport;
+                component.Registry.MarkCeremonyStarted(request.Id,organizer.thingIDNumber,map.uniqueID,now,request.InvitedIds);
+                var arrivals=request.InvitedIds.Select(component.TryGetPawn).Where(p=>p!=null&&p.Spawned&&p.Map==map&&!p.Dead).ToList();
+                if(arrivals.Count>=2)
+                {
+                    string occasion=TraditionCatalog.IndexOf(request.Kind)>=0||CeremonyMoments.Supports(request.Kind)?request.Kind:null;
+                    request.MomentsResolved+=SocialMoments.OnGathering(arrivals,ActivityKind.Celebration,occasion);
+                }
+            }
             else component.Registry.PostponeRequest(request.Id, now, 2500);
         }
 
@@ -177,7 +236,7 @@ namespace FamilyLife
                 var pawn = component.TryGetPawn(record.Id);
                 if (pawn == null || pawn.Map != map || !pawn.Spawned || pawn.Drafted || !GatheringsUtility.PawnCanStartOrContinueGathering(pawn)) continue;
                 if (!Activities.IsFree(pawn, checkCurrentJob: false)) continue;
-                int score = Activities.SocialOf(pawn) + (request.SubjectId != 0 && record.ParentIds.Contains(request.SubjectId) ? 0 : 0)
+                int score = Activities.SocialOf(pawn) + (registry.HeadOf(lineage.Id)==record.Id?30:registry.RoleInHouse(record.Id,lineage.Id)==HouseRole.Steward?15:0)
                             + (registry.GetPerson(request.SubjectId)?.ParentIds.Contains(record.Id) == true ? 20 : 0);
                 if (score > bestScore) { best = pawn; bestScore = score; }
             }

@@ -355,6 +355,45 @@
       </li>
     </stages>
   </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_FuneralAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>6.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>mourned together</label>
+        <description>We gathered to remember someone we lost. It hurt, and it helped.</description>
+        <baseMoodEffect>3</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_WeddingAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>6.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>family wedding</label>
+        <description>We witnessed two people make a life together, surrounded by family.</description>
+        <baseMoodEffect>7</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_GrandReunionAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>5.0</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>grand family reunion</label>
+        <description>Relatives from near and far came together. For a while, the family felt whole.</description>
+        <baseMoodEffect>6</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
 
   <!-- How a conversation or shared moment left someone feeling about the other person. Small and short, and a moment only gives one of these. -->
   <ThoughtDef>

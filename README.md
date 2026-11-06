@@ -12,6 +12,10 @@ Adds 48 value-tradition episodes, witnessed incidents and shared news, family su
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The current development PR adds chosen houses, earned associates, colonist-based actions, crests, gradual relationship updates and household recovery. See [the implementation guide](docs/HOUSES-AND-ROLEPLAY.md) for supported play styles and limits. Prestige, succession disputes, elections and coups remain future work; the new jobs and UI still require live acceptance.
 
+## Organic ceremonies
+
+Families autonomously plan funerals after a death, a family wedding reception after RimWorld records a marriage, and an annual grand-reunion gathering when meaningful relatives are away. The player influences these stories through relationships, family culture, attendance, leadership and the spaces they build rather than selecting outcomes directly. Weddings, funerals and reunions have 26 dedicated social scenes, and successful organizers earn modest personal prestige while the house's standing changes gradually. Reunion travel by distant world pawns is still a separate live-safety milestone; the current ceremony invites those relatives when they are actually present rather than teleporting them out of caravans, quests or other factions.
+
 ## Design principles
 
 - **Standalone.** Harmony is the only hard dependency; Biotech and other mods only enhance.

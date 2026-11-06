@@ -337,27 +337,30 @@ namespace FamilyLife
         }
 
         /// <summary>A gathering is over. A few pairs among those who were there have a moment, most likely those from different families who might yet be reconciled.</summary>
-        public static void OnGathering(List<Pawn> people, ActivityKind kind, string tradition = null)
+        public static int OnGathering(List<Pawn> people, ActivityKind kind, string tradition = null)
         {
-            if (!Enabled || people == null || people.Count < 2) return;
+            if (!Enabled || people == null || people.Count < 2) return 0;
             var component = FamilyComponent.Current;
-            if (component == null) return;
+            if (component == null) return 0;
             var registry = component.Registry;
             var pairs = GatheringBudget.Pairs(people.InRandomOrder().ToList(),60,0);
             int wanted = Mathf.Clamp(Mathf.RoundToInt(3 * Frequency), 1, 5);
+            int completed=0;
             foreach (var pair in pairs.InRandomOrder().OrderByDescending(p => CrossFamily(registry, p.Key, p.Value) ? 1 : 0).Take(wanted * 3))
             {
                 if (wanted <= 0) break;
-                if (tradition != null && FamilyLifeMod.Settings.familyStories)
+                if (tradition != null && (S == null || S.familyStories))
                 {
                     var ctx = SocialContext.Build(component, pair.Key, pair.Value, kind, true);
                     if (ctx == null) continue;
                     ctx.TraditionId = tradition;
-                    var def = registry.PickEvent(ctx, TraditionMoments.All, new System.Random(Rand.Int), ChildrenSupported, d => ctx.SameFamily ? S.eventsFamily : S.eventsInterFamily);
-                    if (def != null) { Perform(component, def, ctx); wanted--; continue; }
+                    var catalog=CeremonyMoments.Supports(tradition)?CeremonyMoments.For(tradition):TraditionMoments.All;
+                    var def = registry.PickEvent(ctx, catalog, new System.Random(Rand.Int), ChildrenSupported, d => ctx.SameFamily ? S.eventsFamily : S.eventsInterFamily);
+                    if (def != null) { Perform(component, def, ctx); wanted--;completed++; continue; }
                 }
-                if (OnActivity(kind, pair.Key, pair.Value)) wanted--;
+                if (OnActivity(kind, pair.Key, pair.Value)){wanted--;completed++;}
             }
+            return completed;
         }
 
         private static bool CrossFamily(FamilyRegistry registry, Pawn a, Pawn b)

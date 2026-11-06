@@ -124,6 +124,10 @@
   <WFL_S_BedsideTip>Relatives who are close to someone unwell may sit with them.</WFL_S_BedsideTip>
   <WFL_S_Traditions>Family traditions and gatherings</WFL_S_Traditions>
   <WFL_S_TraditionsTip>Families take up traditions from what they value, and sometimes hold gatherings for them, for a coming of age, or to remember someone.</WFL_S_TraditionsTip>
+  <WFL_S_Ceremonies>Autonomous family ceremonies</WFL_S_Ceremonies>
+  <WFL_S_CeremoniesTip>Families plan weddings and funerals themselves when life gives them a reason. Your relationships, spaces and choices influence how they unfold.</WFL_S_CeremoniesTip>
+  <WFL_S_VisitingKin>Annual grand family reunions</WFL_S_VisitingKin>
+  <WFL_S_VisitingKinTip>Established families may arrange an annual reunion when they have living relatives away from the colony. Visiting relatives who are present are invited automatically.</WFL_S_VisitingKinTip>
   <WFL_S_Conflicts>Family conflict</WFL_S_Conflicts>
   <WFL_S_ConflictsTip>Tension that lasts can become a rift between relatives. Rifts can be mended with time together.</WFL_S_ConflictsTip>
   <WFL_S_Rivalry>Sibling rivalry</WFL_S_Rivalry>
@@ -138,12 +142,41 @@
   <WFL_Gathering_Report_tradition>at a family gathering.</WFL_Gathering_Report_tradition>
   <WFL_Gathering_Report_comingofage>celebrating a coming of age.</WFL_Gathering_Report_comingofage>
   <WFL_Gathering_Report_memorial>remembering someone.</WFL_Gathering_Report_memorial>
+  <WFL_Gathering_Report_funeral>at a family funeral.</WFL_Gathering_Report_funeral>
+  <WFL_Gathering_Report_wedding>at a family wedding.</WFL_Gathering_Report_wedding>
+  <WFL_Gathering_Report_grandreunion>at a grand family reunion.</WFL_Gathering_Report_grandreunion>
   <WFL_Gathering_Title_tradition>Family tradition</WFL_Gathering_Title_tradition>
   <WFL_Gathering_Text_tradition>{0} is bringing the family together for a tradition.</WFL_Gathering_Text_tradition>
   <WFL_Gathering_Title_comingofage>Coming of age</WFL_Gathering_Title_comingofage>
   <WFL_Gathering_Text_comingofage>{0} is bringing the family together to celebrate {1} becoming an adult.</WFL_Gathering_Text_comingofage>
   <WFL_Gathering_Title_memorial>Remembering</WFL_Gathering_Title_memorial>
   <WFL_Gathering_Text_memorial>{0} is gathering the family to remember {1}.</WFL_Gathering_Text_memorial>
+  <WFL_Gathering_Title_funeral>Family funeral</WFL_Gathering_Title_funeral>
+  <WFL_Gathering_Text_funeral>{0} is gathering the family to mourn {1} and remember their life.</WFL_Gathering_Text_funeral>
+  <WFL_Gathering_Title_wedding>Family wedding</WFL_Gathering_Title_wedding>
+  <WFL_Gathering_Text_wedding>{0} has brought the families together for the wedding of {1}.</WFL_Gathering_Text_wedding>
+  <WFL_Gathering_Title_grandreunion>Grand family reunion</WFL_Gathering_Title_grandreunion>
+  <WFL_Gathering_Text_grandreunion>{0} is gathering relatives from near and far for a grand family reunion.</WFL_Gathering_Text_grandreunion>
+  <WFL_Ceremonies_Title>Family ceremonies</WFL_Ceremonies_Title>
+  <WFL_Ceremony_None>No ceremony is currently planned. Families arrange them when their lives and relationships give them a reason.</WFL_Ceremony_None>
+  <WFL_Ceremony_Planned>{0} — expected around {1}. Shaped by: {2}.</WFL_Ceremony_Planned>
+  <WFL_Ceremony_Recent>{0} — {1}: {2} attended and {3} notable interactions unfolded.</WFL_Ceremony_Recent>
+  <WFL_Ceremony_Prestige>Prestige earned through public service: {0}.</WFL_Ceremony_Prestige>
+  <WFL_Ceremony_Tradition>family tradition</WFL_Ceremony_Tradition>
+  <WFL_Ceremony_ComingOfAge>coming of age</WFL_Ceremony_ComingOfAge>
+  <WFL_Ceremony_Funeral>family funeral</WFL_Ceremony_Funeral>
+  <WFL_Ceremony_Reconciliation>reconciliation gathering</WFL_Ceremony_Reconciliation>
+  <WFL_Ceremony_Wedding>family wedding</WFL_Ceremony_Wedding>
+  <WFL_Ceremony_GrandReunion>grand family reunion</WFL_Ceremony_GrandReunion>
+  <WFL_Ceremony_Influence_None>family initiative</WFL_Ceremony_Influence_None>
+  <WFL_Ceremony_Influence_Engagement>an engagement</WFL_Ceremony_Influence_Engagement>
+  <WFL_Ceremony_Influence_RecentDeath>a recent death</WFL_Ceremony_Influence_RecentDeath>
+  <WFL_Ceremony_Influence_MissingKin>relatives living far away</WFL_Ceremony_Influence_MissingKin>
+  <WFL_Ceremony_Influence_FamilyCulture>family values and traditions</WFL_Ceremony_Influence_FamilyCulture>
+  <WFL_Ceremony_Influence_StrongRelationships>strong family relationships</WFL_Ceremony_Influence_StrongRelationships>
+  <WFL_Ceremony_Influence_HeadSupport>support from the family head</WFL_Ceremony_Influence_HeadSupport>
+  <WFL_Ceremony_Influence_SuitableVenue>a suitable family space</WFL_Ceremony_Influence_SuitableVenue>
+  <WFL_Ceremony_Influence_Hospitality>the family's hospitality</WFL_Ceremony_Influence_Hospitality>
   <WFL_Chron_CameOfAge>{0} came of age.</WFL_Chron_CameOfAge>
   <WFL_Chron_Reunion>{0} came back after a long time away.</WFL_Chron_Reunion>
   <WFL_Chron_Anniversary>{0} and {1} marked another year together.</WFL_Chron_Anniversary>

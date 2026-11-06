@@ -891,6 +891,20 @@ namespace FamilyLife
         private void DrawMoments(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
             int perspective=component.PerspectivePawnId;
+            Heading(view, ref y, "WFL_Ceremonies_Title".Translate());
+            var plans=registry.GatheringRequests.Where(r=>r.LineageId==lineage.Id&&r.Ceremony!=CeremonyKind.Tradition).OrderBy(r=>r.NotBefore).Take(6).ToList();
+            foreach(var plan in plans)
+                Line(view,ref y,"WFL_Ceremony_Planned".Translate(("WFL_Ceremony_"+plan.Ceremony).Translate(),FamilyUi.Date(plan.NotBefore),
+                    CeremonyInfluences(plan.Influences)),0f,false);
+            foreach(var ceremony in registry.Ceremonies.Where(c=>c.LineageId==lineage.Id&&c.Kind!=CeremonyKind.Tradition).OrderByDescending(c=>c.CompletedTick).Take(4))
+                Line(view,ref y,"WFL_Ceremony_Recent".Translate(FamilyUi.Date(ceremony.CompletedTick),("WFL_Ceremony_"+ceremony.Kind).Translate(),
+                    ceremony.Attendees,ceremony.Moments),0f,true);
+            if(plans.Count==0&&!registry.Ceremonies.Any(c=>c.LineageId==lineage.Id&&c.Kind!=CeremonyKind.Tradition))
+                Line(view,ref y,"WFL_Ceremony_None".Translate(),0f,true);
+            var publicFigures=registry.Prestige.Where(p=>registry.FamilyOf(p.PersonId)==lineage.Id&&p.Value>0)
+                .OrderByDescending(p=>p.Value).Take(5).ToList();
+            if(publicFigures.Count>0)
+                Line(view,ref y,"WFL_Ceremony_Prestige".Translate(string.Join(", ",publicFigures.Select(p=>FamilyUi.NameOf(registry,p.PersonId)+" "+p.Value.ToString("0.0")))),0f,true);
             Heading(view, ref y, "WFL_Agency_Title".Translate());
             foreach (var person in registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile && (perspective==0 || p.Id==perspective)).Take(24))
             {
@@ -984,6 +998,13 @@ namespace FamilyLife
                 Line(view, ref y, marker + FamilyUi.Date(e.Tick) + " - " + ("WFL_Ev_" + e.EventId.Replace('-', '_') + "_Title").Translate() + ": " + text, 0f, e.Weight == EventWeight.Ambient);
             }
             if (shown == 0) Line(view, ref y, "WFL_Moments_None".Translate(), 0f, true);
+        }
+
+        private static string CeremonyInfluences(CeremonyInfluence influences)
+        {
+            if(influences==CeremonyInfluence.None)return "WFL_Ceremony_Influence_None".Translate();
+            return string.Join(", ",Enum.GetValues(typeof(CeremonyInfluence)).Cast<CeremonyInfluence>()
+                .Where(i=>i!=CeremonyInfluence.None&&influences.HasFlag(i)).Select(i=>("WFL_Ceremony_Influence_"+i).Translate().ToString()));
         }
 
         private static void Line(Rect view, ref float y, string key, float indent, bool dim, params string[] args)
