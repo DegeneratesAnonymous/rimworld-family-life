@@ -72,6 +72,14 @@ namespace FamilyLife
                         .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
                     if (guest != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Admission, true, guest)) return true;
                 }
+                // Standing is given, not asked for: a head honors a member who has earned their trust and the house's respect.
+                if (Rand.Chance(.2f) && (r.GetLineage(mine)?.Stewards.Count ?? 0) < 2)
+                {
+                    var honored = people.Where(o => o.Id != me.Id && r.FamilyOf(o.Id) == mine && r.RoleInHouse(o.Id, mine) == HouseRole.Member &&
+                            Wants(r, o.Id, mine, PetitionKind.Recognition))
+                        .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
+                    if (honored != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Recognition, true, honored)) return true;
+                }
                 // A small house may seek to join a larger one it trusts.
                 if (Rand.Chance(.15f) && r.LivingCount(mine, Presence.Colony) <= 2)
                 {
@@ -87,9 +95,6 @@ namespace FamilyLife
                 foreach (var house in r.Lineages.Where(l => l.AbsorbedIntoId == 0 && l.Id != mine && r.LivingCount(l.Id, Presence.Colony) > 0))
                     if (Wants(r, me.Id, house.Id, PetitionKind.Admission) && HouseInteractions.StartPetition(pawn, house.Id, PetitionKind.Admission)) return true;
             }
-            // A member who has proven themselves seeks a steward's standing.
-            if (mine != 0 && Rand.Chance(.2f) && r.RoleInHouse(me.Id, mine) == HouseRole.Member && (r.GetLineage(mine)?.Stewards.Count ?? 0) < 2 &&
-                Wants(r, me.Id, mine, PetitionKind.Recognition) && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Recognition)) return true;
             return false;
         }
     }

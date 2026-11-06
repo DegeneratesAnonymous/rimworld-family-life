@@ -38,7 +38,8 @@ namespace FamilyLife
                 return;
             }
             bool accept;
-            if(invitation) accept=HouseAgency.WouldAcceptInvitation(r,other.thingIDNumber,speaker.thingIDNumber,q.FamilyId);
+            if(invitation && q.Kind==PetitionKind.Recognition) accept=r.WouldAcceptPetition(q,head);       // an honor from the head: the head's own test, not the invitee's
+            else if(invitation) accept=HouseAgency.WouldAcceptInvitation(r,other.thingIDNumber,speaker.thingIDNumber,q.FamilyId);
             else accept=r.WouldAcceptPetition(q,head);
             Decide(c,q,head,accept,speaker,other);
         }

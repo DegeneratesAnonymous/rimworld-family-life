@@ -25,12 +25,13 @@ namespace FamilyLife
             public bool Started;
             public Dictionary<int, int> StartAt = new Dictionary<int, int>();      // when each person sets off, so they do not all stand up at once
             public HashSet<int> Sent = new HashSet<int>();
+            public HashSet<int> Seated = new HashSet<int>();      // sitting at the table, waiting for the rest or eating
             public Map Map;
             public Building Table;
             public HashSet<int> Members = new HashSet<int>();
         }
 
-        private const int GroupLife = 2500, Cooldown = 10000, InviteRadius = 45, MaxGuests = 7, ScanEvery = 250;
+        private const int GroupLife = 2500, Cooldown = 10000, InviteRadius = 45, MaxGuests = 7, ScanEvery = 250, MaxWait = 1500;
         private const float InviteHunger = 0.65f;        // a relative who is fuller than this is not asked
         private const float CallerHunger = 0.5f;         // someone has to be this hungry for a mealtime to be called at all
         private const float HoldFloor = 0.15f;           // below this nobody waits for the call
@@ -242,6 +243,30 @@ namespace FamilyLife
             return best;
         }
 
+        /// <summary>
+        /// Asked every tick by someone sitting at the table with food. True while a relative who was called is still on the way (or has not set off
+        /// yet), so the meal begins together. Never for long: late or stuck relatives are given up on after <see cref="MaxWait"/> ticks.
+        /// </summary>
+        public static bool ShouldWaitForTable(Pawn pawn)
+        {
+            if (groups.Count == 0 || !Enabled || pawn?.Map == null) return false;
+            int now = Find.TickManager.TicksGame, me = pawn.thingIDNumber;
+            var group = groups.FirstOrDefault(g => g.StartAt.ContainsKey(me) && g.Map == pawn.Map);
+            if (group == null) return false;
+            group.Seated.Add(me);
+            if (now > group.StartTick + MaxWait) return false;
+            var component = FamilyComponent.Current;
+            if (component == null) return false;
+            foreach (int id in group.StartAt.Keys)
+            {
+                if (id == me || group.Seated.Contains(id)) continue;
+                var other = component.TryGetPawn(id);
+                if (other == null || other.Map != group.Map || !Eats(other) || !Able(other)) continue;
+                if (!group.Sent.Contains(id) || other.CurJobDef == JobDefOf.Ingest) return true;       // still coming
+            }
+            return false;
+        }
+
         /// <summary>Called when someone looks for somewhere to eat: if they are part of a mealtime, a seat at its table, else leave it to the game.</summary>
         public static bool TrySeat(Pawn pawn, ref IntVec3 cell)
         {
@@ -253,6 +278,25 @@ namespace FamilyLife
             if (seats.Count == 0) return false;
             cell = seats.OrderBy(c => (c - pawn.Position).LengthHorizontalSquared).First();
             return true;
+        }
+    }
+
+    /// <summary>Whoever has sat down does not start eating until the rest of the family called to the table are seated too.</summary>
+    [HarmonyPatch(typeof(Toils_Ingest), nameof(Toils_Ingest.ChewIngestible))]
+    internal static class Patch_FamilyMealWait
+    {
+        private static void Postfix(Pawn chewer, Toil __result)
+        {
+            try
+            {
+                var inner = __result.tickAction;
+                __result.tickAction = () =>
+                {
+                    inner?.Invoke();
+                    if (FamilyMeals.ShouldWaitForTable(chewer)) chewer.jobs.curDriver.ticksLeftThisToil++;       // the chewing clock stands still
+                };
+            }
+            catch (System.Exception ex) { HookSafety.Report("family mealtime wait", ex); }
         }
     }
 
