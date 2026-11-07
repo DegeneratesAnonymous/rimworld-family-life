@@ -327,6 +327,14 @@ namespace FamilyLife
                 if (rep == null || now - house.Crime.LastPlanTick < 2 * Day || rep.CurJobDef == WFL_StoryDefOf.WFL_ProtectionOffer) return;
                 var target = ProtectionTargets(c, house, map, now).FirstOrDefault();
                 var head = target == null ? null : Spawned(c, r.HeadOf(target.Id));
+                if(head!=null&&PerspectiveShiftBridge.IsAvatar(head))
+                {
+                    var bond=r.GetBond(head.thingIDNumber,rep.thingIDNumber);float trust=bond?.Trust??0f,tension=bond?.Tension??0f;
+                    bool needs=(target.Situation?.Safety??50f)<50f&&trust>=20f,afraid=tension>=40f&&trust<20f;
+                    if(r.ProposeProtection(house.Id,target.Id,15,now,afraid&&!needs)!=null)
+                    {house.Crime.LastPlanTick=now;Messages.Message("WFL_Protection_Waiting".Translate(head.LabelShort),head,MessageTypeDefOf.NeutralEvent,false);}
+                    return;
+                }
                 if (head != null && GovernanceMeetings.Start(rep, head, WFL_StoryDefOf.WFL_ProtectionOffer, target.Id)) house.Crime.LastPlanTick = now;
                 return;
             }
@@ -485,6 +493,8 @@ namespace FamilyLife
                 else if (coup.Stage == CoupStage.Executing && organizer.CurJobDef != WFL_StoryDefOf.WFL_CoupConfront)
                 {
                     var leader = Spawned(c, coup.TargetLeaderId);
+                    if(leader!=null&&PerspectiveShiftBridge.IsAvatar(leader))
+                    {if(now-coup.StageTick>3*Day)r.AvoidCoupConfrontation(coup.Id,now);continue;}
                     if (leader != null && leader.Map == organizer.Map) GovernanceMeetings.Start(organizer, leader, WFL_StoryDefOf.WFL_CoupConfront, coup.Id);
                     else if (now - coup.StageTick > 3 * Day) r.ResolveCoup(coup.Id, political, now);
                 }

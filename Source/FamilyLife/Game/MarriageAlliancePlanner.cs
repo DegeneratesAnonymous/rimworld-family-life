@@ -78,7 +78,7 @@ namespace FamilyLife
             int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(component.Registry,otherFamily);
             var other=component.TryGetPawn(otherId);
             if(other==null||other==actor||!other.Spawned||other.Map!=actor.Map||!Activities.IsFree(other)||other.CurJob?.playerForced==true||
-                (!byPlayer&&PerspectiveShiftBridge.IsAvatar(other))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+                (!byPlayer&&(Find.Selector.IsSelected(other)||PerspectiveShiftBridge.IsAvatar(other)))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
             var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageNegotiation,other);job.count=alliance.Id;
             GovernanceMeetings.PreferOffice(job,component,family,actor,other);
@@ -129,7 +129,8 @@ namespace FamilyLife
                 if(!component.Registry.BeginMarriageConsent(alliance.Id,pawnId,representative.thingIDNumber,Activities.Now))return false;
                 ResolveConsent(component,alliance,target);return true;
             }
-            if(target.Map!=representative.Map||!Activities.IsFree(target)||target.CurJob?.playerForced==true||(!byPlayer&&PerspectiveShiftBridge.IsAvatar(target))||!representative.CanReach(target,PathEndMode.Touch,Danger.None))return false;
+            if(target.Map!=representative.Map||!Activities.IsFree(target)||target.CurJob?.playerForced==true||
+                (!byPlayer&&(Find.Selector.IsSelected(target)||PerspectiveShiftBridge.IsAvatar(target)))||!representative.CanReach(target,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(representative)||representative.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(representative)))return false;
             var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageConsent,target);job.count=alliance.Id;
             GovernanceMeetings.PreferOffice(job,component,family,representative,target);
@@ -167,7 +168,8 @@ namespace FamilyLife
             int family=c.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||
                 !c.Registry.MayDecide(actor.thingIDNumber,family,HouseDecision.MarriageUnion))return false;
             int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(c.Registry,otherFamily);var other=c.TryGetPawn(otherId);
-            if(other==null||other.Map!=actor.Map||!other.Spawned||!Activities.IsFree(other)||other.CurJob?.playerForced==true||(!byPlayer&&PerspectiveShiftBridge.IsAvatar(other))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            if(other==null||other.Map!=actor.Map||!other.Spawned||!Activities.IsFree(other)||other.CurJob?.playerForced==true||
+                (!byPlayer&&(Find.Selector.IsSelected(other)||PerspectiveShiftBridge.IsAvatar(other)))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
             var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_HouseUnionNegotiation,other);job.count=alliance.Id;
             GovernanceMeetings.PreferOffice(job,c,family,actor,other);actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;

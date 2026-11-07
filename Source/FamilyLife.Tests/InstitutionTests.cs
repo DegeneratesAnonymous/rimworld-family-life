@@ -241,6 +241,14 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Declining_a_confrontation_never_counts_as_consent_or_a_remote_coup_result()
+        {
+            var r=Ruled(out var coup);coup.Stage=CoupStage.Executing;coup.Setbacks=2;
+            Assert.True(r.AvoidCoupConfrontation(coup.Id,6*Day));
+            Assert.Equal(CoupState.Abandoned,coup.State);Assert.Equal(1,r.Institution.LeaderId);
+        }
+
+        [Fact]
         public void A_plan_against_a_ruler_who_is_already_gone_is_dropped()
         {
             var r = Ruled(out var coup);

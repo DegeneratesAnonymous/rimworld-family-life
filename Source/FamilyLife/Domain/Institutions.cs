@@ -405,6 +405,17 @@ namespace FamilyLife.Domain
             AdvanceCoup(coupId, ctx, now, false);
         }
 
+        /// <summary>Silence or a refusal from a player-controlled leader is never consent to a confrontation; the scheme loses momentum instead.</summary>
+        public bool AvoidCoupConfrontation(int coupId,int now)
+        {
+            var coup=Coups.FirstOrDefault(c=>c.Id==coupId);
+            if(coup==null||!coup.Open||coup.Stage!=CoupStage.Executing)return false;
+            coup.Setbacks++;coup.StageTick=now;
+            if(coup.Setbacks>=3){coup.State=CoupState.Abandoned;coup.EndedTick=now;}
+            else coup.Stage=CoupStage.Preparing;
+            return true;
+        }
+
         /// <summary>Both sides can step back before the plan lands; it ends cleanly and eases the strain rather than leaving a loose thread.</summary>
         public bool ReconcileCoup(int coupId, int now)
         {

@@ -23,11 +23,11 @@ namespace FamilyLife
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
         internal static int NextToken() => (int)(unchecked((uint)((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000u) + 1;
 
-        internal static bool Start(Pawn actor, Pawn other, JobDef def, int id, bool byPlayer = false)
+        internal static bool Start(Pawn actor, Pawn other, JobDef def, int id, bool byPlayer = false, bool recipientConsented = false)
         {
             if (actor == null || other == null || def == null || actor == other || !actor.Spawned || !other.Spawned || actor.Map != other.Map) return false;
-            if (!byPlayer && (!Activities.IsFree(actor) || actor.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(actor))) return false;
-            if (!Activities.IsFree(other) || other.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(other)) return false;
+            if (!byPlayer && (!Activities.IsFree(actor) || actor.CurJob?.playerForced == true || Find.Selector.IsSelected(actor) || PerspectiveShiftBridge.IsAvatar(actor))) return false;
+            if (!Activities.IsFree(other) || other.CurJob?.playerForced == true || (Find.Selector.IsSelected(other) || PerspectiveShiftBridge.IsAvatar(other)) && !recipientConsented) return false;
             if (!actor.CanReach(other, PathEndMode.Touch, Danger.None)) return false;
             var job = JobMaker.MakeJob(def, other); job.count = id;
             if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate)

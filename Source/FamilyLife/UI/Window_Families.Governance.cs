@@ -52,6 +52,17 @@ namespace FamilyLife
                     new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.AnswerCoup(id, viewer, RecruitAnswer.Refuse, now)),
                     new KeyValuePair<string, System.Action>("WFL_Ask_Expose".Translate(), () => registry.AnswerCoup(id, viewer, RecruitAnswer.Expose, now)));
             }
+            foreach(var coup in registry.Coups.Where(c=>c.Open&&c.Stage==CoupStage.Executing&&c.TargetLeaderId==viewer).ToList())
+            {
+                int id=coup.Id;var organizer=component.TryGetPawn(coup.OrganizerId);
+                Answer(ref y,"WFL_Ask_CoupConfront".Translate(FamilyUi.NameOf(registry,coup.OrganizerId)),
+                    new KeyValuePair<string,System.Action>("WFL_Ask_Meet".Translate(),()=>
+                    {
+                        if(organizer==null||organizer.Map!=pawn.Map||!Activities.IsFree(organizer)||!GovernanceMeetings.Start(organizer,pawn,WFL_StoryDefOf.WFL_CoupConfront,id,recipientConsented:true))
+                            Messages.Message("WFL_House_ActionUnavailable".Translate(),MessageTypeDefOf.NeutralEvent,false);
+                    }),
+                    new KeyValuePair<string,System.Action>("WFL_Ask_DeclineMeeting".Translate(),()=>registry.AvoidCoupConfrontation(id,now)));
+            }
             foreach (var heist in registry.Heists.Where(h => h.State == HeistState.Planning && h.Participants.Any(p => p.PersonId == viewer && p.Stance == CrimeStance.Unasked)).ToList())
             {
                 int id = heist.Id;

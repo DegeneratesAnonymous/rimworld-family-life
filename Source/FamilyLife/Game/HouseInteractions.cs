@@ -40,7 +40,7 @@ namespace FamilyLife
             var r=c.Registry;int head=r.HeadOf(family);
             var other=invitation?invitee:c.TryGetPawn(head);
             if(other==null || other==actor || !other.Spawned || other.Map!=actor.Map || !Activities.IsFree(other) || other.CurJob?.playerForced==true ||
-                (!byPlayer&&PerspectiveShiftBridge.IsAvatar(other))||!Activities.CanSpareAttention(other) || !actor.CanReach(other,PathEndMode.Touch,Danger.None)) return false;
+                (!byPlayer&&(Find.Selector.IsSelected(other)||PerspectiveShiftBridge.IsAvatar(other)))||!Activities.CanSpareAttention(other) || !actor.CanReach(other,PathEndMode.Touch,Danger.None)) return false;
             if(invitation && actor.thingIDNumber!=head) return false;
             int subject=invitation?other.thingIDNumber:actor.thingIDNumber;
             var q=r.HousePetitions.FirstOrDefault(p=>p.PersonId==subject && p.FamilyId==family && p.Kind==kind && p.State==PetitionState.Proposed) ?? r.ProposePetition(subject,family,kind,Activities.Now);if(q==null)return false;
