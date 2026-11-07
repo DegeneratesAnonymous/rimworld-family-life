@@ -88,9 +88,14 @@ namespace FamilyLife.Domain
         public MarriageAlliance RecordMarriageOpportunity(MarriageAllianceAssessment a,int now)
         {
             if(a==null||!a.WorthConsidering)return null;
-            var existing=MarriageAlliances.FirstOrDefault(x=>x.State<=MarriageAllianceState.Supported&&((x.PawnA==a.PawnA&&x.PawnB==a.PawnB)||(x.PawnA==a.PawnB&&x.PawnB==a.PawnA)));
+            var existing=MarriageAlliances.FirstOrDefault(x=>ActiveMatch(x.State)&&((x.PawnA==a.PawnA&&x.PawnB==a.PawnB)||(x.PawnA==a.PawnB&&x.PawnB==a.PawnA)));
             if(existing!=null)return existing;
-            if(MarriageAlliances.Count>=64)MarriageAlliances.RemoveAll(x=>x.State>=MarriageAllianceState.Fulfilled);
+            while(MarriageAlliances.Count>=64)
+            {
+                var old=MarriageAlliances.Where(Evictable).OrderBy(x=>x.LastChangedTick).ThenBy(x=>x.Id).FirstOrDefault();
+                if(old==null)break;
+                MarriageAlliances.Remove(old);
+            }
             if(MarriageAlliances.Count>=64)return null;
             var record=new MarriageAlliance{Id=NextMarriageAllianceId++,PawnA=a.PawnA,PawnB=a.PawnB,FamilyA=a.FamilyA,FamilyB=a.FamilyB,
                 CreatedTick=now,ExpiresTick=now+7*ActivityTuning.TicksPerDay,LastChangedTick=now,HouseAInterest=a.HouseAInterest,HouseBInterest=a.HouseBInterest,
@@ -208,7 +213,8 @@ namespace FamilyLife.Domain
         {
             var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
             if(a==null||a.State!=MarriageAllianceState.Fulfilled||a.UnionState!=HouseUnionState.Eligible||targetFamily!=a.FamilyA&&targetFamily!=a.FamilyB||
-                !CanUniteThroughMarriage(a.FamilyA,a.FamilyB)||!CanManageHouse(representativeA,a.FamilyA)||!CanManageHouse(representativeB,a.FamilyB))return false;
+                !CanUniteThroughMarriage(a.FamilyA,a.FamilyB)||!MayDecide(representativeA,a.FamilyA,HouseDecision.MarriageUnion)||
+                !MayDecide(representativeB,a.FamilyB,HouseDecision.MarriageUnion))return false;
             a.UnionTargetFamilyId=targetFamily;a.UnionNegotiatorA=representativeA;a.UnionNegotiatorB=representativeB;a.UnionState=HouseUnionState.Negotiating;a.LastChangedTick=now;
             LearnAlliance(a,representativeA);LearnAlliance(a,representativeB);return true;
         }
@@ -225,9 +231,15 @@ namespace FamilyLife.Domain
         public bool DecideMarriageUnion(int id,int representative,bool support,int now)
         {
             var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
-            if(a==null||a.UnionState!=HouseUnionState.Negotiating||representative!=a.UnionNegotiatorA&&representative!=a.UnionNegotiatorB)return false;
+            if(a==null||a.UnionState!=HouseUnionState.Negotiating)return false;
+            int repA=Math.Abs(a.UnionNegotiatorA),repB=Math.Abs(a.UnionNegotiatorB);
+            if(!MayDecide(repA,a.FamilyA,HouseDecision.MarriageUnion)||!MayDecide(repB,a.FamilyB,HouseDecision.MarriageUnion))
+            {
+                a.UnionState=HouseUnionState.Eligible;a.UnionNegotiatorA=0;a.UnionNegotiatorB=0;a.LastChangedTick=now;return false;
+            }
+            if(representative!=repA&&representative!=repB)return false;
             if(!support){a.UnionState=HouseUnionState.Rejected;a.LastChangedTick=now;return true;}
-            if(representative==a.UnionNegotiatorA)a.UnionNegotiatorA=-Math.Abs(a.UnionNegotiatorA);else a.UnionNegotiatorB=-Math.Abs(a.UnionNegotiatorB);
+            if(representative==repA)a.UnionNegotiatorA=-repA;else a.UnionNegotiatorB=-repB;
             if(a.UnionNegotiatorA<0&&a.UnionNegotiatorB<0)
             {
                 int source=a.UnionTargetFamilyId==a.FamilyA?a.FamilyB:a.FamilyA;a.UnionState=HouseUnionState.Agreed;
@@ -235,6 +247,11 @@ namespace FamilyLife.Domain
             }
             a.LastChangedTick=now;return true;
         }
+        private static bool ActiveMatch(MarriageAllianceState state)=>state==MarriageAllianceState.Opportunity||state==MarriageAllianceState.Negotiating||
+            state==MarriageAllianceState.Supported||state==MarriageAllianceState.Consented;
+        private static bool Evictable(MarriageAlliance a)=>a!=null&&(a.State==MarriageAllianceState.Opposed||a.State==MarriageAllianceState.Expired||
+            a.State==MarriageAllianceState.Withdrawn||a.State==MarriageAllianceState.Fulfilled&&
+            (a.UnionState==HouseUnionState.None||a.UnionState==HouseUnionState.Rejected||a.UnionState==HouseUnionState.Completed));
         private static float Bound(float value)=>Math.Max(-100f,Math.Min(100f,float.IsNaN(value)?0f:value));
     }
 }

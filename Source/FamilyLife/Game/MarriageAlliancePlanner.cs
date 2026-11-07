@@ -16,18 +16,21 @@ namespace FamilyLife
         internal static void AssessHouse(FamilyComponent component,Lineage house,List<Lineage> active,int now)
         {
             var r=component.Registry;
-            if(house?.Ambition==null||!WantsAlliance(house.Ambition.Primary)||r.MarriageAlliances.Any(a=>(a.FamilyA==house.Id||a.FamilyB==house.Id)&&a.State<=MarriageAllianceState.Supported))return;
+            if(house?.Ambition==null||!WantsAlliance(house.Ambition.Primary)||r.MarriageAlliances.Any(a=>(a.FamilyA==house.Id||a.FamilyB==house.Id)&&
+                (a.State==MarriageAllianceState.Opportunity||a.State==MarriageAllianceState.Negotiating||a.State==MarriageAllianceState.Supported||a.State==MarriageAllianceState.Consented)))return;
             var own=r.MembersOf(house.Id).Where(p=>p.InColony&&!p.Juvenile&&!p.PartnerIds().Any()).Take(6).ToList();
             if(own.Count==0)return;
-            MarriageAllianceAssessment best=null;int tried=0;
-            foreach(var other in active.Where(h=>h.Id!=house.Id).OrderBy(h=>h.Id))
-            foreach(var candidate in r.MembersOf(other.Id).Where(p=>p.InColony&&!p.Juvenile&&!p.PartnerIds().Any()).Take(6))
-            foreach(var person in own)
+            var pairs=(from other in active.Where(h=>h.Id!=house.Id).OrderBy(h=>h.Id)
+                       from candidate in r.MembersOf(other.Id).Where(p=>p.InColony&&!p.Juvenile&&!p.PartnerIds().Any()).Take(6)
+                       from person in own select new{Other=other,Candidate=candidate,Person=person}).ToList();
+            if(pairs.Count==0)return;
+            int start=(unchecked(house.Id*397+now/ActivityTuning.TicksPerDay)&int.MaxValue)%pairs.Count;
+            MarriageAllianceAssessment best=null;
+            for(int tried=0;tried<Math.Min(PairBudget,pairs.Count);tried++)
             {
-                if(++tried>PairBudget)break;
-                var a=component.TryGetPawn(person.Id);var b=component.TryGetPawn(candidate.Id);
+                var pair=pairs[(start+tried)%pairs.Count];var a=component.TryGetPawn(pair.Person.Id);var b=component.TryGetPawn(pair.Candidate.Id);
                 if(a==null||b==null||a.Map!=b.Map||!a.Spawned||!b.Spawned)continue;
-                var context=Context(component,house,other,a,b);
+                var context=Context(component,house,pair.Other,a,b);
                 var assessment=r.AssessMarriageAlliance(a.thingIDNumber,b.thingIDNumber,context);
                 if(!assessment.WorthConsidering)continue;
                 if(best==null||assessment.HouseAInterest+assessment.HouseBInterest>best.HouseAInterest+best.HouseBInterest)best=assessment;
@@ -51,7 +54,8 @@ namespace FamilyLife
         private static float Contribution(Pawn pawn,Lineage receiving)
         {
             var skill=HouseSituationPlanner.PreferredSkill(receiving?.Situation?.WeakestCapability??HouseCapability.None,pawn);
-            return skill==null?0f:Math.Min(1f,(pawn.skills?.GetSkill(skill)?.Level??0)/12f);
+            var record=skill==null?null:pawn.skills?.GetSkill(skill);
+            return record==null||record.TotallyDisabled?0f:Math.Min(1f,record.Level/12f);
         }
 
         internal static int Representative(FamilyRegistry r,int family)
@@ -73,9 +77,11 @@ namespace FamilyLife
             int family=component.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||!component.Registry.CanManageHouse(actor.thingIDNumber,family))return false;
             int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(component.Registry,otherFamily);
             var other=component.TryGetPawn(otherId);
-            if(other==null||other==actor||!other.Spawned||other.Map!=actor.Map||!Activities.IsFree(other)||other.CurJob?.playerForced==true||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            if(other==null||other==actor||!other.Spawned||other.Map!=actor.Map||!Activities.IsFree(other)||other.CurJob?.playerForced==true||
+                (!byPlayer&&PerspectiveShiftBridge.IsAvatar(other))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
             var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageNegotiation,other);job.count=alliance.Id;
+            GovernanceMeetings.PreferOffice(job,component,family,actor,other);
             actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
         }
 
@@ -97,14 +103,14 @@ namespace FamilyLife
             if(Find.Selector.IsSelected(representative)||PerspectiveShiftBridge.IsAvatar(representative))return;
             int family=c.Registry.FamilyOf(representative.thingIDNumber);bool support=c.Registry.WouldHouseSupportMarriage(alliance,family);
             c.Registry.DecideMarriageNegotiation(alliance.Id,representative.thingIDNumber,support,Activities.Now);
-            c.Registry.NoteStewardService(representative.thingIDNumber,family,StewardServiceKind.Negotiation,support,Activities.Now);
+            c.Registry.NoteStewardService(representative.thingIDNumber,family,StewardServiceKind.Negotiation,true,Activities.Now);
         }
 
         internal static bool DecideAs(FamilyComponent c,MarriageAlliance alliance,Pawn representative,bool support)
         {
             if(c==null||alliance==null||representative==null)return false;
             bool decided=c.Registry.DecideMarriageNegotiation(alliance.Id,representative.thingIDNumber,support,Activities.Now);
-            if(decided)c.Registry.NoteStewardService(representative.thingIDNumber,c.Registry.FamilyOf(representative.thingIDNumber),StewardServiceKind.Negotiation,support,Activities.Now);
+            if(decided)c.Registry.NoteStewardService(representative.thingIDNumber,c.Registry.FamilyOf(representative.thingIDNumber),StewardServiceKind.Negotiation,true,Activities.Now);
             return decided;
         }
 
@@ -123,9 +129,10 @@ namespace FamilyLife
                 if(!component.Registry.BeginMarriageConsent(alliance.Id,pawnId,representative.thingIDNumber,Activities.Now))return false;
                 ResolveConsent(component,alliance,target);return true;
             }
-            if(target.Map!=representative.Map||!Activities.IsFree(target)||target.CurJob?.playerForced==true||!representative.CanReach(target,PathEndMode.Touch,Danger.None))return false;
+            if(target.Map!=representative.Map||!Activities.IsFree(target)||target.CurJob?.playerForced==true||(!byPlayer&&PerspectiveShiftBridge.IsAvatar(target))||!representative.CanReach(target,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(representative)||representative.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(representative)))return false;
             var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageConsent,target);job.count=alliance.Id;
+            GovernanceMeetings.PreferOffice(job,component,family,representative,target);
             representative.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
         }
 
@@ -157,11 +164,13 @@ namespace FamilyLife
         internal static bool StartUnion(FamilyComponent c,MarriageAlliance alliance,Pawn actor,bool byPlayer=false)
         {
             if(c==null||alliance==null||alliance.UnionState!=HouseUnionState.Eligible||actor==null)return false;
-            int family=c.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||!c.Registry.CanManageHouse(actor.thingIDNumber,family))return false;
+            int family=c.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||
+                !c.Registry.MayDecide(actor.thingIDNumber,family,HouseDecision.MarriageUnion))return false;
             int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(c.Registry,otherFamily);var other=c.TryGetPawn(otherId);
-            if(other==null||other.Map!=actor.Map||!other.Spawned||!Activities.IsFree(other)||other.CurJob?.playerForced==true||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            if(other==null||other.Map!=actor.Map||!other.Spawned||!Activities.IsFree(other)||other.CurJob?.playerForced==true||(!byPlayer&&PerspectiveShiftBridge.IsAvatar(other))||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
             if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
-            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_HouseUnionNegotiation,other);job.count=alliance.Id;actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_HouseUnionNegotiation,other);job.count=alliance.Id;
+            GovernanceMeetings.PreferOffice(job,c,family,actor,other);actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
         }
 
         internal static void CompleteUnion(Pawn speaker,Pawn other,int id)

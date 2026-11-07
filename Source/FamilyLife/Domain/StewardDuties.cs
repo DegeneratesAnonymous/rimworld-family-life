@@ -76,6 +76,9 @@ namespace FamilyLife.Domain
             if (request != null && !Taken(StewardDutyKind.OrganizeCeremony, request.Id)) { kind = StewardDutyKind.OrganizeCeremony; target = request.Id; return true; }
             var alliance = MarriageAlliances.FirstOrDefault(a => (a.FamilyA == family || a.FamilyB == family) && (a.State == MarriageAllianceState.Opportunity || a.State == MarriageAllianceState.Negotiating) && !Taken(StewardDutyKind.Negotiate, a.Id));
             if (alliance != null && house.Ambition?.Primary != HouseAmbitionKind.Contentment) { kind = StewardDutyKind.Negotiate; target = alliance.Id; return true; }
+            var union = MarriageAlliances.FirstOrDefault(a => (a.FamilyA == family || a.FamilyB == family) && a.State == MarriageAllianceState.Fulfilled &&
+                a.UnionState == HouseUnionState.Eligible && !Taken(StewardDutyKind.Negotiate, -a.Id));
+            if (union != null) { kind = StewardDutyKind.Negotiate; target = -union.Id; return true; }
             var rift = Rifts.FirstOrDefault(r => r.ResolvedTick == 0 && FamilyOf(r.A) == family && FamilyOf(r.B) == family && !Taken(StewardDutyKind.Mediate, r.Id));
             if (rift != null) { kind = StewardDutyKind.Mediate; target = rift.Id; return true; }
             if (guestsPresent > 0 && !Taken(StewardDutyKind.GuestCare, 0)) { kind = StewardDutyKind.GuestCare; return true; }
@@ -126,7 +129,7 @@ namespace FamilyLife.Domain
             if (!EvidenceExists(duty, token)) return false;
             duty.State = StewardDutyState.Completed; duty.EndedTick = now; duty.EvidenceToken = token;
             // A head covering for a missing Steward earns public regard but adds nothing to the Steward's term.
-            if (!duty.HeadActed && CreditedHere(duty.Kind)) NoteStewardService(duty.HolderId, duty.FamilyId, ServiceOf(duty.Kind), true, now);
+            if (!duty.HeadActed && CreditedHere(duty)) NoteStewardService(duty.HolderId, duty.FamilyId, ServiceOf(duty.Kind), true, now);
             NotePublicService(duty.HolderId, duty.FamilyId, duty.HeadActed ? .5f : 1f, now);
             return true;
         }
@@ -136,7 +139,7 @@ namespace FamilyLife.Domain
             var duty = StewardDuties.FirstOrDefault(d => d.Id == dutyId);
             if (duty == null || !duty.Open) return false;
             duty.State = StewardDutyState.Failed; duty.EndedTick = now;
-            if (!duty.HeadActed && CreditedHere(duty.Kind)) NoteStewardService(duty.HolderId, duty.FamilyId, ServiceOf(duty.Kind), false, now);
+            if (!duty.HeadActed && CreditedHere(duty)) NoteStewardService(duty.HolderId, duty.FamilyId, ServiceOf(duty.Kind), false, now);
             return true;
         }
 
@@ -170,7 +173,8 @@ namespace FamilyLife.Domain
                 case StewardDutyKind.ReceivePetition:
                     return HousePetitions.Any(p => p.Id == duty.TargetId && p.ReceivedBy == duty.HolderId);
                 case StewardDutyKind.Negotiate:
-                    return MarriageAlliances.Any(a => a.Id == duty.TargetId && (a.NegotiatorA == duty.HolderId || a.NegotiatorB == duty.HolderId) &&
+                    if(duty.TargetId<0)return token>0&&!TokenUsed(token);
+                    return MarriageAlliances.Any(a => a.Id == duty.TargetId && (Math.Abs(a.NegotiatorA) == duty.HolderId || Math.Abs(a.NegotiatorB) == duty.HolderId) &&
                         (a.State == MarriageAllianceState.Supported || a.State == MarriageAllianceState.Opposed || a.State == MarriageAllianceState.Consented || a.State == MarriageAllianceState.Fulfilled));
                 case StewardDutyKind.SupplyShortage:
                     // The request must really have reached its destination (granted goods carried home) after the duty began.
@@ -181,7 +185,8 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>Ceremonies, aid, reconciliations and negotiations are already credited by the systems that perform them; crediting them again here would double count.</summary>
-        private static bool CreditedHere(StewardDutyKind kind) => kind == StewardDutyKind.ReceivePetition || kind == StewardDutyKind.GuestCare || kind == StewardDutyKind.Mediate;
+        private static bool CreditedHere(StewardDuty duty) => duty.Kind == StewardDutyKind.ReceivePetition || duty.Kind == StewardDutyKind.GuestCare ||
+            duty.Kind == StewardDutyKind.Mediate || duty.Kind == StewardDutyKind.Negotiate && duty.TargetId < 0;
 
         private bool TokenUsed(int token) => StewardDuties.Any(d => d.EvidenceToken == token && d.State == StewardDutyState.Completed);
 
@@ -214,8 +219,8 @@ namespace FamilyLife.Domain
         public bool ClearFamilyOffice(int family) => FamilyOffices.RemoveAll(o => o.FamilyId == family) > 0;
 
         /// <summary>Removes offices whose house is gone or whose map no longer exists. Duties then simply meet wherever the house normally gathers.</summary>
-        public void PruneOffices(Func<int, bool> mapExists)
-            => FamilyOffices.RemoveAll(o => !IsActiveHouse(o.FamilyId) || (mapExists != null && !mapExists(o.MapId)));
+        public void PruneOffices(Func<FamilyOffice, bool> valid)
+            => FamilyOffices.RemoveAll(o => !IsActiveHouse(o.FamilyId) || (valid != null && !valid(o)));
 
         /// <summary>The preferred meeting place if it is still usable, else null. Callers fall back to any suitable family area.</summary>
         public FamilyOffice UsableOffice(int family, Func<int, int, int, bool> valid)

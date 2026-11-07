@@ -17,7 +17,7 @@ namespace FamilyLife
         private static int tokenCounter;
 
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
-            def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
+            def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_StewardNegotiate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
             def == WFL_StoryDefOf.WFL_ProtectionOffer);
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
@@ -30,8 +30,15 @@ namespace FamilyLife
             if (!Activities.IsFree(other) || other.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(other)) return false;
             if (!actor.CanReach(other, PathEndMode.Touch, Danger.None)) return false;
             var job = JobMaker.MakeJob(def, other); job.count = id;
+            if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate)
+                PreferOffice(job,FamilyComponent.Current,FamilyComponent.Current?.Registry.FamilyOf(actor.thingIDNumber)??0,actor,other);
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
+        }
+
+        internal static void PreferOffice(Job job,FamilyComponent c,int family,Pawn actor,Pawn other)
+        {
+            if(job!=null&&Governance.TryMeetingCell(c,family,actor,other,out var cell))job.targetB=cell;
         }
 
         internal static void Complete(Pawn speaker, Pawn other, JobDef def, int id)
@@ -61,6 +68,8 @@ namespace FamilyLife
                 }
                 FinishDuty(r, StewardDutyKind.Mediate, id, NextToken(), now, a);
             }
+            else if(def==WFL_StoryDefOf.WFL_StewardNegotiate)
+                FinishDuty(r,StewardDutyKind.Negotiate,-id,NextToken(),now,a);
             else if (def == WFL_StoryDefOf.WFL_CoupRecruit)
             {
                 var coup = r.Coups.FirstOrDefault(x => x.Id == id && x.Open);

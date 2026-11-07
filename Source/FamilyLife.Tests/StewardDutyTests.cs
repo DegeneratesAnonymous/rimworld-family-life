@@ -159,7 +159,7 @@ namespace FamilyLife.Tests
             Assert.True(r.SetFamilyOffice(fam, 2, 10, 12, 2000));
             Assert.NotNull(r.UsableOffice(fam, (m, x, z) => m == 2));
             Assert.Null(r.UsableOffice(fam, (m, x, z) => false));                     // blocked or demolished: callers use any family area
-            r.PruneOffices(map => map != 2);                                          // map no longer exists
+            r.PruneOffices(office => office.MapId != 2);                              // map no longer exists
             Assert.Null(r.OfficeOf(fam));
             Assert.False(r.ClearFamilyOffice(fam));
         }
@@ -205,5 +205,20 @@ namespace FamilyLife.Tests
             Assert.False(r.CompleteStewardDuty(duty.Id, 0, 2100));
             Assert.True(r.CompleteStewardDuty(duty.Id, 321, 2100));
             Assert.Equal(1, r.StewardshipOf(3, fam, true).Reconciliations);
-        }    }
+        }
+
+        [Fact]
+        public void A_steward_can_prepare_a_union_but_cannot_decide_it()
+        {
+            var r=House(out int fam);int other=r.FamilyOf(9);
+            r.MarriageAlliances.Add(new MarriageAlliance{Id=7,FamilyA=fam,FamilyB=other,State=MarriageAllianceState.Fulfilled,UnionState=HouseUnionState.Eligible});
+            Assert.True(r.TryChooseDuty(fam,0,out var kind,out int target));
+            Assert.Equal(StewardDutyKind.Negotiate,kind);Assert.Equal(-7,target);
+            var duty=r.BeginStewardDuty(fam,kind,target,null,2000);
+            Assert.False(r.CompleteStewardDuty(duty.Id,0,2100));
+            Assert.True(r.CompleteStewardDuty(duty.Id,7001,2100));
+            Assert.Equal(1,r.StewardshipOf(3,fam,true).NegotiationsLed);
+            Assert.False(r.MayDecide(3,fam,HouseDecision.MarriageUnion));
+        }
+    }
 }

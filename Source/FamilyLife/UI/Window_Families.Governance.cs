@@ -126,8 +126,11 @@ namespace FamilyLife
                 int family = lineage.Id;
                 Find.Targeter.BeginTargeting(TargetingParameters.ForCell(), target =>
                 {
-                    if (target.Cell.IsValid && Find.CurrentMap != null && registry.SetFamilyOffice(family, Find.CurrentMap.uniqueID, target.Cell.x, target.Cell.z, Activities.Now))
+                    var map=Find.CurrentMap;var house=registry.GetLineage(family);var area=FamilyZones.AreaFor(house);
+                    if (target.Cell.IsValid && map != null && target.Cell.InBounds(map) && target.Cell.Standable(map) && area?.Map==map && area[target.Cell] &&
+                        registry.SetFamilyOffice(family, map.uniqueID, target.Cell.x, target.Cell.z, Activities.Now))
                         Messages.Message("WFL_Office_Saved".Translate(), MessageTypeDefOf.TaskCompletion, false);
+                    else Messages.Message("WFL_Office_Invalid".Translate(),MessageTypeDefOf.RejectInput,false);
                 });
             }
             if (office != null && HouseButton(new Rect(210f, y, 150f, 26f), "WFL_Office_Clear".Translate(), registry, lineage)) registry.ClearFamilyOffice(lineage.Id);
@@ -160,7 +163,8 @@ namespace FamilyLife
             var inst = registry.Institution;
             Line(view, ref y, "WFL_Institution_Line".Translate(("WFL_Institution_" + inst.Kind).Translate(), FamilyUi.NameOf(registry, inst.LeaderId)), 10f);
             bool anyHead = viewer == 0 || registry.Lineages.Any(h => h.AbsorbedIntoId == 0 && registry.HeadOf(h.Id) == viewer);
-            if (ActionButton(new Rect(10f, y, 250f, 26f), "WFL_Gov_ChangeLeadership".Translate(), anyHead))
+            // Constitutional setup is an overseer control, not a power a role-played head exercises by clicking a panel.
+            if (ActionButton(new Rect(10f, y, 250f, 26f), "WFL_Gov_ChangeLeadership".Translate(), viewer==0))
             {
                 int fallbackLeader = registry.GetPerson(inst.LeaderId)?.InColony == true ? inst.LeaderId :
                     registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => registry.AssessLegitimacy(p.Id, registry.FamilyOf(p.Id), 0)).OrderByDescending(a => a.Score).Select(a => a.PersonId).FirstOrDefault();

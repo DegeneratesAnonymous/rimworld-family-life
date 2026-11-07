@@ -12,7 +12,7 @@ namespace FamilyLife
     [DefOf]
     public static class WFL_StoryDefOf
     {
-        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote, WFL_ProtectionOffer;
+        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_StewardNegotiate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote, WFL_ProtectionOffer;
         static WFL_StoryDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(WFL_StoryDefOf)); }
     }
 
@@ -63,6 +63,7 @@ namespace FamilyLife
             if (held > 0f) return Math.Min(100f, held / target * 100f);
             // Before a family has claimed a pantry, current hunger prevents a false crisis while keeping the assessment conservative.
             float current = members.Where(p => p?.needs?.food != null).Select(p => p.needs.food.CurLevelPercentage).DefaultIfEmpty(.5f).Average() * 70f;
+            if (current < 20f) return current; // observed severe hunger must outrank an unknown pantry
             return Math.Max(Pressure(family.Id) ? 15f : 35f, current);
         }
         internal void Invalidate(Map map) { if (map != null && stocks.TryGetValue(map, out var snapshot)) snapshot.Refresh.Invalidate(); }

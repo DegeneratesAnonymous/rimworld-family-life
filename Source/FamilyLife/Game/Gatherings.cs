@@ -145,8 +145,18 @@ namespace FamilyLife
 
         protected override bool TryFindGatherSpot(Pawn organizer, out IntVec3 spot)
         {
-            // A house that has chosen a meeting place prefers it, when it is still standable and on this map.
+            // An area chosen on the planning card wins; otherwise the house's meeting place is preferred.
             var request = FamilyGatherings.Active;
+            var plan=request==null?null:FamilyComponent.Current?.Registry.PlanFor(request.Id);
+            if(plan?.VenueAreaId>0&&plan.VenueMapId==organizer.Map.uniqueID)
+            {
+                var area=FamilyZones.FindArea(plan.VenueAreaId,plan.VenueMapId);
+                if(area?.Map==organizer.Map)
+                {
+                    spot=area.ActiveCells.Where(c=>c.Standable(organizer.Map)).InRandomOrder().FirstOrDefault();
+                    if(spot.IsValid)return true;
+                }
+            }
             var office = request == null ? null : FamilyComponent.Current?.Registry.UsableOffice(request.LineageId, (m, x, z) =>
                 m == organizer.Map.uniqueID && new IntVec3(x, 0, z).InBounds(organizer.Map) && new IntVec3(x, 0, z).Standable(organizer.Map));
             if (office != null) { spot = new IntVec3(office.X, 0, office.Z); return true; }

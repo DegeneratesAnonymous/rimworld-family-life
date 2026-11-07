@@ -107,8 +107,8 @@ namespace FamilyLife
                 foreach (var pawn in adults)
                 {
                     int level = capabilities[i] == HouseCapability.Combat
-                        ? Math.Max(pawn.skills?.GetSkill(SkillDefOf.Shooting)?.Level ?? 0, pawn.skills?.GetSkill(SkillDefOf.Melee)?.Level ?? 0)
-                        : pawn.skills?.GetSkill(capabilitySkills[i])?.Level ?? 0;
+                        ? Math.Max(UsableSkill(pawn,SkillDefOf.Shooting),UsableSkill(pawn,SkillDefOf.Melee))
+                        : UsableSkill(pawn,capabilitySkills[i]);
                     best = Math.Max(best, level); if (level >= 6) competent++;
                 }
                 float score = Math.Min(100f, best * 5f + competent * 8f);
@@ -127,10 +127,16 @@ namespace FamilyLife
             foreach (var pawn in adults)
             {
                 if (pawn.Downed || pawn.health?.capacities?.CapableOf(PawnCapacityDefOf.Consciousness) != true) continue;
-                int combat = Math.Max(pawn.skills?.GetSkill(SkillDefOf.Shooting)?.Level ?? 0, pawn.skills?.GetSkill(SkillDefOf.Melee)?.Level ?? 0);
+                int combat = Math.Max(UsableSkill(pawn,SkillDefOf.Shooting),UsableSkill(pawn,SkillDefOf.Melee));
                 power += 8f + combat * 1.5f + Math.Min(20f, (pawn.equipment?.Primary?.MarketValue ?? 0f) / 100f);
             }
             return power + (levels.TryGetValue(HouseCapability.Medical, out var medicine) ? medicine * .1f : 0f);
+        }
+
+        private static int UsableSkill(Pawn pawn,SkillDef def)
+        {
+            var skill=pawn?.skills?.GetSkill(def);
+            return skill==null||skill.TotallyDisabled?0:skill.Level;
         }
 
         private static float ContinuityOf(HouseSituation s)

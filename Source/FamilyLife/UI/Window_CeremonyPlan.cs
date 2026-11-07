@@ -72,11 +72,19 @@ namespace FamilyLife
 
             // Where
             Widgets.Label(new Rect(0f, y, 160f, 28f), "WFL_Plan_Venue".Translate());
-            string venue = plan.VenueMapId < 0 || Find.Maps.All(m => m.uniqueID != plan.VenueMapId) ? "WFL_Plan_VenueDefault".Translate().ToString() : "WFL_Plan_VenueMap".Translate(plan.VenueMapId).ToString();
+            var venueMap=Find.Maps.FirstOrDefault(m=>m.uniqueID==plan.VenueMapId);
+            var venueArea=venueMap?.areaManager.AllAreas.FirstOrDefault(a=>a.ID==plan.VenueAreaId);
+            string venue = venueMap==null ? "WFL_Plan_VenueDefault".Translate().ToString() : venueArea==null
+                ? "WFL_Plan_VenueMap".Translate(plan.VenueMapId).ToString() : "WFL_Plan_VenueArea".Translate(venueArea.Label,plan.VenueMapId).ToString();
             if (ActionButtonLocal(new Rect(170f, y, inRect.width - 170f, 28f), venue, editable))
             {
                 var options = new List<FloatMenuOption> { new FloatMenuOption("WFL_Plan_VenueDefault".Translate(), () => registry.SetPlanVenue(plan.Id, ctx.DefaultMapId, 0, ctx)) };
-                foreach (var map in Find.Maps.Where(m => m.IsPlayerHome)) { int id = map.uniqueID; options.Add(new FloatMenuOption("WFL_Plan_VenueMap".Translate(id), () => registry.SetPlanVenue(plan.Id, id, 0, ctx))); }
+                foreach (var map in Find.Maps.Where(m => m.IsPlayerHome))
+                {
+                    int id = map.uniqueID; options.Add(new FloatMenuOption("WFL_Plan_VenueMap".Translate(id), () => registry.SetPlanVenue(plan.Id, id, 0, ctx)));
+                    foreach(var area in FamilyZones.Areas(map).Take(20))
+                    {int areaId=area.ID;string label=area.Label;options.Add(new FloatMenuOption("WFL_Plan_VenueArea".Translate(label,id),()=>registry.SetPlanVenue(plan.Id,id,areaId,ctx)));}
+                }
                 Find.WindowStack.Add(new FloatMenu(options));
             }
             y += 34f;

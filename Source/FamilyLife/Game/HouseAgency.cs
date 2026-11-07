@@ -165,7 +165,7 @@ namespace FamilyLife
                 yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,false));
             }
             foreach(var alliance in r.MarriageAlliances.Where(a=>(a.FamilyA==myFamily||a.FamilyB==myFamily)&&a.UnionState==HouseUnionState.Eligible))
-                if(r.CanManageHouse(me.Id,myFamily)&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
+                if(r.MayDecide(me.Id,myFamily,HouseDecision.MarriageUnion)&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
                 {var pending=alliance;yield return Act("WFL_Act_NegotiateUnion".Translate(b),()=>MarriageAlliancePlanner.StartUnion(c,pending,actor,true));}
             foreach(var alliance in r.MarriageAlliances.Where(a=>a.UnionState==HouseUnionState.Negotiating&&
                 (System.Math.Abs(a.UnionNegotiatorA)==me.Id||System.Math.Abs(a.UnionNegotiatorB)==me.Id)))

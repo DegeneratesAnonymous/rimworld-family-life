@@ -100,7 +100,8 @@ namespace FamilyLife
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => Other == null || Other.Dead || Other.Drafted || Other.InMentalState || pawn.Drafted || pawn.InMentalState || !FamilyLifeMod.Settings.familyStories);
-            yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
+            if(job.targetB.IsValid)yield return Toils_Goto.GotoCell(TargetIndex.B,PathEndMode.OnCell);
+            else yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             var talk = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             talk.initAction = () =>
             {

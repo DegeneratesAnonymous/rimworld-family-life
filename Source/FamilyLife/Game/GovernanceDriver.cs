@@ -42,7 +42,7 @@ namespace FamilyLife
         {
             var r = c.Registry;
             // Duties whose evidence arrives from other systems (a negotiation, a petition hearing, goods brought home) close when it does.
-            foreach (var duty in r.StewardDuties.Where(d => d.Open && (d.Kind == StewardDutyKind.Negotiate || d.Kind == StewardDutyKind.SupplyShortage || d.Kind == StewardDutyKind.ReceivePetition)).ToList())
+            foreach (var duty in r.StewardDuties.Where(d => d.Open && (d.Kind == StewardDutyKind.OrganizeCeremony || d.Kind == StewardDutyKind.Negotiate && d.TargetId>0 || d.Kind == StewardDutyKind.SupplyShortage || d.Kind == StewardDutyKind.ReceivePetition)).ToList())
                 r.CompleteStewardDuty(duty.Id, 0, now);
 
             var houses = r.Lineages.Where(h => h.AbsorbedIntoId == 0).OrderBy(h => h.Id).ToList();
@@ -50,7 +50,7 @@ namespace FamilyLife
             var house = houses[dutyRotate++ % houses.Count];
             if (r.StewardDuties.Any(d => d.Open && d.FamilyId == house.Id)) return;
             int guests = r.HouseContacts.Count(x => x.FamilyId == house.Id && x.Respect > 0f && !r.BelongsToFamily(r.GetPerson(x.PersonId), house.Id) && Spawned(c, x.PersonId) != null);
-            if (!r.TryChooseDuty(house.Id, guests, out var kind, out int target) || kind == StewardDutyKind.OrganizeCeremony) return;
+            if (!r.TryChooseDuty(house.Id, guests, out var kind, out int target)) return;
             var duty2 = r.BeginStewardDuty(house.Id, kind, target, id => Governance.Free(c, id), now);
             if (duty2 == null) return;
             var holder = Spawned(c, duty2.HolderId);
@@ -59,6 +59,12 @@ namespace FamilyLife
             {
                 switch (kind)
                 {
+                    case StewardDutyKind.OrganizeCeremony:
+                        var ceremony=r.GatheringRequests.FirstOrDefault(q=>q.Id==target);
+                        var plan=ceremony==null?null:r.PlanFor(ceremony.Id);
+                        var planContext=Governance.PlanContextFor(c,house.Id);
+                        started=plan!=null&&r.SetPlanOrganizer(plan.Id,holder.thingIDNumber,planContext)||ceremony?.OrganizerId==holder.thingIDNumber;
+                        break;
                     case StewardDutyKind.ReceivePetition:
                         var petition = r.HousePetitions.FirstOrDefault(p => p.Id == target);
                         started = petition != null && GovernanceMeetings.Start(holder, Spawned(c, petition.PersonId), WFL_StoryDefOf.WFL_StewardPetition, target); break;
@@ -74,7 +80,15 @@ namespace FamilyLife
                         started = rift != null && GovernanceMeetings.Start(holder, Spawned(c, rift.A == holder.thingIDNumber ? rift.B : rift.A), WFL_StoryDefOf.WFL_StewardMediate, target); break;
                     case StewardDutyKind.Negotiate:
                         var alliance = r.MarriageAlliances.FirstOrDefault(a => a.Id == target);
-                        started = alliance != null && MarriageAlliancePlanner.StartNegotiation(c, alliance, holder); break;
+                        if(target>0)started = alliance != null && MarriageAlliancePlanner.StartNegotiation(c, alliance, holder);
+                        else
+                        {
+                            alliance=r.MarriageAlliances.FirstOrDefault(a=>a.Id==-target);
+                            int otherFamily=alliance==null?0:alliance.FamilyA==house.Id?alliance.FamilyB:alliance.FamilyA;
+                            var other=Spawned(c,MarriageAlliancePlanner.Representative(r,otherFamily));
+                            started=alliance!=null&&other!=null&&GovernanceMeetings.Start(holder,other,WFL_StoryDefOf.WFL_StewardNegotiate,alliance.Id);
+                        }
+                        break;
                     case StewardDutyKind.SupplyShortage:
                         started = true; break;       // the supply system does the carrying; the duty closes when the goods are home
                 }

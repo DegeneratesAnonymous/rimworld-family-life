@@ -75,6 +75,8 @@ namespace FamilyLife.Tests
             r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
             r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day);r.DecideMarriageConsent(x.Id,1,true,2*Day);r.BeginMarriageConsent(x.Id,2,r.HeadOf(b),2*Day);r.DecideMarriageConsent(x.Id,2,true,2*Day);
             Assert.Equal(MarriageAllianceState.Consented,x.State);Assert.True(r.HasConsentedMatch(1,2));Assert.Empty(r.GetPerson(1).PartnerIds());Assert.Empty(r.GetPerson(2).PartnerIds());
+            Assert.Same(x,r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),3*Day));
+            Assert.Single(r.MarriageAlliances);
         }
 
         [Fact] public void Changed_relationship_state_invalidates_consent_before_it_is_requested()
@@ -118,6 +120,27 @@ namespace FamilyLife.Tests
             r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},3*Day);r.MaintainAgency(3*Day);
             Assert.True(r.BeginMarriageUnion(x.Id,r.HeadOf(a),r.HeadOf(b),r.PreferredMarriageUnionTarget(x),3*Day));Assert.True(r.DecideMarriageUnion(x.Id,r.HeadOf(a),false,3*Day));
             Assert.Equal(HouseUnionState.Rejected,x.UnionState);Assert.True(r.IsActiveHouse(a));Assert.True(r.IsActiveHouse(b));
+        }
+
+        [Fact] public void Pruning_removes_old_terminal_history_but_preserves_an_unfinished_union()
+        {
+            var r=World(out int a,out int b);
+            var live=new MarriageAlliance{Id=1,PawnA=1,PawnB=2,FamilyA=a,FamilyB=b,State=MarriageAllianceState.Fulfilled,UnionState=HouseUnionState.Eligible,LastChangedTick=1};
+            r.MarriageAlliances.Add(live);
+            for(int i=2;i<=64;i++)r.MarriageAlliances.Add(new MarriageAlliance{Id=i,State=MarriageAllianceState.Opposed,LastChangedTick=i});
+            var assessment=r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true});
+            Assert.NotNull(r.RecordMarriageOpportunity(assessment,4*Day));
+            Assert.Contains(live,r.MarriageAlliances);Assert.Equal(64,r.MarriageAlliances.Count);
+        }
+
+        [Fact] public void A_union_approval_is_cancelled_when_a_representative_loses_authority()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},3*Day);r.MaintainAgency(3*Day);
+            int headA=r.HeadOf(a),headB=r.HeadOf(b);Assert.True(r.BeginMarriageUnion(x.Id,headA,headB,r.PreferredMarriageUnionTarget(x),3*Day));
+            r.GetPerson(headB).Presence=Presence.Away;
+            Assert.False(r.DecideMarriageUnion(x.Id,headA,true,3*Day+1));Assert.Equal(HouseUnionState.Eligible,x.UnionState);
+            Assert.True(r.IsActiveHouse(a));Assert.True(r.IsActiveHouse(b));
         }
     }
 }

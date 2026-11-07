@@ -321,7 +321,7 @@ namespace FamilyLife.Domain
             var organizer = GetPerson(plan.OrganizerId);
             bool organizerOk = organizer?.InColony == true && !organizer.Juvenile && ctx.CanTake(organizer.Id) && (!ctx.Avatar(organizer.Id) || plan.Ask == AvatarAsk.Accepted);
             if (!organizerOk) { plan.OrganizerId = DefaultOrganizer(request, ctx); Tell(plan, plan.OrganizerId); }
-            if (plan.VenueMapId != ctx.DefaultMapId && !ctx.Venue(plan.VenueMapId, plan.VenueAreaId)) { plan.VenueMapId = ctx.DefaultMapId; plan.VenueAreaId = 0; }
+            if (!ctx.Venue(plan.VenueMapId, plan.VenueAreaId)) { plan.VenueMapId = ctx.DefaultMapId; plan.VenueAreaId = 0; }
             foreach (var invitee in plan.Invitees.Where(i => i.Status == InviteStatus.Invited).ToList())
             {
                 var p = GetPerson(invitee.PersonId);

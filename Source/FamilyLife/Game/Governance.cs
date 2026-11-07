@@ -26,7 +26,25 @@ namespace FamilyLife
         {
             var pawn = c.TryGetPawn(id);
             if (pawn == null) return true;
-            return !pawn.Drafted && !pawn.Downed && !pawn.InMentalState && !pawn.IsPrisoner && !PerspectiveShiftBridge.IsAvatar(pawn);
+            return !pawn.Drafted && !pawn.Downed && !pawn.InMentalState && !pawn.IsPrisoner && pawn.CurJob?.playerForced != true &&
+                !Find.Selector.IsSelected(pawn) && !PerspectiveShiftBridge.IsAvatar(pawn);
+        }
+
+        internal static bool OfficeCellValid(FamilyComponent c, FamilyOffice office)
+        {
+            if(c==null||office==null)return false;
+            var map=Find.Maps.FirstOrDefault(m=>m.uniqueID==office.MapId);var house=c.Registry.GetLineage(office.FamilyId);
+            var cell=new IntVec3(office.X,0,office.Z);var area=FamilyZones.AreaFor(house);
+            return map!=null&&cell.InBounds(map)&&cell.Standable(map)&&area?.Map==map&&area[cell];
+        }
+
+        internal static bool TryMeetingCell(FamilyComponent c,int family,Pawn first,Pawn second,out IntVec3 cell)
+        {
+            cell=IntVec3.Invalid;
+            var office=c?.Registry.OfficeOf(family);if(!OfficeCellValid(c,office)||first?.Map==null||second?.Map!=first.Map||first.Map.uniqueID!=office.MapId)return false;
+            var candidate=new IntVec3(office.X,0,office.Z);
+            if(!first.CanReach(candidate,Verse.AI.PathEndMode.OnCell,Danger.None)||!second.CanReach(candidate,Verse.AI.PathEndMode.OnCell,Danger.None))return false;
+            cell=candidate;return true;
         }
 
         internal static PlanContext PlanContextFor(FamilyComponent c, int family)
@@ -39,7 +57,8 @@ namespace FamilyLife
                 IsAvatar = id => IsAvatar(c, id),
                 // Nobody is brought to the map from elsewhere. A relative counts as able to attend only if they are already here.
                 ArrivalEstimate = id => { var p = c.TryGetPawn(id); return p != null && p.Spawned && p.Map != null && (home < 0 || p.Map.uniqueID == home) ? 0 : -1; },
-                VenueValid = (map, area) => map < 0 || Find.Maps.Any(m => m.uniqueID == map)
+                VenueValid = (map, area) => map < 0 || Find.Maps.Any(m => m.uniqueID == map &&
+                    (area == 0 || m.areaManager.AllAreas.Any(a => a.ID == area)))
             };
         }
 
@@ -51,7 +70,7 @@ namespace FamilyLife
                 r.OpenCeremonyPlan(request.Id, now, PlanContextFor(c, request.LineageId)); }, "plans");
             Safe(() => r.AdvanceCeremonyPlans(now, family => PlanContextFor(c, family)), "plan upkeep");
             Safe(() => r.MaintainStewardDuties(now, id => Free(c, id)), "duties");
-            Safe(() => r.PruneOffices(map => Find.Maps.Any(m => m.uniqueID == map)), "offices");
+            Safe(() => r.PruneOffices(office => OfficeCellValid(c, office)), "offices");
             Safe(() => r.MaintainSuccession(now), "succession");
             Safe(() => r.MaintainCrime(now), "crime upkeep");
             GovernanceDriver.Run(c, now);
