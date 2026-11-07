@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_Gov_Title>Occasions, leadership and institutions</WFL_Gov_Title>
+  <WFL_Plan_Line>{0}: {1} ({2}), led by {3}</WFL_Plan_Line>
+  <WFL_Plan_Open>Planning card</WFL_Plan_Open>
+  <WFL_PlanState_Open>planning open</WFL_PlanState_Open>
+  <WFL_PlanState_Confirmed>confirmed</WFL_PlanState_Confirmed>
+  <WFL_PlanState_Defaulted>going ahead as planned</WFL_PlanState_Defaulted>
+  <WFL_PlanState_Cancelled>cancelled</WFL_PlanState_Cancelled>
+  <WFL_Duty_Line>{0} is working on: {1} {2}</WFL_Duty_Line>
+  <WFL_Duty_HeadActing>(the head is covering)</WFL_Duty_HeadActing>
+  <WFL_DutyKind_OrganizeCeremony>organizing an occasion</WFL_DutyKind_OrganizeCeremony>
+  <WFL_DutyKind_ReceivePetition>hearing a request</WFL_DutyKind_ReceivePetition>
+  <WFL_DutyKind_Negotiate>negotiating</WFL_DutyKind_Negotiate>
+  <WFL_DutyKind_GuestCare>looking after guests</WFL_DutyKind_GuestCare>
+  <WFL_DutyKind_Mediate>mediating a quarrel</WFL_DutyKind_Mediate>
+  <WFL_DutyKind_SupplyShortage>dealing with a shortage</WFL_DutyKind_SupplyShortage>
+  <WFL_Duty_Record>Steward {0}: {1} completed, {2} failed, {3} interrupted, {4} requests heard</WFL_Duty_Record>
+  <WFL_Office_None>No meeting place has been chosen. Duties are done wherever the house gathers.</WFL_Office_None>
+  <WFL_Office_At>Preferred meeting place: ({0}, {1}). It is a preference, not a requirement.</WFL_Office_At>
+  <WFL_Office_Set>Choose a meeting place</WFL_Office_Set>
+  <WFL_Office_Clear>Clear meeting place</WFL_Office_Clear>
+  <WFL_Office_Saved>Meeting place saved.</WFL_Office_Saved>
+  <WFL_Office_Invalid>Choose a walkable cell inside this family's area.</WFL_Office_Invalid>
+  <WFL_Succession_Custom>How this house chooses its head: {0}</WFL_Succession_Custom>
+  <WFL_Custom_Seniority>the eldest capable member</WFL_Custom_Seniority>
+  <WFL_Custom_Primogeniture>the head's own line</WFL_Custom_Primogeniture>
+  <WFL_Custom_Merit>proven service and skill</WFL_Custom_Merit>
+  <WFL_Custom_Designation>the head's chosen heir</WFL_Custom_Designation>
+  <WFL_Custom_Consensus>what the house agrees on</WFL_Custom_Consensus>
+  <WFL_Succession_Waiting>{0} is away. The house is waiting before it names anyone.</WFL_Succession_Waiting>
+  <WFL_Succession_Case>Succession after {0}: {1}. Acting head: {2}.</WFL_Succession_Case>
+  <WFL_SuccessionStage_Orderly>considering an orderly succession</WFL_SuccessionStage_Orderly>
+  <WFL_SuccessionStage_Negotiation>negotiating</WFL_SuccessionStage_Negotiation>
+  <WFL_SuccessionStage_Compromise>seeking a compromise</WFL_SuccessionStage_Compromise>
+  <WFL_SuccessionStage_Disputed>disputed</WFL_SuccessionStage_Disputed>
+  <WFL_SuccessionStage_Branched>the house divided</WFL_SuccessionStage_Branched>
+  <WFL_SuccessionStage_Resolved>settled</WFL_SuccessionStage_Resolved>
+  <WFL_SuccessionStage_Returned>the head returned</WFL_SuccessionStage_Returned>
+  <WFL_Succession_Candidate>{0}: legitimacy {1} out of 100 {2}</WFL_Succession_Candidate>
+  <WFL_Succession_Reluctant>(reluctant)</WFL_Succession_Reluctant>
+  <WFL_Legit_Kin>kinship</WFL_Legit_Kin>
+  <WFL_Legit_Seniority>age and standing</WFL_Legit_Seniority>
+  <WFL_Legit_Service>service</WFL_Legit_Service>
+  <WFL_Legit_Competence>skill</WFL_Legit_Competence>
+  <WFL_Legit_Relationships>trust of the house</WFL_Legit_Relationships>
+  <WFL_Legit_Promise>a promise made</WFL_Legit_Promise>
+  <WFL_Legit_Conduct>known misconduct</WFL_Legit_Conduct>
+  <WFL_Legit_Ideology>shared beliefs</WFL_Legit_Ideology>
+  <WFL_Legit_Prestige>personal respect</WFL_Legit_Prestige>
+  <WFL_Succession_Heir>Named heir: {0}</WFL_Succession_Heir>
+  <WFL_Succession_Last>Last succession: {0} ({1}); lingering dispute {2}</WFL_Succession_Last>
+  <WFL_Institution_Line>The colony is run by {0}. Leader: {1}</WFL_Institution_Line>
+  <WFL_Institution_Consensus>informal consensus</WFL_Institution_Consensus>
+  <WFL_Institution_Council>a council of houses</WFL_Institution_Council>
+  <WFL_Institution_Election>elected leadership</WFL_Institution_Election>
+  <WFL_Institution_Authoritarian>one ruler</WFL_Institution_Authoritarian>
+  <WFL_Election_Line>Election ({0}): {1}</WFL_Election_Line>
+  <WFL_ElectionState_Campaign>campaigning</WFL_ElectionState_Campaign>
+  <WFL_ElectionState_Voting>voting</WFL_ElectionState_Voting>
+  <WFL_ElectionState_Counted>counted</WFL_ElectionState_Counted>
+  <WFL_ElectionState_Aborted>called off</WFL_ElectionState_Aborted>
+  <WFL_Coup_Line>A scheme led by {0} is at the stage of: {1}</WFL_Coup_Line>
+  <WFL_CoupStage_Recruiting>looking for backers</WFL_CoupStage_Recruiting>
+  <WFL_CoupStage_Preparing>preparing</WFL_CoupStage_Preparing>
+  <WFL_CoupStage_Executing>under way</WFL_CoupStage_Executing>
+  <WFL_CoupStage_Aftermath>over</WFL_CoupStage_Aftermath>
+  <WFL_Crime_Line>This house's direction: {0} ({1})</WFL_Crime_Line>
+  <WFL_Crime_Tip>Attention from others: {0}. Reform progress: {1}.</WFL_Crime_Tip>
+  <WFL_CrimeDirection_None>none</WFL_CrimeDirection_None>
+  <WFL_CrimeDirection_Protection>protection arrangements</WFL_CrimeDirection_Protection>
+  <WFL_CrimeDirection_Contraband>contraband</WFL_CrimeDirection_Contraband>
+  <WFL_CrimeDirection_Theft>theft</WFL_CrimeDirection_Theft>
+  <WFL_CrimeDirection_Intimidation>intimidation</WFL_CrimeDirection_Intimidation>
+  <WFL_CrimeDirection_Favors>favors</WFL_CrimeDirection_Favors>
+  <WFL_CrimeDirection_Laundering>laundering</WFL_CrimeDirection_Laundering>
+  <WFL_CrimeStatus_None>none</WFL_CrimeStatus_None>
+  <WFL_CrimeStatus_Considering>being considered</WFL_CrimeStatus_Considering>
+  <WFL_CrimeStatus_Active>active</WFL_CrimeStatus_Active>
+  <WFL_CrimeStatus_Reforming>reforming</WFL_CrimeStatus_Reforming>
+  <WFL_CrimeStatus_Reformed>reformed</WFL_CrimeStatus_Reformed>
+  <WFL_Crime_Unknown>someone unknown</WFL_Crime_Unknown>
+  <WFL_Heist_Line>A job ({0}) by {1}; you know this as: {2}</WFL_Heist_Line>
+  <WFL_HeistState_Planning>being planned</WFL_HeistState_Planning>
+  <WFL_HeistState_Ready>ready</WFL_HeistState_Ready>
+  <WFL_HeistState_Executing>under way</WFL_HeistState_Executing>
+  <WFL_HeistState_Completed>done</WFL_HeistState_Completed>
+  <WFL_HeistState_Interrupted>interrupted</WFL_HeistState_Interrupted>
+  <WFL_HeistState_Aborted>called off</WFL_HeistState_Aborted>
+  <WFL_HeistState_Exposed>found out</WFL_HeistState_Exposed>
+  <WFL_HeistState_CleanedUp>cleaned up</WFL_HeistState_CleanedUp>
+  <WFL_CrimeKnowledge_None>not at all</WFL_CrimeKnowledge_None>
+  <WFL_CrimeKnowledge_Suspicion>a suspicion</WFL_CrimeKnowledge_Suspicion>
+  <WFL_CrimeKnowledge_Report>a report</WFL_CrimeKnowledge_Report>
+  <WFL_CrimeKnowledge_Fact>first hand</WFL_CrimeKnowledge_Fact>
+  <WFL_Plan_OpenNote>If you leave this card alone, the family goes ahead with the choices below at {0}.</WFL_Plan_OpenNote>
+  <WFL_Plan_When>When it starts</WFL_Plan_When>
+  <WFL_Plan_Organizer>Who leads</WFL_Plan_Organizer>
+  <WFL_Plan_CannotLead>{0} cannot lead this occasion.</WFL_Plan_CannotLead>
+  <WFL_Plan_Venue>Where</WFL_Plan_Venue>
+  <WFL_Plan_VenueDefault>The family's usual area</WFL_Plan_VenueDefault>
+  <WFL_Plan_VenueMap>Map {0}</WFL_Plan_VenueMap>
+  <WFL_Plan_VenueArea>{0} on map {1}</WFL_Plan_VenueArea>
+  <WFL_Plan_AvatarAsked>{0} has been asked to lead. Only you can answer for them.</WFL_Plan_AvatarAsked>
+  <WFL_Plan_Accept>I will lead</WFL_Plan_Accept>
+  <WFL_Plan_Decline>Not me</WFL_Plan_Decline>
+  <WFL_Plan_AskAvatar>Ask {0} to lead</WFL_Plan_AskAvatar>
+  <WFL_PlanAsk_None>{0} has not been asked.</WFL_PlanAsk_None>
+  <WFL_PlanAsk_Asked>{0} has been asked and has not answered.</WFL_PlanAsk_Asked>
+  <WFL_PlanAsk_Accepted>{0} agreed to lead.</WFL_PlanAsk_Accepted>
+  <WFL_PlanAsk_Declined>{0} declined.</WFL_PlanAsk_Declined>
+  <WFL_PlanAsk_Unanswered>{0} did not answer, so someone else leads.</WFL_PlanAsk_Unanswered>
+  <WFL_Plan_Guests>Who is asked</WFL_Plan_Guests>
+  <WFL_Plan_NotTold>You have not been told the details of this occasion.</WFL_Plan_NotTold>
+  <WFL_InviteSource_Family>family</WFL_InviteSource_Family>
+  <WFL_InviteSource_Guest>friend of the house</WFL_InviteSource_Guest>
+  <WFL_InviteSource_Distant>relative far away</WFL_InviteSource_Distant>
+  <WFL_InviteBarrier_Dead>has died</WFL_InviteBarrier_Dead>
+  <WFL_InviteBarrier_Hostile>the houses are on bad terms</WFL_InviteBarrier_Hostile>
+  <WFL_InviteBarrier_TooFarForWindow>could not arrive in time</WFL_InviteBarrier_TooFarForWindow>
+  <WFL_InviteBarrier_CannotTravel>no safe way to reach the colony</WFL_InviteBarrier_CannotTravel>
+  <WFL_InviteBarrier_Unavailable>cannot take part right now</WFL_InviteBarrier_Unavailable>
+  <WFL_InviteBarrier_NotKin>not kin</WFL_InviteBarrier_NotKin>
+  <WFL_InviteBarrier_TheSubject>the occasion is for them</WFL_InviteBarrier_TheSubject>
+  <WFL_InviteBarrier_WrongMap>on another map</WFL_InviteBarrier_WrongMap>
+  <WFL_Plan_Arrives>arrives {0}</WFL_Plan_Arrives>
+  <WFL_Plan_Confirm>Confirm these choices</WFL_Plan_Confirm>
+  <WFL_Plan_Close>Close</WFL_Plan_Close>
+  <WFL_S_Governance>Leadership, institutions and house politics</WFL_S_Governance>
+  <WFL_S_GovernanceTip>Lets Steward duties, succession, elections, schemes and house crime play out on their own. Turn off to keep only the records.</WFL_S_GovernanceTip>
+  <WFL_Coup_Confronted>{0} confronted {1}.</WFL_Coup_Confronted>
+  <WFL_Protection_Waiting>{0} has received a protection offer. Their answer is waiting in Families.</WFL_Protection_Waiting>
+  <WFL_Gov_ChangeLeadership>Configure leadership (overseer)</WFL_Gov_ChangeLeadership>
+  <WFL_Gov_CallElection>Call an election</WFL_Gov_CallElection>
+  <WFL_Gov_ElectionCalled>An election has been called.</WFL_Gov_ElectionCalled>
+  <WFL_Gov_ElectionNotPossible>An election needs elected leadership, no election already open, and two people the colony would accept.</WFL_Gov_ElectionNotPossible>
+  <WFL_Gov_NeedsLeader>Choose who leads.</WFL_Gov_NeedsLeader>
+  <WFL_Ask_Title>Waiting for your answer</WFL_Ask_Title>
+  <WFL_Ask_Vote>An election is open. You can go and vote.</WFL_Ask_Vote>
+  <WFL_Ask_GoVote>Go and vote</WFL_Ask_GoVote>
+  <WFL_Ask_Coup>{0} quietly asks whether you would join a scheme against {1}.</WFL_Ask_Coup>
+  <WFL_Ask_CoupConfront>{0} is asking to confront you over the colony's leadership.</WFL_Ask_CoupConfront>
+  <WFL_Ask_Meet>Meet them</WFL_Ask_Meet>
+  <WFL_Ask_DeclineMeeting>Refuse the meeting</WFL_Ask_DeclineMeeting>
+  <WFL_Ask_Heist>{0} asks whether you would take part in a job against another house.</WFL_Ask_Heist>
+  <WFL_Ask_Protection>{0} offers to protect your house for {1} silver every few days.</WFL_Ask_Protection>
+  <WFL_Ask_Petition>{0} has a request ({1}) waiting to be heard.</WFL_Ask_Petition>
+  <WFL_Ask_Join>Join</WFL_Ask_Join>
+  <WFL_Ask_Refuse>Refuse</WFL_Ask_Refuse>
+  <WFL_Ask_Expose>Tell others</WFL_Ask_Expose>
+  <WFL_Ask_Agree>Agree</WFL_Ask_Agree>
+  <WFL_Ask_Hear>Hear them</WFL_Ask_Hear>
+  <WFL_Ask_CouncilUnion>The council is asked whether {0} and {1} may join as one house.</WFL_Ask_CouncilUnion>
+  <WFL_Ask_CouncilCensure>The council is asked whether to censure {0}.</WFL_Ask_CouncilCensure>
+  <WFL_Favor_Line>A favor owed by {0}: {1}</WFL_Favor_Line>
+  <WFL_FavorState_Owed>not yet asked for</WFL_FavorState_Owed>
+  <WFL_FavorState_Called>asked for</WFL_FavorState_Called>
+  <WFL_FavorState_Settled>honoured</WFL_FavorState_Settled>
+  <WFL_FavorState_Defaulted>refused</WFL_FavorState_Defaulted>
+  <WFL_FavorState_Lapsed>forgotten</WFL_FavorState_Lapsed>
+  <WFL_S_Camping>Family camping trips</WFL_S_Camping>
+  <WFL_S_CampingTip>Families may wish for a day or two away from the colony. You always decide: nothing is sent until you form the caravan yourself. Declining costs nothing.</WFL_S_CampingTip>
+  <WFL_S_CampRadius>Camping trip distance: up to {0} tiles from home</WFL_S_CampRadius>
+  <WFL_S_CampRadiusTip>How far from the colony a family may suggest camping.</WFL_S_CampRadiusTip>
+  <WFL_Office_Elected>{0} was chosen as the colony's {1}.</WFL_Office_Elected>
+  <WFL_OfficeKind_Healer>healer</WFL_OfficeKind_Healer>
+  <WFL_OfficeKind_Teacher>teacher</WFL_OfficeKind_Teacher>
+  <WFL_OfficeKind_HallKeeper>hall keeper</WFL_OfficeKind_HallKeeper>
+  <WFL_OfficeKind_Chaplain>chaplain</WFL_OfficeKind_Chaplain>
+  <WFL_Offices_Title>Community posts</WFL_Offices_Title>
+  <WFL_Office_Vacant>The {0}: nobody holds it.</WFL_Office_Vacant>
+  <WFL_Office_Holder>The {0}: {1} ({2})</WFL_Office_Holder>
+  <WFL_Office_Tip>Acts of real work this term: {0}. Chosen with {1} for and {2} against. So far the year is judged: {3}. A post is kept by doing its work; it never changes what a person can do.</WFL_Office_Tip>
+  <WFL_Ask_CouncilLeader>The council is choosing the colony's leader. Whom do you back?</WFL_Ask_CouncilLeader>
+  <WFL_Ask_Abstain>Abstain</WFL_Ask_Abstain>
+  <WFL_Camp_LetterTitle>A family would like to go camping</WFL_Camp_LetterTitle>
+  <WFL_Camp_LetterText>{0} and the {2} family would like a day or two away ({1}). Nothing happens unless you agree and send a caravan yourself.</WFL_Camp_LetterText>
+  <WFL_CampMotive_Recreation>time together</WFL_CampMotive_Recreation>
+  <WFL_CampMotive_Reconciliation>to make peace</WFL_CampMotive_Reconciliation>
+  <WFL_CampMotive_Teaching>to teach the young ones</WFL_CampMotive_Teaching>
+  <WFL_CampMotive_ComingOfAge>to mark a coming of age</WFL_CampMotive_ComingOfAge>
+  <WFL_CampMotive_Tradition>an old family custom</WFL_CampMotive_Tradition>
+  <WFL_CampState_Proposed>waiting for your answer</WFL_CampState_Proposed>
+  <WFL_CampState_Authorized>agreed; waiting for the caravan</WFL_CampState_Authorized>
+  <WFL_CampState_Away>camping now</WFL_CampState_Away>
+  <WFL_CampState_Completed>finished</WFL_CampState_Completed>
+  <WFL_CampState_Declined>declined</WFL_CampState_Declined>
+  <WFL_CampState_Expired>lapsed</WFL_CampState_Expired>
+  <WFL_CampState_Cut>cut short</WFL_CampState_Cut>
+  <WFL_Camp_Line>Camping trip ({0}): {1}. About {2} hours. They would like to bring: {3}</WFL_Camp_Line>
+  <WFL_Camp_Plan>Agree to the trip</WFL_Camp_Plan>
+  <WFL_Camp_Decline>Not now</WFL_Camp_Decline>
+  <WFL_Camp_FormCaravan>Form the caravan</WFL_Camp_FormCaravan>
+  <WFL_Camp_ShowPlace>Show the place</WFL_Camp_ShowPlace>
+  <WFL_Camp_Authorized>Agreed. Form a caravan and take it to the place shown on the world map. The trip counts once people have stayed there the whole time.</WFL_Camp_Authorized>
+  <WFL_Camp_Unavailable>That camping trip can no longer be agreed to.</WFL_Camp_Unavailable>
+  <WFL_Camp_NeedHomeMap>Open one of your colony maps first, then form the caravan from there.</WFL_Camp_NeedHomeMap>
+  <WFL_Camp_Arrived>The {0} family has made camp.</WFL_Camp_Arrived>
+  <WFL_Camp_Good>The {0} family's camping trip was lovely. They are closer for it.</WFL_Camp_Good>
+  <WFL_Camp_Fine>The {0} family's camping trip passed quietly.</WFL_Camp_Fine>
+  <WFL_Camp_Bad>The {0} family's camping trip went badly.</WFL_Camp_Bad>
+  <WFL_Camp_Cut>The {0} family's camping trip ended early.</WFL_Camp_Cut>
+  <WFL_Kin_Line>Relatives on the way ({0}): {1}</WFL_Kin_Line>
+  <WFL_KinState_Travelling>travelling</WFL_KinState_Travelling>
+  <WFL_KinState_Stranded>held up on the road</WFL_KinState_Stranded>
+  <WFL_KinState_Arrived>visiting</WFL_KinState_Arrived>
+  <WFL_KinState_Leaving>leaving</WFL_KinState_Leaving>
+  <WFL_KinState_Completed>home again</WFL_KinState_Completed>
+  <WFL_KinState_Failed>did not come</WFL_KinState_Failed>
+  <WFL_KinState_Expired>called off</WFL_KinState_Expired>
+  <WFL_Kin_ShowPlace>Show where they are</WFL_Kin_ShowPlace>
+  <WFL_Kin_StrandedTitle>Relatives held up on the road</WFL_Kin_StrandedTitle>
+  <WFL_Kin_StrandedText>Relatives of the {0} family, on their way to the reunion, are stuck on the road. A caravan that reaches them within about {1} days can help. If nobody comes, they will turn back and the reunion will go ahead without them.</WFL_Kin_StrandedText>
+  <WFL_Kin_Rescued>Help reached the {0} family's relatives. They are on their way again.</WFL_Kin_Rescued>
+  <WFL_Kin_Failed>The {0} family's relatives did not make it to the reunion.</WFL_Kin_Failed>
+  <WFL_Kin_ArrivedTitle>Relatives have arrived</WFL_Kin_ArrivedTitle>
+  <WFL_Kin_ArrivedText>Kin of the {0} family have arrived for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedText>
+  <WFL_S_Classes>Hold classes (the colony's teacher)</WFL_S_Classes>
+  <WFL_S_ClassesTip>The colony's chosen teacher holds a class for the children every few days. The class waits if nobody is free to teach or to learn.</WFL_S_ClassesTip>
+  <WFL_S_ClassEvery>A class every {0} day(s)</WFL_S_ClassEvery>
+  <WFL_S_ClassEveryTip>How often the teacher holds a class.</WFL_S_ClassEveryTip>
+  <WFL_S_AdultStudents>Let adults join the class</WFL_S_AdultStudents>
+  <WFL_S_AdultStudentsTip>Adults can be students too, when the teacher knows something they would like to learn. Off by default.</WFL_S_AdultStudentsTip>
+  <WFL_S_HealthChecks>Check-ups with the colony's doctor</WFL_S_HealthChecks>
+  <WFL_S_HealthChecksTip>The colony's chosen doctor examines everyone in the medical room. Someone examined recovers a little faster and fights illness a little better for a while.</WFL_S_HealthChecksTip>
+  <WFL_S_CheckupsPerYear>{0} round(s) of check-ups per year</WFL_S_CheckupsPerYear>
+  <WFL_S_CheckupsPerYearTip>A year here is 60 days; two rounds a year is one about every 30 days.</WFL_S_CheckupsPerYearTip>
+  <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
+  <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>
+  <WFL_Office_Until>until the next assembly, {0}</WFL_Office_Until>&#10;  <WFL_Office_Appointed>named by the ideoligion</WFL_Office_Appointed>&#10;  <WFL_Grade_Good>well</WFL_Grade_Good>&#10;  <WFL_Grade_Fair>fairly</WFL_Grade_Fair>&#10;  <WFL_Grade_Poor>poorly</WFL_Grade_Poor>&#10;  <WFL_Assembly_Title>The yearly assembly</WFL_Assembly_Title>&#10;  <WFL_Assembly_Text>The families are gathering to choose the colony's posts. Everyone who can goes to the polling place to vote.&#10;&#10;{0}</WFL_Assembly_Text>&#10;  <WFL_Assembly_RaceIncumbent>The {0}: {1} holds it, and has served {2}. Standing again.</WFL_Assembly_RaceIncumbent>&#10;  <WFL_Assembly_RaceOpen>The {0}: nobody holds it. Standing:</WFL_Assembly_RaceOpen>&#10;  <WFL_Assembly_ResultTitle>The assembly has chosen</WFL_Assembly_ResultTitle>&#10;  <WFL_Assembly_ResultText>The votes are counted.&#10;&#10;{0}</WFL_Assembly_ResultText>&#10;  <WFL_Assembly_ResultKept>The {0}: {1} is kept on, having served {2}.</WFL_Assembly_ResultKept>&#10;  <WFL_Assembly_ResultNew>The {0}: {1} is chosen. {2}</WFL_Assembly_ResultNew>&#10;  <WFL_Assembly_ResultNone>The {0}: nobody was chosen.</WFL_Assembly_ResultNone>&#10;  <WFL_Assembly_Next>The next assembly: {0}</WFL_Assembly_Next>&#10;  <WFL_Assembly_RaceLine>The {0} ({1}): {2}</WFL_Assembly_RaceLine>&#10;  <WFL_AssemblyState_Campaign>houses are choosing whom to back</WFL_AssemblyState_Campaign>&#10;  <WFL_AssemblyState_Voting>voting</WFL_AssemblyState_Voting>&#10;  <WFL_AssemblyState_Counted>counted</WFL_AssemblyState_Counted>&#10;  <WFL_AssemblyState_Cancelled>called off</WFL_AssemblyState_Cancelled>&#10;  <WFL_Ask_AssemblyVote>The yearly assembly is voting on the colony's posts. Go and cast your ballot?</WFL_Ask_AssemblyVote>&#10;  <WFL_Chaplain_Named>{0}, the ideoligion's moral guide, is now the colony's chaplain.</WFL_Chaplain_Named>&#10;  <WFL_Hall_Begins>{0} is serving a meal in the hall.</WFL_Hall_Begins>&#10;  <WFL_S_HallMeals>Hall meals (the hall keeper)</WFL_S_HallMeals>&#10;  <WFL_S_HallMealsTip>The colony's chosen hall keeper keeps the dining hall clean and serves meals to those who come and sit. Nothing starts unless the keeper is free.</WFL_S_HallMealsTip>&#10;  <WFL_S_HallEvery>A hall meal every {0} day(s)</WFL_S_HallEvery>&#10;  <WFL_S_HallEveryTip>How often the hall keeper calls people to a served meal.</WFL_S_HallEveryTip>&#10;  <WFL_Assembly_Stands>{0} stands: {1}.</WFL_Assembly_Stands>
+  <WFL_Motive_Calling>burns for the work</WFL_Motive_Calling>
+  <WFL_Motive_Recognition>wants to be recognised</WFL_Motive_Recognition>
+  <WFL_Motive_Sponsored>put forward by their house</WFL_Motive_Sponsored>
+  <WFL_Motive_Duty>asked because no one else would stand</WFL_Motive_Duty>
+  <WFL_Motive_Incumbent>holds the post now</WFL_Motive_Incumbent>
+  <WFL_HouseWish_Care>This house would like a {0} of its own: it has sick or hurt people to look after, or a gap in medical skill.</WFL_HouseWish_Care>
+  <WFL_HouseWish_Teach>This house would like a {0} of its own: it has children to bring on, or a skill it wants taught.</WFL_HouseWish_Teach>
+  <WFL_HouseWish_Feed>This house would like a {0} of its own: it is short of food or wants its people at one table.</WFL_HouseWish_Feed>
+  <WFL_HouseWish_Standing>This house is seeking influence and would take a {0} for the standing it brings.</WFL_HouseWish_Standing>
+  <WFL_Perk_Healer>What it brings the house of the one who holds it: they are seen first at every round of check-ups, the check-up's good effect lasts twice as long for them, they are glad to be looked after by kin, and the house gains standing for each patient helped.</WFL_Perk_Healer>
+  <WFL_Perk_Teacher>What it brings the house of the one who holds it: their children are taught first and learn half as much again from every lesson, and the house gains standing for each class given.</WFL_Perk_Teacher>
+  <WFL_Perk_HallKeeper>What it brings the house of the one who holds it: they are seated and served first, and are glad to be fed by their own, and the house gains standing for each meal served.</WFL_Perk_HallKeeper>
+  <WFL_Perk_Chaplain>What it brings the house of the one who holds it: the holder is preferred to lead the family's rites, and the house gains standing for each rite led well.</WFL_Perk_Chaplain>
+  <WFL_Hall_Named>The hall is the room you named, at ({0}, {1}).</WFL_Hall_Named>
+  <WFL_Hall_Auto>No hall named: the game looks for a dining room. A room with school furniture is never chosen.</WFL_Hall_Auto>
+  <WFL_Hall_Set>Name the dining hall</WFL_Hall_Set>
+  <WFL_Hall_Clear>Go back to automatic</WFL_Hall_Clear>
+  <WFL_Hall_Saved>That room is now the hall.</WFL_Hall_Saved>
+  <WFL_Hall_Invalid>That is not an enclosed room.</WFL_Hall_Invalid>
+  <WFL_Tab_Roles>Roles in the colony</WFL_Tab_Roles>
+  <WFL_Role_Leader>Colony leader</WFL_Role_Leader>
+  <WFL_Role_Head>Head of House {0}</WFL_Role_Head>
+  <WFL_Role_Steward>Steward of House {0}</WFL_Role_Steward>
+  <WFL_S_MindComfort>Loved ones help with mental breaks</WFL_S_MindComfort>
+  <WFL_S_MindComfortTip>A partner, or a parent, will try to talk someone through a mental break that is coming or has begun. How well it goes depends on how close they are and how good they are with people. They try a few times at most, and never during violent breaks.</WFL_S_MindComfortTip>
+  <WFL_Comfort_Resolved_0>{0} found the right words, and {1} came back to themselves.</WFL_Comfort_Resolved_0>
+  <WFL_Comfort_Resolved_1>{1} let {0} take their hand, and the storm passed.</WFL_Comfort_Resolved_1>
+  <WFL_Comfort_Resolved_2>With a few quiet words, {0} talked {1} down.</WFL_Comfort_Resolved_2>
+  <WFL_Comfort_Resolved_3>"I'm here," said {0}, and that was enough for {1}.</WFL_Comfort_Resolved_3>
+  <WFL_Comfort_Eased_0>{0} sat with {1}, who is calmer for it.</WFL_Comfort_Eased_0>
+  <WFL_Comfort_Eased_1>{0} could not fix it, but {1} is no longer alone with it.</WFL_Comfort_Eased_1>
+  <WFL_Comfort_Eased_2>{1} listened to {0}, a little.</WFL_Comfort_Eased_2>
+  <WFL_Comfort_Failed_0>{0} tried to reach {1}, but could not.</WFL_Comfort_Failed_0>
+  <WFL_Comfort_Failed_1>Whatever {0} said, {1} was not ready to hear it.</WFL_Comfort_Failed_1>
+  <WFL_Comfort_Failed_2>{1} pulled away from {0}.</WFL_Comfort_Failed_2>
+  <WFL_Kin_ArrivedShuttleText>A shuttle has set down kin of the {0} family for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedShuttleText>
+  <WFL_Gathering_Title_assembly>The yearly assembly</WFL_Gathering_Title_assembly>
+  <WFL_Gathering_Text_assembly>{0} has called the whole colony together. The candidates will speak, and everyone who comes may vote.</WFL_Gathering_Text_assembly>
+  <WFL_Gathering_Report_assembly>at the yearly assembly.</WFL_Gathering_Report_assembly>
+  <WFL_Speech_0>{0} rises to speak for the post of {1}. "{2}."</WFL_Speech_0>
+  <WFL_Speech_1>"I ask for your voice for {1}," says {0}. The crowd listens.</WFL_Speech_1>
+  <WFL_Speech_2>{0} stands before the assembly and makes the case for the {1}: {2}.</WFL_Speech_2>
+  <WFL_Speech_3>There is a stir as {0} speaks about the {1}.</WFL_Speech_3>
+</LanguageData>

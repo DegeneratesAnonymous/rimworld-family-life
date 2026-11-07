@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - community posts, camping and visiting kin
+- Add four community posts: a teacher who holds a class every few days (adjustable, adults optional), a doctor who gives everyone a check-up twice a year in the medical room, a hall keeper who cleans the hall and serves meals to people who sit and wait, and a chaplain named by the ideoligion. People stand for a post for a reason (a calling, a personal aim, a sponsoring house, or duty) and only one post each; houses with a need want the matching post and its holder's kin are served first and learn or heal more. Elected posts are chosen at a yearly assembly where the incumbent's graded year weighs in the vote; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
+- A player-controlled head is asked for their council leadership ballot; a union a head accepted under a council now finishes when the council approves it.
+- Offline tests only; nothing here has been run in the game.
+
 ## Unreleased — family stories and supplies
 
 - Add 48 tradition episodes with independent directed bond outcomes and real-context eligibility.

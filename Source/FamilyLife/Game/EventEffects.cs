@@ -20,14 +20,32 @@ namespace FamilyLife
             var registry = component.Registry;
             var settings = FamilyLifeMod.Settings;
             bool gatherings = settings == null || settings.traditions;
+            bool ceremonies=settings==null||settings.ceremonies;
 
             foreach (var e in events)
             {
                 switch (e.Kind)
                 {
+                    case FamilyEventKind.MarriageFormed:
+                        if(ceremonies)
+                        {
+                            int familyA=registry.FamilyOf(e.A),familyB=registry.FamilyOf(e.B);
+                            int host=familyA!=0?familyA:familyB;
+                            if(host!=0)registry.RequestCeremony(CeremonyKind.Wedding,host,e.A,e.B,now,DayTicks/8,4*DayTicks,
+                                CeremonyInfluence.Engagement|(familyA!=0&&familyB!=0?CeremonyInfluence.StrongRelationships:CeremonyInfluence.None),
+                                familyB!=0&&familyB!=host?familyB:0);
+                        }
+                        break;
                     case FamilyEventKind.CameOfAge:
                         Remember(component, e.A, "WFL_CameOfAge", 0);
                         if (gatherings) registry.RequestGathering("comingofage", registry.LineageIdFor(registry.GetPerson(e.A)), e.A, now, DayTicks / 4, 3 * DayTicks);
+                        break;
+                    case FamilyEventKind.Died:
+                        if(ceremonies)
+                        {
+                            int family=registry.FamilyOf(e.A);
+                            if(family!=0)registry.RequestCeremony(CeremonyKind.Funeral,family,e.A,0,now,DayTicks/2,4*DayTicks,CeremonyInfluence.RecentDeath);
+                        }
                         break;
                     case FamilyEventKind.Anniversary:
                         Remember(component, e.A, "WFL_Anniversary", e.B);
@@ -59,12 +77,12 @@ namespace FamilyLife
             }
 
             // A loss that people felt is something the family gathers about.
-            if (gatherings && griefs != null)
+            if (ceremonies && griefs != null)
                 foreach (var grief in griefs)
                 {
                     if (grief.Attachment < 45f) continue;
                     int lineage = registry.LineageIdFor(registry.GetPerson(grief.LostId));
-                    if (lineage != 0) registry.RequestGathering("memorial", lineage, grief.LostId, now, DayTicks / 2, 3 * DayTicks);
+                    if (lineage != 0) registry.RequestCeremony(CeremonyKind.Funeral,lineage,grief.LostId,0,now,DayTicks/2,4*DayTicks,CeremonyInfluence.RecentDeath);
                 }
 
             // Someone who is far away is missed while they are gone.

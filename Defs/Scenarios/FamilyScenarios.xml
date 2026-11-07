@@ -115,4 +115,137 @@
       </parts>
     </scenario>
   </ScenarioDef>
+
+  <!-- A copy of the above with more of everything, for trying the mod out. -->
+  <ScenarioDef ParentName="ScenarioBase" MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>WFL_ThreeFamiliesTesting</defName>
+    <label>Three Families: testing ground</label>
+    <description>FOR TESTING WIL'S FAMILY LIFE. The same three families as the main scenario, with plenty of food, medicine, silver and materials so you can try every feature quickly. Use the debug menu (Wil's Family Life, testing) to build a dining hall and medical room, fast-forward posts, classes, check-ups and the yearly assembly, and to create distant kin.\n\nThree families, each a mother, a father and two children, signed up together for the long passage to a new rimworld. Twelve of you in all. Nobody here is a stranger to anyone: the adults have kept their households running through hard years, and the children are depending on every one of you.\n\nYou have what a family needs to settle: food, medicine, tools and building materials. What you do not have is time to waste.\n\nNote: the children cannot work or fight, and there are only six adults to feed, shelter and defend twelve, so this is a demanding scenario.</description>
+    <scenario>
+      <summary>Three families with generous supplies, for trying out the family features.</summary>
+      <parts>
+
+        <!-- Config page: the starting colonists are generated as families by ScenPart_FamiliesStart -->
+        <li Class="FamilyLife.ScenPart_FamiliesStart">
+          <def>ConfigPage_ConfigureStartingPawns</def>
+          <pawnCount>12</pawnCount>
+          <pawnChoiceCount>12</pawnChoiceCount>
+        </li>
+
+        <!-- Arrival -->
+        <li Class="ScenPart_PlayerPawnsArriveMethod">
+          <def>PlayerPawnsArriveMethod</def>
+          <method>DropPods</method>
+          <visible>false</visible>
+        </li>
+
+        <!-- Supplies for twelve, six of whom cannot work -->
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Silver</thingDef>
+          <count>6000</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MealSurvivalPack</thingDef>
+          <count>300</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MedicineIndustrial</thingDef>
+          <count>40</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MedicineHerbal</thingDef>
+          <count>30</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>ComponentIndustrial</thingDef>
+          <count>40</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Steel</thingDef>
+          <count>500</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Cloth</thingDef>
+          <count>200</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Gun_BoltActionRifle</thingDef>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Gun_BoltActionRifle</thingDef>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Gun_Revolver</thingDef>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Gun_Revolver</thingDef>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MeleeWeapon_Knife</thingDef>
+          <stuff>Steel</stuff>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MeleeWeapon_Knife</thingDef>
+          <stuff>Steel</stuff>
+        </li>
+        <li Class="ScenPart_StartingAnimal">
+          <def>StartingAnimal</def>
+          <count>2</count>
+          <bondToRandomPlayerPawnChance>1.0</bondToRandomPlayerPawnChance>
+        </li>
+
+        <!-- Building materials near where everyone lands -->
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>Steel</thingDef>
+          <count>400</count>
+        </li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>WoodLog</thingDef>
+          <count>500</count>
+        </li>
+
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MealFine</thingDef>
+          <count>80</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MealSimple</thingDef>
+          <count>80</count>
+        </li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>Steel</thingDef>
+          <count>1500</count>
+        </li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>WoodLog</thingDef>
+          <count>1500</count>
+        </li>
+        <li Class="ScenPart_GameStartDialog">
+          <def>GameStartDialog</def>
+          <text>Testing ground. Open the debug menu and look under "Wil's Family Life, testing": build a dining hall and a medical room, give the colonists skills and passions, then fast-forward the posts, classes, check-ups and the yearly assembly.</text>
+          <closeSound>GameStartSting</closeSound>
+        </li>
+
+      </parts>
+    </scenario>
+  </ScenarioDef>
 </Defs>

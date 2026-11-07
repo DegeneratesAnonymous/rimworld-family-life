@@ -133,6 +133,7 @@ namespace FamilyLife
                 OpinionOfInitiator = component.OpinionBetween(ib.Id, ia.Id) ?? 0,
                 Broken = registry.BrokenPromise(ia.Id, ib.Id)
             };
+            ctx.ConsentedMatch=registry.HasConsentedMatch(ia.Id,ib.Id);
             if (ia.LineageId != 0 && ib.LineageId != 0 && ia.LineageId != ib.LineageId) ctx.FamilyTie = registry.GetTie(ia.LineageId, ib.LineageId);
 
             if (!ia.Child && !ib.Child)

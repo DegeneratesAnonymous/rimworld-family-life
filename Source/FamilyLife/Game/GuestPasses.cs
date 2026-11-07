@@ -15,6 +15,8 @@ namespace FamilyLife
         public Pawn Guest, Opener;
         public int Lineage;
         public Zone_Family Zone;
+        public Job Wished;                  // what they were about to do inside, if known
+        public IntVec3 WishCell = IntVec3.Invalid;
         public IntVec3 Inside, Outside;
         public int Start, GrantedTick, LeftSince = -1;
         public int ArrivedTick = -1, LastKnock = -1000000, LastSummon = -1000000;
@@ -89,17 +91,17 @@ namespace FamilyLife
                     var lineage = zone.Family(registry);
                     if (lineage == null || IsFamilyMember(registry, lineage, pawn)) continue;
                     if (ByGuest.Values.Any(p => p.Zone == zone && p.Lineage == lineage.Id && !p.Granted)) continue;      // someone is already at this door
-                    Begin(registry, component, pawn, zone, lineage, now);
+                    Begin(registry, component, pawn, zone, lineage, now, wish);
                 }
             }
         }
 
-        private static bool Begin(FamilyRegistry registry, FamilyComponent component, Pawn guest, Zone_Family zone, Lineage lineage, int now)
+        private static bool Begin(FamilyRegistry registry, FamilyComponent component, Pawn guest, Zone_Family zone, Lineage lineage, int now, DoorWish wish)
         {
             if (ByGuest.Count >= MaxVisits) return false;
             cooldown[guest.thingIDNumber] = now + CooldownAfterRefusal;                  // replaced by a shorter one if the visit goes ahead and ends well
             if (!FindDoor(zone, guest, out IntVec3 inside, out IntVec3 outside)) { Trace(guest.LabelShort + ": no edge cell found for " + zone.label); return false; }
-            var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, Lineage = lineage.Id };
+            var pass = new GuestPass { Guest = guest, Zone = zone, Inside = inside, Outside = outside, Start = now, Lineage = lineage.Id, Wished = wish.Job, WishCell = wish.Cell };
             ByGuest[guest.thingIDNumber] = pass;
             if (!guest.CanReach(outside, PathEndMode.OnCell, Danger.Deadly)) { Trace(guest.LabelShort + " cannot reach the edge of " + zone.label); End(pass, CooldownAfterRefusal); return false; }
             Trace(guest.LabelShort + " goes to knock at " + zone.label);
@@ -164,7 +166,37 @@ namespace FamilyLife
             pass.Granted = true;
             pass.GrantedTick = Find.TickManager.TicksGame;
             Trace(guest.LabelShort + " was let into " + pass.Zone.label);
-            if (pass.Opener != null && pass.Opener.Spawned) MoteMaker.ThrowText(pass.Opener.DrawPos, pass.Opener.Map, "WFL_ComeIn".Translate(), Color.white);
+            if (pass.Opener != null && pass.Opener.Spawned) MoteMaker.ThrowText(pass.Opener.DrawPos, pass.Opener.Map, Phrasing.Say("WFL_ComeIn", pass.Opener.thingIDNumber + Find.TickManager.TicksGame / 600), Color.white);
+        }
+
+        /// <summary>Whether a remembered job can still be done: its targets are still there and the guest may now go to them.</summary>
+        private static bool StillDoable(Job job, Pawn guest)
+        {
+            if (job == null || job.def == null) return false;
+            foreach (var t in new[] { job.targetA, job.targetB, job.targetC })
+            {
+                if (!t.IsValid) continue;
+                if (t.HasThing) { var th = t.Thing; if (th == null || th.Destroyed || !th.Spawned || th.Map != guest.Map || th.IsForbidden(guest)) return false; }
+                else if (!t.Cell.InBounds(guest.Map)) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Called as the guest steps away from the door after being let in. They carry on with what they came for (the job the door stopped), and if that
+        /// is no longer possible they walk to where they were headed, so the next thing they pick is in the home rather than somewhere else entirely.
+        /// </summary>
+        public static void Resume(Pawn guest)
+        {
+            if (guest == null || !ByGuest.TryGetValue(guest.thingIDNumber, out var pass) || !pass.Granted || guest.jobs == null) return;
+            var job = pass.Wished; pass.Wished = null;
+            try
+            {
+                if (StillDoable(job, guest)) { guest.jobs.jobQueue.EnqueueFirst(job, JobTag.Misc); Trace(guest.LabelShort + " carries on with " + job.def.defName); return; }
+                var spot = pass.WishCell.IsValid && pass.Zone.ContainsCell(pass.WishCell) && pass.WishCell.Standable(guest.Map) ? pass.WishCell : pass.Inside;
+                guest.jobs.jobQueue.EnqueueFirst(JobMaker.MakeJob(JobDefOf.Goto, spot), JobTag.Misc);
+            }
+            catch (System.Exception ex) { HookSafety.Report("family door resume", ex); }
         }
 
         private static void Update(GuestPass pass, int now)
@@ -184,7 +216,7 @@ namespace FamilyLife
                 if (now - pass.LastKnock >= KnockEvery)
                 {
                     pass.LastKnock = now;
-                    MoteMaker.ThrowText(guest.DrawPos, guest.Map, "WFL_Knock".Translate(), Color.white);
+                    MoteMaker.ThrowText(guest.DrawPos, guest.Map, Phrasing.Say("WFL_Knock", guest.thingIDNumber + Find.TickManager.TicksGame / 180), Color.white);
                 }
                 var op = pass.Opener;
                 bool coming = op != null && Available(op) && op.CurJobDef == FamilyJobDefOf.WFL_LetGuestIn;
@@ -209,7 +241,7 @@ namespace FamilyLife
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
+        public static void Reset() { ComfortDriver.Reset(); ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]
@@ -232,6 +264,7 @@ namespace FamilyLife
             wait.initAction = () => pawn.pather.StopDead();
             wait.tickAction = () => { if (GuestPasses.IsGranted(pawn)) ReadyForNextToil(); };
             yield return wait;
+            yield return new Toil { defaultCompleteMode = ToilCompleteMode.Instant, initAction = () => GuestPasses.Resume(pawn) };
         }
     }
 
@@ -264,6 +297,7 @@ namespace FamilyLife
             if (component == null) return;
             using var measurement = component.Performance.Measure("Zone tick");
             GuestPasses.Process(component);
+            ComfortDriver.Tick(component, Find.TickManager.TicksGame);
             FamilyMeals.Tick(component, Find.TickManager.TicksGame);
         }
 

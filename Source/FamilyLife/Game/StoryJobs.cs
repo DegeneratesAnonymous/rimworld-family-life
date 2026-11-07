@@ -92,15 +92,16 @@ namespace FamilyLife
 
     public class JobDriver_StoryTalk : JobDriver
     {
-        private int waited;
+        private int waited, together;
         private Pawn Other => job.targetA.Thing as Pawn;
-        public override void ExposeData() { base.ExposeData(); Scribe_Values.Look(ref waited, "storyWait"); }
+        public override void ExposeData() { base.ExposeData(); Scribe_Values.Look(ref waited, "storyWait"); Scribe_Values.Look(ref together, "storyTogether"); }
         public override bool TryMakePreToilReservations(bool errorOnFailed) => pawn.Reserve(job.targetA, job, 1, -1, null, errorOnFailed);
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => Other == null || Other.Dead || Other.Drafted || Other.InMentalState || pawn.Drafted || pawn.InMentalState || !FamilyLifeMod.Settings.familyStories);
-            yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
+            if(job.targetB.IsValid)yield return Toils_Goto.GotoCell(TargetIndex.B,PathEndMode.OnCell);
+            else yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             var talk = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             talk.initAction = () =>
             {
@@ -110,8 +111,16 @@ namespace FamilyLife
             };
             talk.tickAction = () =>
             {
-                if (++waited > 600 || Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen || Other.Position.DistanceTo(pawn.Position) > 3) { EndJobWith(JobCondition.Incompletable); return; }
-                if (waited >= 180) { if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
+                if (Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen) { EndJobWith(JobCondition.Incompletable); return; }
+                // At an office the listener starts walking only after the speaker arrives. Give that pathing time
+                // before treating distance as a failed conversation, and count the talk itself only once together.
+                if (Other.Position.DistanceTo(pawn.Position) > 3) { if (++waited > 600) EndJobWith(JobCondition.Incompletable); return; }
+                waited++;
+                if (++together >= 180) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
+                    else if(job.def==WFL_StoryDefOf.WFL_MarriageConsent) MarriageAlliancePlanner.CompleteConsent(pawn,Other,job.count);
+                    else if(job.def==WFL_StoryDefOf.WFL_HouseUnionNegotiation) MarriageAlliancePlanner.CompleteUnion(pawn,Other,job.count);
+                    else if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
+                    else if(GovernanceMeetings.Handles(job.def)) GovernanceMeetings.Complete(pawn,Other,job.def,job.count);
                     else StoryActions.FinishTalk(pawn, Other, job.count, job.def == WFL_StoryDefOf.WFL_ReconcileStory); ReadyForNextToil(); }
             };
             yield return talk;
@@ -124,7 +133,7 @@ namespace FamilyLife
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || job.targetA.Pawn?.CurJob == null ||
-                (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite));
+                !GovernanceMeetings.Handles(job.targetA.Pawn.CurJobDef) && (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageNegotiation && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageConsent && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseUnionNegotiation));
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             yield return Toils_General.Wait(1200);
         }

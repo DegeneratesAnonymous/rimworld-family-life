@@ -44,6 +44,7 @@ namespace FamilyLife.Domain
         BondCooled = 23,
         FamiliesJoined = 24,    // A, B = the partners whose two families were joined by it
         SocialMembership = 26, SocialBranch = 27,
+        MarriageFormed = 28,     // A, B became spouses; bookkeeping for an organic wedding reception
         StepFamilyFormed = 25   // A, B = the partners; at least one of them already had children who are not the other's       // A, B = the two people
     }
 

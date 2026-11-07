@@ -19,6 +19,8 @@ namespace FamilyLife
         public FamilyRegistry Registry = new FamilyRegistry();
         internal readonly FamilyEconomy Economy;
         internal readonly PerformanceProbe Performance = new PerformanceProbe();
+        internal readonly TickGate AmbitionGate = new TickGate(2500, 400);
+        internal readonly SearchCursor AmbitionCursor = new SearchCursor();
         internal int Revision { get; private set; }
         private readonly TickGate maintenance = new TickGate(625);
         private int maintenancePhase;
@@ -77,6 +79,7 @@ namespace FamilyLife
             if (dirty) return;
             dirty = true;
             dirtySince = Find.TickManager.TicksGame;
+            HouseSituationPlanner.Invalidate(this);
         }
 
         public Pawn TryGetPawn(int id)
@@ -105,6 +108,7 @@ namespace FamilyLife
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
             Economy.Tick(now);
             HouseAgency.Tick(this, now);
+            HouseSituationPlanner.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>
@@ -131,6 +135,9 @@ namespace FamilyLife
                 using (Performance.Measure("Update bonds")) griefs = Registry.UpdateBonds(OpinionOf, now, events, ProfileOf);
                 var s = FamilyLifeMod.Settings;
                 Registry.UpdateCulture(ProfileOf, now);
+                // Expiry and interrupted-request recovery apply to every gathering. Only new reunion planning
+                // follows the ceremonies/visiting-kin switches.
+                Registry.UpdateOrganicCeremonies(now,(s==null||s.ceremonies)&&(s==null||s.visitingKin));
                 events.AddRange(Registry.UpdateMilestones(now));
                 if (s == null || s.traditions) events.AddRange(Registry.UpdateTraditions(now));
                 if (s == null || s.conflicts) events.AddRange(Registry.UpdateRifts(now, s == null || s.rivalry, events));
@@ -168,6 +175,7 @@ namespace FamilyLife
                         Registry.PruneTimeRecords(now);
                         Registry.MaintainAgency(now);
                         Registry.UpdateTies(now);
+                        Governance.Maintain(this, now);
                         var s = FamilyLifeMod.Settings;
                         if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
                         break;

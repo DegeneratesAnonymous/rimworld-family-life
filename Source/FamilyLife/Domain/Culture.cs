@@ -238,6 +238,20 @@ namespace FamilyLife.Domain
         public int NotBefore;
         public int Expires;
         public int Attempts;
+        public CeremonyKind Ceremony;
+        public CeremonyState State;
+        public CeremonyInfluence Influences;
+        public int SecondLineageId;
+        public int SubjectBId;
+        public int CreatedTick;
+        public int StartedTick;
+        public int OrganizerId;
+        public int MapId = -1;
+        public int Seed;
+        public int MomentBudget;
+        public int MomentsResolved;
+        public List<int> InvitedIds = new List<int>();
+        public List<int> VisitorIds = new List<int>();
     }
 
     public enum MemoryKind : byte { Birth = 0, Loss = 1, Wedding = 2, Parting = 3, CameOfAge = 4, Reunion = 5, Anniversary = 6, Tradition = 7, Reconciliation = 8, Joined = 9, StepFamily = 10, Bond = 11, Rupture = 12 }
@@ -263,6 +277,9 @@ namespace FamilyLife.Domain
         public List<TraditionRecord> Traditions = new List<TraditionRecord>();
         public int StoriesTold;
         public int MealsShared;
+        public int LastGrandReunionTick;
+        public int NextCeremonyCheckTick;
+        public float Standing;
 
         public float CultureOf(Dim d)
         {
@@ -404,7 +421,7 @@ namespace FamilyLife.Domain
             EnsureIndexes();
             var membersByHouse=ActiveColonyMembers();
             var events = new List<FamilyEvent>();
-            GatheringRequests.RemoveAll(r => r == null || r.Expires < now);
+            GatheringRequests.RemoveAll(r => r == null || r.State==CeremonyState.Planned && r.Expires < now);
             foreach (var lineage in Lineages)
             {
                 if(lineage.AbsorbedIntoId!=0) continue;
@@ -435,7 +452,9 @@ namespace FamilyLife.Domain
                     var def = TraditionCatalog.All[Math.Max(0, TraditionCatalog.IndexOf(t.Id))];
                     if (t.Muted || now - Math.Max(t.AdoptedTick, t.LastHeldTick) < def.IntervalDays * ActivityTuning.TicksPerDay) continue;
                     if (GatheringRequests.Any(r => r.LineageId == lineage.Id && r.Kind == t.Id)) continue;
-                    GatheringRequests.Add(new GatheringRequest { Id = NextRequestId++, Kind = t.Id, LineageId = lineage.Id, NotBefore = now, Expires = now + 6 * ActivityTuning.TicksPerDay });
+                    GatheringRequests.Add(new GatheringRequest { Id = NextRequestId++, Kind = t.Id, Ceremony=CeremonyKind.Tradition, State=CeremonyState.Planned,
+                        LineageId = lineage.Id, CreatedTick=now, NotBefore = now, Expires = now + 6 * ActivityTuning.TicksPerDay,
+                        Seed=unchecked(lineage.Id*397^now/ActivityTuning.TicksPerDay) });
                 }
             }
             return events;
@@ -461,27 +480,31 @@ namespace FamilyLife.Domain
         /// <summary>Asks for a one-off gathering (a coming of age, a memorial). A second request for the same thing is ignored.</summary>
         public void RequestGathering(string kind, int lineageId, int subjectId, int now, int delayTicks, int lifetimeTicks)
         {
-            EnsureIndexes();
-            if (GetLineage(lineageId) == null) return;
-            if (GatheringRequests.Any(r => r.Kind == kind && r.LineageId == lineageId && r.SubjectId == subjectId)) return;
-            GatheringRequests.Add(new GatheringRequest { Id = NextRequestId++, Kind = kind, LineageId = lineageId, SubjectId = subjectId, NotBefore = now + delayTicks, Expires = now + delayTicks + lifetimeTicks });
+            var ceremony=CeremonyOf(kind);
+            if(ceremony!=CeremonyKind.Tradition)
+            {RequestCeremony(ceremony,lineageId,subjectId,0,now,delayTicks,lifetimeTicks,ceremony==CeremonyKind.Funeral?CeremonyInfluence.RecentDeath:CeremonyInfluence.None);return;}
+            EnsureIndexes();if(!IsActiveHouse(lineageId))return;
+            if(GatheringRequests.Any(r=>r.Kind==kind&&r.LineageId==lineageId&&r.SubjectId==subjectId&&
+                (r.State==CeremonyState.Planned||r.State==CeremonyState.Active)))return;
+            GatheringRequests.Add(new GatheringRequest{Id=NextRequestId++,Kind=kind,Ceremony=CeremonyKind.Tradition,State=CeremonyState.Planned,LineageId=lineageId,
+                SubjectId=subjectId,CreatedTick=now,NotBefore=now+delayTicks,Expires=now+delayTicks+lifetimeTicks,Seed=unchecked(lineageId*397^subjectId^now/ActivityTuning.TicksPerDay)});
         }
 
         public List<GatheringRequest> DueRequests(int now)
         {
-            return GatheringRequests.Where(r => r.NotBefore <= now && r.Expires >= now).OrderBy(r => r.NotBefore).ThenBy(r => r.Id).ToList();
+            return GatheringRequests.Where(r => r.State==CeremonyState.Planned && r.NotBefore <= now && r.Expires >= now && PlanFor(r.Id)?.Open != true && !KinVisitBlocks(r.Id)).OrderBy(r => r.NotBefore).ThenBy(r => r.Id).ToList();
         }
 
         /// <summary>The gathering took place: the tradition's clock restarts, the culture it expresses grows, and it is remembered.</summary>
-        public FamilyEvent MarkGatheringHeld(int requestId, int now)
+        public FamilyEvent MarkGatheringHeld(int requestId,int now,int attendees=-1,int moments=-1,float outcome=2f)
         {
             var request = GatheringRequests.FirstOrDefault(r => r.Id == requestId);
             if (request == null) return null;
-            GatheringRequests.Remove(request);
             var lineage = GetLineage(request.LineageId);
             if (lineage == null) return null;
             int index = TraditionCatalog.IndexOf(request.Kind);
-            if (index < 0) return null;           // one-off gatherings are remembered by their own events
+            CompleteCeremony(requestId,now,attendees<0?request.InvitedIds.Count:attendees,moments<0?request.MomentsResolved:moments,outcome>1?0.5f:outcome);
+            if (index < 0) return null;
             var record = lineage.Traditions.FirstOrDefault(t => t.Id == request.Kind);
             if (record != null) { record.LastHeldTick = now; record.TimesHeld++; }
             Reinforce(lineage.Id, TraditionCatalog.All[index].Dim, 2f);
@@ -496,7 +519,7 @@ namespace FamilyLife.Domain
         public void PostponeRequest(int requestId, int now, int delayTicks)
         {
             var r = GatheringRequests.FirstOrDefault(x => x.Id == requestId);
-            if (r == null) return;
+            if (r == null || r.State!=CeremonyState.Planned) return;
             r.Attempts++;
             r.NotBefore = now + delayTicks;
         }
@@ -583,7 +606,10 @@ namespace FamilyLife.Domain
                     case FamilyEventKind.CameOfAge: Remember(lineage, MemoryKind.CameOfAge, now, e.A, 0, 1.0f); break;
                     case FamilyEventKind.Reunion: Remember(lineage, MemoryKind.Reunion, now, e.A, 0, 1.0f); break;
                     case FamilyEventKind.PartnershipFormed:
-                        if (a != null && a.SpouseIds.Contains(e.B)) Remember(lineage, MemoryKind.Wedding, now, e.A, e.B, 1.5f);
+                        if (a != null && a.SpouseIds.Contains(e.B)) RememberWedding(lineage,now,e.A,e.B);
+                        break;
+                    case FamilyEventKind.MarriageFormed:
+                        RememberWedding(lineage,now,e.A,e.B);
                         break;
                     case FamilyEventKind.PartnershipEnded: Remember(lineage, MemoryKind.Parting, now, e.A, e.B, 2.0f); break;
                     case FamilyEventKind.Died:
@@ -606,6 +632,14 @@ namespace FamilyLife.Domain
                         }
                 }
             }
+        }
+
+        private void RememberWedding(int lineage,int now,int a,int b)
+        {
+            if(lineage==0)return;
+            bool duplicate=Memories.Any(m=>m.LineageId==lineage&&m.Kind==MemoryKind.Wedding&&m.Tick==now&&
+                (m.A==a&&m.B==b||m.A==b&&m.B==a));
+            if(!duplicate)Remember(lineage,MemoryKind.Wedding,now,a,b,1.5f);
         }
 
         // ------------------------------------------------------------------ milestones

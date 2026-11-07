@@ -127,7 +127,7 @@ namespace FamilyLife
             foreach (var g in guests) { group.Members.Add(g.thingIDNumber); group.StartAt[g.thingIDNumber] = group.StartTick + Rand.RangeInclusive(20, 240); }
             groups.Add(group);
             next[lineage.Id] = now + Cooldown;
-            MoteMaker.ThrowText(caller.DrawPos, caller.Map, "WFL_MealCall".Translate(), Color.white);
+            MoteMaker.ThrowText(caller.DrawPos, caller.Map, Phrasing.Say("WFL_MealCall", caller.thingIDNumber + now / 2500), Color.white);
             if (FamilyLifeMod.Settings != null && FamilyLifeMod.Settings.logEvents)
                 Log.Message("[Wil's Family Life] Mealtime called for " + component.Registry.LineageDisplayName(lineage) + ": " + group.Members.Count + " at " + table.LabelCap);
             return group;

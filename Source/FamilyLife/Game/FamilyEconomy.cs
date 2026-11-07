@@ -12,7 +12,7 @@ namespace FamilyLife
     [DefOf]
     public static class WFL_StoryDefOf
     {
-        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite;
+        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_StewardNegotiate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote, WFL_ProtectionOffer, WFL_OfficeLesson, WFL_Checkup, WFL_HallSit, WFL_HallServe, WFL_CastAssemblyVote, WFL_Comfort;
         static WFL_StoryDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(WFL_StoryDefOf)); }
     }
 
@@ -42,7 +42,57 @@ namespace FamilyLife
         private bool warned;
         internal FamilyEconomy(FamilyComponent component) { this.component = component; }
         internal bool Pressure(int family) => pressured.Contains(family);
+        /// <summary>A bounded, cached reading of food physically held by a house. Used by daily ambitions, never by a tick loop.</summary>
+        internal float FoodSecurity(Lineage family, List<Pawn> members, int now)
+        {
+            if (family == null || members == null || members.Count == 0) return 50f;
+            var map = members.Select(p => p?.Map).FirstOrDefault(m => m != null);
+            if (map == null) return 50f;
+            var area = FamilyZones.AreaFor(family);
+            float held = 0f;
+            foreach (var thing in Stock(map, now))
+            {
+                if (KindOf(thing) != SupplyKind.Food) continue;
+                var claim = R.ClaimFor(thing.thingIDNumber);
+                if (claim?.HolderFamily != family.Id) continue;
+                if (area != null && area.Map == map && !area[thing.Position]) continue;
+                held += thing.stackCount * Units(thing, SupplyKind.Food);
+            }
+            float target = HouseholdPolicy.FoodTarget(members.Count, family.FoodReserveDays);
+            if (target <= 0f) return 100f;
+            if (held > 0f) return Math.Min(100f, held / target * 100f);
+            // Before a family has claimed a pantry, current hunger prevents a false crisis while keeping the assessment conservative.
+            float current = members.Where(p => p?.needs?.food != null).Select(p => p.needs.food.CurLevelPercentage).DefaultIfEmpty(.5f).Average() * 70f;
+            if (current < 20f) return current; // observed severe hunger must outrank an unknown pantry
+            return Math.Max(Pressure(family.Id) ? 15f : 35f, current);
+        }
         internal void Invalidate(Map map) { if (map != null && stocks.TryGetValue(map, out var snapshot)) snapshot.Refresh.Invalidate(); }
+        /// <summary>Stock the economy already tracks for a map, for planners that need to know what is physically there.</summary>
+        internal List<Thing> StockOf(Map map, int now) => Stock(map, now);
+
+        /// <summary>Starts a real theft of real goods: the actor walks to the item, carries it home, and the supply system records what happened.</summary>
+        internal bool StartTheft(Pawn actor, Pawn donor, Thing source, int count, int now, SupplyApproach approach = SupplyApproach.Steal)
+        {
+            if (actor == null || donor == null || source == null || !source.Spawned || !actor.CanReserve(source) || !actor.CanReach(source, PathEndMode.Touch, Danger.None)) return false;
+            var kind = KindOf(source);
+            var home = FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(actor.thingIDNumber)));
+            if (home?.Map != actor.Map) return false;
+            var need = new Need { Kind = kind, ForPawn = actor, Target = count, Urgency = 1f };
+            return Start(actor, donor, source, count, need, approach, home, now);
+        }
+
+        /// <summary>A willing sale: the buyer walks to the seller's goods and pays in silver through the same barter flow as any trade.</summary>
+        internal bool StartSale(Pawn buyer, Pawn seller, Thing source, int count, int now)
+        {
+            if (buyer == null || seller == null || source == null || !source.Spawned || !buyer.CanReserve(source) || !buyer.CanReach(source, PathEndMode.Touch, Danger.None)) return false;
+            int price = Math.Max(1, (int)Math.Ceiling(source.GetStatValue(StatDefOf.MarketValue) * count));
+            if (InventorySilver(buyer) < price) return false;
+            var home = FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(buyer.thingIDNumber)));
+            if (home?.Map != buyer.Map) return false;
+            var need = new Need { Kind = KindOf(source), ForPawn = buyer, Target = count, Urgency = .5f };
+            return Start(buyer, seller, source, count, need, SupplyApproach.Barter, home, now);
+        }
+
         private List<Thing> Stock(Map map, int now)
         {
             if (!stocks.TryGetValue(map, out var s)) stocks[map] = s = new Snapshot();

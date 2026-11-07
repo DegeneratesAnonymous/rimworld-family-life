@@ -8,7 +8,7 @@ using Verse.AI;
 
 namespace FamilyLife
 {
-    internal struct DoorWish { public Pawn Pawn; public Zone_Family Zone; public int Tick; }
+    internal struct DoorWish { public Pawn Pawn; public Zone_Family Zone; public int Tick; public IntVec3 Cell; public Job Job; }
 
     /// <summary>
     /// Someone from outside the family does not walk into its zone. To the game, a family zone is out of bounds for them, as a restricted area
@@ -52,7 +52,13 @@ namespace FamilyLife
             var bed = pawn.ownership?.OwnedBed;
             if (bed != null && bed.Spawned && bed.Map == map && bed.OccupiedRect().Cells.Any(zone.ContainsCell)) return false;      // they sleep here
 
-            if (noteWish) wishes[pawn.thingIDNumber] = new DoorWish { Pawn = pawn, Zone = zone, Tick = Find.TickManager.TicksGame };
+            if (noteWish)
+            {
+                int now = Find.TickManager.TicksGame;
+                // Keep the job noted a moment ago for this same place, so the visit can pick up where the pawn was going.
+                Job kept = wishes.TryGetValue(pawn.thingIDNumber, out var prev) && prev.Zone == zone && now - prev.Tick < 120 ? prev.Job : null;
+                wishes[pawn.thingIDNumber] = new DoorWish { Pawn = pawn, Zone = zone, Tick = now, Cell = cell, Job = kept };
+            }
             return true;
         }
 
@@ -64,6 +70,14 @@ namespace FamilyLife
             bool member = GuestPasses.IsFamilyMember(component.Registry, lineage, pawn);
             memberCache[key] = new KeyValuePair<int, bool>(now, member);
             return member;
+        }
+
+        /// <summary>The job a pawn was about to start when the door stopped them, kept so they can carry on with it once let in.</summary>
+        public static void AttachJob(Pawn pawn, Job job)
+        {
+            if (pawn == null || job == null || !wishes.TryGetValue(pawn.thingIDNumber, out var wish)) return;
+            try { wish.Job = job.Clone(); wishes[pawn.thingIDNumber] = wish; }
+            catch (System.Exception ex) { HookSafety.Report("family door wish", ex); }
         }
 
         /// <summary>The recent wishes to enter a zone, each pawn once. They are cleared as they are taken.</summary>
@@ -105,6 +119,7 @@ namespace FamilyLife
                 var job = pawn?.CurJob;
                 if (job == null || job.playerForced || !dest.IsValid || dest.Thing is Pawn || job.def.defName.StartsWith("WFL_")) return true;
                 if (!FamilyDoorRule.Blocks(dest.Cell, pawn, true)) return true;
+                FamilyDoorRule.AttachJob(pawn, job);
                 pawn.jobs.curDriver?.Notify_PatherFailed();
                 return false;
             }
