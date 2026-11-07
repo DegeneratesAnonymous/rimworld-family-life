@@ -62,8 +62,9 @@ namespace FamilyLife
                     case StewardDutyKind.OrganizeCeremony:
                         var ceremony=r.GatheringRequests.FirstOrDefault(q=>q.Id==target);
                         var plan=ceremony==null?null:r.PlanFor(ceremony.Id);
-                        var planContext=Governance.PlanContextFor(c,house.Id);
-                        started=plan!=null&&r.SetPlanOrganizer(plan.Id,holder.thingIDNumber,planContext)||ceremony?.OrganizerId==holder.thingIDNumber;
+                        // The planning card owns this choice. A duty may track its chosen Steward/head, but must
+                        // never replace a valid organizer merely because this maintenance pass chose a holder.
+                        started=plan?.OrganizerId==holder.thingIDNumber||ceremony?.OrganizerId==holder.thingIDNumber;
                         break;
                     case StewardDutyKind.ReceivePetition:
                         var petition = r.HousePetitions.FirstOrDefault(p => p.Id == target);

@@ -153,8 +153,8 @@ namespace FamilyLife
                 var area=FamilyZones.FindArea(plan.VenueAreaId,plan.VenueMapId);
                 if(area?.Map==organizer.Map)
                 {
-                    spot=area.ActiveCells.Where(c=>c.Standable(organizer.Map)).InRandomOrder().FirstOrDefault();
-                    if(spot.IsValid)return true;
+                    var candidates=area.ActiveCells.Where(c=>c.Standable(organizer.Map)).ToList();
+                    if(candidates.Count>0){spot=candidates.RandomElement();return true;}
                 }
             }
             var office = request == null ? null : FamilyComponent.Current?.Registry.UsableOffice(request.LineageId, (m, x, z) =>

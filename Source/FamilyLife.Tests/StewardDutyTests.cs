@@ -68,6 +68,17 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void A_player_chosen_ceremony_organizer_is_not_reassigned_as_a_steward_duty()
+        {
+            var r = House(out int fam);
+            var request = r.RequestCeremony(CeremonyKind.GrandReunion, fam, 0, 0, 2000, 100, 5 * Day);
+            var plan = r.OpenCeremonyPlan(request.Id, 2000);
+            Assert.NotNull(plan);
+            plan.PlayerAdjusted = true;
+            Assert.False(r.TryChooseDuty(fam, 0, out _, out _));
+        }
+
+        [Fact]
         public void Interrupted_and_failed_duties_never_count_as_success()
         {
             var r = House(out int fam);
@@ -219,6 +230,7 @@ namespace FamilyLife.Tests
             Assert.True(r.CompleteStewardDuty(duty.Id,7001,2100));
             Assert.Equal(1,r.StewardshipOf(3,fam,true).NegotiationsLed);
             Assert.False(r.MayDecide(3,fam,HouseDecision.MarriageUnion));
+            Assert.False(r.TryChooseDuty(fam,0,out _,out _)); // preparation is evidence, not a repeatable prestige farm
         }
     }
 }

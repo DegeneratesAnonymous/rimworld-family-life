@@ -72,12 +72,13 @@ namespace FamilyLife.Domain
             if (petition != null && !Taken(StewardDutyKind.ReceivePetition, petition.Id)) { kind = StewardDutyKind.ReceivePetition; target = petition.Id; return true; }
             var shortage = Requests.Where(r => r.Open && r.Approach != SupplyApproach.Steal && FamilyOf(r.RequesterId) == family).OrderBy(r => r.CreatedTick).FirstOrDefault();
             if (shortage != null && !Taken(StewardDutyKind.SupplyShortage, shortage.Id)) { kind = StewardDutyKind.SupplyShortage; target = shortage.Id; return true; }
-            var request = GatheringRequests.Where(r => r.LineageId == family && r.State == CeremonyState.Planned && r.OrganizerId == 0).OrderBy(r => r.NotBefore).FirstOrDefault();
+            var request = GatheringRequests.Where(r => r.LineageId == family && r.State == CeremonyState.Planned && r.OrganizerId == 0 && PlanFor(r.Id)?.PlayerAdjusted != true).OrderBy(r => r.NotBefore).FirstOrDefault();
             if (request != null && !Taken(StewardDutyKind.OrganizeCeremony, request.Id)) { kind = StewardDutyKind.OrganizeCeremony; target = request.Id; return true; }
             var alliance = MarriageAlliances.FirstOrDefault(a => (a.FamilyA == family || a.FamilyB == family) && (a.State == MarriageAllianceState.Opportunity || a.State == MarriageAllianceState.Negotiating) && !Taken(StewardDutyKind.Negotiate, a.Id));
             if (alliance != null && house.Ambition?.Primary != HouseAmbitionKind.Contentment) { kind = StewardDutyKind.Negotiate; target = alliance.Id; return true; }
             var union = MarriageAlliances.FirstOrDefault(a => (a.FamilyA == family || a.FamilyB == family) && a.State == MarriageAllianceState.Fulfilled &&
-                a.UnionState == HouseUnionState.Eligible && !Taken(StewardDutyKind.Negotiate, -a.Id));
+                a.UnionState == HouseUnionState.Eligible && !Taken(StewardDutyKind.Negotiate, -a.Id) &&
+                !StewardDuties.Any(d => d.FamilyId == family && d.Kind == StewardDutyKind.Negotiate && d.TargetId == -a.Id && d.State == StewardDutyState.Completed));
             if (union != null) { kind = StewardDutyKind.Negotiate; target = -union.Id; return true; }
             var rift = Rifts.FirstOrDefault(r => r.ResolvedTick == 0 && FamilyOf(r.A) == family && FamilyOf(r.B) == family && !Taken(StewardDutyKind.Mediate, r.Id));
             if (rift != null) { kind = StewardDutyKind.Mediate; target = rift.Id; return true; }

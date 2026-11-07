@@ -92,9 +92,9 @@ namespace FamilyLife
 
     public class JobDriver_StoryTalk : JobDriver
     {
-        private int waited;
+        private int waited, together;
         private Pawn Other => job.targetA.Thing as Pawn;
-        public override void ExposeData() { base.ExposeData(); Scribe_Values.Look(ref waited, "storyWait"); }
+        public override void ExposeData() { base.ExposeData(); Scribe_Values.Look(ref waited, "storyWait"); Scribe_Values.Look(ref together, "storyTogether"); }
         public override bool TryMakePreToilReservations(bool errorOnFailed) => pawn.Reserve(job.targetA, job, 1, -1, null, errorOnFailed);
         protected override IEnumerable<Toil> MakeNewToils()
         {
@@ -111,8 +111,12 @@ namespace FamilyLife
             };
             talk.tickAction = () =>
             {
-                if (++waited > 600 || Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen || Other.Position.DistanceTo(pawn.Position) > 3) { EndJobWith(JobCondition.Incompletable); return; }
-                if (waited >= 180) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
+                if (Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen) { EndJobWith(JobCondition.Incompletable); return; }
+                // At an office the listener starts walking only after the speaker arrives. Give that pathing time
+                // before treating distance as a failed conversation, and count the talk itself only once together.
+                if (Other.Position.DistanceTo(pawn.Position) > 3) { if (++waited > 600) EndJobWith(JobCondition.Incompletable); return; }
+                waited++;
+                if (++together >= 180) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_MarriageConsent) MarriageAlliancePlanner.CompleteConsent(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HouseUnionNegotiation) MarriageAlliancePlanner.CompleteUnion(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
