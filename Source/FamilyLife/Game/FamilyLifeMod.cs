@@ -29,6 +29,7 @@ namespace FamilyLife
         public bool adultStudents=false;
         public bool healthChecks=true;
         public bool holdHallMeals=true;
+        public bool mindComfort=true;
         public int hallMealEveryDays=3;
         public int checkupsPerYear=2;
         public int campRadius=4;
@@ -76,6 +77,7 @@ namespace FamilyLife
             Scribe_Values.Look(ref adultStudents,"adultStudents",false);
             Scribe_Values.Look(ref healthChecks,"healthChecks",true);
             Scribe_Values.Look(ref holdHallMeals,"holdHallMeals",true);
+            Scribe_Values.Look(ref mindComfort,"mindComfort",true);
             Scribe_Values.Look(ref hallMealEveryDays,"hallMealEveryDays",3);
             Scribe_Values.Look(ref checkupsPerYear,"checkupsPerYear",2);
             Scribe_Values.Look(ref campRadius,"campRadius",4);
@@ -130,7 +132,7 @@ namespace FamilyLife
         public override string SettingsCategory() => "Wil's Family Life";
 
         private Vector2 settingsScroll;
-        private float settingsHeight = 1800;
+        private float settingsHeight = 1850;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
@@ -165,6 +167,7 @@ namespace FamilyLife
                 list.Label("WFL_S_CheckupsPerYear".Translate(Settings.checkupsPerYear),tooltip:"WFL_S_CheckupsPerYearTip".Translate());
                 Settings.checkupsPerYear=Mathf.RoundToInt(list.Slider(Settings.checkupsPerYear,1f,4f));
             }
+            list.CheckboxLabeled("WFL_S_MindComfort".Translate(),ref Settings.mindComfort,"WFL_S_MindComfortTip".Translate());
             list.CheckboxLabeled("WFL_S_HallMeals".Translate(),ref Settings.holdHallMeals,"WFL_S_HallMealsTip".Translate());
             if(Settings.holdHallMeals)
             {

@@ -241,7 +241,7 @@ namespace FamilyLife
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
+        public static void Reset() { ComfortDriver.Reset(); ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]
@@ -297,6 +297,7 @@ namespace FamilyLife
             if (component == null) return;
             using var measurement = component.Performance.Measure("Zone tick");
             GuestPasses.Process(component);
+            ComfortDriver.Tick(component, Find.TickManager.TicksGame);
             FamilyMeals.Tick(component, Find.TickManager.TicksGame);
         }
 

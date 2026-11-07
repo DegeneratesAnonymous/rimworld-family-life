@@ -528,4 +528,19 @@
     <stackLimit>1</stackLimit>
     <stages><li><label>looked after by my own</label><description>It was one of our own who saw to me, and it showed.</description><baseMoodEffect>4</baseMoodEffect></li></stages>
   </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_Comforted</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1.5</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>talked back from the edge</label><description>Someone who loves me found the words, and I could breathe again.</description><baseMoodEffect>12</baseMoodEffect></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_ComfortedEased</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>1</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>someone sat with me</label><description>It did not fix anything, but I was not alone.</description><baseMoodEffect>6</baseMoodEffect></li></stages>
+  </ThoughtDef>
 </Defs>
