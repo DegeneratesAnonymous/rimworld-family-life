@@ -90,6 +90,7 @@ namespace FamilyLife
             var political = GovernanceMeetings.Political(c);
             r.AdvanceElections(now, political, physicalVoting: true);
             r.ConveneCouncil(now, political);
+            r.AdvanceCouncil(now, id => Governance.IsAvatar(c, id));
             foreach (var election in r.Elections.Where(e => e.Open).Take(1))
             {
                 if (election.State == ElectionState.Campaign)
@@ -163,7 +164,8 @@ namespace FamilyLife
             var map = Find.Maps.FirstOrDefault(m => m.uniqueID == heist.TargetMapId);
             if (map == null) return null;
             var thing = c.Economy.StockOf(map, now).FirstOrDefault(t => t.thingIDNumber == heist.TargetToken && t.Spawned);
-            return thing != null && c.Registry.ClaimFor(thing.thingIDNumber)?.HolderFamily == heist.TargetFamilyId ? thing : null;
+            int holder = heist.Consensual ? heist.FamilyId : heist.TargetFamilyId;       // goods being sold are the seller's, goods being taken are the other house's
+            return thing != null && c.Registry.ClaimFor(thing.thingIDNumber)?.HolderFamily == holder ? thing : null;
         }
 
         private static CrimeContext CrimeContextFor(FamilyComponent c, int opportunities, int now) => new CrimeContext
@@ -181,6 +183,8 @@ namespace FamilyLife
             var house = houses[crimeRotate++ % houses.Count];
             var map = Find.Maps.FirstOrDefault(m => m.uniqueID == house.ZoneMapId);
             if (map == null) return;
+            r.MaintainFavors(now);
+            if (house.Crime.Heat >= 40f) r.RequestCensure(house.Id, now);
             ManageHeists(c, house, now);
             if (nextCrimeCheck.TryGetValue(house.Id, out int due) && now < due) return;
             nextCrimeCheck[house.Id] = now + Day / 2;
@@ -204,7 +208,12 @@ namespace FamilyLife
                 if (crime.Heat >= 50f && (refusal || ambition == HouseAmbitionKind.RestoreCohesion || ambition == HouseAmbitionKind.SeekProtection)) { r.BeginReform(house.Id, now); return; }
                 if ((house.Situation?.Sustenance ?? 50f) >= 60f && now - crime.LastPlanTick > 30 * Day) { r.AbandonCrimeDirection(house.Id, now); return; }
                 if (crime.Direction == CrimeDirection.Protection) { ManageProtection(c, house, map, now); return; }
-                if (r.Heists.Any(h => h.FamilyId == house.Id && h.Active) || targets.Count == 0) return;
+                if (r.Heists.Any(h => h.FamilyId == house.Id && h.Active)) return;
+                if (TrySale(c, house, map, now)) return;
+                if (ManageFavors(c, house, map, now)) return;
+                if (crime.Direction == CrimeDirection.Contraband || crime.Direction == CrimeDirection.Laundering || crime.Direction == CrimeDirection.Favors)
+                    r.SetCrimeDirection(house.Id, r.Incidents.Count(i => i.ActorFamily == house.Id && i.Kind == IncidentKind.Intimidation && now - i.Tick < 60 * Day) > 0 ? CrimeDirection.Intimidation : CrimeDirection.Theft);
+                if (targets.Count == 0) return;
                 var actors = r.Incidents.Where(i => i.ActorFamily == house.Id && (i.Kind == IncidentKind.Theft || i.Kind == IncidentKind.Intimidation)).Select(i => i.ActorId).Distinct().ToList();
                 var organizer = actors.Select(id => Spawned(c, id)).FirstOrDefault(p => p != null && p.Map == map && !p.DevelopmentalStage.Juvenile() && Governance.Free(c, p.thingIDNumber));
                 var target = targets.OrderBy(t => organizer == null ? 0 : t.Position.DistanceToSquared(organizer.Position)).FirstOrDefault();
@@ -216,6 +225,59 @@ namespace FamilyLife
                 foreach (var restitution in r.Incidents.Where(i => i.Kind == IncidentKind.Restitution && i.ActorFamily == house.Id && i.Id > crime.LastAmendsIncident).OrderBy(i => i.Id).Take(4).ToList())
                     r.NoteAmends(house.Id, restitution.Id, now);
             }
+        }
+
+        private static Thing PricedFor(FamilyComponent c, Pawn buyer, Thing t) =>
+            t.Spawned && InventoryAffordable(buyer, t) ? t : null;
+
+        private static bool InventoryAffordable(Pawn buyer, Thing t) => FamilyEconomy.InventorySilver(buyer) >= Math.Max(1, (int)Math.Ceiling(t.GetStatValue(StatDefOf.MarketValue) * Math.Min(t.stackCount, 3)));
+
+        /// <summary>
+        /// Opens a willing-seller job when there is something to sell and someone who wants it and can pay: stolen goods to a third house (laundering),
+        /// or drugs to a person already dependent on them (contraband).
+        /// </summary>
+        private static bool TrySale(FamilyComponent c, Lineage house, Map map, int now)
+        {
+            var r = c.Registry;
+            var held = c.Economy.StockOf(map, now).Where(t => t.Spawned && r.ClaimFor(t.thingIDNumber)?.HolderFamily == house.Id).ToList();
+            var seller = r.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile).Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == map && Governance.Free(c, p.thingIDNumber) && Activities.IsFree(p));
+            if (seller == null) return false;
+            var buyers = r.Persons.Where(p => p.InColony && !p.Juvenile && r.FamilyOf(p.Id) != house.Id && r.FamilyOf(p.Id) != 0).Select(p => Spawned(c, p.Id))
+                .Where(p => p != null && p.Map == map && Governance.Free(c, p.thingIDNumber) && Activities.IsFree(p)).Take(20).ToList();
+            if (buyers.Count == 0) return false;
+            foreach (var item in held.Where(t => r.ClaimFor(t.thingIDNumber).OwnerFamily != house.Id).Take(5))              // laundering
+            {
+                var buyer = buyers.FirstOrDefault(b => r.FamilyOf(b.thingIDNumber) != r.ClaimFor(item.thingIDNumber).OwnerFamily && PricedFor(c, b, item) != null);
+                if (buyer != null && StartSaleJob(c, house, seller, buyer, item, CrimeDirection.Laundering, now)) return true;
+            }
+            foreach (var item in held.Where(t => FamilyEconomy.KindOf(t) == SupplyKind.Drug).Take(5))                       // contraband
+            {
+                var buyer = buyers.FirstOrDefault(b => (AddictionUtility.IsAddicted(b, item) || AddictionUtility.HasChemicalDependency(b, item)) && PricedFor(c, b, item) != null);
+                if (buyer != null && StartSaleJob(c, house, seller, buyer, item, CrimeDirection.Contraband, now)) return true;
+            }
+            return false;
+        }
+
+        private static bool StartSaleJob(FamilyComponent c, Lineage house, Pawn seller, Pawn buyer, Thing item, CrimeDirection direction, int now)
+        {
+            var r = c.Registry;
+            if (!r.SetCrimeDirection(house.Id, direction)) return false;
+            var heist = r.PlanHeist(house.Id, seller.thingIDNumber, r.FamilyOf(buyer.thingIDNumber), seller.Map.uniqueID, item.thingIDNumber, CrimeContextFor(c, 1, now), now);
+            return heist != null;
+        }
+
+        /// <summary>Calls in one favor owed to the house: a member asks the debtor''s house for goods. Whether it is honoured is the debtor''s own call.</summary>
+        private static bool ManageFavors(FamilyComponent c, Lineage house, Map map, int now)
+        {
+            var r = c.Registry;
+            r.RememberFavors(house.Id, now);
+            var favor = r.Favors.FirstOrDefault(f => f.State == FavorState.Owed && f.CreditorFamily == house.Id && now - f.CreatedTick > Day / 2);
+            if (favor == null) return false;
+            var creditor = r.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile).Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == map && Governance.Free(c, p.thingIDNumber) && Activities.IsFree(p));
+            if (creditor == null || !c.Economy.RequestAid(creditor, favor.DebtorFamily)) return false;
+            var request = r.Requests.LastOrDefault(q => q.RequesterId == creditor.thingIDNumber && q.Approach == SupplyApproach.Ask && q.CreatedTick >= now - 5);
+            if (request != null) r.CallInFavor(favor.Id, request.Id, now);
+            return request != null;
         }
 
         /// <summary>Nearby houses that could plausibly want protection: unsettled, with a head present, and holding silver to pay with.</summary>
@@ -268,6 +330,7 @@ namespace FamilyLife
                 {
                     case HeistState.Planning:
                         if (organizer == null) { r.AbortHeist(heist.Id, now); break; }
+                        if (heist.Consensual) { if (!r.ReadyHeist(heist.Id, context, now)) r.AbortHeist(heist.Id, now); break; }
                         if (organizer.CurJobDef == WFL_StoryDefOf.WFL_HeistRecruit) break;
                         var next = r.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile && heist.Participants.All(x => x.PersonId != p.Id)).OrderBy(p => p.Id)
                             .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map);
@@ -297,8 +360,16 @@ namespace FamilyLife
         private static bool Launch(FamilyComponent c, Heist heist, int now)
         {
             var r = c.Registry;
-            var donor = Spawned(c, r.HeadOf(heist.TargetFamilyId));
             var map = Find.Maps.FirstOrDefault(m => m.uniqueID == heist.TargetMapId);
+            if (heist.Consensual)
+            {
+                var sellerPawn = Spawned(c, heist.OrganizerId); var good = FindTarget(c, heist, now);
+                if (sellerPawn == null || good == null || map == null) return false;
+                var buyer = r.Persons.Where(p => p.InColony && !p.Juvenile && r.FamilyOf(p.Id) == heist.TargetFamilyId).Select(p => Spawned(c, p.Id))
+                    .FirstOrDefault(p => p != null && p.Map == map && Governance.Free(c, p.thingIDNumber) && Activities.IsFree(p) && InventoryAffordable(p, good));
+                return buyer != null && c.Economy.StartSale(buyer, sellerPawn, good, Math.Min(good.stackCount, 3), now);
+            }
+            var donor = Spawned(c, r.HeadOf(heist.TargetFamilyId));
             if (donor == null || map == null) return false;
             var items = c.Economy.StockOf(map, now).Where(t => t.Spawned && r.ClaimFor(t.thingIDNumber)?.HolderFamily == heist.TargetFamilyId).ToList();
             var first = FindTarget(c, heist, now);
@@ -316,6 +387,15 @@ namespace FamilyLife
         private static void Monitor(FamilyComponent c, Heist heist, int now)
         {
             var r = c.Registry;
+            if (heist.Consensual)
+            {
+                var sales = r.Requests.Where(q => q.Approach == SupplyApproach.Barter && q.CreatedTick >= heist.StateTick && r.FamilyOf(q.RequesterId) == heist.TargetFamilyId && r.FamilyOf(q.DonorId) == heist.FamilyId).ToList();
+                if (sales.Count == 0 || sales.Any(q => q.Open)) { if (now - heist.StateTick > 2 * Day) r.InterruptHeist(heist.Id, now); return; }
+                var done = sales.FirstOrDefault(q => q.State == SupplyState.Exchanged || q.State == SupplyState.Stored);
+                if (!r.ResolveHeist(heist.Id, done?.Count ?? 0, done == null ? 0 : done.Id + 3000000, false, null, now)) { r.InterruptHeist(heist.Id, now); return; }
+                if (done != null && heist.Direction == CrimeDirection.Laundering) r.LaunderGoods(heist.Id, done.SourceId, now);
+                return;
+            }
             var people = heist.Participants.Where(p => p.Stance == CrimeStance.Willing).Select(p => p.PersonId).ToList();
             var requests = r.Requests.Where(q => (q.Approach == SupplyApproach.Steal || q.Approach == SupplyApproach.Threat) && people.Contains(q.RequesterId) && q.CreatedTick >= heist.StateTick).ToList();
             if (requests.Count == 0 || requests.Any(q => q.Open))

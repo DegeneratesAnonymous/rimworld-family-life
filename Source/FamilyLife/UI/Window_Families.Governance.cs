@@ -67,6 +67,16 @@ namespace FamilyLife
                     new KeyValuePair<string, System.Action>("WFL_Ask_Agree".Translate(), () => registry.AgreeProtection(id, viewer, now)),
                     new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.EndProtection(id, now)));
             }
+            foreach (var matter in registry.CouncilMatters.Where(m => m.Open && registry.CouncilVotersFor(m).Contains(viewer)).ToList())
+            {
+                int id = matter.Id;
+                string what = matter.Kind == CouncilMatterKind.Union
+                    ? "WFL_Ask_CouncilUnion".Translate(registry.LineageDisplayName(registry.GetLineage(matter.FamilyA)), registry.LineageDisplayName(registry.GetLineage(matter.FamilyB))).ToString()
+                    : "WFL_Ask_CouncilCensure".Translate(registry.LineageDisplayName(registry.GetLineage(matter.FamilyA))).ToString();
+                Answer(ref y, what,
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Agree".Translate(), () => registry.AnswerCouncil(id, viewer, true, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.AnswerCouncil(id, viewer, false, now)));
+            }
             int myFamily = registry.FamilyOf(viewer);
             if (myFamily != 0 && registry.CanManageHouse(viewer, myFamily))
                 foreach (var petition in registry.HousePetitions.Where(p => p.FamilyId == myFamily && p.State == PetitionState.Proposed && p.ReceivedBy == 0).Take(3).ToList())
@@ -174,6 +184,10 @@ namespace FamilyLife
                 Messages.Message(registry.CallElection(field, Activities.Now) != null ? "WFL_Gov_ElectionCalled".Translate() : "WFL_Gov_ElectionNotPossible".Translate(), MessageTypeDefOf.NeutralEvent, false);
             }
             y += 32f;
+            foreach (var matter in registry.CouncilMatters.Where(m => m.Open).Take(3))
+                Line(view, ref y, matter.Kind == CouncilMatterKind.Union
+                    ? "WFL_Ask_CouncilUnion".Translate(registry.LineageDisplayName(registry.GetLineage(matter.FamilyA)), registry.LineageDisplayName(registry.GetLineage(matter.FamilyB)))
+                    : "WFL_Ask_CouncilCensure".Translate(registry.LineageDisplayName(registry.GetLineage(matter.FamilyA))), 20f, true);
             foreach (var election in registry.Elections.Where(e => e.Open).Take(2))
                 Line(view, ref y, "WFL_Election_Line".Translate(("WFL_ElectionState_" + election.State).Translate(), FamilyUi.NameList(registry, election.Candidates)), 20f, true);
             foreach (var coup in registry.Coups.Where(c => c.Open && registry.CoupVisibleTo(c, viewer)).Take(2))
@@ -185,6 +199,8 @@ namespace FamilyLife
             if (member && crime != null && crime.Status != CrimeStatus.None)
                 LineTip(view, ref y, "WFL_Crime_Line".Translate(("WFL_CrimeDirection_" + crime.Direction).Translate(), ("WFL_CrimeStatus_" + crime.Status).Translate()),
                     "WFL_Crime_Tip".Translate(crime.Heat.ToString("0"), crime.ReformProgress.ToString("0")), 10f, true);
+            foreach (var favor in registry.Favors.Where(f => f.Open && f.CreditorFamily == lineage.Id && member).Take(3))
+                Line(view, ref y, "WFL_Favor_Line".Translate(FamilyUi.NameOf(registry, favor.DebtorId), ("WFL_FavorState_" + favor.State).Translate()), 20f, true);
             foreach (var heist in registry.Heists.Where(h => h.FamilyId == lineage.Id || h.TargetFamilyId == lineage.Id))
             {
                 var level = viewer == 0 ? CrimeKnowledgeLevel.Fact : registry.CrimeKnowledgeOf(viewer, heist.Id);

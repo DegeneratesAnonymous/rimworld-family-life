@@ -57,6 +57,10 @@ namespace FamilyLife.Domain
         public float Risk;
         public List<HeistParticipant> Participants = new List<HeistParticipant>();
         public bool Active => State <= HeistState.Executing;
+        public int LaunderedThingId;
+        /// <summary>A willing seller and buyer need no victim: contraband, laundering and favors are agreements, not takings.</summary>
+        public bool Consensual => Direction == CrimeDirection.Contraband || Direction == CrimeDirection.Laundering || Direction == CrimeDirection.Favors;
+        public int Needed => Consensual ? 1 : 2;
         public int WillingCount => Participants.Count(p => p.Stance == CrimeStance.Willing);
     }
 
@@ -237,7 +241,7 @@ namespace FamilyLife.Domain
         public bool ReadyHeist(int heistId, CrimeContext ctx, int now)
         {
             var heist = Heists.FirstOrDefault(h => h.Id == heistId);
-            if (heist == null || heist.State != HeistState.Planning || heist.WillingCount < 2) return false;
+            if (heist == null || heist.State != HeistState.Planning || heist.WillingCount < heist.Needed) return false;
             if (ctx?.TargetValid != null && !ctx.TargetValid(heist)) { AbortHeist(heistId, now); return false; }
             int refused = heist.Participants.Count(p => p.Stance == CrimeStance.Refused);
             heist.Risk = Math.Max(5f, Math.Min(95f, 45f + refused * 8f - heist.WillingCount * 6f + (GetLineage(heist.TargetFamilyId)?.Situation?.Safety ?? 50f) * .2f));
@@ -251,7 +255,7 @@ namespace FamilyLife.Domain
             if (heist == null || heist.State != HeistState.Ready) return false;
             if (ctx?.TargetValid != null && !ctx.TargetValid(heist)) { InterruptHeist(heistId, now); return false; }
             int ready = heist.Participants.Count(p => p.Stance == CrimeStance.Willing && GetPerson(p.PersonId)?.InColony == true && (ctx?.Free == null || ctx.Free(p.PersonId)));
-            if (ready < 2) { InterruptHeist(heistId, now); return false; }
+            if (ready < heist.Needed) { InterruptHeist(heistId, now); return false; }
             heist.State = HeistState.Executing; heist.StateTick = now;
             return true;
         }
@@ -283,12 +287,13 @@ namespace FamilyLife.Domain
             if (goodsMoved > 0 && (evidenceToken == 0 || Heists.Any(h => h.Id != heistId && h.EvidenceToken == evidenceToken))) return false;
             int victim = HeadOf(heist.TargetFamilyId);
             if (victim == 0) return false;
+            if (heist.Consensual) { existingIncidentId = 0; caught = false; }
             var present = heist.Participants.Where(p => p.Stance == CrimeStance.Willing).Select(p => p.PersonId).ToList();
             var seen = (witnesses ?? Enumerable.Empty<int>()).Concat(caught ? new[] { victim } : new int[0]).Distinct().ToList();
             var kind = heist.Direction == CrimeDirection.Intimidation || heist.Direction == CrimeDirection.Protection ? IncidentKind.Intimidation : IncidentKind.Theft;
             // An incident is recorded for the actor; its witnesses are the only people who learn who did it.
             // When the supply system already recorded the theft that really happened, that record is used rather than writing a second one.
-            var incident = existingIncidentId != 0 ? Incidents.FirstOrDefault(i => i.Id == existingIncidentId) :
+            var incident = heist.Consensual ? null : existingIncidentId != 0 ? Incidents.FirstOrDefault(i => i.Id == existingIncidentId) :
                 RecordIncident(kind, heist.OrganizerId, victim, heist.TargetMapId, now, Math.Min(100f, 25f + goodsMoved * .5f), seen, IncidentContext.Planned, Math.Max(0, goodsMoved));
             heist.IncidentId = incident?.Id ?? 0; heist.GoodsMoved = Math.Max(0, goodsMoved); heist.EvidenceToken = goodsMoved > 0 ? evidenceToken : 0;
             heist.State = caught ? HeistState.Exposed : HeistState.Completed; heist.StateTick = now;
@@ -309,6 +314,30 @@ namespace FamilyLife.Domain
         }
 
         // ---- who knows what ----
+
+        /// <summary>Changes what an active house does next. Only an active house can, and never while a job is under way.</summary>
+        public bool SetCrimeDirection(int family, CrimeDirection direction)
+        {
+            var house = GetLineage(family);
+            if (house == null || house.Crime.Status != CrimeStatus.Active || direction == CrimeDirection.None || Heists.Any(h => h.FamilyId == family && h.Active)) return false;
+            house.Crime.Direction = direction;
+            return true;
+        }
+
+        /// <summary>
+        /// After goods have really been sold on to a third house, their ownership record follows the sale and the original owner can no longer
+        /// reclaim them through restitution. It needs a finished laundering job, a thing the buyer now holds, and works once per job.
+        /// </summary>
+        public bool LaunderGoods(int heistId, int thingId, int now)
+        {
+            var heist = Heists.FirstOrDefault(h => h.Id == heistId);
+            var claim = ClaimFor(thingId);
+            if (heist == null || heist.Direction != CrimeDirection.Laundering || heist.State != HeistState.Completed || heist.LaunderedThingId != 0 || claim == null) return false;
+            if (claim.HolderFamily != heist.TargetFamilyId || claim.OwnerFamily == claim.HolderFamily || claim.OwnerFamily == heist.FamilyId) return false;
+            claim.OwnerFamily = claim.HolderFamily;
+            heist.LaunderedThingId = thingId;
+            return true;
+        }
 
         public CrimeKnowledgeLevel CrimeKnowledgeOf(int observer, int heistId)
             => CrimeKnowledgeRecords.FirstOrDefault(k => k.HeistId == heistId && k.PersonId == observer)?.Level ?? CrimeKnowledgeLevel.None;

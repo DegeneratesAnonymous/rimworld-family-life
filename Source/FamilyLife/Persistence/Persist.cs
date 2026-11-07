@@ -548,7 +548,9 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref NextHeistId,"nextHeistId",1);Scribe_Values.Look(ref NextProtectionId,"nextProtectionId",1);
             Scribe_Deep.Look(ref Institution,"institution");Scribe_Collections.Look(ref Elections,"elections",LookMode.Deep);
             Scribe_Collections.Look(ref Coups,"coups",LookMode.Deep);Scribe_Values.Look(ref NextElectionId,"nextElectionId",1);
-            Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
+            Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);
+            Scribe_Collections.Look(ref Favors,"favors",LookMode.Deep);Scribe_Values.Look(ref NextFavorId,"nextFavorId",1);
+            Scribe_Collections.Look(ref CouncilMatters,"councilMatters",LookMode.Deep);Scribe_Values.Look(ref NextCouncilMatterId,"nextCouncilMatterId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
             Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
             Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
@@ -575,6 +577,7 @@ namespace FamilyLife.Domain
                 SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
                 ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();
                 Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
+                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();
             }
         }
     }

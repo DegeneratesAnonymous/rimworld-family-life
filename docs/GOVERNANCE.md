@@ -15,12 +15,13 @@ Pure rules live in `Source/FamilyLife/Domain` and are covered by offline tests. 
 - **Protection deals.** A house whose past acts were mostly menace, with a poorly protected neighbour holding silver, may offer protection. The two heads talk; the neighbour accepts out of need (unsafe and trusts them) or fear (a coerced deal, which also puts an intimidation on record) or declines. Tribute is collected every few days through the supply system and recorded only when the silver really arrived. Reforming ends the deal.
 - **Intimidation jobs.** The same job flow as theft, but the participants demand goods (the donor can refuse).
 - **Councils.** A council names the colony's leader when the post is empty or the term ends; each seated house's head casts one vote by their own judgment.
+- **Contraband, laundering and favors.** Willing-seller jobs and calling in favors. A house that holds stolen goods can sell them to a third house's member for silver, and the ownership record then follows the sale (so the original owner can no longer reclaim them through restitution). A house holding drugs can sell them to someone already dependent on them. Both use the normal barter flow and record no theft: nobody is wronged, but the house draws attention. A favor exists only because of a real recorded gift to someone in another house; calling it in is an ordinary request for goods, honoured or refused by the other side, and the outcome changes trust.
+- **Council powers.** Under a council, a union of two houses needs the seated heads' approval (the first attempt raises the question, a later attempt goes through once it is approved; a union that would hold most of the colony's adults is refused), and a house of known bad conduct can be censured, which costs it standing. A head only votes on what they know; a head you control has a window to answer and is otherwise not counted.
 - **Player-controlled pawns.** Questions put to a pawn you control (a scheme, a job, a protection offer, a request to hear, an open ballot) wait in the Families window under "Waiting for your answer". Nothing answers for them; an unanswered question counts for nothing.
 
 ## Not built
 
 - Bringing distant relatives to the colony (travel, rescue, camping): they are listed with the reason, and only relatives already present can come.
-- Contraband, favors and laundering have rules but nothing starts them: they need item and debt concepts the mod does not have.
 - Inheritance of anything beyond the office of head is deliberately not attempted.
 ## Rules the tests pin down
 

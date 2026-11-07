@@ -80,6 +80,18 @@ namespace FamilyLife
             return Start(actor, donor, source, count, need, approach, home, now);
         }
 
+        /// <summary>A willing sale: the buyer walks to the seller's goods and pays in silver through the same barter flow as any trade.</summary>
+        internal bool StartSale(Pawn buyer, Pawn seller, Thing source, int count, int now)
+        {
+            if (buyer == null || seller == null || source == null || !source.Spawned || !buyer.CanReserve(source) || !buyer.CanReach(source, PathEndMode.Touch, Danger.None)) return false;
+            int price = Math.Max(1, (int)Math.Ceiling(source.GetStatValue(StatDefOf.MarketValue) * count));
+            if (InventorySilver(buyer) < price) return false;
+            var home = FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(buyer.thingIDNumber)));
+            if (home?.Map != buyer.Map) return false;
+            var need = new Need { Kind = KindOf(source), ForPawn = buyer, Target = count, Urgency = .5f };
+            return Start(buyer, seller, source, count, need, SupplyApproach.Barter, home, now);
+        }
+
         private List<Thing> Stock(Map map, int now)
         {
             if (!stocks.TryGetValue(map, out var s)) stocks[map] = s = new Snapshot();

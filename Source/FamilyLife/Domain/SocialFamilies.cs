@@ -79,6 +79,7 @@ namespace FamilyLife.Domain
             var sourceHouse=GetLineage(source);var targetHouse=GetLineage(target);
             int sourceColonyMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,source));
             if(sourceColonyMembers==0) return false;
+            if(!CouncilClears(source,target,now)) return false;       // under a council, a union needs its approval first
             var members=Persons.Where(p=>BelongsToFamily(p,source)).Select(p=>p.Id).ToList();
             int targetMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,target));
             int total=Math.Max(1,sourceColonyMembers+targetMembers);

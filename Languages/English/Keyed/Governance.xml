@@ -144,4 +144,12 @@
   <WFL_Ask_Expose>Tell others</WFL_Ask_Expose>
   <WFL_Ask_Agree>Agree</WFL_Ask_Agree>
   <WFL_Ask_Hear>Hear them</WFL_Ask_Hear>
+  <WFL_Ask_CouncilUnion>The council is asked whether {0} and {1} may join as one house.</WFL_Ask_CouncilUnion>
+  <WFL_Ask_CouncilCensure>The council is asked whether to censure {0}.</WFL_Ask_CouncilCensure>
+  <WFL_Favor_Line>A favor owed by {0}: {1}</WFL_Favor_Line>
+  <WFL_FavorState_Owed>not yet asked for</WFL_FavorState_Owed>
+  <WFL_FavorState_Called>asked for</WFL_FavorState_Called>
+  <WFL_FavorState_Settled>honoured</WFL_FavorState_Settled>
+  <WFL_FavorState_Defaulted>refused</WFL_FavorState_Defaulted>
+  <WFL_FavorState_Lapsed>forgotten</WFL_FavorState_Lapsed>
 </LanguageData>

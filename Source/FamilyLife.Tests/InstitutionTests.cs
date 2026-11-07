@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using FamilyLife.Domain;
 using Xunit;
@@ -345,5 +346,100 @@ namespace FamilyLife.Tests
             Assert.Equal(20, r.Institution.LeaderId);
             Assert.Null(r.ConveneCouncil(3100));                                      // nothing to decide until the term ends or the post empties
             Assert.NotNull(r.ConveneCouncil(r.Institution.TermEndTick + 1));
+        }
+        private static FamilyRegistry Council(out int a, out int b, out int c)
+        {
+            var r = new FamilyRegistry();
+            r.Apply(new[]
+            {
+                T.P(1, "Elder"), T.P(2, "Two", parents: new[] { 1 }),
+                T.P(20, "Solo", last: "Other"),
+                T.P(22, "Third", last: "Third"), T.P(23, "T2", parents: new[] { 22 }), T.P(24, "T3", parents: new[] { 22 }), T.P(25, "T4", parents: new[] { 22 })
+            }, 1000);
+            a = r.FamilyOf(1); b = r.FamilyOf(20); c = r.FamilyOf(22);
+            r.SetInstitution(InstitutionKind.Council, 0, 3000);
+            return r;
+        }
+
+        [Fact]
+        public void Under_a_council_a_union_waits_for_approval_then_goes_through_once()
+        {
+            var r = Council(out int a, out int b, out int c);
+            Assert.False(r.UniteFamilies(b, a, 3000));                               // first attempt only raises the question
+            var matter = Assert.Single(r.CouncilMatters);
+            Assert.Equal(CouncilMatterKind.Union, matter.Kind);
+            Assert.False(r.UniteFamilies(b, a, 3010));                               // and does not open a second one
+            Assert.Single(r.CouncilMatters);
+            r.AdvanceCouncil(3100);
+            Assert.Equal(CouncilMatterState.Approved, matter.State);
+            Assert.True(r.UniteFamilies(b, a, 3200));
+            Assert.Equal(CouncilMatterState.Used, matter.State);
+        }
+
+        [Fact]
+        public void A_council_refuses_a_union_that_would_hold_most_of_the_colony()
+        {
+            var r = Council(out int a, out int b, out int c);
+            Assert.False(r.UniteFamilies(c, a, 3000));                               // four of seven people in one block
+            r.AdvanceCouncil(3100);
+            Assert.Equal(CouncilMatterState.Rejected, r.CouncilMatters.Single().State);
+            Assert.False(r.UniteFamilies(c, a, 3200));
+        }
+
+        [Fact]
+        public void Without_a_council_a_union_needs_no_one_s_leave()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.SetInstitution(InstitutionKind.Consensus, 0, 3100);
+            Assert.True(r.CouncilClears(a, b, 3200));
+            Assert.Empty(r.CouncilMatters);
+        }
+
+        [Fact]
+        public void A_player_controlled_head_has_a_window_to_answer_and_silence_counts_for_nothing()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.UniteFamilies(b, a, 3000);
+            var matter = r.CouncilMatters.Single();
+            Func<int, bool> player = id => id == 22;
+            r.AdvanceCouncil(3100, player);
+            Assert.True(matter.Open);                                                   // waiting for them
+            Assert.True(r.AnswerCouncil(matter.Id, 22, false, 3200));
+            Assert.False(r.AnswerCouncil(matter.Id, 22, true, 3201));
+            r.AdvanceCouncil(3300, player);
+            Assert.Equal(CouncilMatterState.Rejected, matter.State);
+
+            var r2 = Council(out a, out b, out c);
+            r2.UniteFamilies(b, a, 3000);
+            r2.AdvanceCouncil(3000 + ActivityTuning.TicksPerDay * 3, player);          // the window passed with no word
+            Assert.Equal(CouncilMatterState.Rejected, r2.CouncilMatters.Single().State);   // nobody voted: nothing changes
+        }
+
+        [Fact]
+        public void A_censure_needs_heads_who_actually_know_of_the_conduct()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.GetLineage(a).Crime.Heat = 60f;
+            r.RecordIncident(IncidentKind.Theft, 2, 20, 0, 3000, 40f, new[] { 22 });     // only the third house's head saw it (and the victim learned of it)
+            var matter = r.RequestCensure(a, 3100);
+            Assert.NotNull(matter);
+            Assert.Null(r.RequestCensure(a, 3200));                                      // not again straight away
+            float before = r.GetLineage(a).Standing;
+            r.AdvanceCouncil(3300);
+            Assert.True(matter.Yes >= 1);
+            Assert.Equal(CouncilMatterState.Used, matter.State);
+            Assert.Equal(before - 10f, r.GetLineage(a).Standing);
+        }
+
+        [Fact]
+        public void A_censure_with_no_one_who_knows_changes_nothing()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.GetLineage(a).Crime.Heat = 60f;
+            var matter = r.RequestCensure(a, 3100);
+            float before = r.GetLineage(a).Standing;
+            r.AdvanceCouncil(3300);
+            Assert.Equal(CouncilMatterState.Rejected, matter.State);
+            Assert.Equal(before, r.GetLineage(a).Standing);
         }    }
 }

@@ -339,5 +339,60 @@ namespace FamilyLife.Tests
             Assert.True(r.BeginReform(fam, Now + 10));
             Assert.False(deal.Agreed);                                               // reforming ends the arrangement
             Assert.False(r.RecordTribute(deal.Id, 20, 5, Now + 20));
+        }
+        [Fact]
+        public void A_sale_between_willing_houses_needs_no_victim_and_records_no_theft()
+        {
+            var r = World(out int fam, out int target);
+            Precedent(r);
+            r.AdoptCrimeDirection(fam, CrimeDirection.Theft, Open(), Now);
+            int third = r.FamilyOf(22);
+            Assert.True(r.SetCrimeDirection(fam, CrimeDirection.Contraband));
+            var heist = r.PlanHeist(fam, 3, third, 0, 901, Open(), Now);
+            Assert.NotNull(heist);
+            Assert.True(heist.Consensual);
+            int incidents = r.Incidents.Count;
+            Assert.True(r.ReadyHeist(heist.Id, Open(), Now));                          // the seller alone is enough: the buyer is willing, not recruited
+            Assert.True(r.BeginHeist(heist.Id, Open(), Now));
+            Assert.False(r.SetCrimeDirection(fam, CrimeDirection.Favors));            // not while a job is under way
+            Assert.True(r.ResolveHeist(heist.Id, 3, 7001, true, null, Now + 5));       // "caught" is ignored: nobody was wronged
+            Assert.Equal(HeistState.Completed, heist.State);
+            Assert.Equal(incidents, r.Incidents.Count);
+            Assert.Equal(0, heist.IncidentId);
+            Assert.True(r.GetLineage(fam).Crime.Heat > 0f);                            // but it still draws attention
+        }
+
+        [Fact]
+        public void Laundering_changes_the_ownership_record_only_after_a_real_sale_to_a_third_house()
+        {
+            var r = World(out int fam, out int target);
+            Precedent(r);
+            r.AdoptCrimeDirection(fam, CrimeDirection.Theft, Open(), Now);
+            int third = r.FamilyOf(22);
+            r.ClaimStock(900, target, fam, 0, SupplyKind.Food);                          // stolen goods: the victim owns them, the thieves hold them
+            r.SetCrimeDirection(fam, CrimeDirection.Laundering);
+            var heist = r.PlanHeist(fam, 3, third, 0, 900, Open(), Now);
+            r.ReadyHeist(heist.Id, Open(), Now); r.BeginHeist(heist.Id, Open(), Now);
+            Assert.False(r.LaunderGoods(heist.Id, 900, Now));                          // job not finished
+            r.ResolveHeist(heist.Id, 4, 7002, false, null, Now + 5);
+            Assert.False(r.LaunderGoods(heist.Id, 900, Now + 6));                      // still held by the seller: no sale happened
+            r.ClaimStock(900, target, third, 0, SupplyKind.Food);                        // the sale: the buyer now holds the victim's goods
+            Assert.True(r.LaunderGoods(heist.Id, 900, Now + 7));
+            Assert.Equal(third, r.ClaimFor(900).OwnerFamily);
+            Assert.False(r.LaunderGoods(heist.Id, 900, Now + 8));                      // once per job
+        }
+
+        [Fact]
+        public void Laundering_cannot_clean_goods_a_house_owns_or_goods_that_never_changed_hands_wrongly()
+        {
+            var r = World(out int fam, out int target);
+            Precedent(r);
+            r.AdoptCrimeDirection(fam, CrimeDirection.Theft, Open(), Now);
+            int third = r.FamilyOf(22);
+            r.ClaimStock(901, third, third, 0, SupplyKind.Food);                         // honestly owned by the buyer already
+            r.SetCrimeDirection(fam, CrimeDirection.Laundering);
+            var heist = r.PlanHeist(fam, 3, third, 0, 901, Open(), Now);
+            r.ReadyHeist(heist.Id, Open(), Now); r.BeginHeist(heist.Id, Open(), Now); r.ResolveHeist(heist.Id, 1, 7003, false, null, Now + 1);
+            Assert.False(r.LaunderGoods(heist.Id, 901, Now + 2));
         }    }
 }

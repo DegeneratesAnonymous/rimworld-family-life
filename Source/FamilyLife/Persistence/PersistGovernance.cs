@@ -86,7 +86,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref OrganizerId, "organizer");
             Scribe_Values.Look(ref TargetFamilyId, "targetFamily"); Scribe_Values.Look(ref TargetMapId, "targetMap", -1); Scribe_Values.Look(ref TargetToken, "targetToken");
             Scribe_Values.Look(ref PlannedTick, "planned"); Scribe_Values.Look(ref StateTick, "stateTick"); Scribe_Values.Look(ref GoodsMoved, "goods");
-            Scribe_Values.Look(ref IncidentId, "incident"); Scribe_Values.Look(ref EvidenceToken, "evidence"); Scribe_Values.Look(ref Risk, "risk");
+            Scribe_Values.Look(ref IncidentId, "incident"); Scribe_Values.Look(ref LaunderedThingId, "laundered"); Scribe_Values.Look(ref EvidenceToken, "evidence"); Scribe_Values.Look(ref Risk, "risk");
             Scribe_Values.Look(ref Direction, "direction", CrimeDirection.None); Scribe_Values.Look(ref State, "state", HeistState.Planning);
             Scribe_Collections.Look(ref Participants, "participants", LookMode.Deep);
             if (Participants == null) Participants = new List<HeistParticipant>();
@@ -165,4 +165,25 @@ namespace FamilyLife.Domain
             if (Participants == null) Participants = new List<CoupParticipant>();
         }
     }
-}
+
+    public sealed partial class FavorDebt : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref CreditorFamily, "creditor"); Scribe_Values.Look(ref DebtorId, "debtor"); Scribe_Values.Look(ref DebtorFamily, "debtorFamily");
+            Scribe_Values.Look(ref GiftIncidentId, "gift"); Scribe_Values.Look(ref CreatedTick, "created"); Scribe_Values.Look(ref CalledTick, "called");
+            Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref RequestId, "request"); Scribe_Values.Look(ref State, "state", FavorState.Owed);
+        }
+    }
+
+    public sealed partial class CouncilMatter : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref FamilyA, "familyA"); Scribe_Values.Look(ref FamilyB, "familyB");
+            Scribe_Values.Look(ref RequestedTick, "requested"); Scribe_Values.Look(ref DecidedTick, "decided"); Scribe_Values.Look(ref Yes, "yes"); Scribe_Values.Look(ref No, "no");
+            Scribe_Values.Look(ref Kind, "kind", CouncilMatterKind.Union); Scribe_Values.Look(ref State, "state", CouncilMatterState.Pending);
+            Scribe_Collections.Look(ref Voted, "voted", LookMode.Value);
+            if (Voted == null) Voted = new List<int>();
+        }
+    }}
