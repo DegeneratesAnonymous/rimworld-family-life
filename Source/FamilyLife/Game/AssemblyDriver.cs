@@ -27,7 +27,13 @@ namespace FamilyLife
             var counted = r.AdvanceAssembly(now);
             if (counted != null && a != null) Report(c, r, a);
             a = r.OpenAssembly;
-            if (a != null && a.State == AssemblyState.Voting) SendVoters(c, r, a);
+            if (a != null && a.State == AssemblyState.Voting)
+            {
+                Convene(c, r, a, now);
+                VoteAtTheAssembly(c, r, a, ctx, now);
+                if (!r.GatheringRequests.Any(q => q.Ceremony == CeremonyKind.Assembly && (q.State == CeremonyState.Planned || q.State == CeremonyState.Active)))
+                    SendVoters(c, r, a);                                     // the gathering could not be held (or is over): anyone left walks to the polling place instead
+            }
         }
 
         /// <summary>Why someone is standing, in plain words: a calling, a personal aim, their house's wish, a duty, or already holding it.</summary>
@@ -70,6 +76,44 @@ namespace FamilyLife
                     if (pick != 0 && score >= FamilyRegistry.SupportFloor) r.EndorseAssembly(a.Id, house.Id, head, race.Kind, pick);
                 }
             }
+        }
+
+        /// <summary>The whole colony is called together: a gathering at which the candidates speak and everyone who comes votes. Called once per assembly.</summary>
+        private static void Convene(FamilyComponent c, FamilyRegistry r, CommunityAssembly a, int now)
+        {
+            if (a.Convened) return;
+            a.Convened = true;
+            int leaderHouse = r.FamilyOf(r.Institution.LeaderId);
+            var host = leaderHouse != 0 && r.IsActiveHouse(leaderHouse) ? r.GetLineage(leaderHouse)
+                : r.Lineages.Where(h => h.AbsorbedIntoId == 0 && r.IsActiveHouse(h.Id)).OrderByDescending(h => h.Standing).ThenBy(h => h.Id).FirstOrDefault();
+            if (host == null) return;
+            r.RequestCeremony(CeremonyKind.Assembly, host.Id, 0, 0, now, 0, FamilyRegistry.AssemblyVotingTicks);
+        }
+
+        private static readonly HashSet<int> spoken = new HashSet<int>();
+
+        /// <summary>People at the assembly vote as they arrive, and one candidate speaks for each post as the day goes on.</summary>
+        private static void VoteAtTheAssembly(FamilyComponent c, FamilyRegistry r, CommunityAssembly a, OfficeContext ctx, int now)
+        {
+            foreach (var map in Find.Maps.Where(m => m.IsPlayerHome))
+                foreach (var lord in map.lordManager.lords.Where(l => l.LordJob is LordJob_FamilyGathering g && g.OccasionKind == "assembly").ToList())
+                {
+                    foreach (var pawn in lord.ownedPawns.Where(p => p != null && p.Spawned && !Governance.IsAvatar(c, p.thingIDNumber)).ToList())
+                        if (r.NeedsToVoteInAssembly(pawn.thingIDNumber)) r.CastAssemblyBallot(a.Id, pawn.thingIDNumber, ctx, now);
+                    foreach (var race in a.Races)
+                    {
+                        int key = a.Id * 16 + (int)race.Kind;
+                        if (spoken.Contains(key)) continue;
+                        int speakerId = race.IncumbentId != 0 ? race.IncumbentId : race.Candidates.FirstOrDefault();
+                        var speaker = c.TryGetPawn(speakerId);
+                        if (speaker == null || !speaker.Spawned || lord.ownedPawns.Contains(speaker) == false) continue;
+                        spoken.Add(key);
+                        string post = ("WFL_OfficeKind_" + race.Kind).Translate();
+                        string why = MotiveWords(r.MotivesOf(race, speakerId));
+                        Messages.Message(Phrasing.Pick("WFL_Speech", speakerId + key, speaker.LabelShort, post, why), speaker, MessageTypeDefOf.NeutralEvent, false);
+                        return;                                              // one speech each time round, so they are spread through the day
+                    }
+                }
         }
 
         private static void SendVoters(FamilyComponent c, FamilyRegistry r, CommunityAssembly a)

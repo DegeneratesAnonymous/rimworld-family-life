@@ -68,6 +68,7 @@ namespace FamilyLife.Domain
         public AssemblyState State;
         public List<AssemblyRace> Races = new List<AssemblyRace>();
         public List<int> Voted = new List<int>();
+        public bool Convened;                         // the gathering for it has been called, so it is called only once
         public List<AssemblyEndorsement> Endorsements = new List<AssemblyEndorsement>();
         public bool Open => State == AssemblyState.Campaign || State == AssemblyState.Voting;
     }

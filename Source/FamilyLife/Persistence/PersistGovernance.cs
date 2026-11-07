@@ -236,7 +236,7 @@ namespace FamilyLife.Domain
         public void ExposeData()
         {
             Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref StartedTick, "started"); Scribe_Values.Look(ref VotingTick, "voting"); Scribe_Values.Look(ref CountedTick, "counted");
-            Scribe_Values.Look(ref State, "state", AssemblyState.Campaign);
+            Scribe_Values.Look(ref State, "state", AssemblyState.Campaign); Scribe_Values.Look(ref Convened, "convened");
             Scribe_Collections.Look(ref Races, "races", LookMode.Deep); Scribe_Collections.Look(ref Voted, "voted", LookMode.Value); Scribe_Collections.Look(ref Endorsements, "endorsements", LookMode.Deep);
             if (Races == null) Races = new List<AssemblyRace>();
             if (Voted == null) Voted = new List<int>();

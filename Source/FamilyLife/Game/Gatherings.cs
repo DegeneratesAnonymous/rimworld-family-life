@@ -40,6 +40,7 @@ namespace FamilyLife
             this.visitors = visitors ?? new List<int>();
         }
 
+        internal string OccasionKind => kind;
         private ThoughtDef Mood => DefDatabase<ThoughtDef>.GetNamedSilentFail(MoodDefName(kind)) ?? ThoughtDefOf.AttendedParty;
 
         private static string MoodDefName(string occasion)
@@ -48,6 +49,7 @@ namespace FamilyLife
             if(occasion=="funeral"||occasion=="memorial")return "WFL_FuneralAttended";
             if(occasion=="wedding")return "WFL_WeddingAttended";
             if(occasion=="grandreunion")return "WFL_GrandReunionAttended";
+            if(occasion=="assembly")return "WFL_AssemblyAttended";
             if(occasion=="reconciliation")return "WFL_ReconciliationAttended";
             return "WFL_TraditionAttended";
         }
@@ -65,7 +67,7 @@ namespace FamilyLife
             return ("WFL_Gathering_Report_" + ReportKey(kind)).Translate().ToString();
         }
 
-        internal static string ReportKey(string value) => value=="comingofage"||value=="funeral"||value=="wedding"||value=="grandreunion"||value=="reconciliation"?value:"tradition";
+        internal static string ReportKey(string value) => value=="comingofage"||value=="funeral"||value=="wedding"||value=="grandreunion"||value=="reconciliation"||value=="assembly"?value:"tradition";
 
         /// <summary>When the gathering ends, relatives who were there together grow closer.</summary>
         public override void Cleanup()
@@ -197,6 +199,12 @@ namespace FamilyLife
                     var visitor=component.TryGetPawn(id);
                     if(visitor!=null&&visitor.Spawned&&visitor.Map==organizer.Map&&!invited.Contains(id))invited.Add(id);
                 }
+                if (request.Ceremony == CeremonyKind.Assembly)
+                {
+                    // The yearly assembly asks every adult in the colony; nobody is left off for what others think of them.
+                    invited = component.Registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => p.Id).Distinct().Take(64).ToList();
+                    if (!invited.Contains(organizer.thingIDNumber)) invited.Add(organizer.thingIDNumber);
+                }
                 if (request.Kind == "reconciliation")
                 {
                     // The other family is asked as well: that is the whole point of it.
@@ -233,7 +241,7 @@ namespace FamilyLife
         {
             var settings = FamilyLifeMod.Settings;
             var due = component.Registry.DueRequests(now).Where(r=>settings==null||
-                (r.Ceremony==CeremonyKind.Wedding||r.Ceremony==CeremonyKind.Funeral||r.Ceremony==CeremonyKind.GrandReunion
+                (r.Ceremony==CeremonyKind.Assembly?settings.governance:r.Ceremony==CeremonyKind.Wedding||r.Ceremony==CeremonyKind.Funeral||r.Ceremony==CeremonyKind.GrandReunion
                     ?settings.ceremonies:settings.traditions)).ToList();
             if (due.Count == 0) return;
             var requestedHouse=component.Registry.GetLineage(due[0].LineageId);

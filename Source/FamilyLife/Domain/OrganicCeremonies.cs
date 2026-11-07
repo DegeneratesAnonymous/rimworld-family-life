@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FamilyLife.Domain
 {
-    public enum CeremonyKind : byte { None, Tradition, ComingOfAge, Funeral, Reconciliation, Wedding, GrandReunion }
+    public enum CeremonyKind : byte { None, Tradition, ComingOfAge, Funeral, Reconciliation, Wedding, GrandReunion, Assembly }
     public enum CeremonyState : byte { Planned, Active, Completed, Cancelled, Expired }
 
     [Flags]
@@ -111,13 +111,13 @@ namespace FamilyLife.Domain
         public static string KindName(CeremonyKind kind)
         {
             switch(kind){case CeremonyKind.ComingOfAge:return "comingofage";case CeremonyKind.Funeral:return "funeral";case CeremonyKind.Reconciliation:return "reconciliation";
-                case CeremonyKind.Wedding:return "wedding";case CeremonyKind.GrandReunion:return "grandreunion";default:return "tradition";}
+                case CeremonyKind.Wedding:return "wedding";case CeremonyKind.GrandReunion:return "grandreunion";case CeremonyKind.Assembly:return "assembly";default:return "tradition";}
         }
 
         public static CeremonyKind CeremonyOf(string kind)
         {
             switch(kind){case "comingofage":return CeremonyKind.ComingOfAge;case "memorial":case "funeral":return CeremonyKind.Funeral;case "reconciliation":return CeremonyKind.Reconciliation;
-                case "wedding":return CeremonyKind.Wedding;case "grandreunion":return CeremonyKind.GrandReunion;default:return CeremonyKind.Tradition;}
+                case "wedding":return CeremonyKind.Wedding;case "grandreunion":return CeremonyKind.GrandReunion;case "assembly":return CeremonyKind.Assembly;default:return CeremonyKind.Tradition;}
         }
 
         public bool MarkCeremonyStarted(int requestId,int organizer,int mapId,int now,IEnumerable<int> invited)

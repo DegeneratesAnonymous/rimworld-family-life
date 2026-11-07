@@ -543,4 +543,12 @@
     <stackLimit>1</stackLimit>
     <stages><li><label>someone sat with me</label><description>It did not fix anything, but I was not alone.</description><baseMoodEffect>6</baseMoodEffect></li></stages>
   </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>WFL_AssemblyAttended</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <durationDays>8</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>took part in the assembly</label><description>The whole colony stood together and chose its own way. I had a say.</description><baseMoodEffect>8</baseMoodEffect></li></stages>
+  </ThoughtDef>
 </Defs>
