@@ -463,5 +463,17 @@ namespace FamilyLife.Tests
             Assert.False(r.CastBallot(e.Id, 2, null, 3100));
             r.AdvanceElections(3200, null, false);
             Assert.Equal(ElectionState.Aborted, e.State);
+        }
+        [Fact]
+        public void An_approved_union_is_finished_without_running_the_negotiation_again()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.MarriageAlliances.Add(new MarriageAlliance { Id = 1, FamilyA = a, FamilyB = b, State = MarriageAllianceState.Fulfilled, UnionState = HouseUnionState.Eligible, UnionTargetFamilyId = a });
+            Assert.False(r.UniteFamilies(b, a, 3000));
+            r.AdvanceCouncil(3100);
+            Assert.Equal(1, r.CompleteApprovedUnions(3200));
+            Assert.Equal(HouseUnionState.Completed, r.MarriageAlliances.Single().UnionState);
+            Assert.NotEqual(0, r.GetLineage(b).AbsorbedIntoId);
+            Assert.Equal(0, r.CompleteApprovedUnions(3300));
         }    }
 }

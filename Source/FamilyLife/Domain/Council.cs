@@ -91,6 +91,24 @@ namespace FamilyLife.Domain
             }
         }
 
+        /// <summary>
+        /// When the council approves a union that a marriage alliance already agreed on, finishes it at once rather than waiting for the
+        /// negotiation to be run again.
+        /// </summary>
+        public int CompleteApprovedUnions(int now)
+        {
+            int done = 0;
+            foreach (var m in CouncilMatters.Where(x => x.Kind == CouncilMatterKind.Union && x.State == CouncilMatterState.Approved).ToList())
+            {
+                var alliance = MarriageAlliances.FirstOrDefault(a => a.UnionTargetFamilyId != 0 && (a.UnionState == HouseUnionState.Eligible || a.UnionState == HouseUnionState.Agreed) &&
+                    (a.FamilyA == m.FamilyA && a.FamilyB == m.FamilyB || a.FamilyA == m.FamilyB && a.FamilyB == m.FamilyA));
+                if (alliance == null) continue;
+                int target = alliance.UnionTargetFamilyId, source = target == alliance.FamilyA ? alliance.FamilyB : alliance.FamilyA;
+                if (UniteFamilies(source, target, now)) { alliance.UnionState = HouseUnionState.Completed; alliance.LastChangedTick = now; done++; }
+            }
+            return done;
+        }
+
         public bool AnswerCouncil(int matterId, int head, bool yes, int now)
         {
             var m = CouncilMatters.FirstOrDefault(x => x.Id == matterId);

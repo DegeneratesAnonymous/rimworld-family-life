@@ -58,6 +58,8 @@ namespace FamilyLife.Domain
         public List<HeistParticipant> Participants = new List<HeistParticipant>();
         public bool Active => State <= HeistState.Executing;
         public int LaunderedThingId;
+        /// <summary>The supply requests this job itself started, so unrelated requests by the same people are never mistaken for its result.</summary>
+        public List<int> RequestIds = new List<int>();
         /// <summary>A willing seller and buyer need no victim: contraband, laundering and favors are agreements, not takings.</summary>
         public bool Consensual => Direction == CrimeDirection.Contraband || Direction == CrimeDirection.Laundering || Direction == CrimeDirection.Favors;
         public int Needed => Consensual ? 1 : 2;

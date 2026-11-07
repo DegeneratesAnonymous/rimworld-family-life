@@ -86,7 +86,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref OrganizerId, "organizer");
             Scribe_Values.Look(ref TargetFamilyId, "targetFamily"); Scribe_Values.Look(ref TargetMapId, "targetMap", -1); Scribe_Values.Look(ref TargetToken, "targetToken");
             Scribe_Values.Look(ref PlannedTick, "planned"); Scribe_Values.Look(ref StateTick, "stateTick"); Scribe_Values.Look(ref GoodsMoved, "goods");
-            Scribe_Values.Look(ref IncidentId, "incident"); Scribe_Values.Look(ref LaunderedThingId, "laundered"); Scribe_Values.Look(ref EvidenceToken, "evidence"); Scribe_Values.Look(ref Risk, "risk");
+            Scribe_Values.Look(ref IncidentId, "incident"); Scribe_Values.Look(ref LaunderedThingId, "laundered"); Scribe_Collections.Look(ref RequestIds, "requests", LookMode.Value);
+            if (RequestIds == null) RequestIds = new List<int>(); Scribe_Values.Look(ref EvidenceToken, "evidence"); Scribe_Values.Look(ref Risk, "risk");
             Scribe_Values.Look(ref Direction, "direction", CrimeDirection.None); Scribe_Values.Look(ref State, "state", HeistState.Planning);
             Scribe_Collections.Look(ref Participants, "participants", LookMode.Deep);
             if (Participants == null) Participants = new List<HeistParticipant>();
