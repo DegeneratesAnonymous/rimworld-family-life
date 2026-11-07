@@ -34,7 +34,7 @@ namespace FamilyLife.Domain
             if (!CouncilSits) return true;
             var approved = CouncilMatters.FirstOrDefault(m => m.Kind == CouncilMatterKind.Union && m.State == CouncilMatterState.Approved && Pair(m, a, b));
             if (approved != null) { approved.State = CouncilMatterState.Used; return true; }
-            if (CouncilMatters.Any(m => m.Kind == CouncilMatterKind.Union && m.Open && Pair(m, a, b))) return false;
+            if (CouncilMatters.Any(m => m.Kind == CouncilMatterKind.Union && Pair(m, a, b) && (m.Open || m.State == CouncilMatterState.Rejected && now - m.DecidedTick < 10 * ActivityTuning.TicksPerDay))) return false;
             AddMatter(CouncilMatterKind.Union, a, b, now);
             return false;
         }

@@ -216,6 +216,7 @@ namespace FamilyLife.Domain
         {
             var e = Elections.FirstOrDefault(x => x.Id == electionId); var p = GetPerson(voter);
             if (e == null || e.State != ElectionState.Voting || p?.InColony != true || p.Juvenile || e.Voted.Contains(voter)) return false;
+            if (e.Candidates.Count == 0) return false;
             e.Voted.Add(voter);
             var best = e.Candidates.Select(c => Support(voter, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();
             if (best.Total < AbstainBelow) { e.Abstained++; return true; }
@@ -242,6 +243,7 @@ namespace FamilyLife.Domain
         private void Count(Election e, int now, PoliticalContext ctx)
         {
             e.Votes.Clear(); e.Abstained = 0;
+            if (e.Candidates.Count == 0) { e.State = ElectionState.Aborted; return; }
             foreach (var voter in Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => p.Id).Take(160))
             {
                 var best = e.Candidates.Select(c => Support(voter.Id, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();

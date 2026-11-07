@@ -21,7 +21,7 @@ namespace FamilyLife
             def == WFL_StoryDefOf.WFL_ProtectionOffer);
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
-        internal static int NextToken() => (Math.Abs(unchecked((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000) + 1;
+        internal static int NextToken() => (int)(unchecked((uint)((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000u) + 1;
 
         internal static bool Start(Pawn actor, Pawn other, JobDef def, int id, bool byPlayer = false)
         {

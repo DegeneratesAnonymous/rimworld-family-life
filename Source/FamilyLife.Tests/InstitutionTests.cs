@@ -441,5 +441,27 @@ namespace FamilyLife.Tests
             r.AdvanceCouncil(3300);
             Assert.Equal(CouncilMatterState.Rejected, matter.State);
             Assert.Equal(before, r.GetLineage(a).Standing);
+        }
+        [Fact]
+        public void A_rejected_union_is_not_re_asked_every_attempt()
+        {
+            var r = Council(out int a, out int b, out int c);
+            r.UniteFamilies(c, a, 3000);
+            r.AdvanceCouncil(3100);
+            Assert.Equal(CouncilMatterState.Rejected, r.CouncilMatters.Single().State);
+            for (int i = 0; i < 5; i++) Assert.False(r.UniteFamilies(c, a, 3200 + i));
+            Assert.Single(r.CouncilMatters);
+        }
+
+        [Fact]
+        public void An_election_with_every_candidate_gone_ends_instead_of_failing()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var e = r.CallElection(new[] { 3, 20 }, 3000);
+            e.State = ElectionState.Voting; e.Candidates.Clear();
+            Assert.False(r.CastBallot(e.Id, 2, null, 3100));
+            r.AdvanceElections(3200, null, false);
+            Assert.Equal(ElectionState.Aborted, e.State);
         }    }
 }

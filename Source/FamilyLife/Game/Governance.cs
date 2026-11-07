@@ -46,13 +46,14 @@ namespace FamilyLife
         internal static void Maintain(FamilyComponent c, int now)
         {
             var r = c.Registry;
-            foreach (var request in r.GatheringRequests.Where(q => q.State == CeremonyState.Planned && q.NotBefore > now && IsPlanned(q.Ceremony) && r.PlanFor(q.Id) == null).Take(4).ToList())
-                r.OpenCeremonyPlan(request.Id, now, PlanContextFor(c, request.LineageId));
-            r.AdvanceCeremonyPlans(now, family => PlanContextFor(c, family));
-            r.MaintainStewardDuties(now, id => Free(c, id));
-            r.PruneOffices(map => Find.Maps.Any(m => m.uniqueID == map));
-            r.MaintainSuccession(now);
-            r.MaintainCrime(now);
+            void Safe(System.Action step, string name) { try { step(); } catch (System.Exception ex) { Log.Warning("[Wil's Family Life] Governance upkeep '" + name + "' skipped: " + ex.Message); } }
+            Safe(() => { foreach (var request in r.GatheringRequests.Where(q => q.State == CeremonyState.Planned && q.NotBefore > now && IsPlanned(q.Ceremony) && r.PlanFor(q.Id) == null).Take(4).ToList())
+                r.OpenCeremonyPlan(request.Id, now, PlanContextFor(c, request.LineageId)); }, "plans");
+            Safe(() => r.AdvanceCeremonyPlans(now, family => PlanContextFor(c, family)), "plan upkeep");
+            Safe(() => r.MaintainStewardDuties(now, id => Free(c, id)), "duties");
+            Safe(() => r.PruneOffices(map => Find.Maps.Any(m => m.uniqueID == map)), "offices");
+            Safe(() => r.MaintainSuccession(now), "succession");
+            Safe(() => r.MaintainCrime(now), "crime upkeep");
             GovernanceDriver.Run(c, now);
         }
     }
