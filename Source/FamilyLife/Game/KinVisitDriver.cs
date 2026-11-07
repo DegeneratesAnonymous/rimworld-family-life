@@ -107,9 +107,18 @@ namespace FamilyLife
             if (map == null) { if (now > visit.ArriveTick + 2 * Day) r.MarkKinArrived(visit.Id, new int[0], now); return; }
             if (!CellFinder.TryFindRandomEdgeCellWith(cell => cell.Standable(map) && map.reachability.CanReachColony(cell), map, CellFinder.EdgeRoadChance_Neutral, out var edge)) return;
             var placed = new List<Pawn>();
+            // Relatives from a spacefaring faction come down by shuttle; everyone else comes on foot along the road, as they always did.
+            var byShuttle = new List<Pawn>();
             foreach (int id in visit.KinIds)
             {
                 var p = c.TryGetPawn(id);
+                if (Eligible(p) && p.Faction.def.techLevel >= TechLevel.Spacer) byShuttle.Add(p);
+            }
+            bool landed = byShuttle.Count > 0 && TryShuttle(map, byShuttle);
+            foreach (int id in visit.KinIds)
+            {
+                var p = c.TryGetPawn(id);
+                if (landed && byShuttle.Contains(p)) { placed.Add(p); continue; }                      // already aboard and on their way down
                 if (!Eligible(p)) continue;                                                           // checked again now: things change in a day
                 Find.WorldPawns.RemovePawn(p);
                 try { GenSpawn.Spawn(p, CellFinder.RandomClosewalkCellNear(edge, map, 8), map); placed.Add(p); }
@@ -120,10 +129,35 @@ namespace FamilyLife
                 }
             }
             if (!r.MarkKinArrived(visit.Id, placed.Select(p => p.thingIDNumber), now)) return;
-            Greet(placed, map, Math.Max(Day, KinStayLeft(visit, now)));
+            Greet(placed.Where(p => p.Spawned).ToList(), map, Math.Max(Day, KinStayLeft(visit, now)));
             if (placed.Count > 0)
-                Find.LetterStack.ReceiveLetter("WFL_Kin_ArrivedTitle".Translate(), "WFL_Kin_ArrivedText".Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId)), string.Join(", ", placed.Select(p => p.LabelShort))),
-                    LetterDefOf.PositiveEvent, new LookTargets(placed));
+                Find.LetterStack.ReceiveLetter("WFL_Kin_ArrivedTitle".Translate(), (landed ? "WFL_Kin_ArrivedShuttleText" : "WFL_Kin_ArrivedText").Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId)), string.Join(", ", placed.Select(p => p.LabelShort))),
+                    LetterDefOf.PositiveEvent, new LookTargets(placed.Where(p => p.Spawned).ToList()));
+        }
+
+        /// <summary>
+        /// A shuttle brings the relatives from the world and sets them down at the colony's landing spot, then leaves. They are not touched until the
+        /// ship is made; if it cannot be made, nothing has changed and they come on foot instead.
+        /// </summary>
+        private static bool TryShuttle(Map map, List<Pawn> pawns)
+        {
+            try
+            {
+                var faction = pawns[0].Faction;
+                IntVec3 spot = DropCellFinder.GetBestShuttleLandingSpot(map, faction);
+                if (!spot.IsValid) return false;
+                foreach (var p in pawns) if (Find.WorldPawns.Contains(p)) Find.WorldPawns.RemovePawn(p);
+                var ship = TransportShipMaker.MakeTransportShip(TransportShipDefOf.Ship_Shuttle, pawns.Cast<Thing>().ToList());
+                ship.ArriveAt(spot, map.Parent);
+                ship.AddJobs(ShipJobDefOf.Unload, ShipJobDefOf.FlyAway);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[Wil's Family Life] Could not bring relatives by shuttle; they will walk in. " + ex.Message);
+                foreach (var p in pawns) if (!p.Spawned && !Find.WorldPawns.Contains(p) && p.holdingOwner == null) Find.WorldPawns.PassToWorld(p);
+                return false;
+            }
         }
 
         private static int KinStayLeft(KinVisit visit, int now) => Math.Max(0, visit.StayEndTick - now);

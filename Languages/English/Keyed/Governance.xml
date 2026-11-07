@@ -263,4 +263,5 @@
   <WFL_Comfort_Failed_0>{0} tried to reach {1}, but could not.</WFL_Comfort_Failed_0>
   <WFL_Comfort_Failed_1>Whatever {0} said, {1} was not ready to hear it.</WFL_Comfort_Failed_1>
   <WFL_Comfort_Failed_2>{1} pulled away from {0}.</WFL_Comfort_Failed_2>
+  <WFL_Kin_ArrivedShuttleText>A shuttle has set down kin of the {0} family for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedShuttleText>
 </LanguageData>
