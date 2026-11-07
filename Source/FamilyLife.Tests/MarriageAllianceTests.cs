@@ -59,5 +59,39 @@ namespace FamilyLife.Tests
             Assert.True(r.DecideMarriageNegotiation(opportunity.Id,r.HeadOf(a),true,2*Day));Assert.Equal(MarriageAllianceState.Negotiating,opportunity.State);
             Assert.True(r.DecideMarriageNegotiation(opportunity.Id,r.HeadOf(b),true,2*Day));Assert.Equal(MarriageAllianceState.Supported,opportunity.State);
         }
+
+        [Fact] public void Each_pawn_decides_separately_and_refusal_is_final()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
+            Assert.True(r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day));Assert.True(r.DecideMarriageConsent(x.Id,1,true,2*Day));Assert.Equal(MarriageAllianceState.Supported,x.State);
+            Assert.True(r.BeginMarriageConsent(x.Id,2,r.HeadOf(b),2*Day));Assert.True(r.DecideMarriageConsent(x.Id,2,false,2*Day));Assert.Equal(MarriageAllianceState.Withdrawn,x.State);
+            Assert.Empty(r.GetPerson(1).PartnerIds());Assert.Empty(r.GetPerson(2).PartnerIds());
+        }
+
+        [Fact] public void Mutual_consent_still_does_not_create_romance()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
+            r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day);r.DecideMarriageConsent(x.Id,1,true,2*Day);r.BeginMarriageConsent(x.Id,2,r.HeadOf(b),2*Day);r.DecideMarriageConsent(x.Id,2,true,2*Day);
+            Assert.Equal(MarriageAllianceState.Consented,x.State);Assert.Empty(r.GetPerson(1).PartnerIds());Assert.Empty(r.GetPerson(2).PartnerIds());
+        }
+
+        [Fact] public void Changed_relationship_state_invalidates_consent_before_it_is_requested()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
+            r.GetPerson(1).LoverIds.Add(99);Assert.False(r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day));Assert.Equal(MarriageAllianceState.Expired,x.State);
+        }
+
+        [Fact] public void Consent_is_private_until_the_pawn_is_approached()
+        {
+            var r=new FamilyRegistry();r.Apply(new[]{T.P(1,last:"Smith"),T.P(3,last:"Smith",parents:new[]{1}),T.P(2,last:"Jones"),T.P(4,last:"Jones",parents:new[]{2})},Day);
+            int a=r.FamilyOf(3),b=r.FamilyOf(4);r.GetLineage(a).Situation=new HouseSituation{Continuity=5,LivingSpace=80,Sustenance=80};r.GetLineage(b).Situation=new HouseSituation{Continuity=5,LivingSpace=80,Sustenance=80};
+            var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(3,4,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            Assert.True(r.KnowsMarriageAlliance(r.HeadOf(a),x));Assert.False(r.KnowsMarriageAlliance(3,x));
+            r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
+            Assert.True(r.BeginMarriageConsent(x.Id,3,r.HeadOf(a),2*Day));Assert.True(r.KnowsMarriageAlliance(3,x));Assert.False(r.KnowsMarriageAlliance(4,x));
+        }
     }
 }

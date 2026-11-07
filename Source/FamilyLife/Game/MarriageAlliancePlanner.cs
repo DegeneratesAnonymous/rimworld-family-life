@@ -60,6 +60,13 @@ namespace FamilyLife
             return r.GetLineage(family)?.Stewards.FirstOrDefault(id=>r.GetPerson(id)?.InColony==true)??0;
         }
 
+        internal static int ConsentRepresentative(FamilyRegistry r,int family,int candidate)
+        {
+            int head=r.HeadOf(family);if(head!=0&&head!=candidate)return head;
+            int steward=r.GetLineage(family)?.Stewards.FirstOrDefault(id=>id!=candidate&&r.GetPerson(id)?.InColony==true)??0;
+            return steward!=0?steward:candidate;
+        }
+
         internal static bool StartNegotiation(FamilyComponent component,MarriageAlliance alliance,Pawn actor,bool byPlayer=false)
         {
             if(component==null||alliance==null||alliance.State!=MarriageAllianceState.Opportunity||actor==null)return false;
@@ -99,6 +106,52 @@ namespace FamilyLife
             bool decided=c.Registry.DecideMarriageNegotiation(alliance.Id,representative.thingIDNumber,support,Activities.Now);
             if(decided)c.Registry.NoteStewardService(representative.thingIDNumber,c.Registry.FamilyOf(representative.thingIDNumber),StewardServiceKind.Negotiation,support,Activities.Now);
             return decided;
+        }
+
+        internal static bool StartConsent(FamilyComponent component,MarriageAlliance alliance,Pawn representative,bool byPlayer=false)
+        {
+            if(component==null||alliance==null||alliance.State!=MarriageAllianceState.Supported||representative==null)return false;
+            int family=component.Registry.FamilyOf(representative.thingIDNumber);bool first=family==alliance.FamilyA;
+            if(!first&&family!=alliance.FamilyB||!component.Registry.CanManageHouse(representative.thingIDNumber,family))return false;
+            int pawnId=first?alliance.PawnA:alliance.PawnB;
+            var target=component.TryGetPawn(pawnId);if(target==null||!target.Spawned)return false;
+            var proposedOther=component.TryGetPawn(first?alliance.PawnB:alliance.PawnA);
+            try{if(proposedOther==null||!RelationsUtility.RomanceEligiblePair(target,proposedOther,false).Accepted){alliance.State=MarriageAllianceState.Expired;alliance.LastChangedTick=Activities.Now;return false;}}
+            catch(Exception){alliance.State=MarriageAllianceState.Expired;alliance.LastChangedTick=Activities.Now;return false;}
+            if(target==representative)
+            {
+                if(!component.Registry.BeginMarriageConsent(alliance.Id,pawnId,representative.thingIDNumber,Activities.Now))return false;
+                ResolveConsent(component,alliance,target);return true;
+            }
+            if(target.Map!=representative.Map||!Activities.IsFree(target)||target.CurJob?.playerForced==true||!representative.CanReach(target,PathEndMode.Touch,Danger.None))return false;
+            if(!byPlayer&&(!Activities.IsFree(representative)||representative.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(representative)))return false;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageConsent,target);job.count=alliance.Id;
+            representative.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+        }
+
+        internal static void CompleteConsent(Pawn representative,Pawn proposed,int id)
+        {
+            var c=FamilyComponent.Current;var alliance=c?.Registry.MarriageAlliances.FirstOrDefault(a=>a.Id==id);
+            if(alliance==null||representative.Map!=proposed.Map||representative.Position.DistanceTo(proposed.Position)>3||
+                !c.Registry.BeginMarriageConsent(id,proposed.thingIDNumber,representative.thingIDNumber,Activities.Now))return;
+            ResolveConsent(c,alliance,proposed);
+        }
+
+        private static void ResolveConsent(FamilyComponent c,MarriageAlliance alliance,Pawn proposed)
+        {
+            if(Find.Selector.IsSelected(proposed)||PerspectiveShiftBridge.IsAvatar(proposed))
+            {Messages.Message("WFL_MarriageConsent_Waiting".Translate(proposed.LabelShort),proposed,MessageTypeDefOf.NeutralEvent,false);return;}
+            bool first=proposed.thingIDNumber==alliance.PawnA;float willingness=first?alliance.PawnAWillingness:alliance.PawnBWillingness;
+            c.Registry.DecideMarriageConsent(alliance.Id,proposed.thingIDNumber,willingness>=0f,Activities.Now);
+        }
+
+        internal static bool DecideConsentAs(FamilyComponent c,MarriageAlliance alliance,Pawn proposed,bool accept)
+            =>c!=null&&alliance!=null&&proposed!=null&&c.Registry.DecideMarriageConsent(alliance.Id,proposed.thingIDNumber,accept,Activities.Now);
+
+        internal static bool DecideSelfConsent(FamilyComponent c,MarriageAlliance alliance,Pawn proposed,bool accept)
+        {
+            if(c==null||alliance==null||proposed==null||!c.Registry.BeginMarriageConsent(alliance.Id,proposed.thingIDNumber,proposed.thingIDNumber,Activities.Now))return false;
+            return c.Registry.DecideMarriageConsent(alliance.Id,proposed.thingIDNumber,accept,Activities.Now);
         }
     }
 }

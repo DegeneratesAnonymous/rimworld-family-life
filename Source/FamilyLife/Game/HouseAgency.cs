@@ -64,6 +64,9 @@ namespace FamilyLife
 
             if(mine!=0&&r.CanManageHouse(me.Id,mine)&&Rand.Chance(.25f))
             {
+                var consent=r.MarriageAlliances.FirstOrDefault(a=>a.State==MarriageAllianceState.Supported&&
+                    (a.FamilyA==mine&&a.ConsentA==MarriageConsentState.NotAsked||a.FamilyB==mine&&a.ConsentB==MarriageConsentState.NotAsked));
+                if(consent!=null&&MarriageAlliancePlanner.ConsentRepresentative(r,mine,mine==consent.FamilyA?consent.PawnA:consent.PawnB)==me.Id&&MarriageAlliancePlanner.StartConsent(c,consent,pawn))return true;
                 var alliance=r.MarriageAlliances.FirstOrDefault(a=>(a.FamilyA==mine||a.FamilyB==mine)&&a.State==MarriageAllianceState.Opportunity);
                 if(alliance!=null&&MarriageAlliancePlanner.StartNegotiation(c,alliance,pawn))return true;
             }
@@ -136,6 +139,28 @@ namespace FamilyLife
                 if(them.Id!=counterpart)continue;
                 yield return Act("WFL_Act_SupportMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,true));
                 yield return Act("WFL_Act_OpposeMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.FamilyA==myFamily&&a.PawnA==them.Id&&a.ConsentA==MarriageConsentState.NotAsked||a.FamilyB==myFamily&&a.PawnB==them.Id&&a.ConsentB==MarriageConsentState.NotAsked)))
+            {
+                var pending=alliance;
+                if(r.CanManageHouse(me.Id,myFamily)&&MarriageAlliancePlanner.ConsentRepresentative(r,myFamily,them.Id)==me.Id)
+                    yield return Act("WFL_Act_AskMarriageConsent".Translate(b),()=>MarriageAlliancePlanner.StartConsent(c,pending,actor,true));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.PawnA==me.Id&&a.ConsentA==MarriageConsentState.Awaiting&&a.ConsentApproacherA==them.Id||a.PawnB==me.Id&&a.ConsentB==MarriageConsentState.Awaiting&&a.ConsentApproacherB==them.Id)))
+            {
+                var pending=alliance;
+                yield return Act("WFL_Act_AcceptMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideConsentAs(c,pending,actor,true));
+                yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideConsentAs(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.PawnA==me.Id&&a.PawnB==them.Id&&a.ConsentA==MarriageConsentState.NotAsked&&MarriageAlliancePlanner.ConsentRepresentative(r,a.FamilyA,a.PawnA)==me.Id||
+                 a.PawnB==me.Id&&a.PawnA==them.Id&&a.ConsentB==MarriageConsentState.NotAsked&&MarriageAlliancePlanner.ConsentRepresentative(r,a.FamilyB,a.PawnB)==me.Id)))
+            {
+                var pending=alliance;
+                yield return Act("WFL_Act_AcceptMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,true));
+                yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,false));
             }
 
             // A petition waiting on this pawn's word.

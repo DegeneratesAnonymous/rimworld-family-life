@@ -147,7 +147,7 @@ namespace FamilyLife.Domain
                     service.EndedTick = Math.Max(1, service.AppointedTick + 1);
             MarriageAlliances = MarriageAlliances ?? new List<MarriageAlliance>();
             MarriageAlliances.RemoveAll(a => a == null || !personById.ContainsKey(a.PawnA) || !personById.ContainsKey(a.PawnB));
-            foreach(var alliance in MarriageAlliances) NextMarriageAllianceId=Math.Max(NextMarriageAllianceId,alliance.Id+1);
+            foreach(var alliance in MarriageAlliances){alliance.KnownBy=alliance.KnownBy??new List<int>();NextMarriageAllianceId=Math.Max(NextMarriageAllianceId,alliance.Id+1);}
             RebuildChildIndex();
             RebuildBondIndex();
             RebuildTimeIndex();

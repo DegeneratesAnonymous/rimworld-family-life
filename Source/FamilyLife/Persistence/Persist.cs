@@ -153,6 +153,10 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref PawnAWillingness,"pawnAWillingness");Scribe_Values.Look(ref PawnBWillingness,"pawnBWillingness");
             Scribe_Values.Look(ref Reasons,"reasons",MarriageAllianceReason.None);Scribe_Values.Look(ref ObjectionsA,"objectionsA",MarriageAllianceObjection.None);
             Scribe_Values.Look(ref ObjectionsB,"objectionsB",MarriageAllianceObjection.None);Scribe_Values.Look(ref State,"state",MarriageAllianceState.Opportunity);
+            Scribe_Values.Look(ref ConsentA,"consentA",MarriageConsentState.NotAsked);Scribe_Values.Look(ref ConsentB,"consentB",MarriageConsentState.NotAsked);
+            Scribe_Values.Look(ref ConsentApproacherA,"consentApproacherA");Scribe_Values.Look(ref ConsentApproacherB,"consentApproacherB");
+            Scribe_Values.Look(ref DefianceA,"defianceA");Scribe_Values.Look(ref DefianceB,"defianceB");Scribe_Collections.Look(ref KnownBy,"knownBy",LookMode.Value);
+            if(KnownBy==null)KnownBy=new List<int>();
         }
     }
 

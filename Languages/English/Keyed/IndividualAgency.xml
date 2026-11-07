@@ -58,6 +58,10 @@
 <WFL_Act_NegotiateMarriage>Discuss a possible marriage alliance with {0}</WFL_Act_NegotiateMarriage>
 <WFL_Act_SupportMarriage>Support this possible match</WFL_Act_SupportMarriage>
 <WFL_Act_OpposeMarriage>Oppose this possible match</WFL_Act_OpposeMarriage>
+<WFL_Act_AskMarriageConsent>Ask {0} how they feel about the proposed match</WFL_Act_AskMarriageConsent>
+<WFL_Act_AcceptMarriageConsent>Accept consideration of this match</WFL_Act_AcceptMarriageConsent>
+<WFL_Act_RefuseMarriageConsent>Refuse this proposed match</WFL_Act_RefuseMarriageConsent>
+<WFL_MarriageConsent_Waiting>{0} has been asked about a possible match. Their response is waiting for you.</WFL_MarriageConsent_Waiting>
 <WFL_MarriageAlliance_Waiting>{0} and {1} discussed a possible marriage alliance. Your representative's response is waiting.</WFL_MarriageAlliance_Waiting>
 <WFL_MarriageAlliance_Title>Possible marriage alliances</WFL_MarriageAlliance_Title>
 <WFL_MarriageAlliance_None>No current marriage alliance is being considered.</WFL_MarriageAlliance_None>
@@ -68,6 +72,8 @@ First pawn willingness: {2}
 Other pawn willingness: {3}
 Reasons: {4}
 Objections: {5}
+First pawn response: {6}
+Other pawn response: {7}
 
 This is a possible match, not a forced romance or marriage.</WFL_MarriageAlliance_Tip>
 <WFL_MarriageAllianceState_Opportunity>opportunity</WFL_MarriageAllianceState_Opportunity>
@@ -77,6 +83,11 @@ This is a possible match, not a forced romance or marriage.</WFL_MarriageAllianc
 <WFL_MarriageAllianceState_Fulfilled>married</WFL_MarriageAllianceState_Fulfilled>
 <WFL_MarriageAllianceState_Expired>expired</WFL_MarriageAllianceState_Expired>
 <WFL_MarriageAllianceState_Withdrawn>withdrawn</WFL_MarriageAllianceState_Withdrawn>
+<WFL_MarriageAllianceState_Consented>mutually consented</WFL_MarriageAllianceState_Consented>
+<WFL_MarriageConsent_NotAsked>not yet asked</WFL_MarriageConsent_NotAsked>
+<WFL_MarriageConsent_Awaiting>awaiting a response</WFL_MarriageConsent_Awaiting>
+<WFL_MarriageConsent_Accepted>accepted consideration</WFL_MarriageConsent_Accepted>
+<WFL_MarriageConsent_Refused>refused</WFL_MarriageConsent_Refused>
 <WFL_PetitionKind_Admission>Admission</WFL_PetitionKind_Admission>
 <WFL_PetitionKind_Recognition>Steward appointment</WFL_PetitionKind_Recognition>
 <WFL_PetitionKind_Union>Union</WFL_PetitionKind_Union>
