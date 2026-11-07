@@ -67,6 +67,7 @@ namespace FamilyLife.Domain
         public void MaintainAgency(int now)
         {
             MaintainHouseRelations(now);
+            MaintainMarriageAlliances(now);
             Attention.RemoveAll(a => a.Day < now / ActivityTuning.TicksPerDay - 6);
             foreach (var a in Agency)
             {

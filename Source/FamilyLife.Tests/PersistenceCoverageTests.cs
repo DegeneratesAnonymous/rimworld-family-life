@@ -54,6 +54,7 @@ namespace FamilyLife.Tests
         [InlineData(typeof(HouseSituation))]
         [InlineData(typeof(HouseAmbitionRecord))]
         [InlineData(typeof(StewardRecord))]
+        [InlineData(typeof(MarriageAlliance))]
         [InlineData(typeof(AttentionRecord))]
         [InlineData(typeof(AgencyRecord))]
         [InlineData(typeof(StockClaim))]

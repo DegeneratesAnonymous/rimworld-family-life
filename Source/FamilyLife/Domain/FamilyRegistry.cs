@@ -11,7 +11,7 @@ namespace FamilyLife.Domain
     /// </summary>
     public sealed partial class FamilyRegistry
     {
-        public const int CurrentDataVersion = 2;
+        public const int CurrentDataVersion = 3;
         public const int MaxChronicle = 400;
         public const int AncestorDepthLimit = 12;
         public const int NewbornAgeTicks = 60000;   // a person first seen younger than a day, with a parent, counts as born
@@ -145,6 +145,9 @@ namespace FamilyLife.Domain
             foreach (var service in StewardRecords.Where(s => s.Active).ToList())
                 if (!lineageById.TryGetValue(service.FamilyId, out var served) || !served.Stewards.Contains(service.PersonId))
                     service.EndedTick = Math.Max(1, service.AppointedTick + 1);
+            MarriageAlliances = MarriageAlliances ?? new List<MarriageAlliance>();
+            MarriageAlliances.RemoveAll(a => a == null || !personById.ContainsKey(a.PawnA) || !personById.ContainsKey(a.PawnB));
+            foreach(var alliance in MarriageAlliances) NextMarriageAllianceId=Math.Max(NextMarriageAllianceId,alliance.Id+1);
             RebuildChildIndex();
             RebuildBondIndex();
             RebuildTimeIndex();

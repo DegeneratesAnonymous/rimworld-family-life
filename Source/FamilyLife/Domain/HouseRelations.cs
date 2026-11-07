@@ -112,7 +112,7 @@ namespace FamilyLife.Domain
             {
                 if(q.Kind==PetitionKind.Admission && !SetSocialFamily(q.PersonId,q.FamilyId,now)) return false;
                 if(q.Kind==PetitionKind.Recognition && !DelegateHouse(leader,q.PersonId,q.FamilyId,true,now)) return false;
-                if(q.Kind==PetitionKind.Union && (FamilyOf(q.PersonId)!=q.SourceFamilyId || HeadOf(q.SourceFamilyId)!=q.PersonId || !UniteFamilies(q.FamilyId,FamilyOf(q.PersonId),now))) return false;
+                if(q.Kind==PetitionKind.Union && (FamilyOf(q.PersonId)!=q.SourceFamilyId || HeadOf(q.SourceFamilyId)!=q.PersonId || !CanUniteThroughMarriage(q.FamilyId,q.SourceFamilyId) || !UniteFamilies(q.FamilyId,FamilyOf(q.PersonId),now))) return false;
             }
             q.State=accept?PetitionState.Accepted:PetitionState.Denied;q.HeardBy=leader;q.HeardTick=heardAt;return true;
         }
