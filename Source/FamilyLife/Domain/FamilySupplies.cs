@@ -138,6 +138,11 @@ namespace FamilyLife.Domain
             var debt = r.Approach != SupplyApproach.Repay ? null : Requests.FirstOrDefault(x => x.Id == r.DebtId && x.Id != r.Id && x.Approach == SupplyApproach.Loan && !x.DebtPaid &&
                 (x.State == SupplyState.Exchanged || x.State == SupplyState.Stored) && x.RequesterId == r.DonorId && x.DonorId == r.RequesterId && x.Kind == r.Kind && (r.Kind == SupplyKind.Food ? r.Units >= x.Units : r.Definition == x.Definition && r.Count >= x.Count));
             if (debt != null) { NoteHouseService(debt.RequesterId,FamilyOf(debt.DonorId),2,now); debt.DebtPaid = true; debt.State = SupplyState.Repaid; ChangeBond(debt.DonorId, debt.RequesterId, new BondChange(1, 4, -3, 1), now); }
+            if(r.Approach!=SupplyApproach.PublicClaim&&r.Approach!=SupplyApproach.Relocate&&r.Approach!=SupplyApproach.Steal)
+            {
+                NoteStewardService(r.RequesterId,FamilyOf(r.RequesterId),StewardServiceKind.Aid,true,now);
+                NoteStewardService(r.DonorId,FamilyOf(r.DonorId),StewardServiceKind.Aid,true,now);
+            }
             return true;
         }
 

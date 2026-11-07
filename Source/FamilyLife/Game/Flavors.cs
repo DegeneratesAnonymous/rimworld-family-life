@@ -156,6 +156,16 @@ namespace FamilyLife
         {
             if (mentor.skills == null || learner.skills == null) return null;
             if (mentor.ageTracker.AgeBiologicalYearsFloat < learner.ageTracker.AgeBiologicalYearsFloat + 8f) return null;
+            var component = FamilyComponent.Current;
+            var learnerRecord = component?.Registry.GetPerson(learner.thingIDNumber);
+            var house = learnerRecord == null ? null : component.Registry.GetLineage(component.Registry.FamilyOf(learnerRecord.Id));
+            var preferred = HouseSituationPlanner.PreferredSkill(house?.Ambition?.TargetCapability ?? HouseCapability.None, mentor);
+            if (preferred != null)
+            {
+                var mine = mentor.skills.GetSkill(preferred); var theirs = learner.skills.GetSkill(preferred);
+                if (mine != null && theirs != null && !mine.TotallyDisabled && !theirs.TotallyDisabled && theirs.Level < 20 && mine.Level - theirs.Level > 2)
+                    return mine;
+            }
             SkillRecord best = null;
             int bestGap = 2;
             foreach (var s in mentor.skills.skills)

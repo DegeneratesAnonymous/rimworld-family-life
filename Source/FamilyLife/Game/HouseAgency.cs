@@ -6,10 +6,9 @@ using Verse;
 namespace FamilyLife
 {
     /// <summary>
-    /// How a house's people shape it. Colonists act on their own: a pawn who has earned a place asks to join, a head invites someone they have
-    /// come to trust, a trusted member seeks recognition, the head of a small house proposes uniting with another. Each is the same walk-over-and-talk
-    /// the player can start by hand (select a pawn, right-click another: <see cref="FloatMenuOptionProvider_FamilyHouse"/>), and a pawn the player has
-    /// selected is left alone, so the player is never fighting the colony for the same pawn.
+    /// How a house's people shape it. Generic admission, self-promotion and trust-based house mergers are deliberately absent: membership now
+    /// comes from kinship/marriage or explicit player authority, while a head may still recognize sustained service by appointing a steward.
+    /// A selected pawn and the Perspective Shift avatar are left alone.
     /// </summary>
     internal static class HouseAgency
     {
@@ -65,13 +64,6 @@ namespace FamilyLife
 
             if (head)
             {
-                // Invite someone the head has come to trust and who has no better home.
-                if (Rand.Chance(.35f))
-                {
-                    var guest = people.Where(o => o.Id != me.Id && r.FamilyOf(o.Id) != mine && WouldAcceptInvitation(r, o.Id, me.Id, mine))
-                        .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
-                    if (guest != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Admission, true, guest)) return true;
-                }
                 // Standing is given, not asked for: a head honors a member who has earned their trust and the house's respect.
                 if (Rand.Chance(.2f) && (r.GetLineage(mine)?.Stewards.Count ?? 0) < 2)
                 {
@@ -80,20 +72,7 @@ namespace FamilyLife
                         .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
                     if (honored != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Recognition, true, honored)) return true;
                 }
-                // A small house may seek to join a larger one it trusts.
-                if (Rand.Chance(.15f) && r.LivingCount(mine, Presence.Colony) <= 2)
-                {
-                    foreach (var other in r.Lineages.Where(l => l.Id != mine && l.AbsorbedIntoId == 0 && r.LivingCount(l.Id, Presence.Colony) > r.LivingCount(mine, Presence.Colony)))
-                        if (Wants(r, me.Id, other.Id, PetitionKind.Union) && HouseInteractions.StartPetition(pawn, other.Id, PetitionKind.Union)) return true;
-                }
                 return false;
-            }
-
-            // Ask to join a house whose head would take them in.
-            if (Rand.Chance(.4f))
-            {
-                foreach (var house in r.Lineages.Where(l => l.AbsorbedIntoId == 0 && l.Id != mine && r.LivingCount(l.Id, Presence.Colony) > 0))
-                    if (Wants(r, me.Id, house.Id, PetitionKind.Admission) && HouseInteractions.StartPetition(pawn, house.Id, PetitionKind.Admission)) return true;
             }
             return false;
         }
@@ -124,7 +103,7 @@ namespace FamilyLife
             var me = r.GetPerson(actor.thingIDNumber); var them = r.GetPerson(clicked.thingIDNumber);
             if (me == null || them == null) yield break;
             int myFamily=r.FamilyOf(me.Id),theirFamily=r.FamilyOf(them.Id);
-            string a = actor.LabelShort, b = clicked.LabelShort;
+            string b = clicked.LabelShort;
             if(actor!=clicked)
                 yield return Act("WFL_Act_SocialMoment".Translate(b),()=>SocialMoments.TryPlayerMoment(actor,clicked));
             var rift=r.OpenRiftBetween(me.Id,them.Id);
@@ -151,21 +130,11 @@ namespace FamilyLife
 
             if (!them.Juvenile)
             {
-                // Joining another house, or bringing someone into this one.
-                if (theyLead && !r.BelongsToFamily(me, theirFamily))
-                    yield return Act("WFL_Act_AskToJoin".Translate(a, r.LineageDisplayName(r.GetLineage(theirFamily))), () => HouseInteractions.StartPetition(actor, theirFamily, PetitionKind.Admission, byPlayer: true));
-                if (iLead && !r.BelongsToFamily(them, myFamily))
-                    yield return Act("WFL_Act_Invite".Translate(b, r.LineageDisplayName(r.GetLineage(myFamily))), () => HouseInteractions.StartPetition(actor, myFamily, PetitionKind.Admission, true, clicked, true));
-                if (iLead && theyLead && myFamily != theirFamily)
-                    yield return Act("WFL_Act_Unite".Translate(r.LineageDisplayName(r.GetLineage(myFamily)), r.LineageDisplayName(r.GetLineage(theirFamily))), () => HouseInteractions.StartPetition(actor, theirFamily, PetitionKind.Union, byPlayer: true));
-
-                // Standing within a house.
-                if (theyLead && myFamily == theirFamily && r.RoleInHouse(me.Id, myFamily) == HouseRole.Member)
-                    yield return Act("WFL_Act_Recognition".Translate(b), () => HouseInteractions.StartPetition(actor, myFamily, PetitionKind.Recognition, byPlayer: true));
+                // A Steward is an office granted by the head for demonstrated service; members do not ask for standing.
                 if (iLead && myFamily == theirFamily)
                 {
                     var house = r.GetLineage(myFamily); bool steward = house.Stewards.Contains(them.Id);
-                    yield return new FloatMenuOption((steward ? "WFL_Act_Revoke" : "WFL_Act_Appoint").Translate(b), () => { r.DelegateHouse(me.Id, them.Id, myFamily, !steward); c.MarkDirty(); });
+                    yield return new FloatMenuOption((steward ? "WFL_Act_Revoke" : "WFL_Act_Appoint").Translate(b), () => { r.DelegateHouse(me.Id, them.Id, myFamily, !steward, Activities.Now); c.MarkDirty(); });
                 }
                 if (iLead && myFamily == theirFamily && them.Id != me.Id)
                     yield return new FloatMenuOption("WFL_Act_Release".Translate(b), () => { r.SetSocialFamily(them.Id, -1, Activities.Now); c.FamilyMembershipChanged(); });

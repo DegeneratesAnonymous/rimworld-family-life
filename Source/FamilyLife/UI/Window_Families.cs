@@ -285,6 +285,18 @@ namespace FamilyLife
             foreach (var q in petitions)
                 Line(view, ref y, "WFL_Petition_Status".Translate(FamilyUi.NameOf(registry, q.PersonId), ("WFL_PetitionKind_" + q.Kind).Translate(), ("WFL_PetitionState_" + q.State).Translate(), registry.LineageDisplayName(registry.GetLineage(q.FamilyId))), 10f);
 
+            Heading(view, ref y, "WFL_Stewardship_Title".Translate());
+            Line(view, ref y, "WFL_Stewardship_Head".Translate(FamilyUi.NameOf(registry, registry.HeadOf(lineage.Id))), 10f);
+            var stewards = lineage.Stewards.Select(id => registry.GetPerson(id)).Where(p => p != null && p.InColony).ToList();
+            if (stewards.Count == 0) Line(view, ref y, "WFL_Stewardship_None".Translate(), 10f, true);
+            foreach (var steward in stewards)
+            {
+                var record = registry.StewardshipOf(steward.Id, lineage.Id, true);
+                LineTip(view, ref y, "WFL_Stewardship_Line".Translate(FamilyUi.NameOf(registry, steward.Id), record?.Successes ?? 0, record?.Failures ?? 0),
+                    "WFL_Stewardship_Tip".Translate(record?.CeremoniesOrganized ?? 0, record?.AidTransfers ?? 0, record?.Reconciliations ?? 0,
+                        record?.NegotiationsLed ?? 0, record?.GuestsHoused ?? 0, record?.ShortagesAverted ?? 0), 10f);
+            }
+
             // Friends and associates of the house.
             Heading(view, ref y, "WFL_Associates_Title".Translate());
             foreach (var c in registry.HouseContacts.Where(c => c.FamilyId == lineage.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId), lineage.Id)).OrderByDescending(c => c.Respect).Take(12))
@@ -323,9 +335,30 @@ namespace FamilyLife
                 registry.LivingCount(lineage.Id, Presence.Dead)), 56f);
             y = Mathf.Max(y, 70f) + 4f;
 
+            DrawHouseAmbition(view, ref y, registry, lineage);
+
             Heading(view, ref y, "WFL_Tree".Translate());
             DrawTree(view, ref y, registry, lineage);
             DrawCulture(view, ref y, registry, lineage);
+        }
+
+        private static void DrawHouseAmbition(Rect view, ref float y, FamilyRegistry registry, Lineage lineage)
+        {
+            Heading(view, ref y, "WFL_Ambition_Title".Translate());
+            var situation = lineage.Situation; var ambition = lineage.Ambition;
+            if (situation == null || situation.EvaluatedTick <= 0 || ambition == null)
+            { Line(view, ref y, "WFL_Ambition_Assessing".Translate(), 10f, true); return; }
+            string primary = ("WFL_Ambition_" + ambition.Primary).Translate();
+            string reason = ("WFL_Need_" + ambition.PrimaryReason).Translate();
+            string target = ambition.TargetFamilyId == 0 ? "" : " " + "WFL_Ambition_Target".Translate(registry.LineageDisplayName(registry.GetLineage(ambition.TargetFamilyId)));
+            LineTip(view, ref y, "WFL_Ambition_Primary".Translate(primary, reason, ambition.Urgency.ToString("0")) + target,
+                "WFL_Ambition_Metrics".Translate(situation.Sustenance.ToString("0"), situation.LivingSpace.ToString("0"), situation.Safety.ToString("0"),
+                    situation.Continuity.ToString("0"), situation.Capability.ToString("0"), situation.Cohesion.ToString("0"),
+                    situation.Influence.ToString("0"), situation.Independence.ToString("0")), 10f);
+            if (ambition.Secondary != HouseAmbitionKind.None)
+                Line(view, ref y, "WFL_Ambition_Secondary".Translate(("WFL_Ambition_" + ambition.Secondary).Translate(), ("WFL_Need_" + ambition.SecondaryReason).Translate()), 10f, true);
+            if (ambition.TargetCapability != HouseCapability.None)
+                Line(view, ref y, "WFL_Ambition_SkillGap".Translate(("WFL_Capability_" + ambition.TargetCapability).Translate()), 10f, true);
         }
 
         // ------------------------------------------------------------------ the family tree

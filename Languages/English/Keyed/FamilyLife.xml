@@ -33,7 +33,7 @@
   <WFL_Tab_Members>Members</WFL_Tab_Members>
   <WFL_Tab_Households>Households</WFL_Tab_Households>
   <WFL_Tab_Manage>House</WFL_Tab_Manage>
-  <WFL_Manage_Help>People in a house act on their own: they ask to join, invite those they trust, seek standing and offer help as the relationships allow. To act as one of them yourself, select that colonist and right-click another colonist; the options that pawn could take toward them appear in the menu.</WFL_Manage_Help>
+  <WFL_Manage_Help>Each house assesses its food, living space, safety, continuity, skills, cohesion and influence, then keeps a stable ambition for several days. Membership follows kinship, marriage or explicit family decisions; standing is earned through service. Select a colonist and right-click another to see actions that pawn can actually take.</WFL_Manage_Help>
   <WFL_Manage_Membership>Who belongs</WFL_Manage_Membership>
   <WFL_Manage_Standing>Standing and help</WFL_Manage_Standing>
   <WFL_Manage_Leadership>Leadership</WFL_Manage_Leadership>
@@ -57,6 +57,62 @@
   <WFL_MoveTo>Move in with {0}</WFL_MoveTo>
   <WFL_MoveToNew>Start a new household</WFL_MoveToNew>
   <WFL_NoHistory>Nothing recorded yet.</WFL_NoHistory>
+
+  <!-- House situation and ambitions -->
+  <WFL_Ambition_Title>Current family ambition</WFL_Ambition_Title>
+  <WFL_Ambition_Assessing>The family is still assessing its circumstances.</WFL_Ambition_Assessing>
+  <WFL_Ambition_Primary>{0} — driven by {1}; urgency {2}</WFL_Ambition_Primary>
+  <WFL_Ambition_Secondary>Secondary: {0} ({1})</WFL_Ambition_Secondary>
+  <WFL_Ambition_Target>with {0}</WFL_Ambition_Target>
+  <WFL_Ambition_SkillGap>Weakest capability: {0}</WFL_Ambition_SkillGap>
+  <WFL_Ambition_Metrics>Family assessment, 0–100:
+Food security {0}; living space {1}; safety {2}; continuity {3}; capability {4}; cohesion {5}; influence {6}; independence {7}.
+
+Assessments are cached and refreshed gradually, not recalculated every tick.</WFL_Ambition_Metrics>
+  <WFL_Ambition_None>No active ambition</WFL_Ambition_None>
+  <WFL_Ambition_SecureProvisions>Secure provisions</WFL_Ambition_SecureProvisions>
+  <WFL_Ambition_EstablishFamilyQuarters>Establish family quarters</WFL_Ambition_EstablishFamilyQuarters>
+  <WFL_Ambition_ImproveSafety>Improve family safety</WFL_Ambition_ImproveSafety>
+  <WFL_Ambition_SeekProtection>Seek a protective alliance</WFL_Ambition_SeekProtection>
+  <WFL_Ambition_SecureSuccession>Secure succession</WFL_Ambition_SecureSuccession>
+  <WFL_Ambition_FillSkillGap>Fill a capability gap</WFL_Ambition_FillSkillGap>
+  <WFL_Ambition_TrainNextGeneration>Train the next generation</WFL_Ambition_TrainNextGeneration>
+  <WFL_Ambition_RestoreCohesion>Restore family cohesion</WFL_Ambition_RestoreCohesion>
+  <WFL_Ambition_ExpandLegacy>Expand the family legacy</WFL_Ambition_ExpandLegacy>
+  <WFL_Ambition_PreserveIndependence>Preserve family independence</WFL_Ambition_PreserveIndependence>
+  <WFL_Ambition_IncreaseInfluence>Increase family influence</WFL_Ambition_IncreaseInfluence>
+  <WFL_Ambition_Contentment>Enjoy a period of contentment</WFL_Ambition_Contentment>
+  <WFL_Need_None>no urgent need</WFL_Need_None>
+  <WFL_Need_Sustenance>food and supplies</WFL_Need_Sustenance>
+  <WFL_Need_LivingSpace>living space</WFL_Need_LivingSpace>
+  <WFL_Need_Safety>safety</WFL_Need_Safety>
+  <WFL_Need_Continuity>continuity and succession</WFL_Need_Continuity>
+  <WFL_Need_Capability>missing skills</WFL_Need_Capability>
+  <WFL_Need_Cohesion>internal relationships</WFL_Need_Cohesion>
+  <WFL_Need_Influence>influence</WFL_Need_Influence>
+  <WFL_Need_Independence>independence</WFL_Need_Independence>
+  <WFL_Need_Legacy>legacy</WFL_Need_Legacy>
+  <WFL_Capability_None>none</WFL_Capability_None>
+  <WFL_Capability_Medical>medical</WFL_Capability_Medical>
+  <WFL_Capability_Cooking>cooking</WFL_Capability_Cooking>
+  <WFL_Capability_Growing>growing</WFL_Capability_Growing>
+  <WFL_Capability_Construction>construction</WFL_Capability_Construction>
+  <WFL_Capability_Crafting>crafting</WFL_Capability_Crafting>
+  <WFL_Capability_Intellectual>research</WFL_Capability_Intellectual>
+  <WFL_Capability_Social>social</WFL_Capability_Social>
+  <WFL_Capability_Childcare>childcare</WFL_Capability_Childcare>
+  <WFL_Capability_Combat>combat</WFL_Capability_Combat>
+  <WFL_Capability_Animals>animal handling</WFL_Capability_Animals>
+  <WFL_Stewardship_Title>Leadership and stewardship</WFL_Stewardship_Title>
+  <WFL_Stewardship_Head>Head: {0}</WFL_Stewardship_Head>
+  <WFL_Stewardship_None>No Steward currently serves this house.</WFL_Stewardship_None>
+  <WFL_Stewardship_Line>{0}: {1} recorded successes; {2} failures</WFL_Stewardship_Line>
+  <WFL_Stewardship_Tip>Ceremonies organized: {0}
+Aid transfers completed: {1}
+Reconciliations completed: {2}
+Negotiations led: {3}
+Guests housed: {4}
+Shortages averted: {5}</WFL_Stewardship_Tip>
 
   <!-- Pawn tab -->
   <WFL_TabFamily>Family</WFL_TabFamily>

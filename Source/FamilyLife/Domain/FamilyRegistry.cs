@@ -11,7 +11,7 @@ namespace FamilyLife.Domain
     /// </summary>
     public sealed partial class FamilyRegistry
     {
-        public const int CurrentDataVersion = 1;
+        public const int CurrentDataVersion = 2;
         public const int MaxChronicle = 400;
         public const int AncestorDepthLimit = 12;
         public const int NewbornAgeTicks = 60000;   // a person first seen younger than a day, with a parent, counts as born
@@ -120,6 +120,8 @@ namespace FamilyLife.Domain
             {
                 l.Culture = l.Culture ?? new List<float>();
                 while (l.Culture.Count < DimInfo.Count) l.Culture.Add(0f);
+                l.Situation = l.Situation ?? new HouseSituation();
+                l.Ambition = l.Ambition ?? new HouseAmbitionRecord();
                 l.ZoneApplied = l.ZoneApplied ?? new List<int>();
                 l.Traditions = l.Traditions ?? new List<TraditionRecord>();
                 l.Traditions.RemoveAll(t => t == null || TraditionCatalog.IndexOf(t.Id) < 0);
@@ -135,6 +137,14 @@ namespace FamilyLife.Domain
             Memories.RemoveAll(m => m == null || !lineageById.ContainsKey(m.LineageId));
             GatheringRequests = GatheringRequests ?? new List<GatheringRequest>();
             GatheringRequests.RemoveAll(r => r == null || !lineageById.ContainsKey(r.LineageId));
+            StewardRecords = StewardRecords ?? new List<StewardRecord>();
+            StewardRecords.RemoveAll(s => s == null || !personById.ContainsKey(s.PersonId) || !lineageById.ContainsKey(s.FamilyId));
+            foreach (var house in Lineages)
+                foreach (var steward in house.Stewards)
+                    if (StewardshipOf(steward, house.Id, true) == null) BeginStewardship(steward, house.Id, 0);
+            foreach (var service in StewardRecords.Where(s => s.Active).ToList())
+                if (!lineageById.TryGetValue(service.FamilyId, out var served) || !served.Stewards.Contains(service.PersonId))
+                    service.EndedTick = Math.Max(1, service.AppointedTick + 1);
             RebuildChildIndex();
             RebuildBondIndex();
             RebuildTimeIndex();

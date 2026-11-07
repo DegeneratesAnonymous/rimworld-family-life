@@ -52,7 +52,8 @@ namespace FamilyLife.Domain
             if(p.SocialFamilyId==family) return false;
             p.SocialFamilyId=family;
             foreach(var request in Requests.Where(q=>q.Open && (q.RequesterId==person || q.DonorId==person))) request.State=SupplyState.Cancelled;
-            foreach(var house in Lineages) if(!BelongsToFamily(p,house.Id)) house.Stewards.Remove(person);
+            foreach(var house in Lineages)
+                if(!BelongsToFamily(p,house.Id)&&house.Stewards.Remove(person)) EndStewardship(person,house.Id,now);
             Chronicle.Add(new FamilyEvent(FamilyEventKind.SocialMembership,now,person,family));
             if(Chronicle.Count>MaxChronicle) Chronicle.RemoveAt(0);
             if(maintain) MaintainAgency(now); return true;
@@ -108,6 +109,7 @@ namespace FamilyLife.Domain
             foreach(var petition in HousePetitions.Where(q=>q.State<=PetitionState.Heard && (q.FamilyId==source || q.SourceFamilyId==source))) petition.State=PetitionState.Expired;
             if(targetHouse.ZoneAreaId==0 && sourceHouse.ZoneAreaId!=0)
             {targetHouse.ZoneAreaId=sourceHouse.ZoneAreaId;targetHouse.ZoneMapId=sourceHouse.ZoneMapId;targetHouse.ZoneApplied.Clear();}
+            foreach(var steward in sourceHouse.Stewards.ToList())EndStewardship(steward,source,now);
             sourceHouse.AbsorbedIntoId=target;sourceHouse.RetiredTick=now;sourceHouse.HeadId=0;sourceHouse.Stewards.Clear();
             sourceHouse.ZoneAreaId=0;sourceHouse.ZoneMapId=-1;sourceHouse.ZoneApplied.Clear();
             MaintainAgency(now);

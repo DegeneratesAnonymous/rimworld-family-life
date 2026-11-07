@@ -19,6 +19,8 @@ namespace FamilyLife
         public FamilyRegistry Registry = new FamilyRegistry();
         internal readonly FamilyEconomy Economy;
         internal readonly PerformanceProbe Performance = new PerformanceProbe();
+        internal readonly TickGate AmbitionGate = new TickGate(2500, 400);
+        internal readonly SearchCursor AmbitionCursor = new SearchCursor();
         internal int Revision { get; private set; }
         private readonly TickGate maintenance = new TickGate(625);
         private int maintenancePhase;
@@ -77,6 +79,7 @@ namespace FamilyLife
             if (dirty) return;
             dirty = true;
             dirtySince = Find.TickManager.TicksGame;
+            HouseSituationPlanner.Invalidate(this);
         }
 
         public Pawn TryGetPawn(int id)
@@ -105,6 +108,7 @@ namespace FamilyLife
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
             Economy.Tick(now);
             HouseAgency.Tick(this, now);
+            HouseSituationPlanner.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>

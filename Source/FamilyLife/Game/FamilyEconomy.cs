@@ -42,6 +42,29 @@ namespace FamilyLife
         private bool warned;
         internal FamilyEconomy(FamilyComponent component) { this.component = component; }
         internal bool Pressure(int family) => pressured.Contains(family);
+        /// <summary>A bounded, cached reading of food physically held by a house. Used by daily ambitions, never by a tick loop.</summary>
+        internal float FoodSecurity(Lineage family, List<Pawn> members, int now)
+        {
+            if (family == null || members == null || members.Count == 0) return 50f;
+            var map = members.Select(p => p?.Map).FirstOrDefault(m => m != null);
+            if (map == null) return 50f;
+            var area = FamilyZones.AreaFor(family);
+            float held = 0f;
+            foreach (var thing in Stock(map, now))
+            {
+                if (KindOf(thing) != SupplyKind.Food) continue;
+                var claim = R.ClaimFor(thing.thingIDNumber);
+                if (claim?.HolderFamily != family.Id) continue;
+                if (area != null && area.Map == map && !area[thing.Position]) continue;
+                held += thing.stackCount * Units(thing, SupplyKind.Food);
+            }
+            float target = HouseholdPolicy.FoodTarget(members.Count, family.FoodReserveDays);
+            if (target <= 0f) return 100f;
+            if (held > 0f) return Math.Min(100f, held / target * 100f);
+            // Before a family has claimed a pantry, current hunger prevents a false crisis while keeping the assessment conservative.
+            float current = members.Where(p => p?.needs?.food != null).Select(p => p.needs.food.CurLevelPercentage).DefaultIfEmpty(.5f).Average() * 70f;
+            return Math.Max(Pressure(family.Id) ? 15f : 35f, current);
+        }
         internal void Invalidate(Map map) { if (map != null && stocks.TryGetValue(map, out var snapshot)) snapshot.Refresh.Invalidate(); }
         private List<Thing> Stock(Map map, int now)
         {

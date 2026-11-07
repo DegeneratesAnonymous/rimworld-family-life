@@ -39,7 +39,7 @@
 <WFL_Perspective_Branch>Found my own branch</WFL_Perspective_Branch>
 <WFL_Perspective_Delegate>Appoint or revoke a steward</WFL_Perspective_Delegate>
 <WFL_Petition_Admission>Ask to join</WFL_Petition_Admission>
-<WFL_Petition_Recognition>Seek recognition</WFL_Petition_Recognition>
+<WFL_Petition_Recognition>Steward appointment</WFL_Petition_Recognition>
 <WFL_Petition_Aid>Ask for food aid</WFL_Petition_Aid>
 <WFL_Petition_Status>{0} → {3}: {1} — {2}</WFL_Petition_Status>
 <WFL_Petition_Accept>Accept petition</WFL_Petition_Accept>
@@ -56,7 +56,7 @@
 <WFL_HouseRole_Steward>Steward</WFL_HouseRole_Steward>
 <WFL_HouseRole_Head>Head</WFL_HouseRole_Head>
 <WFL_PetitionKind_Admission>Admission</WFL_PetitionKind_Admission>
-<WFL_PetitionKind_Recognition>Recognition</WFL_PetitionKind_Recognition>
+<WFL_PetitionKind_Recognition>Steward appointment</WFL_PetitionKind_Recognition>
 <WFL_PetitionKind_Union>Union</WFL_PetitionKind_Union>
 <WFL_PetitionState_Proposed>Proposed</WFL_PetitionState_Proposed>
 <WFL_PetitionState_Heard>Heard</WFL_PetitionState_Heard>

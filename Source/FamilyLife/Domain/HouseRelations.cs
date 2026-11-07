@@ -77,11 +77,14 @@ namespace FamilyLife.Domain
             return contact?.Respect>=20 && contact.ServiceDays>=10 ? HouseRole.TrustedAssociate : contact?.Respect>=6 && contact.ServiceDays>=3 ? HouseRole.Associate : contact?.ContactDays>=3 ? HouseRole.FamilyFriend : HouseRole.Outsider;
         }
         public bool CanManageHouse(int person,int family) => GetPerson(person)?.InColony==true && RoleInHouse(person,family)>=HouseRole.Steward;
-        public bool DelegateHouse(int leader,int member,int family,bool appoint)
+        public bool DelegateHouse(int leader,int member,int family,bool appoint,int now=0)
         {
             var house=GetLineage(family);var p=GetPerson(member);
             if(HeadOf(family)!=leader || p?.InColony!=true || p.Juvenile || !BelongsToFamily(p,family) || member==leader) return false;
-            house.Stewards.Remove(member);if(appoint) house.Stewards.Add(member);return true;
+            house.Stewards.Remove(member);
+            if(appoint){house.Stewards.Add(member);BeginStewardship(member,family,now);}
+            else EndStewardship(member,family,now);
+            return true;
         }
         public HousePetition ProposePetition(int person,int family,PetitionKind kind,int now)
         {
@@ -108,7 +111,7 @@ namespace FamilyLife.Domain
             if(accept)
             {
                 if(q.Kind==PetitionKind.Admission && !SetSocialFamily(q.PersonId,q.FamilyId,now)) return false;
-                if(q.Kind==PetitionKind.Recognition && !DelegateHouse(leader,q.PersonId,q.FamilyId,true)) return false;
+                if(q.Kind==PetitionKind.Recognition && !DelegateHouse(leader,q.PersonId,q.FamilyId,true,now)) return false;
                 if(q.Kind==PetitionKind.Union && (FamilyOf(q.PersonId)!=q.SourceFamilyId || HeadOf(q.SourceFamilyId)!=q.PersonId || !UniteFamilies(q.FamilyId,FamilyOf(q.PersonId),now))) return false;
             }
             q.State=accept?PetitionState.Accepted:PetitionState.Denied;q.HeardBy=leader;q.HeardTick=heardAt;return true;
@@ -119,8 +122,19 @@ namespace FamilyLife.Domain
             float trust=GetBond(leader,q.PersonId)?.Trust??0;
             float respect=ContactOf(q.PersonId,q.FamilyId)?.Respect??0;
             if(q.Kind==PetitionKind.Admission) return trust>=40 || respect>=6;
-            if(q.Kind==PetitionKind.Recognition) return trust>=50 && respect>=10 && AssessBelonging(q.PersonId).TrustedConnections>=2;
+            if(q.Kind==PetitionKind.Recognition) return DeservesStewardship(q.PersonId,q.FamilyId,leader);
             return trust>=55 && respect>=10;
+        }
+        /// <summary>Stewardship follows demonstrated competence and trust; it is not standing a member can purchase by asking.</summary>
+        public bool DeservesStewardship(int person,int family,int leader=0)
+        {
+            if(leader==0)leader=HeadOf(family);
+            var member=GetPerson(person);
+            if(member?.InColony!=true||member.Juvenile||!BelongsToFamily(member,family)||leader==person)return false;
+            float trust=GetBond(leader,person)?.Trust??0;
+            float service=PrestigeOf(person)?.Value??0;
+            int connections=AssessBelonging(person).TrustedConnections;
+            return trust>=50&&connections>=2&&(service>=2||member.TopSkillLevel>=10);
         }
         private void MaintainHouseRelations(int now)
         {
