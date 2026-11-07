@@ -113,6 +113,7 @@ namespace FamilyLife
                 if (++waited > 600 || Other.CurJobDef != WFL_StoryDefOf.WFL_StoryListen || Other.Position.DistanceTo(pawn.Position) > 3) { EndJobWith(JobCondition.Incompletable); return; }
                 if (waited >= 180) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_MarriageConsent) MarriageAlliancePlanner.CompleteConsent(pawn,Other,job.count);
+                    else if(job.def==WFL_StoryDefOf.WFL_HouseUnionNegotiation) MarriageAlliancePlanner.CompleteUnion(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
                     else StoryActions.FinishTalk(pawn, Other, job.count, job.def == WFL_StoryDefOf.WFL_ReconcileStory); ReadyForNextToil(); }
             };
@@ -126,7 +127,7 @@ namespace FamilyLife
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || job.targetA.Pawn?.CurJob == null ||
-                (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageNegotiation && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageConsent));
+                (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageNegotiation && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageConsent && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseUnionNegotiation));
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             yield return Toils_General.Wait(1200);
         }

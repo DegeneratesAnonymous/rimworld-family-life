@@ -64,6 +64,8 @@ namespace FamilyLife
 
             if(mine!=0&&r.CanManageHouse(me.Id,mine)&&Rand.Chance(.25f))
             {
+                var union=r.MarriageAlliances.FirstOrDefault(a=>a.FamilyA==mine&&a.UnionState==HouseUnionState.Eligible);
+                if(union!=null&&MarriageAlliancePlanner.Representative(r,mine)==me.Id&&MarriageAlliancePlanner.StartUnion(c,union,pawn))return true;
                 var consent=r.MarriageAlliances.FirstOrDefault(a=>a.State==MarriageAllianceState.Supported&&
                     (a.FamilyA==mine&&a.ConsentA==MarriageConsentState.NotAsked||a.FamilyB==mine&&a.ConsentB==MarriageConsentState.NotAsked));
                 if(consent!=null&&MarriageAlliancePlanner.ConsentRepresentative(r,mine,mine==consent.FamilyA?consent.PawnA:consent.PawnB)==me.Id&&MarriageAlliancePlanner.StartConsent(c,consent,pawn))return true;
@@ -161,6 +163,16 @@ namespace FamilyLife
                 var pending=alliance;
                 yield return Act("WFL_Act_AcceptMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,true));
                 yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>(a.FamilyA==myFamily||a.FamilyB==myFamily)&&a.UnionState==HouseUnionState.Eligible))
+                if(r.CanManageHouse(me.Id,myFamily)&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
+                {var pending=alliance;yield return Act("WFL_Act_NegotiateUnion".Translate(b),()=>MarriageAlliancePlanner.StartUnion(c,pending,actor,true));}
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.UnionState==HouseUnionState.Negotiating&&
+                (System.Math.Abs(a.UnionNegotiatorA)==me.Id||System.Math.Abs(a.UnionNegotiatorB)==me.Id)))
+            {
+                int counterpart=System.Math.Abs(alliance.UnionNegotiatorA)==me.Id?System.Math.Abs(alliance.UnionNegotiatorB):System.Math.Abs(alliance.UnionNegotiatorA);if(counterpart!=them.Id)continue;
+                var pending=alliance;yield return Act("WFL_Act_SupportUnion".Translate(),()=>MarriageAlliancePlanner.DecideUnionAs(c,pending,actor,true));
+                yield return Act("WFL_Act_KeepHousesSeparate".Translate(),()=>MarriageAlliancePlanner.DecideUnionAs(c,pending,actor,false));
             }
 
             // A petition waiting on this pawn's word.

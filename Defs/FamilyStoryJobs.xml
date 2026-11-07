@@ -12,4 +12,5 @@
   <JobDef><defName>WFL_HouseInvite</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>offering family membership to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_MarriageNegotiation</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>discussing a possible marriage alliance with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_MarriageConsent</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>discussing a possible match with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_HouseUnionNegotiation</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>discussing the future of two married houses with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

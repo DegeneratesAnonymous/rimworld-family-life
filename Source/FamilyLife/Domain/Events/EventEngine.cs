@@ -199,6 +199,7 @@ namespace FamilyLife.Domain
                 line.Motive = d.Motive.Value(c, d.Skill);
                 if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
                 line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(history,d.Id);
+                if(c.ConsentedMatch&&((d.Effects&EventEffect.Romance)!=0||ReferenceEquals(d.Arc,Arc.Longing)))line.Weight*=1.25f;
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
                 line.Reason = "possible";

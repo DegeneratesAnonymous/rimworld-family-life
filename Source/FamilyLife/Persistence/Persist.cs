@@ -156,6 +156,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref ConsentA,"consentA",MarriageConsentState.NotAsked);Scribe_Values.Look(ref ConsentB,"consentB",MarriageConsentState.NotAsked);
             Scribe_Values.Look(ref ConsentApproacherA,"consentApproacherA");Scribe_Values.Look(ref ConsentApproacherB,"consentApproacherB");
             Scribe_Values.Look(ref DefianceA,"defianceA");Scribe_Values.Look(ref DefianceB,"defianceB");Scribe_Collections.Look(ref KnownBy,"knownBy",LookMode.Value);
+            Scribe_Values.Look(ref UnionState,"unionState",HouseUnionState.None);Scribe_Values.Look(ref UnionTargetFamilyId,"unionTarget");
+            Scribe_Values.Look(ref UnionNegotiatorA,"unionNegotiatorA");Scribe_Values.Look(ref UnionNegotiatorB,"unionNegotiatorB");
             if(KnownBy==null)KnownBy=new List<int>();
         }
     }

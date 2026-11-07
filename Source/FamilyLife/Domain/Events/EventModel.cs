@@ -169,6 +169,7 @@ namespace FamilyLife.Domain
         public int ThirdAttachToInitiator = -1;
         public int ThirdOpinionOfInitiator;       // the third person's opinion of the initiator
         public bool RomanticallyEligible;         // the game's own rules allow a romance between them (adults, orientation, no conflicting bonds)
+        public bool ConsentedMatch;               // both pawns agreed to consider a match; changes weight only, never eligibility
 
         /// <summary>Copies the pair facts for a different third participant. Actors are read-only for this selection.</summary>
         public PairContext Copy() => (PairContext)MemberwiseClone();

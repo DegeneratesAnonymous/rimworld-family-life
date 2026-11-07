@@ -153,5 +153,34 @@ namespace FamilyLife
             if(c==null||alliance==null||proposed==null||!c.Registry.BeginMarriageConsent(alliance.Id,proposed.thingIDNumber,proposed.thingIDNumber,Activities.Now))return false;
             return c.Registry.DecideMarriageConsent(alliance.Id,proposed.thingIDNumber,accept,Activities.Now);
         }
+
+        internal static bool StartUnion(FamilyComponent c,MarriageAlliance alliance,Pawn actor,bool byPlayer=false)
+        {
+            if(c==null||alliance==null||alliance.UnionState!=HouseUnionState.Eligible||actor==null)return false;
+            int family=c.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||!c.Registry.CanManageHouse(actor.thingIDNumber,family))return false;
+            int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(c.Registry,otherFamily);var other=c.TryGetPawn(otherId);
+            if(other==null||other.Map!=actor.Map||!other.Spawned||!Activities.IsFree(other)||other.CurJob?.playerForced==true||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_HouseUnionNegotiation,other);job.count=alliance.Id;actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+        }
+
+        internal static void CompleteUnion(Pawn speaker,Pawn other,int id)
+        {
+            var c=FamilyComponent.Current;var a=c?.Registry.MarriageAlliances.FirstOrDefault(x=>x.Id==id);if(a==null||speaker.Map!=other.Map||speaker.Position.DistanceTo(other.Position)>3)return;
+            int repA=c.Registry.FamilyOf(speaker.thingIDNumber)==a.FamilyA?speaker.thingIDNumber:other.thingIDNumber;
+            int repB=repA==speaker.thingIDNumber?other.thingIDNumber:speaker.thingIDNumber;int target=c.Registry.PreferredMarriageUnionTarget(a);
+            if(!c.Registry.BeginMarriageUnion(id,repA,repB,target,Activities.Now))return;
+            ResolveUnionIfAutonomous(c,a,speaker);ResolveUnionIfAutonomous(c,a,other);
+            if(a.UnionState==HouseUnionState.Negotiating)Messages.Message("WFL_HouseUnion_Waiting".Translate(),speaker,MessageTypeDefOf.NeutralEvent,false);
+        }
+
+        private static void ResolveUnionIfAutonomous(FamilyComponent c,MarriageAlliance a,Pawn representative)
+        {
+            if(Find.Selector.IsSelected(representative)||PerspectiveShiftBridge.IsAvatar(representative))return;
+            int family=c.Registry.FamilyOf(representative.thingIDNumber);c.Registry.DecideMarriageUnion(a.Id,representative.thingIDNumber,c.Registry.WouldHouseSupportUnion(a,family),Activities.Now);
+        }
+
+        internal static bool DecideUnionAs(FamilyComponent c,MarriageAlliance a,Pawn representative,bool support)
+            =>c!=null&&a!=null&&representative!=null&&c.Registry.DecideMarriageUnion(a.Id,representative.thingIDNumber,support,Activities.Now);
     }
 }

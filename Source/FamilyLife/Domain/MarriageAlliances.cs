@@ -10,6 +10,7 @@ namespace FamilyLife.Domain
     { None=0, MissingPerson=1, NotAdult=2, SameHouse=4, ExistingPartner=8, Kinship=16, VanillaRejected=32, HostileHouses=64, NoRoom=128, FoodInsecure=256, Ideology=512, PawnUnwilling=1024 }
     public enum MarriageAllianceState : byte { Opportunity, Negotiating, Supported, Opposed, Fulfilled, Expired, Withdrawn, Consented }
     public enum MarriageConsentState : byte { NotAsked, Awaiting, Accepted, Refused }
+    public enum HouseUnionState : byte { None, Eligible, Negotiating, Agreed, Rejected, Completed }
 
     /// <summary>Game facts that the pure domain cannot know. Supplying them never creates a relation.</summary>
     public sealed class MarriageCandidateContext
@@ -41,6 +42,8 @@ namespace FamilyLife.Domain
         public int ConsentApproacherA,ConsentApproacherB;
         public bool DefianceA,DefianceB;
         public List<int> KnownBy=new List<int>();
+        public HouseUnionState UnionState;
+        public int UnionTargetFamilyId,UnionNegotiatorA,UnionNegotiatorB;
     }
 
     public sealed partial class FamilyRegistry
@@ -109,7 +112,13 @@ namespace FamilyLife.Domain
         {
             var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
             if(a==null||a.State!=MarriageAllianceState.Negotiating||representative!=a.NegotiatorA&&representative!=a.NegotiatorB)return false;
-            if(!support){a.State=MarriageAllianceState.Opposed;a.DefianceA=a.PawnAWillingness>=35f;a.DefianceB=a.PawnBWillingness>=35f;a.LastChangedTick=now;return true;}
+            if(!support)
+            {
+                bool first=representative==a.NegotiatorA;
+                if(first)a.DefianceA=a.PawnAWillingness>=35f;else a.DefianceB=a.PawnBWillingness>=35f;
+                int pawn=first?a.PawnA:a.PawnB;if((first?a.DefianceA:a.DefianceB)&&pawn!=representative)ChangeBond(pawn,representative,new BondChange(0,-1,2,1),now);
+                a.State=MarriageAllianceState.Opposed;a.LastChangedTick=now;return true;
+            }
             if(representative==a.NegotiatorA)a.NegotiatorA=-Math.Abs(a.NegotiatorA);
             else a.NegotiatorB=-Math.Abs(a.NegotiatorB);
             if(a.NegotiatorA<0&&a.NegotiatorB<0){a.State=MarriageAllianceState.Supported;a.ExpiresTick=Math.Max(a.ExpiresTick,now+7*ActivityTuning.TicksPerDay);}
@@ -152,6 +161,8 @@ namespace FamilyLife.Domain
         }
 
         public bool KnowsMarriageAlliance(int observer,MarriageAlliance a)=>observer==0||a?.KnownBy?.Contains(observer)==true;
+        public bool HasConsentedMatch(int first,int second)=>MarriageAlliances.Any(a=>a.State==MarriageAllianceState.Consented&&
+            (a.PawnA==first&&a.PawnB==second||a.PawnA==second&&a.PawnB==first));
         private static void LearnAlliance(MarriageAlliance a,int person){if(person!=0&&!a.KnownBy.Contains(person)&&a.KnownBy.Count<16)a.KnownBy.Add(person);}
 
         public bool CanUniteThroughMarriage(int firstFamily,int secondFamily)
@@ -171,7 +182,8 @@ namespace FamilyLife.Domain
             foreach(var a in MarriageAlliances.Where(x=>x.State!=MarriageAllianceState.Fulfilled).ToList())
             {
                 var pa=GetPerson(a.PawnA);var pb=GetPerson(a.PawnB);
-                if(pa?.SpouseIds.Contains(a.PawnB)==true){a.State=MarriageAllianceState.Fulfilled;a.LastChangedTick=now;}
+                if(pa?.SpouseIds.Contains(a.PawnB)==true)
+                {a.State=MarriageAllianceState.Fulfilled;if(a.UnionState==HouseUnionState.None)a.UnionState=HouseUnionState.Eligible;a.LastChangedTick=now;}
                 else if((a.State==MarriageAllianceState.Opportunity||a.State==MarriageAllianceState.Negotiating||a.State==MarriageAllianceState.Supported||a.State==MarriageAllianceState.Consented)&&
                     (now>a.ExpiresTick||pa?.InColony!=true||pb?.InColony!=true)){a.State=MarriageAllianceState.Expired;a.LastChangedTick=now;}
             }
@@ -183,6 +195,45 @@ namespace FamilyLife.Domain
             if(s.Sustenance<35f){objections|=MarriageAllianceObjection.FoodInsecure;interest-=25f;}
             if(grievance>=45f){objections|=MarriageAllianceObjection.HostileHouses;interest-=35f;}
             if(ideology<-.35f){objections|=MarriageAllianceObjection.Ideology;interest+=ideology*20f;}
+        }
+
+        public int PreferredMarriageUnionTarget(MarriageAlliance a)
+        {
+            if(a==null||!CanUniteThroughMarriage(a.FamilyA,a.FamilyB))return 0;
+            float Score(int family){var h=GetLineage(family);var s=h?.Situation;return LivingCount(family,Presence.Colony)*12f+(h?.Standing??0)+(s?.Influence??50f)*.4f+(s?.Power??0)*.1f;}
+            float one=Score(a.FamilyA),two=Score(a.FamilyB);return one>two?a.FamilyA:two>one?a.FamilyB:Math.Min(a.FamilyA,a.FamilyB);
+        }
+
+        public bool BeginMarriageUnion(int id,int representativeA,int representativeB,int targetFamily,int now)
+        {
+            var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
+            if(a==null||a.State!=MarriageAllianceState.Fulfilled||a.UnionState!=HouseUnionState.Eligible||targetFamily!=a.FamilyA&&targetFamily!=a.FamilyB||
+                !CanUniteThroughMarriage(a.FamilyA,a.FamilyB)||!CanManageHouse(representativeA,a.FamilyA)||!CanManageHouse(representativeB,a.FamilyB))return false;
+            a.UnionTargetFamilyId=targetFamily;a.UnionNegotiatorA=representativeA;a.UnionNegotiatorB=representativeB;a.UnionState=HouseUnionState.Negotiating;a.LastChangedTick=now;
+            LearnAlliance(a,representativeA);LearnAlliance(a,representativeB);return true;
+        }
+
+        public bool WouldHouseSupportUnion(MarriageAlliance a,int family)
+        {
+            if(a==null||family!=a.FamilyA&&family!=a.FamilyB)return false;
+            var own=GetLineage(family)?.Situation??new HouseSituation();var target=GetLineage(a.UnionTargetFamilyId)?.Situation??new HouseSituation();
+            var tie=GetTie(a.FamilyA,a.FamilyB);if((tie?.Grievance??0)>=30f)return false;
+            if(family==a.UnionTargetFamilyId)return own.Sustenance>=50f&&own.LivingSpace>=50f&&own.Cohesion>=45f;
+            return own.Independence<60f||target.Power>own.Power*1.25f||target.Influence>own.Influence+15f;
+        }
+
+        public bool DecideMarriageUnion(int id,int representative,bool support,int now)
+        {
+            var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
+            if(a==null||a.UnionState!=HouseUnionState.Negotiating||representative!=a.UnionNegotiatorA&&representative!=a.UnionNegotiatorB)return false;
+            if(!support){a.UnionState=HouseUnionState.Rejected;a.LastChangedTick=now;return true;}
+            if(representative==a.UnionNegotiatorA)a.UnionNegotiatorA=-Math.Abs(a.UnionNegotiatorA);else a.UnionNegotiatorB=-Math.Abs(a.UnionNegotiatorB);
+            if(a.UnionNegotiatorA<0&&a.UnionNegotiatorB<0)
+            {
+                int source=a.UnionTargetFamilyId==a.FamilyA?a.FamilyB:a.FamilyA;a.UnionState=HouseUnionState.Agreed;
+                a.UnionState=UniteFamilies(source,a.UnionTargetFamilyId,now)?HouseUnionState.Completed:HouseUnionState.Eligible;
+            }
+            a.LastChangedTick=now;return true;
         }
         private static float Bound(float value)=>Math.Max(-100f,Math.Min(100f,float.IsNaN(value)?0f:value));
     }

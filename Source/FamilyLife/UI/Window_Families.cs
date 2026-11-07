@@ -297,7 +297,8 @@ namespace FamilyLife
                 LineTip(view,ref y,"WFL_MarriageAlliance_Line".Translate(FamilyUi.NameOf(registry,a.PawnA),FamilyUi.NameOf(registry,a.PawnB),("WFL_MarriageAllianceState_"+a.State).Translate()),
                     "WFL_MarriageAlliance_Tip".Translate(registry.LineageDisplayName(registry.GetLineage(otherFamily)),interest.ToString("0"),
                         a.PawnAWillingness.ToString("0"),a.PawnBWillingness.ToString("0"),a.Reasons.ToString(),objections.ToString(),
-                        ("WFL_MarriageConsent_"+a.ConsentA).Translate(),("WFL_MarriageConsent_"+a.ConsentB).Translate()),10f);
+                        ("WFL_MarriageConsent_"+a.ConsentA).Translate(),("WFL_MarriageConsent_"+a.ConsentB).Translate(),
+                        ("WFL_HouseUnionState_"+a.UnionState).Translate()),10f);
             }
 
             Heading(view, ref y, "WFL_Stewardship_Title".Translate());

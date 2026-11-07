@@ -61,6 +61,10 @@
 <WFL_Act_AskMarriageConsent>Ask {0} how they feel about the proposed match</WFL_Act_AskMarriageConsent>
 <WFL_Act_AcceptMarriageConsent>Accept consideration of this match</WFL_Act_AcceptMarriageConsent>
 <WFL_Act_RefuseMarriageConsent>Refuse this proposed match</WFL_Act_RefuseMarriageConsent>
+<WFL_Act_NegotiateUnion>Discuss a marriage-based house union with {0}</WFL_Act_NegotiateUnion>
+<WFL_Act_SupportUnion>Support the proposed house union</WFL_Act_SupportUnion>
+<WFL_Act_KeepHousesSeparate>Keep the two houses separate</WFL_Act_KeepHousesSeparate>
+<WFL_HouseUnion_Waiting>The houses discussed whether to unite after the marriage. Your representative's response is waiting.</WFL_HouseUnion_Waiting>
 <WFL_MarriageConsent_Waiting>{0} has been asked about a possible match. Their response is waiting for you.</WFL_MarriageConsent_Waiting>
 <WFL_MarriageAlliance_Waiting>{0} and {1} discussed a possible marriage alliance. Your representative's response is waiting.</WFL_MarriageAlliance_Waiting>
 <WFL_MarriageAlliance_Title>Possible marriage alliances</WFL_MarriageAlliance_Title>
@@ -74,6 +78,7 @@ Reasons: {4}
 Objections: {5}
 First pawn response: {6}
 Other pawn response: {7}
+House union: {8}
 
 This is a possible match, not a forced romance or marriage.</WFL_MarriageAlliance_Tip>
 <WFL_MarriageAllianceState_Opportunity>opportunity</WFL_MarriageAllianceState_Opportunity>
@@ -88,6 +93,12 @@ This is a possible match, not a forced romance or marriage.</WFL_MarriageAllianc
 <WFL_MarriageConsent_Awaiting>awaiting a response</WFL_MarriageConsent_Awaiting>
 <WFL_MarriageConsent_Accepted>accepted consideration</WFL_MarriageConsent_Accepted>
 <WFL_MarriageConsent_Refused>refused</WFL_MarriageConsent_Refused>
+<WFL_HouseUnionState_None>not applicable</WFL_HouseUnionState_None>
+<WFL_HouseUnionState_Eligible>available after marriage</WFL_HouseUnionState_Eligible>
+<WFL_HouseUnionState_Negotiating>being discussed</WFL_HouseUnionState_Negotiating>
+<WFL_HouseUnionState_Agreed>agreed</WFL_HouseUnionState_Agreed>
+<WFL_HouseUnionState_Rejected>houses remain separate</WFL_HouseUnionState_Rejected>
+<WFL_HouseUnionState_Completed>houses united</WFL_HouseUnionState_Completed>
 <WFL_PetitionKind_Admission>Admission</WFL_PetitionKind_Admission>
 <WFL_PetitionKind_Recognition>Steward appointment</WFL_PetitionKind_Recognition>
 <WFL_PetitionKind_Union>Union</WFL_PetitionKind_Union>

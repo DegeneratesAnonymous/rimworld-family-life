@@ -74,7 +74,7 @@ namespace FamilyLife.Tests
             var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
             r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
             r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day);r.DecideMarriageConsent(x.Id,1,true,2*Day);r.BeginMarriageConsent(x.Id,2,r.HeadOf(b),2*Day);r.DecideMarriageConsent(x.Id,2,true,2*Day);
-            Assert.Equal(MarriageAllianceState.Consented,x.State);Assert.Empty(r.GetPerson(1).PartnerIds());Assert.Empty(r.GetPerson(2).PartnerIds());
+            Assert.Equal(MarriageAllianceState.Consented,x.State);Assert.True(r.HasConsentedMatch(1,2));Assert.Empty(r.GetPerson(1).PartnerIds());Assert.Empty(r.GetPerson(2).PartnerIds());
         }
 
         [Fact] public void Changed_relationship_state_invalidates_consent_before_it_is_requested()
@@ -92,6 +92,32 @@ namespace FamilyLife.Tests
             Assert.True(r.KnowsMarriageAlliance(r.HeadOf(a),x));Assert.False(r.KnowsMarriageAlliance(3,x));
             r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
             Assert.True(r.BeginMarriageConsent(x.Id,3,r.HeadOf(a),2*Day));Assert.True(r.KnowsMarriageAlliance(3,x));Assert.False(r.KnowsMarriageAlliance(4,x));
+        }
+
+        [Fact] public void Actual_marriage_opens_but_does_not_automatically_complete_a_house_union()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.BeginMarriageNegotiation(x.Id,r.HeadOf(a),r.HeadOf(b),2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(a),true,2*Day);r.DecideMarriageNegotiation(x.Id,r.HeadOf(b),true,2*Day);
+            r.BeginMarriageConsent(x.Id,1,r.HeadOf(a),2*Day);r.DecideMarriageConsent(x.Id,1,true,2*Day);r.BeginMarriageConsent(x.Id,2,r.HeadOf(b),2*Day);r.DecideMarriageConsent(x.Id,2,true,2*Day);
+            r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},3*Day);r.MaintainAgency(3*Day);
+            Assert.Equal(MarriageAllianceState.Fulfilled,x.State);Assert.Equal(HouseUnionState.Eligible,x.UnionState);Assert.True(r.IsActiveHouse(a));Assert.True(r.IsActiveHouse(b));
+        }
+
+        [Fact] public void Union_requires_both_representatives_and_preserves_the_chosen_surviving_house()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},3*Day);r.MaintainAgency(3*Day);r.GetLineage(b).Standing=40;
+            int target=r.PreferredMarriageUnionTarget(x);Assert.Equal(b,target);Assert.True(r.BeginMarriageUnion(x.Id,r.HeadOf(a),r.HeadOf(b),target,3*Day));
+            Assert.True(r.DecideMarriageUnion(x.Id,r.HeadOf(a),true,3*Day));Assert.True(r.IsActiveHouse(a));
+            Assert.True(r.DecideMarriageUnion(x.Id,r.HeadOf(b),true,3*Day));Assert.Equal(HouseUnionState.Completed,x.UnionState);Assert.Equal(b,r.ActiveHouseId(a));
+        }
+
+        [Fact] public void Union_refusal_keeps_both_married_houses_active()
+        {
+            var r=World(out int a,out int b);var x=r.RecordMarriageOpportunity(r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true}),2*Day);
+            r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},3*Day);r.MaintainAgency(3*Day);
+            Assert.True(r.BeginMarriageUnion(x.Id,r.HeadOf(a),r.HeadOf(b),r.PreferredMarriageUnionTarget(x),3*Day));Assert.True(r.DecideMarriageUnion(x.Id,r.HeadOf(a),false,3*Day));
+            Assert.Equal(HouseUnionState.Rejected,x.UnionState);Assert.True(r.IsActiveHouse(a));Assert.True(r.IsActiveHouse(b));
         }
     }
 }
