@@ -200,9 +200,12 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref UnmetSinceTick, "unmetSince"); Scribe_Values.Look(ref NextVoteTick, "nextVote"); Scribe_Values.Look(ref LastHolderId, "lastHolder");
             Scribe_Values.Look(ref BarredId, "barred"); Scribe_Values.Look(ref BarredUntil, "barredUntil"); Scribe_Values.Look(ref EndedTick, "ended");
             Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
-            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Judged, "judged", LookMode.Value);
+            Scribe_Values.Look(ref NextRoundTick, "nextRound"); Scribe_Values.Look(ref RoundStartTick, "roundStart");
+            Scribe_Values.Look(ref NextClassTick, "nextClass"); Scribe_Values.Look(ref ClassStartTick, "classStart");
+            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Examined, "examined", LookMode.Value); Scribe_Collections.Look(ref ClassQueue, "classQueue", LookMode.Value);
             if (Tokens == null) Tokens = new List<int>();
-            if (Judged == null) Judged = new List<int>();
+            if (Examined == null) Examined = new List<int>();
+            if (ClassQueue == null) ClassQueue = new List<int>();
         }
     }
 

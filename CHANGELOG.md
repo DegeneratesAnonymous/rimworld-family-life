@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased - community posts, camping and visiting kin
-- Add five community posts (healer, teacher, quartermaster, mediator, judge) chosen by the colony and kept by real work; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
+- Add two community posts chosen by the colony and kept by real work: a teacher who holds a class every few days (adjustable, adults optional) and a doctor who gives everyone a check-up twice a year in the medical room; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
 - A player-controlled head is asked for their council leadership ballot; a union a head accepted under a council now finishes when the council approves it.
 - Offline tests only; nothing here has been run in the game.
 

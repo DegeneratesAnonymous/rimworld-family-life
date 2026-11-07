@@ -22,6 +22,6 @@
   <JobDef><defName>WFL_HeistRecruit</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>speaking quietly with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ProtectionOffer</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>talking terms with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_OfficeLesson</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a lesson.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_JudgeHearing</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>hearing TargetA out.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_Checkup</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastVote</defName><driverClass>FamilyLife.JobDriver_CastVote</driverClass><reportString>going to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

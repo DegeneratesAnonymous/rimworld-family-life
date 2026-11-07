@@ -24,6 +24,11 @@ namespace FamilyLife
         public bool governance=true;
         public bool visitingKin=true;
         public bool camping=true;
+        public bool holdClasses=true;
+        public int classEveryDays=3;
+        public bool adultStudents=false;
+        public bool healthChecks=true;
+        public int checkupsPerYear=2;
         public int campRadius=4;
         public bool babyBonding = true;
         public bool bedside = true;
@@ -64,6 +69,11 @@ namespace FamilyLife
             Scribe_Values.Look(ref governance,"governance",true);
             Scribe_Values.Look(ref visitingKin,"visitingKin",true);
             Scribe_Values.Look(ref camping,"camping",true);
+            Scribe_Values.Look(ref holdClasses,"holdClasses",true);
+            Scribe_Values.Look(ref classEveryDays,"classEveryDays",3);
+            Scribe_Values.Look(ref adultStudents,"adultStudents",false);
+            Scribe_Values.Look(ref healthChecks,"healthChecks",true);
+            Scribe_Values.Look(ref checkupsPerYear,"checkupsPerYear",2);
             Scribe_Values.Look(ref campRadius,"campRadius",4);
             Scribe_Values.Look(ref babyBonding, "babyBonding", true);
             Scribe_Values.Look(ref bedside, "bedside", true);
@@ -116,7 +126,7 @@ namespace FamilyLife
         public override string SettingsCategory() => "Wil's Family Life";
 
         private Vector2 settingsScroll;
-        private float settingsHeight = 1480;
+        private float settingsHeight = 1700;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
@@ -138,6 +148,19 @@ namespace FamilyLife
             list.CheckboxLabeled("WFL_S_Ceremonies".Translate(),ref Settings.ceremonies,"WFL_S_CeremoniesTip".Translate());
             list.CheckboxLabeled("WFL_S_Governance".Translate(),ref Settings.governance,"WFL_S_GovernanceTip".Translate());
             if(Settings.ceremonies)list.CheckboxLabeled("WFL_S_VisitingKin".Translate(),ref Settings.visitingKin,"WFL_S_VisitingKinTip".Translate());
+            list.CheckboxLabeled("WFL_S_Classes".Translate(),ref Settings.holdClasses,"WFL_S_ClassesTip".Translate());
+            if(Settings.holdClasses)
+            {
+                list.Label("WFL_S_ClassEvery".Translate(Settings.classEveryDays),tooltip:"WFL_S_ClassEveryTip".Translate());
+                Settings.classEveryDays=Mathf.RoundToInt(list.Slider(Settings.classEveryDays,1f,10f));
+                list.CheckboxLabeled("WFL_S_AdultStudents".Translate(),ref Settings.adultStudents,"WFL_S_AdultStudentsTip".Translate());
+            }
+            list.CheckboxLabeled("WFL_S_HealthChecks".Translate(),ref Settings.healthChecks,"WFL_S_HealthChecksTip".Translate());
+            if(Settings.healthChecks)
+            {
+                list.Label("WFL_S_CheckupsPerYear".Translate(Settings.checkupsPerYear),tooltip:"WFL_S_CheckupsPerYearTip".Translate());
+                Settings.checkupsPerYear=Mathf.RoundToInt(list.Slider(Settings.checkupsPerYear,1f,4f));
+            }
             list.CheckboxLabeled("WFL_S_Camping".Translate(),ref Settings.camping,"WFL_S_CampingTip".Translate());
             if(Settings.camping)
             {

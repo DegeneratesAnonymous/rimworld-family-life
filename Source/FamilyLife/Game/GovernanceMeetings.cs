@@ -18,7 +18,7 @@ namespace FamilyLife
 
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
             def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_StewardNegotiate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
-            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_JudgeHearing);
+            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_Checkup);
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
         internal static int NextToken() => (int)(unchecked((uint)((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000u) + 1;
@@ -32,6 +32,7 @@ namespace FamilyLife
             var job = JobMaker.MakeJob(def, other); job.count = id;
             if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate)
                 PreferOffice(job,FamilyComponent.Current,FamilyComponent.Current?.Registry.FamilyOf(actor.thingIDNumber)??0,actor,other);
+            if (def == WFL_StoryDefOf.WFL_Checkup && OfficeDriver.MedicalRoomCell(actor, out var room)) job.targetB = room;       // the examination is held in the medical room when there is one
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
         }
@@ -66,16 +67,15 @@ namespace FamilyLife
                     r.ChangeBond(partner, b, new BondChange(0f, 0f, -1f, 0f), now);
                     rift.Severity = Math.Max(0f, rift.Severity - 15f);
                 }
-                if (rift != null) r.RecordOfficeWork(OfficeKind.Mediator, a, NextToken(), now);
                 FinishDuty(r, StewardDutyKind.Mediate, id, NextToken(), now, a);
             }
             else if (def == WFL_StoryDefOf.WFL_OfficeLesson)
             {
                 if (r.GetPerson(b)?.Juvenile == true && r.OfficeFor(OfficeKind.Teacher)?.HolderId == a) OfficeDriver.CompleteLesson(r, speaker, other, now);
             }
-            else if (def == WFL_StoryDefOf.WFL_JudgeHearing)
+            else if (def == WFL_StoryDefOf.WFL_Checkup)
             {
-                OfficeDriver.CompleteHearing(r, speaker, other, id, now);
+                if (r.OfficeFor(OfficeKind.Healer)?.HolderId == a) OfficeDriver.CompleteCheckup(r, speaker, other, now);
             }
             else if(def==WFL_StoryDefOf.WFL_StewardNegotiate)
                 FinishDuty(r,StewardDutyKind.Negotiate,-id,NextToken(),now,a);

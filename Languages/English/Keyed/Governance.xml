@@ -165,10 +165,6 @@
   <WFL_Office_Elected>{0} was chosen as the colony's {1}.</WFL_Office_Elected>
   <WFL_OfficeKind_Healer>healer</WFL_OfficeKind_Healer>
   <WFL_OfficeKind_Teacher>teacher</WFL_OfficeKind_Teacher>
-  <WFL_OfficeKind_Quartermaster>quartermaster</WFL_OfficeKind_Quartermaster>
-  <WFL_OfficeKind_Mediator>mediator</WFL_OfficeKind_Mediator>
-  <WFL_OfficeKind_Judge>judge</WFL_OfficeKind_Judge>
-  <WFL_Judge_Upheld>{0} heard {1} out and found the accusation true.</WFL_Judge_Upheld>
   <WFL_Offices_Title>Community posts</WFL_Offices_Title>
   <WFL_Office_Vacant>The {0}: nobody holds it.</WFL_Office_Vacant>
   <WFL_Office_Holder>The {0}: {1} until {2}</WFL_Office_Holder>
@@ -217,4 +213,16 @@
   <WFL_Kin_Failed>The {0} family's relatives did not make it to the reunion.</WFL_Kin_Failed>
   <WFL_Kin_ArrivedTitle>Relatives have arrived</WFL_Kin_ArrivedTitle>
   <WFL_Kin_ArrivedText>Kin of the {0} family have arrived for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedText>
+  <WFL_S_Classes>Hold classes (the colony's teacher)</WFL_S_Classes>
+  <WFL_S_ClassesTip>The colony's chosen teacher holds a class for the children every few days. The class waits if nobody is free to teach or to learn.</WFL_S_ClassesTip>
+  <WFL_S_ClassEvery>A class every {0} day(s)</WFL_S_ClassEvery>
+  <WFL_S_ClassEveryTip>How often the teacher holds a class.</WFL_S_ClassEveryTip>
+  <WFL_S_AdultStudents>Let adults join the class</WFL_S_AdultStudents>
+  <WFL_S_AdultStudentsTip>Adults can be students too, when the teacher knows something they would like to learn. Off by default.</WFL_S_AdultStudentsTip>
+  <WFL_S_HealthChecks>Check-ups with the colony's doctor</WFL_S_HealthChecks>
+  <WFL_S_HealthChecksTip>The colony's chosen doctor examines everyone in the medical room. Someone examined recovers a little faster and fights illness a little better for a while.</WFL_S_HealthChecksTip>
+  <WFL_S_CheckupsPerYear>{0} round(s) of check-ups per year</WFL_S_CheckupsPerYear>
+  <WFL_S_CheckupsPerYearTip>A year here is 60 days; two rounds a year is one about every 30 days.</WFL_S_CheckupsPerYearTip>
+  <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
+  <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>
 </LanguageData>

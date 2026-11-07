@@ -131,24 +131,6 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
-        public void A_judge_rules_only_on_what_they_know_first_hand_and_never_on_their_own_house()
-        {
-            var r = Colony();
-            r.ElectOffices(2000, Skilled(20, OfficeKind.Judge));
-            Assert.Equal(20, r.OfficeFor(OfficeKind.Judge).HolderId);
-            var unknown = r.RecordIncident(IncidentKind.Theft, 2, 3, 0, 2100, 30f, new[] { 2, 3 });                       // the judge was not there
-            Assert.Equal(Verdict.None, r.HearAccusation(20, unknown.Id, 2200));
-            var seen = r.RecordIncident(IncidentKind.Theft, 2, 3, 0, 2100, 30f, new[] { 2, 3, 20 });
-            Assert.Equal(seen.Id, r.NextAccusationFor(20).Id);
-            float before = r.GetLineage(r.FamilyOf(2)).Standing;
-            Assert.Equal(Verdict.Upheld, r.HearAccusation(20, seen.Id, 2200));
-            Assert.True(r.GetLineage(r.FamilyOf(2)).Standing < before);
-            Assert.Equal(Verdict.None, r.HearAccusation(20, seen.Id, 2300));                                              // once only
-            var own = r.RecordIncident(IncidentKind.Theft, 21, 2, 0, 2400, 30f, new[] { 20, 21, 2 });
-            Assert.Equal(Verdict.None, r.HearAccusation(20, own.Id, 2500));                                               // their own house
-        }
-
-        [Fact]
         public void A_neglected_holder_cannot_simply_be_chosen_again_at_once()
         {
             var r = Colony();
@@ -157,6 +139,107 @@ namespace FamilyLife.Tests
             r.MaintainOffices(2000 + 40 * Day);
             r.ElectOffices(2000 + 43 * Day, Skilled(3, OfficeKind.Healer));
             Assert.False(r.OfficeFor(OfficeKind.Healer).Held);
+        }
+
+        // ---- classes ----
+
+        private static FamilyRegistry Teacher()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Teacher));
+            return r;
+        }
+
+        [Fact]
+        public void A_class_opens_when_due_and_the_next_one_waits_the_chosen_interval()
+        {
+            var r = Teacher();
+            int every = 3 * Day;
+            Assert.True(r.BeginClass(2100, every, new[] { 30 }));
+            Assert.Equal(30, r.NextStudent(2200));
+            Assert.False(r.BeginClass(2100 + Day, every, new[] { 30 }));                      // one class at a time, and not before it is due
+            r.ClassDone(30);
+            Assert.Equal(0, r.NextStudent(2300));
+            Assert.False(r.BeginClass(2100 + 2 * Day, every, new[] { 30 }));
+            Assert.True(r.BeginClass(2100 + every, every, new[] { 30 }));
+        }
+
+        [Fact]
+        public void With_nobody_to_teach_the_class_is_not_used_up_and_is_held_when_someone_comes()
+        {
+            var r = Teacher();
+            Assert.False(r.BeginClass(2100, 3 * Day, new int[0]));
+            Assert.False(r.BeginClass(2100 + 10 * Day, 3 * Day, new int[0]));               // still waiting, however long
+            Assert.True(r.BeginClass(2100 + 10 * Day, 3 * Day, new[] { 30 }));              // held at once when a student is free
+        }
+
+        [Fact]
+        public void A_class_is_small_never_includes_the_teacher_and_a_stalled_one_ends()
+        {
+            var r = Teacher();
+            Assert.True(r.BeginClass(2100, 3 * Day, new[] { 3, 30, 4, 20, 21, 1, 2, 5 }));
+            Assert.DoesNotContain(3, r.OfficeFor(OfficeKind.Teacher).ClassQueue);
+            Assert.True(r.OfficeFor(OfficeKind.Teacher).ClassQueue.Count <= FamilyRegistry.MaxClassSize);
+            Assert.Equal(0, r.NextStudent(2100 + FamilyRegistry.ClassWindowTicks + 1));      // not finished within a day: over
+            Assert.Empty(r.OfficeFor(OfficeKind.Teacher).ClassQueue);
+        }
+
+        // ---- check-ups ----
+
+        private static FamilyRegistry Doctor()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            return r;
+        }
+
+        [Fact]
+        public void A_round_of_checkups_opens_when_due_and_each_person_is_seen_once()
+        {
+            var r = Doctor();
+            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            Assert.False(r.BeginCheckupRound(start - 1, 30 * Day));
+            Assert.True(r.BeginCheckupRound(start, 30 * Day));
+            Assert.False(r.BeginCheckupRound(start + 10, 30 * Day));                          // already open
+            int first = r.NextCheckupPatient(start + 10, id => true);
+            Assert.NotEqual(0, first);
+            Assert.NotEqual(3, first);                                                          // the doctor is not their own patient
+            Assert.True(r.RecordCheckup(3, first, start + 20));
+            Assert.False(r.RecordCheckup(3, first, start + 30));                               // once per round
+            Assert.NotEqual(first, r.NextCheckupPatient(start + 40, id => true));
+        }
+
+        [Fact]
+        public void Only_the_doctor_can_examine_and_only_people_who_are_free_are_called()
+        {
+            var r = Doctor();
+            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            r.BeginCheckupRound(start, 30 * Day);
+            Assert.False(r.RecordCheckup(2, 1, start + 10));
+            Assert.Equal(20, r.NextCheckupPatient(start + 10, id => id == 20));                // only the one who can come
+            Assert.Equal(0, r.NextCheckupPatient(start + 10, id => false));                     // nobody free: nobody called, nothing forced
+        }
+
+        [Fact]
+        public void The_round_ends_when_everyone_has_been_seen_or_the_window_passes_and_the_next_waits_its_interval()
+        {
+            var r = Doctor();
+            var office = r.OfficeFor(OfficeKind.Healer);
+            int start = office.NextRoundTick;
+            r.BeginCheckupRound(start, 30 * Day);
+            foreach (var p in r.Persons.Where(x => x.InColony && x.Id != 3).Select(x => x.Id).ToList()) r.RecordCheckup(3, p, start + 100);
+            Assert.False(r.CheckupOpen(start + 200));
+            Assert.False(r.BeginCheckupRound(start + 10 * Day, 30 * Day));
+            Assert.True(r.BeginCheckupRound(start + 30 * Day, 30 * Day));
+            Assert.False(r.CheckupOpen(start + 30 * Day + FamilyRegistry.CheckupWindowTicks + 1));    // an unfinished round lapses
+        }
+
+        [Fact]
+        public void Without_a_doctor_there_are_no_checkups()
+        {
+            var r = Colony();
+            Assert.False(r.BeginCheckupRound(10 * Day, 30 * Day));
+            Assert.Equal(0, r.NextCheckupPatient(10 * Day, id => true));
         }
     }
 }

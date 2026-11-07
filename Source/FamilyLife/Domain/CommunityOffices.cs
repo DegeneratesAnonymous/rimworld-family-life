@@ -4,23 +4,25 @@ using System.Linq;
 
 namespace FamilyLife.Domain
 {
-    public enum OfficeKind : byte { Healer, Teacher, Quartermaster, Mediator, Judge }
+    public enum OfficeKind : byte { Healer, Teacher }
     public enum OfficeEnd : byte { None, TermEnded, Neglected, Left, Resigned }
-    public enum Verdict : byte { None, Upheld }
 
     /// <summary>
-    /// A post the colony fills by choice: healer, teacher, quartermaster, mediator or judge. Holding one is public standing, so houses want it, but it is
+    /// A post the colony fills by choice: the healer (the colony's doctor) or the teacher. Holding one is public standing, so houses want it, but it is
     /// earned by being chosen and kept by doing the work. It never changes what a person can do, only how they are regarded.
     /// </summary>
     public sealed partial class CommunityOffice
     {
         public int Id, HolderId, HolderFamily, ElectedTick, TermEndTick, LastWorkTick, Work, DayStamp, ActsToday, Counter, Backers, Opponents;
         public int UnmetSinceTick, NextVoteTick, LastHolderId, BarredId, BarredUntil, EndedTick;
+        public int NextRoundTick, RoundStartTick;       // the doctor's check-ups
+        public int NextClassTick, ClassStartTick;       // the teacher's classes
         public bool CounterReady;
         public OfficeKind Kind;
         public OfficeEnd EndReason;
-        public List<int> Tokens = new List<int>();     // evidence already counted
-        public List<int> Judged = new List<int>();     // incident ids this judge has ruled on
+        public List<int> Tokens = new List<int>();      // evidence already counted
+        public List<int> Examined = new List<int>();    // people the doctor has seen in the current round
+        public List<int> ClassQueue = new List<int>();  // students still to be taught in the current class
         public bool Held => HolderId != 0;
     }
 
@@ -37,6 +39,9 @@ namespace FamilyLife.Domain
         public const int OfficeTermTicks = 30 * ActivityTuning.TicksPerDay;
         public const int OfficeNeglectTicks = 15 * ActivityTuning.TicksPerDay;
         public const int MaxOfficeActsPerDay = 3;
+        public const int CheckupWindowTicks = 5 * ActivityTuning.TicksPerDay;
+        public const int ClassWindowTicks = ActivityTuning.TicksPerDay;
+        public const int MaxClassSize = 6;
         public const float MinOfficeSkill = .3f;
         public List<CommunityOffice> Offices = new List<CommunityOffice>();
         public int NextOfficeId = 1;
@@ -120,6 +125,8 @@ namespace FamilyLife.Domain
             office.HolderId = winner; office.HolderFamily = FamilyOf(winner); office.ElectedTick = now; office.TermEndTick = now + OfficeTermTicks;
             office.LastWorkTick = now; office.Work = 0; office.UnmetSinceTick = 0; office.CounterReady = false; office.EndReason = OfficeEnd.None; office.EndedTick = 0;
             office.Backers = tally[winner]; office.Opponents = cast - tally[winner];
+            office.NextRoundTick = now + ActivityTuning.TicksPerDay; office.RoundStartTick = 0; office.Examined.Clear();
+            office.NextClassTick = now; office.ClassStartTick = 0; office.ClassQueue.Clear();
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
             return true;
         }
@@ -138,7 +145,7 @@ namespace FamilyLife.Domain
         private void EndOffice(CommunityOffice office, OfficeEnd why, int now)
         {
             office.LastHolderId = office.HolderId; office.HolderId = 0; office.HolderFamily = 0; office.EndReason = why; office.EndedTick = now;
-            office.UnmetSinceTick = 0; office.CounterReady = false;
+            office.UnmetSinceTick = 0; office.CounterReady = false; office.RoundStartTick = 0; office.ClassStartTick = 0; office.ClassQueue.Clear();
             if (why == OfficeEnd.Neglected) { office.BarredId = office.LastHolderId; office.BarredUntil = now + OfficeTermTicks; }
         }
 
@@ -164,7 +171,7 @@ namespace FamilyLife.Domain
 
         /// <summary>
         /// Credits one real act of the post's work. The caller must hold evidence the game saw: a one-time token from a finished job or a record the
-        /// supply system wrote. The same token is never counted twice and a day's credit is capped, so easy acts cannot be farmed.
+        /// game wrote. The same token is never counted twice and a day's credit is capped, so easy acts cannot be farmed.
         /// </summary>
         public bool RecordOfficeWork(OfficeKind kind, int person, int token, int now)
         {
@@ -180,7 +187,7 @@ namespace FamilyLife.Domain
             return true;
         }
 
-        /// <summary>Removes holders who have left the colony, kept their family changes current, and relieves anyone who ignored work that was needed.</summary>
+        /// <summary>Removes holders who have left the colony, keeps their family current, and relieves anyone who ignored work that was needed.</summary>
         public void MaintainOffices(int now)
         {
             foreach (var office in Offices.Where(o => o.Held).ToList())
@@ -197,37 +204,71 @@ namespace FamilyLife.Domain
             }
         }
 
+        // ---- the doctor's check-ups ----
+
         /// <summary>
-        /// A judge hears one accusation. Only what the judge knows first-hand counts: an incident the judge does not know of, one involving their own
-        /// house, one already ruled on, or one already settled leaves everything as it was. Suspicion alone never convicts.
+        /// Opens a round of check-ups when one is due: every colonist is to be seen once. The interval is the player's choice. A round that opens
+        /// with the doctor held in office only; nobody is booked in advance and nothing is forced.
         /// </summary>
-        public Verdict HearAccusation(int judge, int incidentId, int now)
+        public bool BeginCheckupRound(int now, int intervalTicks)
         {
-            var office = OfficeFor(OfficeKind.Judge);
-            var incident = Incidents.FirstOrDefault(i => i.Id == incidentId);
-            if (office == null || office.HolderId != judge || incident == null || incident.Resolved || incident.ActorId == 0 || incident.ActorFamily == 0) return Verdict.None;
-            if (incident.Kind == IncidentKind.Gift || incident.Kind == IncidentKind.Restitution || office.Judged.Contains(incidentId)) return Verdict.None;
-            if (!incident.KnownBy.Contains(judge) || incident.ActorId == judge || incident.ActorFamily == FamilyOf(judge) || incident.VictimId == judge) return Verdict.None;
-            office.Judged.Add(incidentId);
-            if (office.Judged.Count > 64) office.Judged.RemoveAt(0);
-            var house = GetLineage(incident.ActorFamily);
-            if (house != null)
-            {
-                house.Standing = Math.Max(-100f, house.Standing - Math.Min(6f, incident.Severity * .12f));
-                if (house.Crime != null) house.Crime.Heat = Math.Min(100f, house.Crime.Heat + 4f);
-            }
-            ChangeBond(judge, incident.ActorId, new BondChange(-.5f, -1f, 2f, 1f), now);
-            return Verdict.Upheld;
+            var office = OfficeFor(OfficeKind.Healer);
+            if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextRoundTick || CheckupOpen(now)) return false;
+            office.RoundStartTick = now; office.Examined.Clear(); office.NextRoundTick = now + intervalTicks;
+            return true;
         }
 
-        /// <summary>The first known, unsettled accusation this judge could hear.</summary>
-        public FamilyIncident NextAccusationFor(int judge)
+        public bool CheckupOpen(int now)
         {
-            var office = OfficeFor(OfficeKind.Judge);
-            if (office == null || office.HolderId != judge) return null;
-            return Incidents.Where(i => !i.Resolved && i.ActorId != 0 && i.ActorFamily != 0 && i.Severity >= 15f && i.Kind != IncidentKind.Gift && i.Kind != IncidentKind.Restitution &&
-                    i.KnownBy.Contains(judge) && i.ActorId != judge && i.ActorFamily != FamilyOf(judge) && i.VictimId != judge && !office.Judged.Contains(i.Id) && GetPerson(i.ActorId)?.InColony == true)
-                .OrderByDescending(i => i.Severity).ThenBy(i => i.Id).FirstOrDefault();
+            var office = OfficeFor(OfficeKind.Healer);
+            return office != null && office.Held && office.RoundStartTick != 0 && now - office.RoundStartTick < CheckupWindowTicks;
         }
+
+        /// <summary>The next person still to be seen this round, chosen from those the game says are free to go. The doctor is not their own patient.</summary>
+        public int NextCheckupPatient(int now, Func<int, bool> available)
+        {
+            var office = OfficeFor(OfficeKind.Healer);
+            if (office == null || !CheckupOpen(now)) return 0;
+            return Persons.Where(p => p.InColony && p.Id != office.HolderId && !office.Examined.Contains(p.Id) && (available == null || available(p.Id)))
+                .OrderBy(p => p.Id).Select(p => p.Id).FirstOrDefault();
+        }
+
+        /// <summary>The doctor has really seen this person. Counted once per round; a round ends when everyone present has been seen.</summary>
+        public bool RecordCheckup(int doctor, int patient, int now)
+        {
+            var office = OfficeFor(OfficeKind.Healer);
+            if (office == null || office.HolderId != doctor || !CheckupOpen(now) || patient == doctor || GetPerson(patient)?.InColony != true || office.Examined.Contains(patient)) return false;
+            office.Examined.Add(patient);
+            if (Persons.Where(p => p.InColony && p.Id != doctor).All(p => office.Examined.Contains(p.Id))) office.RoundStartTick = 0;
+            return true;
+        }
+
+        // ---- the teacher's classes ----
+
+        /// <summary>
+        /// Opens a class when one is due and there is someone to teach. With no student available nothing starts and the class is not used up, so it
+        /// is simply held as soon as someone can come.
+        /// </summary>
+        public bool BeginClass(int now, int intervalTicks, IEnumerable<int> students)
+        {
+            var office = OfficeFor(OfficeKind.Teacher);
+            if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextClassTick || office.ClassQueue.Count > 0) return false;
+            var chosen = (students ?? Enumerable.Empty<int>()).Distinct().Where(s => s != office.HolderId && GetPerson(s)?.InColony == true).OrderBy(s => s).Take(MaxClassSize).ToList();
+            if (chosen.Count == 0) return false;
+            office.ClassQueue = chosen; office.ClassStartTick = now; office.NextClassTick = now + intervalTicks;
+            return true;
+        }
+
+        /// <summary>The next student waiting in the current class, or 0. A class that drags on for more than a day is simply over.</summary>
+        public int NextStudent(int now)
+        {
+            var office = OfficeFor(OfficeKind.Teacher);
+            if (office == null || office.ClassQueue.Count == 0) return 0;
+            if (now - office.ClassStartTick > ClassWindowTicks || !office.Held) { office.ClassQueue.Clear(); return 0; }
+            return office.ClassQueue[0];
+        }
+
+        /// <summary>This student was taught, or cannot be: they leave the queue either way.</summary>
+        public void ClassDone(int student) => OfficeFor(OfficeKind.Teacher)?.ClassQueue.Remove(student);
     }
 }
