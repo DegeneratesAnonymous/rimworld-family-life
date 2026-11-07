@@ -413,4 +413,47 @@ Shortages averted: {5}</WFL_Stewardship_Tip>
   <WFL_ZoneDealBedsConfirm>Take back the beds in this zone that were given out to {0} and share them out again? Beds you gave to someone yourself since, beds locked in Better Beds, and beds owned by people outside the family stay as they are.</WFL_ZoneDealBedsConfirm>
   <WFL_ZoneDealBeds>Share out beds</WFL_ZoneDealBeds>
   <WFL_ZoneDealBedsDesc>Unassign the family's beds in this zone and give them out again: couples first, to the most comfortable place they can sleep together, then the children, then everyone else, to the most comfortable beds left. Any kind of bed. Beds owned by anyone outside the family stay as they are.</WFL_ZoneDealBedsDesc>
+  <!-- Variants: a line may be given as WFL_Name_0, WFL_Name_1, ... and the game chooses among them. Add more freely. -->
+  <WFL_Knock_0>Knock, knock.</WFL_Knock_0>
+  <WFL_Knock_1>Hello? Anyone home?</WFL_Knock_1>
+  <WFL_Knock_2>Excuse me?</WFL_Knock_2>
+  <WFL_Knock_3>*knock knock*</WFL_Knock_3>
+  <WFL_Knock_4>May I come in?</WFL_Knock_4>
+  <WFL_ComeIn_0>Come in.</WFL_ComeIn_0>
+  <WFL_ComeIn_1>Of course, come on in.</WFL_ComeIn_1>
+  <WFL_ComeIn_2>Ah, there you are. Come in.</WFL_ComeIn_2>
+  <WFL_ComeIn_3>Mind the step. Come in.</WFL_ComeIn_3>
+  <WFL_ComeIn_4>Welcome. Come in.</WFL_ComeIn_4>
+  <WFL_MealCall_0>Time to eat!</WFL_MealCall_0>
+  <WFL_MealCall_1>Food's ready!</WFL_MealCall_1>
+  <WFL_MealCall_2>Come and get it!</WFL_MealCall_2>
+  <WFL_MealCall_3>Table's set, everyone!</WFL_MealCall_3>
+  <WFL_MealCall_4>Who's hungry?</WFL_MealCall_4>
+  <WFL_Lead_Dawn_0>At first light,</WFL_Lead_Dawn_0>
+  <WFL_Lead_Dawn_1>Before the day had properly begun,</WFL_Lead_Dawn_1>
+  <WFL_Lead_Dawn_2>In the cool of the early morning,</WFL_Lead_Dawn_2>
+  <WFL_Lead_Morning_0>Over the morning's work,</WFL_Lead_Morning_0>
+  <WFL_Lead_Morning_1>Mid-morning,</WFL_Lead_Morning_1>
+  <WFL_Lead_Morning_2>While the day was still young,</WFL_Lead_Morning_2>
+  <WFL_Lead_Afternoon_0>In the heat of the afternoon,</WFL_Lead_Afternoon_0>
+  <WFL_Lead_Afternoon_1>During a quiet stretch of the afternoon,</WFL_Lead_Afternoon_1>
+  <WFL_Lead_Afternoon_2>Somewhere between one chore and the next,</WFL_Lead_Afternoon_2>
+  <WFL_Lead_Evening_0>As the light began to fade,</WFL_Lead_Evening_0>
+  <WFL_Lead_Evening_1>After the day's work was done,</WFL_Lead_Evening_1>
+  <WFL_Lead_Evening_2>At the end of the day,</WFL_Lead_Evening_2>
+  <WFL_Lead_Night_0>Late in the night,</WFL_Lead_Night_0>
+  <WFL_Lead_Night_1>When most of the colony was asleep,</WFL_Lead_Night_1>
+  <WFL_Lead_Night_2>In the small hours,</WFL_Lead_Night_2>
+  <WFL_Tail_Poor_0>Neither mentioned it again that day.</WFL_Tail_Poor_0>
+  <WFL_Tail_Poor_1>The silence afterwards said more than the words.</WFL_Tail_Poor_1>
+  <WFL_Tail_Poor_2>It will be remembered.</WFL_Tail_Poor_2>
+  <WFL_Tail_Flat_0>Nothing came of it, but nothing was lost.</WFL_Tail_Flat_0>
+  <WFL_Tail_Flat_1>They went their separate ways soon after.</WFL_Tail_Flat_1>
+  <WFL_Tail_Flat_2>It was an ordinary moment, and ordinary moments are most of life.</WFL_Tail_Flat_2>
+  <WFL_Tail_Good_0>They parted on better terms than they met.</WFL_Tail_Good_0>
+  <WFL_Tail_Good_1>It was a small thing, and it helped.</WFL_Tail_Good_1>
+  <WFL_Tail_Good_2>Both were lighter for it.</WFL_Tail_Good_2>
+  <WFL_Tail_Great_0>It is the sort of moment people carry for years.</WFL_Tail_Great_0>
+  <WFL_Tail_Great_1>Something between them changed for good.</WFL_Tail_Great_1>
+  <WFL_Tail_Great_2>Neither will forget it.</WFL_Tail_Great_2>
 </LanguageData>

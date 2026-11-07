@@ -476,7 +476,9 @@ namespace FamilyLife
         private static void Announce(EventDef def, EventResult r, Pawn initiator, Pawn recipient, Pawn third)
         {
             if (NoticeLevel <= 0) return;
-            string text = Describe(def, r.Tier, initiator.LabelShort, recipient.LabelShort, third?.LabelShort);
+            int hour = initiator.Map == null ? 12 : GenLocalDate.HourOfDay(initiator.Map);
+            int seed = TextVariety.Seed(def.Id, initiator.thingIDNumber, recipient.thingIDNumber, Find.TickManager.TicksGame / 2500);
+            string text = Phrasing.Moment("WFL_Ev_" + def.Id.Replace('-', '_'), r.Tier.ToString(), seed, hour, initiator.LabelShort, recipient.LabelShort, third?.LabelShort);
             bool good = r.Tier >= EventTier.Good;
             if (r.BecameMemory || (def.Weight == EventWeight.Defining && (r.Tier == EventTier.Great || r.Tier == EventTier.Poor)))
             {

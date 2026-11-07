@@ -166,7 +166,7 @@ namespace FamilyLife
             pass.Granted = true;
             pass.GrantedTick = Find.TickManager.TicksGame;
             Trace(guest.LabelShort + " was let into " + pass.Zone.label);
-            if (pass.Opener != null && pass.Opener.Spawned) MoteMaker.ThrowText(pass.Opener.DrawPos, pass.Opener.Map, "WFL_ComeIn".Translate(), Color.white);
+            if (pass.Opener != null && pass.Opener.Spawned) MoteMaker.ThrowText(pass.Opener.DrawPos, pass.Opener.Map, Phrasing.Say("WFL_ComeIn", pass.Opener.thingIDNumber + Find.TickManager.TicksGame / 600), Color.white);
         }
 
         /// <summary>Whether a remembered job can still be done: its targets are still there and the guest may now go to them.</summary>
@@ -216,7 +216,7 @@ namespace FamilyLife
                 if (now - pass.LastKnock >= KnockEvery)
                 {
                     pass.LastKnock = now;
-                    MoteMaker.ThrowText(guest.DrawPos, guest.Map, "WFL_Knock".Translate(), Color.white);
+                    MoteMaker.ThrowText(guest.DrawPos, guest.Map, Phrasing.Say("WFL_Knock", guest.thingIDNumber + Find.TickManager.TicksGame / 180), Color.white);
                 }
                 var op = pass.Opener;
                 bool coming = op != null && Available(op) && op.CurJobDef == FamilyJobDefOf.WFL_LetGuestIn;
