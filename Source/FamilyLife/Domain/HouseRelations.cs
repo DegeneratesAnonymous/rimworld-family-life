@@ -13,13 +13,13 @@ namespace FamilyLife.Domain
     }
     public sealed partial class HousePetition
     {
-        public int Id, PersonId, FamilyId, CreatedTick, HeardTick, HeardBy, SourceFamilyId;
+        public int Id, PersonId, FamilyId, CreatedTick, HeardTick, HeardBy, SourceFamilyId, ReceivedBy;
         public PetitionKind Kind;
         public PetitionState State;
     }
     public sealed partial class Lineage
     {
-        public int HeadId;
+        public int HeadId, VacantHeadId, VacantSeenTick;
         public List<int> Stewards = new List<int>();
     }
     public sealed partial class FamilyRegistry
@@ -60,6 +60,7 @@ namespace FamilyLife.Domain
             var house=GetLineage(family);if(house==null) return 0;
             var incumbent=GetPerson(house.HeadId);
             if(incumbent?.InColony==true && !incumbent.Juvenile && BelongsToFamily(incumbent,family)) return incumbent.Id;
+            if(house.HeadId!=0 && house.VacantHeadId==0) house.VacantHeadId=house.HeadId;
             var members=Persons.Where(p=>p.InColony && !p.Juvenile && BelongsToFamily(p,family)).ToList();
             house.HeadId=members.FirstOrDefault(p=>p.Id==house.FounderId)?.Id ?? members.OrderBy(p=>p.BirthAbsTick).ThenBy(p=>p.Id).FirstOrDefault()?.Id ?? 0;
             return house.HeadId;

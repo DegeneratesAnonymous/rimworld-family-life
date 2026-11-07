@@ -10,7 +10,7 @@ namespace FamilyLife
 {
     /// <summary>The Families window: one list of lineages and, for the chosen one, its overview, members, relationships, households and history.
     /// Opened from the Family button on a colonist's bio card, the surname link, or the pawn's Family tab.</summary>
-    public class Window_Families : Window
+    public partial class Window_Families : Window
     {
         public static int PendingLineageId;
 
@@ -312,6 +312,8 @@ namespace FamilyLife
                     "WFL_Stewardship_Tip".Translate(record?.CeremoniesOrganized ?? 0, record?.AidTransfers ?? 0, record?.Reconciliations ?? 0,
                         record?.NegotiationsLed ?? 0, record?.GuestsHoused ?? 0, record?.ShortagesAverted ?? 0), 10f);
             }
+
+            DrawGovernance(view, ref y, component, registry, lineage);
 
             // Friends and associates of the house.
             Heading(view, ref y, "WFL_Associates_Title".Translate());

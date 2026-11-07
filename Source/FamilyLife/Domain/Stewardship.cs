@@ -3,15 +3,15 @@ using System.Linq;
 
 namespace FamilyLife.Domain
 {
-    public enum StewardServiceKind : byte { Ceremony, Aid, Reconciliation, Negotiation, GuestCare, SupplyCrisis }
+    public enum StewardServiceKind : byte { Ceremony, Aid, Reconciliation, Negotiation, GuestCare, SupplyCrisis, Petition }
 
     /// <summary>A bounded record of work performed while holding office, rather than an unexplained status rank.</summary>
     public sealed partial class StewardRecord
     {
         public int PersonId, FamilyId, AppointedTick, EndedTick, LastServiceTick;
-        public int CeremoniesOrganized, AidTransfers, Reconciliations, NegotiationsLed, GuestsHoused, ShortagesAverted, Failures;
+        public int CeremoniesOrganized, AidTransfers, Reconciliations, NegotiationsLed, GuestsHoused, ShortagesAverted, Failures, PetitionsHeard, Interruptions;
         public bool Active => EndedTick == 0;
-        public int Successes => CeremoniesOrganized + AidTransfers + Reconciliations + NegotiationsLed + GuestsHoused + ShortagesAverted;
+        public int Successes => CeremoniesOrganized + AidTransfers + Reconciliations + NegotiationsLed + GuestsHoused + ShortagesAverted + PetitionsHeard;
     }
 
     public sealed partial class FamilyRegistry
@@ -54,6 +54,7 @@ namespace FamilyLife.Domain
                 case StewardServiceKind.Negotiation: record.NegotiationsLed++; break;
                 case StewardServiceKind.GuestCare: record.GuestsHoused++; break;
                 case StewardServiceKind.SupplyCrisis: record.ShortagesAverted++; break;
+                case StewardServiceKind.Petition: record.PetitionsHeard++; break;
             }
         }
     }

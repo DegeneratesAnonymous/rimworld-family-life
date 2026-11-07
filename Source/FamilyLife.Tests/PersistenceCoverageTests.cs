@@ -20,7 +20,7 @@ namespace FamilyLife.Tests
             while (dir != null)
             {
                 var candidate = Path.Combine(dir.FullName, "Source", "FamilyLife", "Persistence", "Persist.cs");
-                if (File.Exists(candidate)) return File.ReadAllText(candidate);
+                if (File.Exists(candidate)) return File.ReadAllText(candidate) + File.ReadAllText(Path.Combine(dir.FullName, "Source", "FamilyLife", "Persistence", "PersistGovernance.cs"));
                 dir = dir.Parent;
             }
             throw new FileNotFoundException("Persist.cs not found above " + AppContext.BaseDirectory);
@@ -58,6 +58,22 @@ namespace FamilyLife.Tests
         [InlineData(typeof(AttentionRecord))]
         [InlineData(typeof(AgencyRecord))]
         [InlineData(typeof(StockClaim))]
+        [InlineData(typeof(PlanInvitee))]
+        [InlineData(typeof(CeremonyPlan))]
+        [InlineData(typeof(StewardDuty))]
+        [InlineData(typeof(FamilyOffice))]
+        [InlineData(typeof(SuccessionCase))]
+        [InlineData(typeof(CrimeRecord))]
+        [InlineData(typeof(HeistParticipant))]
+        [InlineData(typeof(Heist))]
+        [InlineData(typeof(CrimeKnowledge))]
+        [InlineData(typeof(ProtectionArrangement))]
+        [InlineData(typeof(ColonyInstitution))]
+        [InlineData(typeof(ElectionEndorsement))]
+        [InlineData(typeof(ElectionVote))]
+        [InlineData(typeof(Election))]
+        [InlineData(typeof(CoupParticipant))]
+        [InlineData(typeof(CoupPlan))]
         [InlineData(typeof(SupplyRequest))]
         [InlineData(typeof(FamilyRegistry))]
         public void Every_field_is_written_to_the_save(Type type)

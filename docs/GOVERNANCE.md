@@ -1,0 +1,20 @@
+# Governance slices for issues #11–#15
+
+Pure rules live in `Source/FamilyLife/Domain` and are covered by offline tests; the game layer adds only facts the domain cannot know (who is free, which maps exist, who is the Perspective Shift avatar). Nothing below is verified in a running game.
+
+| Issue | Domain | What is wired into the game | What is not |
+|---|---|---|---|
+| #11 planning card | `CeremonyPlanning.cs` | A card opens for each wedding, funeral, reunion and coming-of-age request. Defaults are the family's own; the deadline confirms them. The gathering uses the plan's organizer, venue map and guest list. `Window_CeremonyPlan` (Families → Manage → Occasions) edits time within a bounded window, organizer, venue map and guests, and shows why someone cannot be asked. | Distant relatives are listed as "no safe way to reach the colony" unless already on the map: no travel, rescue or camping exists yet. The venue is a map, not a specific room. |
+| #12 Steward duties | `StewardDuties.cs` | The Steward (else the head) is recorded as holder of an organize-occasion duty, completed only from the finished ceremony record. Optional meeting place set by cell target. Duties lapse as interrupted, never as success. | Petition hearing, guest care, mediation and shortage duties are recorded and verified in the domain but no job driver starts them yet. The meeting place is not yet used to pick a gathering spot. |
+| #13 succession | `Succession.cs` | Runs from the maintenance cycle for every house: a vacancy (death or an absence longer than a day) opens an orderly attempt, then negotiation, compromise, an open dispute or a branch. Candidate legitimacy and the reasons behind it show in Families → Manage, filtered to what the viewer knows. | No inheritance of property exists or is attempted: the only things that change hands are the office of head and a Steward term. |
+| #14 crime families | `CrimeFamilies.cs` | Displayed only (direction, job state, what the viewer knows of each job). | Nothing starts a crime on its own and no job driver carries out a heist. `AdoptCrimeDirection`, planning, recruiting, resolving with physical evidence, knowledge levels, protection deals and reform are complete in the domain and tested. |
+| #15 institutions | `Institutions.cs` | Institution, open elections and schemes are displayed; the term-end election and counting run from maintenance. | No pawn walks to vote, nothing starts an election of its own choice, and no coup is carried out in the world. The player cannot yet choose an institution from the UI. |
+
+## Rules the tests pin down
+
+- Ignoring a card never stalls an occasion; an invalid room, a lost organizer, a dead guest or a passed time repairs itself or ends the request cleanly.
+- An avatar is asked to lead, never assumed; silence is "unanswered" and the game never directs them.
+- A Steward success needs evidence of a finished action, and the same evidence cannot count twice. The head covering for a missing Steward earns regard but adds nothing to a Steward's term. Ceremonies, aid, reconciliation and negotiation are already credited by the systems that perform them, so a duty record does not credit them again.
+- Legitimacy is separate from prestige, standing and office. A large family does not automatically produce a ruler: a house whose custom prizes service with no one who has served keeps an acting head and an open dispute. Members back different candidates for their own reasons. Private designations stay private.
+- Crime needs all of need, opportunity, permitting values, two willing people and a real precedent. Goods, tribute and loss exist only with a one-time evidence token. Witnesses know facts; reports and suspicion are never proof.
+- Political support keeps ideology, family, legitimacy, friendship, fear, needs, policy and endorsement as separate measures with no zero-sum formula. A smaller house can win through trust and conviction. A coup needs capacity (equipped, free people), not headcount, and can be discovered, set back, abandoned or reconciled.

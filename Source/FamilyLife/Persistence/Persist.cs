@@ -96,6 +96,14 @@ namespace FamilyLife.Domain
             Scribe_Deep.Look(ref Ambition, "ambition");
             if (Situation == null) Situation = new HouseSituation();
             if (Ambition == null) Ambition = new HouseAmbitionRecord();
+            Scribe_Values.Look(ref VacantHeadId,"vacantHead");Scribe_Values.Look(ref VacantSeenTick,"vacantSeen");
+            Scribe_Values.Look(ref Custom,"successionCustom",SuccessionCustom.Seniority);Scribe_Values.Look(ref CustomSet,"successionCustomSet");
+            Scribe_Collections.Look(ref Precedent,"successionPrecedent",LookMode.Value);Scribe_Values.Look(ref DesignatedHeirId,"designatedHeir");
+            Scribe_Values.Look(ref DesignatedTick,"designatedTick");Scribe_Collections.Look(ref DesignationKnownBy,"designationKnownBy",LookMode.Value);
+            Scribe_Deep.Look(ref Crime,"crime");
+            if (Precedent == null) Precedent = new List<int> { 0, 0, 0, 0, 0 };
+            if (DesignationKnownBy == null) DesignationKnownBy = new List<int>();
+            if (Crime == null) Crime = new CrimeRecord();
         }
     }
 
@@ -137,7 +145,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref AppointedTick, "appointed"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref LastServiceTick, "lastService");
             Scribe_Values.Look(ref CeremoniesOrganized, "ceremonies"); Scribe_Values.Look(ref AidTransfers, "aid");
             Scribe_Values.Look(ref Reconciliations, "reconciliations"); Scribe_Values.Look(ref NegotiationsLed, "negotiations");
-            Scribe_Values.Look(ref GuestsHoused, "guests"); Scribe_Values.Look(ref ShortagesAverted, "shortages"); Scribe_Values.Look(ref Failures, "failures");
+            Scribe_Values.Look(ref GuestsHoused, "guests"); Scribe_Values.Look(ref ShortagesAverted, "shortages"); Scribe_Values.Look(ref Failures, "failures"); Scribe_Values.Look(ref PetitionsHeard, "petitionsHeard"); Scribe_Values.Look(ref Interruptions, "interruptions");
         }
     }
 
@@ -428,6 +436,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref HeardTick,"heardTick");
             Scribe_Values.Look(ref HeardBy,"heardBy");
             Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");
+            Scribe_Values.Look(ref ReceivedBy,"receivedBy");
             Scribe_Values.Look(ref Kind,"kind");
             Scribe_Values.Look(ref State,"state");
         }
@@ -531,6 +540,15 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref StewardRecords,"stewardRecords",LookMode.Deep);
             Scribe_Collections.Look(ref MarriageAlliances,"marriageAlliances",LookMode.Deep);
             Scribe_Values.Look(ref NextMarriageAllianceId,"nextMarriageAllianceId",1);
+            Scribe_Collections.Look(ref CeremonyPlans,"ceremonyPlans",LookMode.Deep);Scribe_Values.Look(ref NextPlanId,"nextPlanId",1);
+            Scribe_Collections.Look(ref StewardDuties,"stewardDuties",LookMode.Deep);Scribe_Collections.Look(ref FamilyOffices,"familyOffices",LookMode.Deep);
+            Scribe_Values.Look(ref NextStewardDutyId,"nextStewardDutyId",1);Scribe_Collections.Look(ref SuccessionCases,"successionCases",LookMode.Deep);
+            Scribe_Values.Look(ref NextSuccessionCaseId,"nextSuccessionCaseId",1);Scribe_Collections.Look(ref Heists,"heists",LookMode.Deep);
+            Scribe_Collections.Look(ref CrimeKnowledgeRecords,"crimeKnowledge",LookMode.Deep);Scribe_Collections.Look(ref ProtectionArrangements,"protectionArrangements",LookMode.Deep);
+            Scribe_Values.Look(ref NextHeistId,"nextHeistId",1);Scribe_Values.Look(ref NextProtectionId,"nextProtectionId",1);
+            Scribe_Deep.Look(ref Institution,"institution");Scribe_Collections.Look(ref Elections,"elections",LookMode.Deep);
+            Scribe_Collections.Look(ref Coups,"coups",LookMode.Deep);Scribe_Values.Look(ref NextElectionId,"nextElectionId",1);
+            Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
             Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
             Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
@@ -553,6 +571,10 @@ namespace FamilyLife.Domain
                         + ", this is v" + CurrentDataVersion + "). Some family data may be ignored.");
                 RebuildIndexes();
                 Ceremonies=Ceremonies??new List<CeremonyRecord>();Prestige=Prestige??new List<PrestigeRecord>();
+                CeremonyPlans=CeremonyPlans??new List<CeremonyPlan>();StewardDuties=StewardDuties??new List<StewardDuty>();FamilyOffices=FamilyOffices??new List<FamilyOffice>();
+                SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
+                ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();
+                Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
             }
         }
     }

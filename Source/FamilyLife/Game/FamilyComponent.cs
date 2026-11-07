@@ -175,6 +175,7 @@ namespace FamilyLife
                         Registry.PruneTimeRecords(now);
                         Registry.MaintainAgency(now);
                         Registry.UpdateTies(now);
+                        Governance.Maintain(this, now);
                         var s = FamilyLifeMod.Settings;
                         if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
                         break;

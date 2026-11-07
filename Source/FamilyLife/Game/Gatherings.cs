@@ -90,8 +90,12 @@ namespace FamilyLife
                     if(TraditionCatalog.IndexOf(request.Kind)>=0)
                         component.Registry.MarkGatheringHeld(requestId,Activities.Now,people.Count,request.MomentsResolved,outcome);
                     else
+                    {
                         component.Registry.CompleteCeremony(requestId,Activities.Now,people.Count,request.MomentsResolved,
                             outcome);
+                        var duty=component.Registry.StewardDuties.FirstOrDefault(d=>d.Open&&d.Kind==StewardDutyKind.OrganizeCeremony&&d.TargetId==requestId);
+                        if(duty!=null)component.Registry.CompleteStewardDuty(duty.Id,0,Activities.Now);
+                    }
                 }
             }
         }
@@ -188,6 +192,16 @@ namespace FamilyLife
             }
             if(request!=null)
             {
+                // A confirmed or defaulted planning card decides who is asked. The avatar is only ever asked, never directed on their behalf.
+                var plan = component.Registry.PlanFor(request.Id);
+                if (plan != null)
+                {
+                    var planContext = Governance.PlanContextFor(component, request.LineageId);
+                    var allowed = new HashSet<int>(plan.InvitedIds.Where(id => component.Registry.PlanMayDirect(plan, id, planContext)));
+                    invited = invited.Where(id => id == organizer.thingIDNumber || allowed.Contains(id) || request.VisitorIds.Contains(id)).ToList();
+                    foreach (int id in allowed)
+                        if (!invited.Contains(id) && component.TryGetPawn(id) is Pawn guest && guest.Spawned && guest.Map == organizer.Map) invited.Add(id);
+                }
                 // Attendance is judged only against people who could physically attend this map.
                 invited=invited.Where(id=>id==organizer.thingIDNumber||
                     component.TryGetPawn(id) is Pawn pawn&&pawn.Spawned&&!pawn.Dead&&pawn.Map==organizer.Map).Distinct().Take(64).ToList();
@@ -206,7 +220,8 @@ namespace FamilyLife
                     ?settings.ceremonies:settings.traditions)).ToList();
             if (due.Count == 0) return;
             var requestedHouse=component.Registry.GetLineage(due[0].LineageId);
-            var map = requestedHouse==null?Find.AnyPlayerHomeMap:Find.Maps.FirstOrDefault(m=>m.uniqueID==requestedHouse.ZoneMapId)??Find.AnyPlayerHomeMap;
+            int venueMap=component.Registry.PlanFor(due[0].Id)?.VenueMapId??-1;
+            var map = Find.Maps.FirstOrDefault(m=>venueMap>=0&&m.uniqueID==venueMap) ?? (requestedHouse==null?Find.AnyPlayerHomeMap:Find.Maps.FirstOrDefault(m=>m.uniqueID==requestedHouse.ZoneMapId)??Find.AnyPlayerHomeMap);
             var def = WFL_GatheringDefOf.WFL_FamilyGathering;
             if (map == null || def == null) return;
             if (GatheringsUtility.AnyLordJobPreventsNewGatherings(map) || !GatheringsUtility.AcceptableGameConditionsToStartGathering(map, def)) return;
@@ -228,6 +243,9 @@ namespace FamilyLife
                 if(component.Registry.HeadOf(request.LineageId)==organizer.thingIDNumber||component.Registry.RoleInHouse(organizer.thingIDNumber,request.LineageId)==HouseRole.Steward)
                     request.Influences|=CeremonyInfluence.HeadSupport;
                 component.Registry.MarkCeremonyStarted(request.Id,organizer.thingIDNumber,map.uniqueID,now,request.InvitedIds);
+                int dutyHolder=component.Registry.DutyHolder(request.LineageId,id=>Governance.Free(component,id)||id==organizer.thingIDNumber,out _);
+                if(dutyHolder==organizer.thingIDNumber)
+                    component.Registry.BeginStewardDuty(request.LineageId,StewardDutyKind.OrganizeCeremony,request.Id,id=>id==dutyHolder,now);
                 // Relationship scenes are resolved from the lord's actual attendees in Cleanup, never
                 // from every invited pawn who merely happens to be somewhere on the map.
             }
@@ -239,12 +257,19 @@ namespace FamilyLife
             var registry = component.Registry;
             var lineage = registry.GetLineage(request.LineageId);
             if (lineage == null) return null;
+            var plan = registry.PlanFor(request.Id);
+            if (plan != null && plan.OrganizerId != 0)
+            {
+                var chosen = component.TryGetPawn(plan.OrganizerId);
+                if (chosen != null && chosen.Map == map && chosen.Spawned && !chosen.Drafted && GatheringsUtility.PawnCanStartOrContinueGathering(chosen) && Activities.IsFree(chosen, checkCurrentJob: false)) return chosen;
+            }
             Pawn best = null;
             int bestScore = int.MinValue;
             foreach (var record in registry.Persons.Where(p => p.InColony && !p.Juvenile && registry.BelongsToFamily(p,lineage.Id)))
             {
                 var pawn = component.TryGetPawn(record.Id);
                 if (pawn == null || pawn.Map != map || !pawn.Spawned || pawn.Drafted || !GatheringsUtility.PawnCanStartOrContinueGathering(pawn)) continue;
+                if (PerspectiveShiftBridge.IsAvatar(pawn)) continue;      // the avatar leads only if they said so on the card
                 if (!Activities.IsFree(pawn, checkCurrentJob: false)) continue;
                 int score = Activities.SocialOf(pawn) + (registry.HeadOf(lineage.Id)==record.Id?30:registry.RoleInHouse(record.Id,lineage.Id)==HouseRole.Steward?15:0)
                             + (registry.GetPerson(request.SubjectId)?.ParentIds.Contains(record.Id) == true ? 20 : 0);

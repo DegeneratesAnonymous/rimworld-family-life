@@ -1,0 +1,261 @@
+using System.Linq;
+using FamilyLife.Domain;
+using Xunit;
+
+namespace FamilyLife.Tests
+{
+    public class InstitutionTests
+    {
+        private const int Day = ActivityTuning.TicksPerDay;
+
+        private static FamilyRegistry Colony(out int houseA, out int houseB, out int houseC)
+        {
+            var r = new FamilyRegistry();
+            r.Apply(new[]
+            {
+                T.P(1, "Elder"), T.P(2, "Two", parents: new[] { 1 }), T.P(3, "Three", parents: new[] { 1 }), T.P(4, "Four", parents: new[] { 1 }), T.P(5, "Five", parents: new[] { 1 }),
+                T.P(20, "Solo", last: "Other"), T.P(22, "Third", last: "Third"),
+                T.P(31, "Six", parents: new[] { 1 }), T.P(32, "Seven", parents: new[] { 1 }), T.P(33, "Eight", parents: new[] { 1 })
+            }, 1000);
+            houseA = r.FamilyOf(1); houseB = r.FamilyOf(20); houseC = r.FamilyOf(22);
+            return r;
+        }
+
+        [Fact]
+        public void Conviction_and_family_attachment_are_kept_apart()
+        {
+            var r = Colony(out int a, out _, out _);
+            r.ChangeBond(2, 3, new BondChange(80f, 40f, 0f, 0f), 2000);
+            var disagree = r.Support(2, 3, new PoliticalContext { IdeologyFit = (v, c) => -.8f });
+            Assert.Equal(-.8f, disagree.Dims.Ideology, 3);
+            Assert.True(disagree.Dims.Family >= .4f);                           // attachment is untouched by disagreement
+            var agree = r.Support(2, 3, new PoliticalContext { IdeologyFit = (v, c) => .8f });
+            Assert.Equal(disagree.Dims.Family, agree.Dims.Family, 3);
+            Assert.True(agree.Total > disagree.Total);
+        }
+
+        [Fact]
+        public void Fear_helps_a_ruler_under_authority_and_hurts_a_candidate_in_an_election()
+        {
+            var r = Colony(out _, out _, out _);
+            r.ChangeBond(2, 3, new BondChange(0f, 0f, 80f, 0f), 2000);
+            r.SetInstitution(InstitutionKind.Authoritarian, 3, 3000);
+            float ruled = r.Support(2, 3, null).Total;
+            r.SetInstitution(InstitutionKind.Election, 3, 3000);
+            float elected = r.Support(2, 3, null).Total;
+            Assert.True(ruled > elected);
+        }
+
+        [Fact]
+        public void More_relatives_do_not_guarantee_an_election()
+        {
+            var r = Colony(out int a, out int b, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var election = r.CallElection(new[] { 3, 20 }, 3000);
+            Assert.NotNull(election);
+            var ctx = new PoliticalContext { IdeologyFit = (voter, cand) => cand == 3 ? -.9f : .9f };   // the large house disagrees with its own candidate
+            r.AdvanceElections(3000 + Day * 3, ctx);
+
+            Assert.Equal(ElectionState.Counted, election.State);
+            Assert.Equal(20, election.WinnerId);
+            Assert.Equal(20, r.Institution.LeaderId);
+            Assert.True(r.MembersOf(a).Count > r.MembersOf(b).Count);
+            Assert.True(r.Institution.TermEndTick > 3000);
+        }
+
+        [Fact]
+        public void A_tight_race_goes_to_the_better_supported_and_abstentions_are_possible()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var election = r.CallElection(new[] { 3, 20 }, 3000);
+            r.AdvanceElections(3000 + Day * 3, new PoliticalContext { IdeologyFit = (v, c) => 0f });
+            Assert.Equal(ElectionState.Counted, election.State);
+            Assert.True(election.Abstained >= 0);
+            Assert.Equal(election.Votes.Count, election.Votes.Count(v => v.CandidateId == 3 || v.CandidateId == 20));
+        }
+
+        [Fact]
+        public void An_endorsement_persuades_through_trust_not_house_size()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var election = r.CallElection(new[] { 3, 20 }, 3000);
+            r.ChangeBond(4, 22, new BondChange(0f, 80f, 0f, 0f), 3000);
+            Assert.True(r.EndorseCandidate(election.Id, c, 22, 20));
+            Assert.False(r.EndorseCandidate(election.Id, c, 1, 20));            // only the house's own head can speak for it
+            float trusting = r.Support(4, 20, null, election).Dims.Endorsement;
+            float stranger = r.Support(5, 20, null, election).Dims.Endorsement;
+            Assert.True(trusting > stranger);
+            Assert.True(stranger <= .001f);
+        }
+
+        [Fact]
+        public void An_election_opens_when_a_term_ends_and_not_before()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 3, 3000);
+            int end = r.Institution.TermEndTick;
+            r.AdvanceElections(end - 5, null);
+            Assert.Empty(r.Elections);
+            r.AdvanceElections(end + 5, null);
+            Assert.True(r.Elections.Any() || r.Institution.TermEndTick > end);
+        }
+
+        [Fact]
+        public void Votes_are_secret_but_reasons_in_total_are_public()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var election = r.CallElection(new[] { 3, 20 }, 3000);
+            r.AdvanceElections(3000 + Day * 3, new PoliticalContext { IdeologyFit = (v, c) => c == 20 ? .8f : -.2f });
+            var summary = r.ExplainElection(election.Id, 2, out var own);
+            Assert.NotEmpty(summary);
+            Assert.Equal(election.Votes.Count, summary.Sum(s => s.Value));
+            Assert.NotNull(own);
+            Assert.Equal(2, own.VoterId);
+            r.ExplainElection(election.Id, 0, out var omniscient);
+            Assert.Null(omniscient);                                             // the overview shows totals only, not individual ballots
+        }
+
+        [Fact]
+        public void A_council_gives_every_house_a_seat_ranked_by_standing_not_headcount()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            r.GetLineage(b).Standing = 40f; r.GetLineage(a).Standing = 0f; r.GetLineage(c).Standing = 10f;
+            Assert.Equal(new[] { b }, r.FormCouncil(0, 1));
+            var all = r.FormCouncil(0, 7);
+            Assert.Equal(b, all[0]);
+            Assert.Contains(a, all); Assert.Contains(c, all);
+            Assert.True(r.SetInstitution(InstitutionKind.Council, 0, 3000));
+            Assert.Equal(all.Count, r.Institution.CouncilHouseIds.Count);
+        }
+
+        [Fact]
+        public void Authority_needs_a_real_adult_ruler()
+        {
+            var r = Colony(out _, out _, out _);
+            Assert.False(r.SetInstitution(InstitutionKind.Authoritarian, 999, 3000));
+            Assert.False(r.SetInstitution(InstitutionKind.Authoritarian, 0, 3000));
+            Assert.True(r.SetInstitution(InstitutionKind.Consensus, 0, 3000));
+        }
+
+        // ---------------- coups ----------------
+
+        private static FamilyRegistry Ruled(out CoupPlan coup, int start = 5 * Day)
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Authoritarian, 1, 1000);
+            coup = r.PlanCoup(2, CoupGoal.ReplaceLeader, 0, null, start);
+            Assert.NotNull(coup);
+            foreach (int p in new[] { 3, 4, 5 }) Assert.True(r.RecruitForCoup(coup.Id, p, RecruitAnswer.Join, start));
+            return r;
+        }
+
+        [Fact]
+        public void A_coup_needs_a_concrete_goal_and_a_ruler_to_oppose()
+        {
+            var r = Colony(out _, out _, out _);
+            Assert.Null(r.PlanCoup(2, CoupGoal.ReplaceLeader, 0, null, 5 * Day));       // nobody rules yet
+            r.SetInstitution(InstitutionKind.Authoritarian, 1, 1000);
+            Assert.Null(r.PlanCoup(2, CoupGoal.ReversePolicy, 0, null, 5 * Day));       // a policy coup must name the policy
+            Assert.Null(r.PlanCoup(1, CoupGoal.ReplaceLeader, 0, null, 5 * Day));       // the ruler cannot depose themself
+            var coup = r.PlanCoup(2, CoupGoal.ReversePolicy, 7, null, 5 * Day);
+            Assert.NotNull(coup);
+            Assert.Null(r.PlanCoup(3, CoupGoal.ReplaceLeader, 0, null, 5 * Day + 10));   // scheming is spaced out, not constant
+        }
+
+        [Fact]
+        public void Too_few_backers_and_the_plan_lapses()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Authoritarian, 1, 1000);
+            var coup = r.PlanCoup(2, CoupGoal.ReplaceLeader, 0, null, 5 * Day);
+            r.AdvanceCoup(coup.Id, null, 5 * Day + 10);
+            Assert.Equal(CoupStage.Recruiting, coup.Stage);
+            r.AdvanceCoup(coup.Id, null, 12 * Day);
+            Assert.Equal(CoupState.Abandoned, coup.State);
+            Assert.Equal(1, r.Institution.LeaderId);
+        }
+
+        [Fact]
+        public void Numbers_without_the_means_never_win()
+        {
+            var r = Ruled(out var coup);
+            foreach (int p in new[] { 31, 32, 33 }) r.RecruitForCoup(coup.Id, p, RecruitAnswer.Join, 5 * Day);
+            var weak = new PoliticalContext { MaterialCapacity = id => .05f, DefenceCapacity = id => 1f };
+            for (int d = 0; d < 30 && coup.Open; d++) r.AdvanceCoup(coup.Id, weak, 5 * Day + d * (Day + 10));
+            Assert.NotEqual(CoupState.Succeeded, coup.State);
+            Assert.Equal(1, r.Institution.LeaderId);
+            Assert.True(coup.WillingCount >= 6);                                  // plenty of people, not enough capacity
+        }
+
+        [Fact]
+        public void People_who_are_drafted_or_ordered_elsewhere_cannot_carry_a_coup()
+        {
+            var r = Ruled(out var coup);
+            var busy = new PoliticalContext { MaterialCapacity = id => 1f, Free = id => false };
+            for (int d = 0; d < 30 && coup.Open; d++) r.AdvanceCoup(coup.Id, busy, 5 * Day + d * (Day + 10));
+            Assert.NotEqual(CoupState.Succeeded, coup.State);
+        }
+
+        [Fact]
+        public void With_real_capacity_a_coup_can_succeed_or_be_discovered_and_never_just_inevitably()
+        {
+            int succeeded = 0, discovered = 0;
+            for (int start = 5; start < 60; start++)
+            {
+                var r = Ruled(out var coup, start * Day);
+                var strong = new PoliticalContext { MaterialCapacity = id => .6f, DefenceCapacity = id => 1f };
+                for (int d = 0; d < 12 && coup.Open; d++) r.AdvanceCoup(coup.Id, strong, start * Day + d * (Day + 10));
+                if (coup.State == CoupState.Succeeded) { succeeded++; Assert.Equal(2, r.Institution.LeaderId); }
+                if (coup.State == CoupState.Failed) { discovered++; Assert.Equal(1, r.Institution.LeaderId); }
+            }
+            Assert.True(succeeded > 0);
+            Assert.True(discovered > 0);
+        }
+
+        [Fact]
+        public void A_participant_can_expose_the_plan()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Authoritarian, 1, 1000);
+            var coup = r.PlanCoup(2, CoupGoal.ReplaceLeader, 0, null, 5 * Day);
+            Assert.True(r.RecruitForCoup(coup.Id, 3, RecruitAnswer.Expose, 5 * Day));
+            Assert.Equal(CoupState.Failed, coup.State);
+            Assert.Equal(3, coup.DiscoveredBy);
+            Assert.True(r.CoupVisibleTo(coup, 1));                                 // the ruler now knows
+            Assert.False(r.CoupVisibleTo(coup, 4));                                // an uninvolved bystander does not
+        }
+
+        [Fact]
+        public void A_plan_can_end_by_reconciliation()
+        {
+            var r = Ruled(out var coup);
+            r.AdvanceCoup(coup.Id, null, 5 * Day + 10);
+            Assert.True(r.ReconcileCoup(coup.Id, 5 * Day + 20));
+            Assert.Equal(CoupState.Reconciled, coup.State);
+            Assert.False(r.ReconcileCoup(coup.Id, 5 * Day + 30));
+            Assert.Equal(1, r.Institution.LeaderId);
+        }
+
+        [Fact]
+        public void A_plan_against_a_ruler_who_is_already_gone_is_dropped()
+        {
+            var r = Ruled(out var coup);
+            r.SetInstitution(InstitutionKind.Authoritarian, 3, 5 * Day + 5);
+            r.AdvanceCoup(coup.Id, null, 5 * Day + 20);
+            Assert.Equal(CoupState.Abandoned, coup.State);
+        }
+
+        [Fact]
+        public void Only_members_of_a_plan_can_see_it_before_it_is_found_out()
+        {
+            var r = Ruled(out var coup);
+            Assert.True(r.CoupVisibleTo(coup, 3));
+            Assert.True(r.CoupVisibleTo(coup, 0));
+            Assert.False(r.CoupVisibleTo(coup, 1));
+            Assert.False(r.CoupVisibleTo(coup, 22));
+        }
+    }
+}

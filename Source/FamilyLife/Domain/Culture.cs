@@ -492,7 +492,7 @@ namespace FamilyLife.Domain
 
         public List<GatheringRequest> DueRequests(int now)
         {
-            return GatheringRequests.Where(r => r.State==CeremonyState.Planned && r.NotBefore <= now && r.Expires >= now).OrderBy(r => r.NotBefore).ThenBy(r => r.Id).ToList();
+            return GatheringRequests.Where(r => r.State==CeremonyState.Planned && r.NotBefore <= now && r.Expires >= now && PlanFor(r.Id)?.Open != true).OrderBy(r => r.NotBefore).ThenBy(r => r.Id).ToList();
         }
 
         /// <summary>The gathering took place: the tradition's clock restarts, the culture it expresses grows, and it is remembered.</summary>

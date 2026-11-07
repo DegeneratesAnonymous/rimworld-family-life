@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_Gov_Title>Occasions, leadership and institutions</WFL_Gov_Title>
+  <WFL_Plan_Line>{0}: {1} ({2}), led by {3}</WFL_Plan_Line>
+  <WFL_Plan_Open>Planning card</WFL_Plan_Open>
+  <WFL_PlanState_Open>planning open</WFL_PlanState_Open>
+  <WFL_PlanState_Confirmed>confirmed</WFL_PlanState_Confirmed>
+  <WFL_PlanState_Defaulted>going ahead as planned</WFL_PlanState_Defaulted>
+  <WFL_PlanState_Cancelled>cancelled</WFL_PlanState_Cancelled>
+  <WFL_Duty_Line>{0} is working on: {1} {2}</WFL_Duty_Line>
+  <WFL_Duty_HeadActing>(the head is covering)</WFL_Duty_HeadActing>
+  <WFL_DutyKind_OrganizeCeremony>organizing an occasion</WFL_DutyKind_OrganizeCeremony>
+  <WFL_DutyKind_ReceivePetition>hearing a request</WFL_DutyKind_ReceivePetition>
+  <WFL_DutyKind_Negotiate>negotiating</WFL_DutyKind_Negotiate>
+  <WFL_DutyKind_GuestCare>looking after guests</WFL_DutyKind_GuestCare>
+  <WFL_DutyKind_Mediate>mediating a quarrel</WFL_DutyKind_Mediate>
+  <WFL_DutyKind_SupplyShortage>dealing with a shortage</WFL_DutyKind_SupplyShortage>
+  <WFL_Duty_Record>Steward {0}: {1} completed, {2} failed, {3} interrupted, {4} requests heard</WFL_Duty_Record>
+  <WFL_Office_None>No meeting place has been chosen. Duties are done wherever the house gathers.</WFL_Office_None>
+  <WFL_Office_At>Preferred meeting place: ({0}, {1}). It is a preference, not a requirement.</WFL_Office_At>
+  <WFL_Office_Set>Choose a meeting place</WFL_Office_Set>
+  <WFL_Office_Clear>Clear meeting place</WFL_Office_Clear>
+  <WFL_Office_Saved>Meeting place saved.</WFL_Office_Saved>
+  <WFL_Succession_Custom>How this house chooses its head: {0}</WFL_Succession_Custom>
+  <WFL_Custom_Seniority>the eldest capable member</WFL_Custom_Seniority>
+  <WFL_Custom_Primogeniture>the head's own line</WFL_Custom_Primogeniture>
+  <WFL_Custom_Merit>proven service and skill</WFL_Custom_Merit>
+  <WFL_Custom_Designation>the head's chosen heir</WFL_Custom_Designation>
+  <WFL_Custom_Consensus>what the house agrees on</WFL_Custom_Consensus>
+  <WFL_Succession_Waiting>{0} is away. The house is waiting before it names anyone.</WFL_Succession_Waiting>
+  <WFL_Succession_Case>Succession after {0}: {1}. Acting head: {2}.</WFL_Succession_Case>
+  <WFL_SuccessionStage_Orderly>considering an orderly succession</WFL_SuccessionStage_Orderly>
+  <WFL_SuccessionStage_Negotiation>negotiating</WFL_SuccessionStage_Negotiation>
+  <WFL_SuccessionStage_Compromise>seeking a compromise</WFL_SuccessionStage_Compromise>
+  <WFL_SuccessionStage_Disputed>disputed</WFL_SuccessionStage_Disputed>
+  <WFL_SuccessionStage_Branched>the house divided</WFL_SuccessionStage_Branched>
+  <WFL_SuccessionStage_Resolved>settled</WFL_SuccessionStage_Resolved>
+  <WFL_SuccessionStage_Returned>the head returned</WFL_SuccessionStage_Returned>
+  <WFL_Succession_Candidate>{0}: legitimacy {1} out of 100 {2}</WFL_Succession_Candidate>
+  <WFL_Succession_Reluctant>(reluctant)</WFL_Succession_Reluctant>
+  <WFL_Legit_Kin>kinship</WFL_Legit_Kin>
+  <WFL_Legit_Seniority>age and standing</WFL_Legit_Seniority>
+  <WFL_Legit_Service>service</WFL_Legit_Service>
+  <WFL_Legit_Competence>skill</WFL_Legit_Competence>
+  <WFL_Legit_Relationships>trust of the house</WFL_Legit_Relationships>
+  <WFL_Legit_Promise>a promise made</WFL_Legit_Promise>
+  <WFL_Legit_Conduct>known misconduct</WFL_Legit_Conduct>
+  <WFL_Legit_Ideology>shared beliefs</WFL_Legit_Ideology>
+  <WFL_Legit_Prestige>personal respect</WFL_Legit_Prestige>
+  <WFL_Succession_Heir>Named heir: {0}</WFL_Succession_Heir>
+  <WFL_Succession_Last>Last succession: {0} ({1}); lingering dispute {2}</WFL_Succession_Last>
+  <WFL_Institution_Line>The colony is run by {0}. Leader: {1}</WFL_Institution_Line>
+  <WFL_Institution_Consensus>informal consensus</WFL_Institution_Consensus>
+  <WFL_Institution_Council>a council of houses</WFL_Institution_Council>
+  <WFL_Institution_Election>elected leadership</WFL_Institution_Election>
+  <WFL_Institution_Authoritarian>one ruler</WFL_Institution_Authoritarian>
+  <WFL_Election_Line>Election ({0}): {1}</WFL_Election_Line>
+  <WFL_ElectionState_Campaign>campaigning</WFL_ElectionState_Campaign>
+  <WFL_ElectionState_Voting>voting</WFL_ElectionState_Voting>
+  <WFL_ElectionState_Counted>counted</WFL_ElectionState_Counted>
+  <WFL_ElectionState_Aborted>called off</WFL_ElectionState_Aborted>
+  <WFL_Coup_Line>A scheme led by {0} is at the stage of: {1}</WFL_Coup_Line>
+  <WFL_CoupStage_Recruiting>looking for backers</WFL_CoupStage_Recruiting>
+  <WFL_CoupStage_Preparing>preparing</WFL_CoupStage_Preparing>
+  <WFL_CoupStage_Executing>under way</WFL_CoupStage_Executing>
+  <WFL_CoupStage_Aftermath>over</WFL_CoupStage_Aftermath>
+  <WFL_Crime_Line>This house's direction: {0} ({1})</WFL_Crime_Line>
+  <WFL_Crime_Tip>Attention from others: {0}. Reform progress: {1}.</WFL_Crime_Tip>
+  <WFL_CrimeDirection_None>none</WFL_CrimeDirection_None>
+  <WFL_CrimeDirection_Protection>protection arrangements</WFL_CrimeDirection_Protection>
+  <WFL_CrimeDirection_Contraband>contraband</WFL_CrimeDirection_Contraband>
+  <WFL_CrimeDirection_Theft>theft</WFL_CrimeDirection_Theft>
+  <WFL_CrimeDirection_Intimidation>intimidation</WFL_CrimeDirection_Intimidation>
+  <WFL_CrimeDirection_Favors>favors</WFL_CrimeDirection_Favors>
+  <WFL_CrimeDirection_Laundering>laundering</WFL_CrimeDirection_Laundering>
+  <WFL_CrimeStatus_None>none</WFL_CrimeStatus_None>
+  <WFL_CrimeStatus_Considering>being considered</WFL_CrimeStatus_Considering>
+  <WFL_CrimeStatus_Active>active</WFL_CrimeStatus_Active>
+  <WFL_CrimeStatus_Reforming>reforming</WFL_CrimeStatus_Reforming>
+  <WFL_CrimeStatus_Reformed>reformed</WFL_CrimeStatus_Reformed>
+  <WFL_Crime_Unknown>someone unknown</WFL_Crime_Unknown>
+  <WFL_Heist_Line>A job ({0}) by {1}; you know this as: {2}</WFL_Heist_Line>
+  <WFL_HeistState_Planning>being planned</WFL_HeistState_Planning>
+  <WFL_HeistState_Ready>ready</WFL_HeistState_Ready>
+  <WFL_HeistState_Executing>under way</WFL_HeistState_Executing>
+  <WFL_HeistState_Completed>done</WFL_HeistState_Completed>
+  <WFL_HeistState_Interrupted>interrupted</WFL_HeistState_Interrupted>
+  <WFL_HeistState_Aborted>called off</WFL_HeistState_Aborted>
+  <WFL_HeistState_Exposed>found out</WFL_HeistState_Exposed>
+  <WFL_HeistState_CleanedUp>cleaned up</WFL_HeistState_CleanedUp>
+  <WFL_CrimeKnowledge_None>not at all</WFL_CrimeKnowledge_None>
+  <WFL_CrimeKnowledge_Suspicion>a suspicion</WFL_CrimeKnowledge_Suspicion>
+  <WFL_CrimeKnowledge_Report>a report</WFL_CrimeKnowledge_Report>
+  <WFL_CrimeKnowledge_Fact>first hand</WFL_CrimeKnowledge_Fact>
+  <WFL_Plan_OpenNote>If you leave this card alone, the family goes ahead with the choices below at {0}.</WFL_Plan_OpenNote>
+  <WFL_Plan_When>When it starts</WFL_Plan_When>
+  <WFL_Plan_Organizer>Who leads</WFL_Plan_Organizer>
+  <WFL_Plan_CannotLead>{0} cannot lead this occasion.</WFL_Plan_CannotLead>
+  <WFL_Plan_Venue>Where</WFL_Plan_Venue>
+  <WFL_Plan_VenueDefault>The family's usual area</WFL_Plan_VenueDefault>
+  <WFL_Plan_VenueMap>Map {0}</WFL_Plan_VenueMap>
+  <WFL_Plan_AvatarAsked>{0} has been asked to lead. Only you can answer for them.</WFL_Plan_AvatarAsked>
+  <WFL_Plan_Accept>I will lead</WFL_Plan_Accept>
+  <WFL_Plan_Decline>Not me</WFL_Plan_Decline>
+  <WFL_Plan_AskAvatar>Ask {0} to lead</WFL_Plan_AskAvatar>
+  <WFL_PlanAsk_None>{0} has not been asked.</WFL_PlanAsk_None>
+  <WFL_PlanAsk_Asked>{0} has been asked and has not answered.</WFL_PlanAsk_Asked>
+  <WFL_PlanAsk_Accepted>{0} agreed to lead.</WFL_PlanAsk_Accepted>
+  <WFL_PlanAsk_Declined>{0} declined.</WFL_PlanAsk_Declined>
+  <WFL_PlanAsk_Unanswered>{0} did not answer, so someone else leads.</WFL_PlanAsk_Unanswered>
+  <WFL_Plan_Guests>Who is asked</WFL_Plan_Guests>
+  <WFL_Plan_NotTold>You have not been told the details of this occasion.</WFL_Plan_NotTold>
+  <WFL_InviteSource_Family>family</WFL_InviteSource_Family>
+  <WFL_InviteSource_Guest>friend of the house</WFL_InviteSource_Guest>
+  <WFL_InviteSource_Distant>relative far away</WFL_InviteSource_Distant>
+  <WFL_InviteBarrier_Dead>has died</WFL_InviteBarrier_Dead>
+  <WFL_InviteBarrier_Hostile>the houses are on bad terms</WFL_InviteBarrier_Hostile>
+  <WFL_InviteBarrier_TooFarForWindow>could not arrive in time</WFL_InviteBarrier_TooFarForWindow>
+  <WFL_InviteBarrier_CannotTravel>no safe way to reach the colony</WFL_InviteBarrier_CannotTravel>
+  <WFL_InviteBarrier_Unavailable>cannot take part right now</WFL_InviteBarrier_Unavailable>
+  <WFL_InviteBarrier_NotKin>not kin</WFL_InviteBarrier_NotKin>
+  <WFL_InviteBarrier_TheSubject>the occasion is for them</WFL_InviteBarrier_TheSubject>
+  <WFL_InviteBarrier_WrongMap>on another map</WFL_InviteBarrier_WrongMap>
+  <WFL_Plan_Arrives>arrives {0}</WFL_Plan_Arrives>
+  <WFL_Plan_Confirm>Confirm these choices</WFL_Plan_Confirm>
+  <WFL_Plan_Close>Close</WFL_Plan_Close>
+</LanguageData>
