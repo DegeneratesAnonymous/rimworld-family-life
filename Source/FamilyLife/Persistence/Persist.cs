@@ -552,7 +552,7 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Favors,"favors",LookMode.Deep);Scribe_Values.Look(ref NextFavorId,"nextFavorId",1);
             Scribe_Collections.Look(ref CouncilMatters,"councilMatters",LookMode.Deep);Scribe_Values.Look(ref NextCouncilMatterId,"nextCouncilMatterId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
             Scribe_Collections.Look(ref Offices,"communityOffices",LookMode.Deep);Scribe_Values.Look(ref NextOfficeId,"nextOfficeId",1);
-            Scribe_Collections.Look(ref Assemblies,"assemblies",LookMode.Deep);Scribe_Values.Look(ref NextAssemblyId,"nextAssemblyId",1);Scribe_Values.Look(ref NextAssemblyTick,"nextAssemblyTick");
+            Scribe_Collections.Look(ref Assemblies,"assemblies",LookMode.Deep);Scribe_Values.Look(ref NextAssemblyId,"nextAssemblyId",1);Scribe_Values.Look(ref NextAssemblyTick,"nextAssemblyTick");Scribe_Values.Look(ref HallMapId,"hallMap",-1);Scribe_Values.Look(ref HallX,"hallX");Scribe_Values.Look(ref HallZ,"hallZ");
             Scribe_Collections.Look(ref KinVisits,"kinVisits",LookMode.Deep);Scribe_Values.Look(ref NextKinVisitId,"nextKinVisitId",1);
             Scribe_Collections.Look(ref CampTrips,"campTrips",LookMode.Deep);Scribe_Values.Look(ref NextCampId,"nextCampId",1);Scribe_Values.Look(ref CampCursor,"campCursor");Scribe_Values.Look(ref LastCampScanTick,"lastCampScanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);

@@ -258,6 +258,17 @@ namespace FamilyLife
                 string post = ("WFL_OfficeKind_" + kind).Translate();
                 LineTip(view, ref y, ("WFL_HouseWish_" + wish).Translate(post), ("WFL_Perk_" + kind).Translate(), 20f, true);
             }
+            Line(view, ref y, registry.HallNamed ? "WFL_Hall_Named".Translate(registry.HallX, registry.HallZ) : "WFL_Hall_Auto".Translate(), 10f, true);
+            if (Widgets.ButtonText(new Rect(10f, y, 190f, 26f), "WFL_Hall_Set".Translate()))
+                Find.Targeter.BeginTargeting(TargetingParameters.ForCell(), target =>
+                {
+                    var hallMap = Find.CurrentMap;
+                    var room = hallMap == null || !target.Cell.IsValid ? null : target.Cell.GetRoom(hallMap);
+                    if (room != null && !room.PsychologicallyOutdoors) { registry.SetHall(hallMap.uniqueID, target.Cell.x, target.Cell.z); Messages.Message("WFL_Hall_Saved".Translate(), MessageTypeDefOf.TaskCompletion, false); }
+                    else Messages.Message("WFL_Hall_Invalid".Translate(), MessageTypeDefOf.RejectInput, false);
+                });
+            if (registry.HallNamed && Widgets.ButtonText(new Rect(210f, y, 150f, 26f), "WFL_Hall_Clear".Translate())) registry.ClearHall();
+            y += 32f;
             if (registry.NextAssemblyTick > 0) Line(view, ref y, "WFL_Assembly_Next".Translate(FamilyUi.Date(registry.NextAssemblyTick)), 10f, true);
             var openAssembly = registry.OpenAssembly;
             if (openAssembly != null)

@@ -241,4 +241,14 @@
   <WFL_Perk_Teacher>What it brings the house of the one who holds it: their children are taught first and learn half as much again from every lesson, and the house gains standing for each class given.</WFL_Perk_Teacher>
   <WFL_Perk_HallKeeper>What it brings the house of the one who holds it: they are seated and served first, and are glad to be fed by their own, and the house gains standing for each meal served.</WFL_Perk_HallKeeper>
   <WFL_Perk_Chaplain>What it brings the house of the one who holds it: the holder is preferred to lead the family's rites, and the house gains standing for each rite led well.</WFL_Perk_Chaplain>
+  <WFL_Hall_Named>The hall is the room you named, at ({0}, {1}).</WFL_Hall_Named>
+  <WFL_Hall_Auto>No hall named: the game looks for a dining room. A room with school furniture is never chosen.</WFL_Hall_Auto>
+  <WFL_Hall_Set>Name the dining hall</WFL_Hall_Set>
+  <WFL_Hall_Clear>Go back to automatic</WFL_Hall_Clear>
+  <WFL_Hall_Saved>That room is now the hall.</WFL_Hall_Saved>
+  <WFL_Hall_Invalid>That is not an enclosed room.</WFL_Hall_Invalid>
+  <WFL_Tab_Roles>Roles in the colony</WFL_Tab_Roles>
+  <WFL_Role_Leader>Colony leader</WFL_Role_Leader>
+  <WFL_Role_Head>Head of House {0}</WFL_Role_Head>
+  <WFL_Role_Steward>Steward of House {0}</WFL_Role_Steward>
 </LanguageData>

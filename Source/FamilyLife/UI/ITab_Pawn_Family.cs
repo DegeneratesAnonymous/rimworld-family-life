@@ -63,6 +63,10 @@ namespace FamilyLife
                 y = Mathf.Max(y, 66f);
             }
 
+            var pawnForRoles = SelPawn;
+            var roles = PostBadges.For(pawnForRoles);
+            if (roles.Count > 0) Row(view, ref y, "WFL_Tab_Roles".Translate(), string.Join(", ", roles.Select(b => b.Title)));
+
             var household = registry.GetHousehold(record.HouseholdId);
             if (household != null)
                 Row(view, ref y, "WFL_Tab_Household".Translate(),

@@ -308,6 +308,7 @@ namespace FamilyLife.Domain
                 FounderId = person.Id,
                 FoundedTick = now
             };
+            CrestStyle.Randomize(lineage, Lineages.Select(h => CrestStyle.Index(h.CrestPrimary, h.Id, CrestStyle.Colors)));
             Lineages.Add(lineage);
             lineageById[lineage.Id] = lineage;
             person.PrimaryLineageId = lineage.Id;

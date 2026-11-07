@@ -23,16 +23,40 @@ namespace FamilyLife
 
         private static bool IsTable(Building b) => b != null && b.def.surfaceType == SurfaceType.Eat;
 
+        private static readonly string[] SchoolWords = { "school", "desk", "class", "lecture", "lectern", "blackboard", "study", "student", "pupil", "library" };
+
+        /// <summary>Furniture and rooms that belong to a school, a library or a study, not a dining hall. Judged by name, because mods name them so.</summary>
+        internal static bool LooksLikeSchool(ThingDef def)
+        {
+            string n = ((def?.defName ?? "") + " " + (def?.label ?? "")).ToLowerInvariant();
+            foreach (var w in SchoolWords) if (n.Contains(w)) return true;
+            return false;
+        }
+
+        private static bool RoomIsSchool(Room room) => room.ContainedAndAdjacentThings.Any(t => t is Building && LooksLikeSchool(t.def));
+
         /// <summary>The places to sit in the best hall on this map: seats in one room, each beside a table, that this pawn could take.</summary>
         internal static List<Seat> HallSeats(Map map, Pawn who, out Room room)
         {
             room = null;
+            var named = FamilyComponent.Current?.Registry;
+            Room wanted = null;
+            if (named != null && named.HallNamed)
+            {
+                // The player named the hall: it is that room, and nothing else is ever chosen in its place.
+                var cell = new IntVec3(named.HallX, 0, named.HallZ);
+                if (named.HallMapId != map.uniqueID || !cell.InBounds(map)) return new List<Seat>();
+                wanted = cell.GetRoom(map);
+                if (wanted == null || wanted.PsychologicallyOutdoors) return new List<Seat>();
+            }
             var byRoom = new Dictionary<Room, List<Seat>>();
             foreach (var chair in map.listerBuildings.allBuildingsColonist)
             {
                 if (chair.def.building == null || !chair.def.building.isSittable || chair.Destroyed || chair.IsForbidden(who) || chair.IsBurning()) continue;
                 var r = chair.GetRoom();
                 if (r == null || r.PsychologicallyOutdoors || r.IsHuge) continue;
+                if (wanted != null) { if (r != wanted) continue; }
+                else if (r.Role?.defName != "DiningRoom" || LooksLikeSchool(chair.def) || RoomIsSchool(r)) continue;      // on its own the game only picks a real dining room, never a classroom
                 IntVec3 tableCell = IntVec3.Invalid;
                 for (int i = 0; i < 4 && !tableCell.IsValid; i++)
                 {

@@ -63,9 +63,8 @@ namespace FamilyLife.Domain
             var person=GetPerson(founder); var source=GetLineage(parent);
             if(person?.InColony!=true || person.Juvenile || source==null || !IsActiveHouse(parent) || !BelongsToFamily(person,parent)) return null;
             string label=(name??"").Trim();if(label.Length==0) label=source.Name+" branch";if(label.Length>48) label=label.Substring(0,48);
-            var branch=new Lineage{Id=NextLineageId++,Name=label,FounderId=founder,FoundedTick=now,ParentHouseId=parent,
-                CrestPrimary=CrestStyle.Index(source.CrestPrimary,source.Id,CrestStyle.Colors),CrestSecondary=source.CrestSecondary,
-                CrestMark=CrestStyle.Index(source.CrestMark,source.Id/CrestStyle.Colors,CrestStyle.Marks),CrestPattern=(source.CrestPattern+1)%CrestStyle.Patterns};
+            var branch=new Lineage{Id=NextLineageId++,Name=label,FounderId=founder,FoundedTick=now,ParentHouseId=parent};
+            CrestStyle.Branch(source,branch);
             Lineages.Add(branch);lineageById[branch.Id]=branch;
             SetSocialFamily(founder,branch.Id,now);
             Chronicle.Add(new FamilyEvent(FamilyEventKind.SocialBranch,now,founder,branch.Id));

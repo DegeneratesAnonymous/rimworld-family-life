@@ -89,6 +89,12 @@ namespace FamilyLife.Domain
         public List<CommunityOffice> Offices = new List<CommunityOffice>();
         public List<CommunityAssembly> Assemblies = new List<CommunityAssembly>();
         public int NextOfficeId = 1, NextAssemblyId = 1, NextAssemblyTick;
+        public int HallMapId = -1, HallX, HallZ;      // the dining hall the player has named, if any; otherwise the game looks for one
+
+        /// <summary>The player names the colony's dining hall. The hall keeper looks after exactly this room and no other.</summary>
+        public void SetHall(int map, int x, int z) { HallMapId = map; HallX = x; HallZ = z; }
+        public void ClearHall() { HallMapId = -1; HallX = HallZ = 0; }
+        public bool HallNamed => HallMapId >= 0;
 
         public static bool IsAppointed(OfficeKind kind) => kind == OfficeKind.Chaplain;
 
