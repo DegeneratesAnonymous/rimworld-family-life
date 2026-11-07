@@ -10,14 +10,18 @@ Pure rules live in `Source/FamilyLife/Domain` and are covered by offline tests. 
 - **#14 crime families.** A house adopts theft only when need, a real target, permitting values, two willing members and a precedent all hold. The organizer recruits members one at a time by talking to them; each answers from their own bonds (join, refuse, expose). A ready job starts real thefts of real stock through the existing supply system; the job resolves from what that system recorded (goods home, witnesses, the theft incident). Heat rises when found out; a house can reform (restitution recorded by the supply system counts) or simply stop.
 - **#15 institutions.** The Manage tab sets the colony's institution (consensus, council, election, one ruler) and calls elections. House heads endorse by their own judgment. Voters walk to the polling place and cast their own ballot; absent people do not vote. A term end opens the next election. Aggrieved, unattached adults may start a scheme against the leader; the organizer recruits by talking, preparations are bounded and can be discovered, set back or reconciled, and the confrontation is a walk to the leader that decides the outcome by capacity, not headcount.
 
+## Also in the game
+
+- **Protection deals.** A house whose past acts were mostly menace, with a poorly protected neighbour holding silver, may offer protection. The two heads talk; the neighbour accepts out of need (unsafe and trusts them) or fear (a coerced deal, which also puts an intimidation on record) or declines. Tribute is collected every few days through the supply system and recorded only when the silver really arrived. Reforming ends the deal.
+- **Intimidation jobs.** The same job flow as theft, but the participants demand goods (the donor can refuse).
+- **Councils.** A council names the colony's leader when the post is empty or the term ends; each seated house's head casts one vote by their own judgment.
+- **Player-controlled pawns.** Questions put to a pawn you control (a scheme, a job, a protection offer, a request to hear, an open ballot) wait in the Families window under "Waiting for your answer". Nothing answers for them; an unanswered question counts for nothing.
+
 ## Not built
 
 - Bringing distant relatives to the colony (travel, rescue, camping): they are listed with the reason, and only relatives already present can come.
-- Protection deals and the other crime directions have rules and tests but nothing starts them; only theft is adopted.
-- A Perspective Shift avatar is never directed: they do not vote, answer scheme or job recruitment, or hear petitions on their own. Those choices are left to the player acting through the avatar and there is not yet a menu for them.
-- Councils and the institution kind change who is listed as leader; they do not yet gate other decisions.
+- Contraband, favors and laundering have rules but nothing starts them: they need item and debt concepts the mod does not have.
 - Inheritance of anything beyond the office of head is deliberately not attempted.
-
 ## Rules the tests pin down
 
 - Ignoring a card never stalls an occasion; an invalid room, a lost organizer, a dead guest or a passed time repairs itself or ends the request cleanly.

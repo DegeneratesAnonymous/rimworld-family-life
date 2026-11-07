@@ -4,6 +4,7 @@ using FamilyLife.Domain;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace FamilyLife
 {
@@ -13,10 +14,80 @@ namespace FamilyLife
     /// </summary>
     public partial class Window_Families
     {
+        /// <summary>
+        /// Questions that wait for a pawn the player controls. The game never answers these on their behalf: an unanswered question
+        /// simply stays open and counts for nothing.
+        /// </summary>
+        private void DrawAsks(Rect view, ref float yOut, FamilyComponent component, FamilyRegistry registry, int viewer)
+        {
+            var pawn = viewer == 0 ? null : component.TryGetPawn(viewer);
+            if (pawn == null) return;
+            int now = Activities.Now;
+            float y = yOut;
+            bool any = false;
+            void Answer(ref float row, string text, params KeyValuePair<string, System.Action>[] buttons)
+            {
+                if (!any) { Line(view, ref y, "WFL_Ask_Title".Translate(), 0f, true); any = true; }
+                Line(view, ref y, text, 10f);
+                float x = 10f;
+                foreach (var b in buttons) { if (Widgets.ButtonText(new Rect(x, y, 130f, 26f), b.Key)) b.Value(); x += 136f; }
+                y += 30f;
+            }
+
+            var election = registry.Elections.FirstOrDefault(e => e.State == ElectionState.Voting);
+            if (election != null && registry.NeedsToVote(viewer) && pawn.Spawned && GovernanceDriver.PollingPlace(component, out var map, out var cell) && map == pawn.Map)
+            {
+                int electionId = election.Id; var cellCopy = cell;
+                Answer(ref y, "WFL_Ask_Vote".Translate(), new KeyValuePair<string, System.Action>("WFL_Ask_GoVote".Translate(), () =>
+                {
+                    var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_CastVote, cellCopy); job.count = electionId;
+                    pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                }));
+            }
+            foreach (var coup in registry.Coups.Where(c => c.Open && c.Participants.Any(p => p.PersonId == viewer && p.Stance == CrimeStance.Unasked)).ToList())
+            {
+                int id = coup.Id;
+                Answer(ref y, "WFL_Ask_Coup".Translate(FamilyUi.NameOf(registry, coup.OrganizerId), FamilyUi.NameOf(registry, coup.TargetLeaderId)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Join".Translate(), () => registry.AnswerCoup(id, viewer, RecruitAnswer.Join, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.AnswerCoup(id, viewer, RecruitAnswer.Refuse, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Expose".Translate(), () => registry.AnswerCoup(id, viewer, RecruitAnswer.Expose, now)));
+            }
+            foreach (var heist in registry.Heists.Where(h => h.State == HeistState.Planning && h.Participants.Any(p => p.PersonId == viewer && p.Stance == CrimeStance.Unasked)).ToList())
+            {
+                int id = heist.Id;
+                Answer(ref y, "WFL_Ask_Heist".Translate(FamilyUi.NameOf(registry, heist.OrganizerId)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Join".Translate(), () => registry.AnswerHeist(id, viewer, RecruitAnswer.Join, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.AnswerHeist(id, viewer, RecruitAnswer.Refuse, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Expose".Translate(), () => registry.AnswerHeist(id, viewer, RecruitAnswer.Expose, now)));
+            }
+            foreach (var deal in registry.ProtectionArrangements.Where(a => a.AgreedTick == 0 && a.EndedTick == 0 && registry.HeadOf(a.ProtectedFamily) == viewer).ToList())
+            {
+                int id = deal.Id;
+                Answer(ref y, "WFL_Ask_Protection".Translate(registry.LineageDisplayName(registry.GetLineage(deal.ProtectorFamily)), deal.TributeAmount),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Agree".Translate(), () => registry.AgreeProtection(id, viewer, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.EndProtection(id, now)));
+            }
+            int myFamily = registry.FamilyOf(viewer);
+            if (myFamily != 0 && registry.CanManageHouse(viewer, myFamily))
+                foreach (var petition in registry.HousePetitions.Where(p => p.FamilyId == myFamily && p.State == PetitionState.Proposed && p.ReceivedBy == 0).Take(3).ToList())
+                {
+                    int id = petition.Id; var petitioner = component.TryGetPawn(petition.PersonId);
+                    if (petitioner == null || !petitioner.Spawned) continue;
+                    Answer(ref y, "WFL_Ask_Petition".Translate(FamilyUi.NameOf(registry, petition.PersonId), ("WFL_PetitionKind_" + petition.Kind).Translate()),
+                        new KeyValuePair<string, System.Action>("WFL_Ask_Hear".Translate(), () =>
+                        {
+                            if (!GovernanceMeetings.Start(pawn, petitioner, WFL_StoryDefOf.WFL_StewardPetition, id, byPlayer: true))
+                                Messages.Message("WFL_House_ActionUnavailable".Translate(), MessageTypeDefOf.NeutralEvent, false);
+                        }));
+                }
+            yOut = y;
+        }
+
         private void DrawGovernance(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
         {
             int viewer = component.PerspectivePawnId;
             Heading(view, ref y, "WFL_Gov_Title".Translate());
+            DrawAsks(view, ref y, component, registry, viewer);
 
             // Upcoming occasions with a planning card.
             foreach (var plan in registry.CeremonyPlans.Where(p => p.FamilyId == lineage.Id && p.State != PlanState.Cancelled && registry.PlanVisibleTo(p, viewer)).Take(6))

@@ -313,5 +313,31 @@ namespace FamilyLife.Tests
             Assert.True(r.NoteAmends(fam, later.Id, Now + 21));
             Assert.True(r.GetLineage(fam).Crime.ReformProgress > before);
             Assert.False(r.NoteAmends(fam + 99, later.Id, Now + 22));
+        }
+        [Fact]
+        public void A_player_controlled_pawn_answers_a_job_for_themselves()
+        {
+            var r = World(out int fam, out int target);
+            var heist = Active(r, fam, target);
+            Assert.True(r.AskHeistMember(heist.Id, 4));
+            Assert.False(r.AskHeistMember(heist.Id, 4));
+            Assert.Equal(1, heist.WillingCount);
+            Assert.False(r.ReadyHeist(heist.Id, Open(), Now));                       // an unanswered question is not agreement
+            Assert.True(r.AnswerHeist(heist.Id, 4, RecruitAnswer.Join, Now));
+            Assert.True(r.ReadyHeist(heist.Id, Open(), Now));
+            Assert.False(r.AnswerHeist(heist.Id, 4, RecruitAnswer.Refuse, Now));
+        }
+
+        [Fact]
+        public void A_protection_deal_can_be_coerced_and_ends_with_reform()
+        {
+            var r = World(out int fam, out int target);
+            Active(r, fam, target);
+            var deal = r.ProposeProtection(fam, target, 20, Now, coerced: true);
+            Assert.True(deal.Coerced);
+            Assert.True(r.AgreeProtection(deal.Id, 20, Now));
+            Assert.True(r.BeginReform(fam, Now + 10));
+            Assert.False(deal.Agreed);                                               // reforming ends the arrangement
+            Assert.False(r.RecordTribute(deal.Id, 20, 5, Now + 20));
         }    }
 }

@@ -89,6 +89,7 @@ namespace FamilyLife
             var r = c.Registry;
             var political = GovernanceMeetings.Political(c);
             r.AdvanceElections(now, political, physicalVoting: true);
+            r.ConveneCouncil(now, political);
             foreach (var election in r.Elections.Where(e => e.Open).Take(1))
             {
                 if (election.State == ElectionState.Campaign)
@@ -187,8 +188,13 @@ namespace FamilyLife
             var crime = house.Crime;
             if (crime.Status == CrimeStatus.None || crime.Status == CrimeStatus.Reformed && now - crime.EndedTick > 30 * Day)
             {
-                if (r.AssessCrimeDirection(house.Id, CrimeContextFor(c, targets.Count, now), now).Eligible)
-                    r.AdoptCrimeDirection(house.Id, CrimeDirection.Theft, CrimeContextFor(c, targets.Count, now), now);
+                var weak = ProtectionTargets(c, house, map, now);
+                var recent = r.Incidents.Where(i => i.ActorFamily == house.Id && now - i.Tick < 60 * Day).ToList();
+                bool menacing = recent.Count(i => i.Kind == IncidentKind.Intimidation) > recent.Count(i => i.Kind == IncidentKind.Theft);
+                var direction = menacing && weak.Count > 0 ? CrimeDirection.Protection : menacing ? CrimeDirection.Intimidation : CrimeDirection.Theft;
+                int options = direction == CrimeDirection.Protection ? weak.Count : targets.Count;
+                if (r.AssessCrimeDirection(house.Id, CrimeContextFor(c, options, now), now).Eligible)
+                    r.AdoptCrimeDirection(house.Id, direction, CrimeContextFor(c, options, now), now);
             }
             else if (crime.Status == CrimeStatus.Active)
             {
@@ -197,6 +203,7 @@ namespace FamilyLife
                 var ambition = house.Ambition?.Primary ?? HouseAmbitionKind.None;
                 if (crime.Heat >= 50f && (refusal || ambition == HouseAmbitionKind.RestoreCohesion || ambition == HouseAmbitionKind.SeekProtection)) { r.BeginReform(house.Id, now); return; }
                 if ((house.Situation?.Sustenance ?? 50f) >= 60f && now - crime.LastPlanTick > 30 * Day) { r.AbandonCrimeDirection(house.Id, now); return; }
+                if (crime.Direction == CrimeDirection.Protection) { ManageProtection(c, house, map, now); return; }
                 if (r.Heists.Any(h => h.FamilyId == house.Id && h.Active) || targets.Count == 0) return;
                 var actors = r.Incidents.Where(i => i.ActorFamily == house.Id && (i.Kind == IncidentKind.Theft || i.Kind == IncidentKind.Intimidation)).Select(i => i.ActorId).Distinct().ToList();
                 var organizer = actors.Select(id => Spawned(c, id)).FirstOrDefault(p => p != null && p.Map == map && !p.DevelopmentalStage.Juvenile() && Governance.Free(c, p.thingIDNumber));
@@ -209,6 +216,45 @@ namespace FamilyLife
                 foreach (var restitution in r.Incidents.Where(i => i.Kind == IncidentKind.Restitution && i.ActorFamily == house.Id && i.Id > crime.LastAmendsIncident).OrderBy(i => i.Id).Take(4).ToList())
                     r.NoteAmends(house.Id, restitution.Id, now);
             }
+        }
+
+        /// <summary>Nearby houses that could plausibly want protection: unsettled, with a head present, and holding silver to pay with.</summary>
+        private static List<Lineage> ProtectionTargets(FamilyComponent c, Lineage house, Map map, int now)
+        {
+            var r = c.Registry;
+            var silver = c.Economy.StockOf(map, now).Where(t => t.def == ThingDefOf.Silver && t.Spawned).Select(t => r.ClaimFor(t.thingIDNumber)?.HolderFamily ?? 0).Where(f => f != 0).Distinct().ToHashSet();
+            return r.Lineages.Where(h => h.AbsorbedIntoId == 0 && h.Id != house.Id && silver.Contains(h.Id) && (h.Situation?.Safety ?? 50f) < 60f && Spawned(c, r.HeadOf(h.Id)) != null).OrderBy(h => h.Situation?.Safety ?? 50f).Take(3).ToList();
+        }
+
+        private static void ManageProtection(FamilyComponent c, Lineage house, Map map, int now)
+        {
+            var r = c.Registry;
+            var deal = r.ProtectionArrangements.FirstOrDefault(a => a.ProtectorFamily == house.Id && a.EndedTick == 0);
+            var rep = Spawned(c, r.HeadOf(house.Id));
+            if (deal == null)
+            {
+                if (rep == null || now - house.Crime.LastPlanTick < 2 * Day || rep.CurJobDef == WFL_StoryDefOf.WFL_ProtectionOffer) return;
+                var target = ProtectionTargets(c, house, map, now).FirstOrDefault();
+                var head = target == null ? null : Spawned(c, r.HeadOf(target.Id));
+                if (head != null && GovernanceMeetings.Start(rep, head, WFL_StoryDefOf.WFL_ProtectionOffer, target.Id)) house.Crime.LastPlanTick = now;
+                return;
+            }
+            if (!deal.Agreed)
+            {
+                if (now - Math.Max(1, house.Crime.LastPlanTick) > 2 * Day) r.EndProtection(deal.Id, now);       // never answered, so never agreed
+                return;
+            }
+            // Payments are recorded only from requests the supply system really completed.
+            foreach (var q in r.Requests.Where(x => (x.Approach == SupplyApproach.Offer || x.Approach == SupplyApproach.Threat) && x.Kind == SupplyKind.Currency && x.Id > deal.LastRequestId && !x.Open &&
+                r.FamilyOf(x.RequesterId) == deal.ProtectorFamily && r.FamilyOf(x.DonorId) == deal.ProtectedFamily).OrderBy(x => x.Id).Take(4).ToList())
+            {
+                deal.LastRequestId = q.Id;
+                if (q.State == SupplyState.Exchanged || q.State == SupplyState.Stored) r.RecordTribute(deal.Id, q.Count, q.Id + 2000000, now);
+            }
+            if (now - deal.LastCollectionTick < 3 * Day || rep == null) return;
+            var donor = Spawned(c, r.HeadOf(deal.ProtectedFamily));
+            var silverStack = donor == null ? null : c.Economy.StockOf(rep.Map, now).FirstOrDefault(t => t.def == ThingDefOf.Silver && t.Spawned && r.ClaimFor(t.thingIDNumber)?.HolderFamily == deal.ProtectedFamily && t.stackCount >= deal.TributeAmount);
+            if (silverStack != null && Activities.IsFree(rep) && c.Economy.StartTheft(rep, donor, silverStack, deal.TributeAmount, now, deal.Coerced ? SupplyApproach.Threat : SupplyApproach.Offer)) deal.LastCollectionTick = now;
         }
 
         private static void ManageHeists(FamilyComponent c, Lineage house, int now)
@@ -224,8 +270,16 @@ namespace FamilyLife
                         if (organizer == null) { r.AbortHeist(heist.Id, now); break; }
                         if (organizer.CurJobDef == WFL_StoryDefOf.WFL_HeistRecruit) break;
                         var next = r.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile && heist.Participants.All(x => x.PersonId != p.Id)).OrderBy(p => p.Id)
-                            .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map && !PerspectiveShiftBridge.IsAvatar(p));
-                        if (next != null && heist.WillingCount < 3) { GovernanceMeetings.Start(organizer, next, WFL_StoryDefOf.WFL_HeistRecruit, heist.Id); break; }
+                            .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map);
+                        if (next != null && heist.WillingCount < 3)
+                        {
+                            // A pawn the player controls is asked, not talked into it: the question waits in their Families window.
+                            if (PerspectiveShiftBridge.IsAvatar(next)) r.AskHeistMember(heist.Id, next.thingIDNumber);
+                            else GovernanceMeetings.Start(organizer, next, WFL_StoryDefOf.WFL_HeistRecruit, heist.Id);
+                            break;
+                        }
+                        bool waiting = heist.Participants.Any(x => x.Stance == CrimeStance.Unasked) && now - heist.StateTick < 2 * Day;
+                        if (waiting) break;
                         if (heist.WillingCount >= 2) r.ReadyHeist(heist.Id, context, now); else r.AbortHeist(heist.Id, now);
                         break;
                     case HeistState.Ready:
@@ -254,7 +308,7 @@ namespace FamilyLife
                 var actor = Spawned(c, part.PersonId);
                 if (actor == null || actor.Map != map || !Governance.Free(c, actor.thingIDNumber) || !Activities.IsFree(actor)) continue;
                 var thing = started == 0 && first != null ? first : items.Where(t => t != first).OrderBy(t => t.Position.DistanceToSquared(actor.Position)).FirstOrDefault(t => actor.CanReserve(t));
-                if (thing != null && c.Economy.StartTheft(actor, donor, thing, Math.Min(thing.stackCount, 5), now)) started++;
+                if (thing != null && c.Economy.StartTheft(actor, donor, thing, Math.Min(thing.stackCount, 5), now, heist.Direction == CrimeDirection.Intimidation ? SupplyApproach.Threat : SupplyApproach.Steal)) started++;
             }
             return started > 0;
         }
@@ -263,14 +317,14 @@ namespace FamilyLife
         {
             var r = c.Registry;
             var people = heist.Participants.Where(p => p.Stance == CrimeStance.Willing).Select(p => p.PersonId).ToList();
-            var requests = r.Requests.Where(q => q.Approach == SupplyApproach.Steal && people.Contains(q.RequesterId) && q.CreatedTick >= heist.StateTick).ToList();
+            var requests = r.Requests.Where(q => (q.Approach == SupplyApproach.Steal || q.Approach == SupplyApproach.Threat) && people.Contains(q.RequesterId) && q.CreatedTick >= heist.StateTick).ToList();
             if (requests.Count == 0 || requests.Any(q => q.Open))
             {
                 if (now - heist.StateTick > 2 * Day) r.InterruptHeist(heist.Id, now);
                 return;
             }
             int goods = requests.Where(q => q.State == SupplyState.Exchanged || q.State == SupplyState.Stored).Sum(q => q.Count);
-            var theft = r.Incidents.Where(i => i.Kind == IncidentKind.Theft && people.Contains(i.ActorId) && i.Tick >= heist.StateTick).OrderByDescending(i => i.Id).FirstOrDefault();
+            var theft = r.Incidents.Where(i => (i.Kind == IncidentKind.Theft || i.Kind == IncidentKind.Intimidation) && people.Contains(i.ActorId) && i.Tick >= heist.StateTick).OrderByDescending(i => i.Id).FirstOrDefault();
             bool caught = theft != null && theft.KnownBy.Any(id => r.FamilyOf(id) == heist.TargetFamilyId);
             int token = goods > 0 ? requests.Max(q => q.Id) + 1000000 : 0;
             if (!r.ResolveHeist(heist.Id, goods, token, caught, theft?.KnownBy, now, theft?.Id ?? 0)) r.InterruptHeist(heist.Id, now);
@@ -305,9 +359,10 @@ namespace FamilyLife
                 if (coup.Stage == CoupStage.Recruiting && organizer.CurJobDef != WFL_StoryDefOf.WFL_CoupRecruit)
                 {
                     var recruit = r.Persons.Where(p => p.InColony && !p.Juvenile && p.Id != coup.TargetLeaderId && coup.Participants.All(x => x.PersonId != p.Id)).OrderBy(p => p.Id)
-                        .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map && !PerspectiveShiftBridge.IsAvatar(p) &&
+                        .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map &&
                             ((r.GetBond(p.thingIDNumber, coup.OrganizerId)?.Trust ?? 0f) >= 25f || (r.GetBond(p.thingIDNumber, coup.TargetLeaderId)?.Tension ?? 0f) >= 30f));
-                    if (recruit != null) GovernanceMeetings.Start(organizer, recruit, WFL_StoryDefOf.WFL_CoupRecruit, coup.Id);
+                    if (recruit != null && PerspectiveShiftBridge.IsAvatar(recruit)) r.AskCoupMember(coup.Id, recruit.thingIDNumber);
+                    else if (recruit != null) GovernanceMeetings.Start(organizer, recruit, WFL_StoryDefOf.WFL_CoupRecruit, coup.Id);
                 }
                 else if (coup.Stage == CoupStage.Executing && organizer.CurJobDef != WFL_StoryDefOf.WFL_CoupConfront)
                 {

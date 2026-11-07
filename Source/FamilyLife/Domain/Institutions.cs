@@ -141,7 +141,7 @@ namespace FamilyLife.Domain
             var p = GetPerson(leader);
             if ((kind == InstitutionKind.Authoritarian || kind == InstitutionKind.Election && leader != 0) && (p?.InColony != true || p.Juvenile)) return false;
             Institution.Kind = kind; Institution.SinceTick = now; Institution.LeaderId = leader;
-            Institution.TermEndTick = kind == InstitutionKind.Election ? now + TermTicks : 0;
+            Institution.TermEndTick = kind == InstitutionKind.Election || kind == InstitutionKind.Council ? now + TermTicks : 0;
             Institution.CouncilHouseIds = new List<int>();
             if (kind == InstitutionKind.Council) FormCouncil(now);
             return true;
@@ -296,6 +296,58 @@ namespace FamilyLife.Domain
                     Discover(coup, person, now); break;
             }
             return true;
+        }
+
+        public bool AskCoupMember(int coupId, int person)
+        {
+            var coup = Coups.FirstOrDefault(c => c.Id == coupId); var p = GetPerson(person);
+            if (coup == null || !coup.Open || coup.Stage > CoupStage.Preparing || p?.InColony != true || p.Juvenile || person == coup.TargetLeaderId || coup.Participants.Any(x => x.PersonId == person)) return false;
+            coup.Participants.Add(new CoupParticipant { PersonId = person, Stance = CrimeStance.Unasked });
+            return true;
+        }
+
+        public bool AnswerCoup(int coupId, int person, RecruitAnswer answer, int now)
+        {
+            var coup = Coups.FirstOrDefault(c => c.Id == coupId);
+            var entry = coup?.Participants.FirstOrDefault(x => x.PersonId == person && x.Stance == CrimeStance.Unasked);
+            if (entry == null || !coup.Open) return false;
+            switch (answer)
+            {
+                case RecruitAnswer.Join: entry.Stance = CrimeStance.Willing; break;
+                case RecruitAnswer.Refuse: entry.Stance = CrimeStance.Refused; ChangeBond(person, coup.OrganizerId, new BondChange(-.5f, -1f, 1f, 0f), now); break;
+                default: entry.Stance = CrimeStance.Exposed; Discover(coup, person, now); break;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// A council names the colony's leader when the post is empty or the term has run out. Each seated house's head casts one vote by their
+        /// own weighing, so a small house counts as much as a large one.
+        /// </summary>
+        public Election ConveneCouncil(int now, PoliticalContext ctx = null)
+        {
+            if (Institution.Kind != InstitutionKind.Council) return null;
+            bool vacant = GetPerson(Institution.LeaderId)?.InColony != true, due = Institution.TermEndTick != 0 && now >= Institution.TermEndTick;
+            if (!vacant && !due) return null;
+            var seats = Institution.CouncilHouseIds.Where(IsActiveHouse).ToList();
+            if (seats.Count == 0) seats = FormCouncil(now);
+            var voters = seats.Select(HeadOf).Where(h => h != 0).Distinct().ToList();
+            var field = Persons.Where(p => p.InColony && !p.Juvenile).Select(p => AssessLegitimacy(p.Id, FamilyOf(p.Id), 0)).Where(a => a.Score >= 30f && !a.Reluctant)
+                .OrderByDescending(a => a.Score).ThenBy(a => a.PersonId).Take(5).Select(a => a.PersonId).ToList();
+            foreach (int head in voters) if (field.Count < 6 && !field.Contains(head)) field.Add(head);
+            if (voters.Count == 0 || field.Count == 0) { Institution.TermEndTick = now + ActivityTuning.TicksPerDay; return null; }
+            if (Elections.Count >= 16) Elections.RemoveAt(0);
+            var e = new Election { Id = NextElectionId++, StartedTick = now, VotingTick = now, Candidates = field, State = ElectionState.Voting };
+            foreach (int voter in voters)
+            {
+                var best = field.Select(c => Support(voter, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();
+                e.Voted.Add(voter);
+                if (best.Total < AbstainBelow) { e.Abstained++; continue; }
+                e.Votes.Add(new ElectionVote { VoterId = voter, CandidateId = best.CandidateId, Reason = best.Dominant });
+            }
+            Elections.Add(e);
+            Tally(e, now);
+            return e;
         }
 
         private void Discover(CoupPlan coup, int by, int now)

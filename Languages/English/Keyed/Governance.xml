@@ -132,4 +132,16 @@
   <WFL_Gov_ElectionCalled>An election has been called.</WFL_Gov_ElectionCalled>
   <WFL_Gov_ElectionNotPossible>An election needs elected leadership, no election already open, and two people the colony would accept.</WFL_Gov_ElectionNotPossible>
   <WFL_Gov_NeedsLeader>Choose who leads.</WFL_Gov_NeedsLeader>
+  <WFL_Ask_Title>Waiting for your answer</WFL_Ask_Title>
+  <WFL_Ask_Vote>An election is open. You can go and vote.</WFL_Ask_Vote>
+  <WFL_Ask_GoVote>Go and vote</WFL_Ask_GoVote>
+  <WFL_Ask_Coup>{0} quietly asks whether you would join a scheme against {1}.</WFL_Ask_Coup>
+  <WFL_Ask_Heist>{0} asks whether you would take part in a job against another house.</WFL_Ask_Heist>
+  <WFL_Ask_Protection>{0} offers to protect your house for {1} silver every few days.</WFL_Ask_Protection>
+  <WFL_Ask_Petition>{0} has a request ({1}) waiting to be heard.</WFL_Ask_Petition>
+  <WFL_Ask_Join>Join</WFL_Ask_Join>
+  <WFL_Ask_Refuse>Refuse</WFL_Ask_Refuse>
+  <WFL_Ask_Expose>Tell others</WFL_Ask_Expose>
+  <WFL_Ask_Agree>Agree</WFL_Ask_Agree>
+  <WFL_Ask_Hear>Hear them</WFL_Ask_Hear>
 </LanguageData>

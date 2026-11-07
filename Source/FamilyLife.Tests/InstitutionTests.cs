@@ -313,5 +313,37 @@ namespace FamilyLife.Tests
                 resolved = true;
             }
             Assert.True(sawExecuting && resolved);
+        }
+        [Fact]
+        public void A_player_controlled_pawn_answers_a_scheme_for_themselves()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Authoritarian, 1, 1000);
+            var coup = r.PlanCoup(2, CoupGoal.ReplaceLeader, 0, null, 5 * Day);
+            Assert.True(r.AskCoupMember(coup.Id, 3));
+            Assert.False(r.AskCoupMember(coup.Id, 3));
+            Assert.Equal(1, coup.WillingCount);                                      // asking decides nothing
+            Assert.True(r.AnswerCoup(coup.Id, 3, RecruitAnswer.Join, 5 * Day));
+            Assert.Equal(2, coup.WillingCount);
+            Assert.False(r.AnswerCoup(coup.Id, 3, RecruitAnswer.Refuse, 5 * Day));  // an answer is final
+            Assert.True(r.AskCoupMember(coup.Id, 4));
+            Assert.True(r.AnswerCoup(coup.Id, 4, RecruitAnswer.Expose, 5 * Day));
+            Assert.Equal(CoupState.Failed, coup.State);
+        }
+
+        [Fact]
+        public void A_council_names_the_leader_by_seat_not_headcount()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            r.GetLineage(b).Standing = 40f; r.GetLineage(c).Standing = 30f; r.GetLineage(a).Standing = 0f;
+            r.SetInstitution(InstitutionKind.Council, 0, 3000);
+            Assert.Equal(0, r.Institution.LeaderId);
+            var seat = r.ConveneCouncil(3000, new PoliticalContext { IdeologyFit = (v, cand) => cand == 20 ? .9f : -.1f });
+            Assert.NotNull(seat);
+            Assert.Equal(ElectionState.Counted, seat.State);
+            Assert.Equal(3, seat.Votes.Count);                                       // one vote per seated house, not per person
+            Assert.Equal(20, r.Institution.LeaderId);
+            Assert.Null(r.ConveneCouncil(3100));                                      // nothing to decide until the term ends or the post empties
+            Assert.NotNull(r.ConveneCouncil(r.Institution.TermEndTick + 1));
         }    }
 }

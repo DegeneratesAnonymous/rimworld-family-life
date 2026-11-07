@@ -69,7 +69,9 @@ namespace FamilyLife.Domain
     /// <summary>A protection deal. It is a recorded agreement; money or goods change hands only through recorded, evidenced payments.</summary>
     public sealed partial class ProtectionArrangement
     {
-        public int Id, ProtectorFamily, ProtectedFamily, AgreedTick, EndedTick, Payments, PaymentsRecorded, LastPaymentToken, TributeAmount, AgreedBy;
+        public int Id, ProtectorFamily, ProtectedFamily, AgreedTick, EndedTick, Payments, PaymentsRecorded, LastPaymentToken, TributeAmount, AgreedBy, LastRequestId, LastCollectionTick;
+        /// <summary>True when the protected house agreed out of fear rather than need. Such a deal is also an intimidation on record.</summary>
+        public bool Coerced;
         public bool Agreed => AgreedTick > 0 && EndedTick == 0;
     }
 
@@ -195,6 +197,33 @@ namespace FamilyLife.Domain
             return true;
         }
 
+        /// <summary>
+        /// Puts a question to someone who answers for themselves (a player acting as their pawn). Nothing is decided for them: they stay
+        /// "unasked" in the record, counting for nothing, until they answer.
+        /// </summary>
+        public bool AskHeistMember(int heistId, int person)
+        {
+            var heist = Heists.FirstOrDefault(h => h.Id == heistId); var p = GetPerson(person);
+            if (heist == null || heist.State != HeistState.Planning || p?.InColony != true || p.Juvenile || !BelongsToFamily(p, heist.FamilyId) || heist.Participants.Any(x => x.PersonId == person)) return false;
+            heist.Participants.Add(new HeistParticipant { PersonId = person, Stance = CrimeStance.Unasked });
+            LearnCrime(heistId, person, CrimeKnowledgeLevel.Fact);
+            return true;
+        }
+
+        public bool AnswerHeist(int heistId, int person, RecruitAnswer answer, int now)
+        {
+            var heist = Heists.FirstOrDefault(h => h.Id == heistId);
+            var entry = heist?.Participants.FirstOrDefault(x => x.PersonId == person && x.Stance == CrimeStance.Unasked);
+            if (entry == null || heist.State != HeistState.Planning) return false;
+            switch (answer)
+            {
+                case RecruitAnswer.Join: entry.Stance = CrimeStance.Willing; break;
+                case RecruitAnswer.Refuse: entry.Stance = CrimeStance.Refused; ChangeBond(person, heist.OrganizerId, new BondChange(-.5f, -1f, 1f, 0f), now); break;
+                default: entry.Stance = CrimeStance.Exposed; ExposeHeist(heist, person, now); break;
+            }
+            return true;
+        }
+
         private void ExposeHeist(Heist heist, int whistleblower, int now)
         {
             heist.State = HeistState.Exposed; heist.StateTick = now;
@@ -312,12 +341,12 @@ namespace FamilyLife.Domain
 
         // ---- protection arrangements ----
 
-        public ProtectionArrangement ProposeProtection(int protector, int protectedHouse, int tribute, int now)
+        public ProtectionArrangement ProposeProtection(int protector, int protectedHouse, int tribute, int now, bool coerced = false)
         {
             if (protector == protectedHouse || !IsActiveHouse(protector) || !IsActiveHouse(protectedHouse) || tribute < 0 || tribute > 500) return null;
             if (ProtectionArrangements.Any(a => a.EndedTick == 0 && a.ProtectorFamily == protector && a.ProtectedFamily == protectedHouse)) return null;
             if (ProtectionArrangements.Count >= 64) { var old = ProtectionArrangements.FirstOrDefault(a => a.EndedTick != 0); if (old == null) return null; ProtectionArrangements.Remove(old); }
-            var arrangement = new ProtectionArrangement { Id = NextProtectionId++, ProtectorFamily = protector, ProtectedFamily = protectedHouse, TributeAmount = tribute };
+            var arrangement = new ProtectionArrangement { Id = NextProtectionId++, ProtectorFamily = protector, ProtectedFamily = protectedHouse, TributeAmount = tribute, Coerced = coerced };
             ProtectionArrangements.Add(arrangement);
             return arrangement;
         }
@@ -355,6 +384,7 @@ namespace FamilyLife.Domain
             if (house == null || house.Crime.Status != CrimeStatus.Active) return false;
             house.Crime.Status = CrimeStatus.Reforming; house.Crime.ReformProgress = Math.Max(house.Crime.ReformProgress, 10f); house.Crime.StartedTick = now;
             foreach (var h in Heists.Where(h => h.FamilyId == family && h.Active)) AbortHeist(h.Id, now);
+            foreach (var deal in ProtectionArrangements.Where(d => d.ProtectorFamily == family && d.EndedTick == 0).ToList()) EndProtection(deal.Id, now);
             return true;
         }
 
@@ -388,6 +418,7 @@ namespace FamilyLife.Domain
             if (house == null || house.Crime.Status == CrimeStatus.None || house.Crime.Status == CrimeStatus.Reformed) return false;
             house.Crime.Status = CrimeStatus.None; house.Crime.Direction = CrimeDirection.None; house.Crime.EndedTick = now;
             foreach (var h in Heists.Where(h => h.FamilyId == family && h.Active)) AbortHeist(h.Id, now);
+            foreach (var deal in ProtectionArrangements.Where(d => d.ProtectorFamily == family && d.EndedTick == 0).ToList()) EndProtection(deal.Id, now);
             return true;
         }
 

@@ -105,7 +105,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref ProtectorFamily, "protector"); Scribe_Values.Look(ref ProtectedFamily, "protected");
             Scribe_Values.Look(ref AgreedTick, "agreed"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Payments, "payments");
             Scribe_Values.Look(ref PaymentsRecorded, "recorded"); Scribe_Values.Look(ref LastPaymentToken, "lastToken"); Scribe_Values.Look(ref TributeAmount, "tribute");
-            Scribe_Values.Look(ref AgreedBy, "agreedBy");
+            Scribe_Values.Look(ref AgreedBy, "agreedBy"); Scribe_Values.Look(ref LastRequestId, "lastRequest"); Scribe_Values.Look(ref LastCollectionTick, "lastCollection"); Scribe_Values.Look(ref Coerced, "coerced");
         }
     }
 

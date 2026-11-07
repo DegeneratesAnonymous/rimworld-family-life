@@ -17,15 +17,16 @@ namespace FamilyLife
         private static int tokenCounter;
 
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
-            def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit);
+            def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
+            def == WFL_StoryDefOf.WFL_ProtectionOffer);
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
         internal static int NextToken() => (Math.Abs(unchecked((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000) + 1;
 
-        internal static bool Start(Pawn actor, Pawn other, JobDef def, int id)
+        internal static bool Start(Pawn actor, Pawn other, JobDef def, int id, bool byPlayer = false)
         {
             if (actor == null || other == null || def == null || actor == other || !actor.Spawned || !other.Spawned || actor.Map != other.Map) return false;
-            if (!Activities.IsFree(actor) || actor.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(actor)) return false;
+            if (!byPlayer && (!Activities.IsFree(actor) || actor.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(actor))) return false;
             if (!Activities.IsFree(other) || other.CurJob?.playerForced == true || PerspectiveShiftBridge.IsAvatar(other)) return false;
             if (!actor.CanReach(other, PathEndMode.Touch, Danger.None)) return false;
             var job = JobMaker.MakeJob(def, other); job.count = id;
@@ -73,6 +74,21 @@ namespace FamilyLife
             {
                 r.ResolveCoup(id, Political(c), now);
                 Messages.Message("WFL_Coup_Confronted".Translate(speaker.LabelShort, other.LabelShort), speaker, MessageTypeDefOf.NeutralEvent, false);
+            }
+            else if (def == WFL_StoryDefOf.WFL_ProtectionOffer)
+            {
+                int protector = r.FamilyOf(a), protectedFamily = r.FamilyOf(b);
+                if (protector == 0 || protectedFamily == 0 || protector == protectedFamily || r.HeadOf(protectedFamily) != b || r.HeadOf(protector) != a) return;
+                var bond = r.GetBond(b, a); float trust = bond?.Trust ?? 0f, tension = bond?.Tension ?? 0f;
+                bool needsIt = (r.GetLineage(protectedFamily)?.Situation?.Safety ?? 50f) < 50f && trust >= 20f, afraid = tension >= 40f && trust < 20f;
+                var deal = r.ProposeProtection(protector, protectedFamily, 15, now, afraid && !needsIt);
+                if (deal == null || PerspectiveShiftBridge.IsAvatar(other)) return;       // a player-controlled head answers for themselves
+                if (needsIt || afraid)
+                {
+                    r.AgreeProtection(deal.Id, b, now);
+                    if (deal.Coerced) r.RecordIncident(IncidentKind.Intimidation, a, b, speaker.Map.uniqueID, now, 18f, new[] { a, b });
+                }
+                else { r.EndProtection(deal.Id, now); r.ChangeBond(b, a, new BondChange(0f, -1f, 1f, 0f), now); }
             }
             else if (def == WFL_StoryDefOf.WFL_HeistRecruit)
             {
