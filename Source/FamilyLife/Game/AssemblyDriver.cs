@@ -78,7 +78,7 @@ namespace FamilyLife
             int sent = 0;
             foreach (int voterId in r.AssemblyVoters(a))
             {
-                if (sent >= 3) break;
+                if (sent >= 6) break;
                 var pawn = c.TryGetPawn(voterId);
                 if (pawn == null || !pawn.Spawned || pawn.Map != map || PerspectiveShiftBridge.IsAvatar(pawn)) continue;
                 if (!Activities.IsFree(pawn) || pawn.CurJob?.playerForced == true || pawn.CurJobDef == WFL_StoryDefOf.WFL_CastAssemblyVote || !pawn.CanReach(cell, PathEndMode.OnCell, Danger.None)) continue;

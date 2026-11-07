@@ -93,11 +93,11 @@ namespace FamilyLife.Domain
         public static bool IsAppointed(OfficeKind kind) => kind == OfficeKind.Chaplain;
 
         /// <summary>How much of the post's work a good year contains. The yardstick for "did they do their part".</summary>
-        public static int ExpectedActs(OfficeKind kind)
+        public int ExpectedActs(OfficeKind kind)
         {
             switch (kind)
             {
-                case OfficeKind.Healer: return 20;
+                case OfficeKind.Healer: return Math.Max(6, Math.Min(20, Persons.Count(p => p.InColony) * 2));
                 case OfficeKind.Teacher: return 30;
                 case OfficeKind.HallKeeper: return 30;
                 default: return 4;
@@ -310,6 +310,7 @@ namespace FamilyLife.Domain
             if (office.HolderId == person) return false;
             if (office.Held) EndOffice(office, person == 0 ? OfficeEnd.Left : OfficeEnd.Replaced, now);
             if (person == 0) return true;
+            foreach (var other in Offices.Where(o => o.HolderId == person && o.Kind != kind).ToList()) EndOffice(other, OfficeEnd.Replaced, now);      // one post per person
             office.HolderId = person; office.HolderFamily = FamilyOf(person); office.ElectedTick = now; office.TermEndTick = 0; office.LastWorkTick = now;
             office.Work = 0; office.QualitySum = 0f; office.QualityCount = 0; office.UnmetSinceTick = 0; office.EndReason = OfficeEnd.None; office.EndedTick = 0; office.Terms++;
             NotePublicService(person, office.HolderFamily, 1f, now);
@@ -410,9 +411,10 @@ namespace FamilyLife.Domain
                 if (office.Held && race.Candidates.Contains(office.HolderId)) { race.IncumbentId = office.HolderId; race.IncumbentGrade = OfficeGrade(kind); }
                 assembly.Races.Add(race);
             }
+            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind))) office.TermEndTick = NextAssemblyTick;
+            if (assembly.Races.Count == 0) return null;                      // nothing to decide this year: no gathering, and holders simply carry on
             if (Assemblies.Count >= 8) Assemblies.RemoveAt(0);
             Assemblies.Add(assembly);
-            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind))) office.TermEndTick = NextAssemblyTick;
             return assembly;
         }
 
@@ -637,6 +639,14 @@ namespace FamilyLife.Domain
 
         /// <summary>This person was seen to, or cannot be: they leave the queue either way.</summary>
         public void SessionDone(OfficeKind kind, int person) => OfficeFor(kind)?.SessionQueue.Remove(person);
+
+        /// <summary>This person could not be reached just now: they move to the back so the rest are not held up.</summary>
+        public void SessionDefer(OfficeKind kind, int person)
+        {
+            var q = OfficeFor(kind)?.SessionQueue;
+            if (q == null || !q.Remove(person)) return;
+            q.Add(person);
+        }
 
         public bool BeginClass(int now, int intervalTicks, IEnumerable<int> students) => BeginSession(OfficeKind.Teacher, now, intervalTicks, students);
         public int NextStudent(int now) => NextInSession(OfficeKind.Teacher, now);

@@ -100,13 +100,12 @@ namespace FamilyLife
 
             int next = r.NextDiner(now);
             if (next == 0) return;
+            if (keeper.CurJobDef == WFL_StoryDefOf.WFL_HallServe) return;                                   // already doing the round
             var diner = c.TryGetPawn(next);
             if (diner == null || !diner.Spawned || diner.Map != map || diner.CurJobDef != WFL_StoryDefOf.WFL_HallSit) { r.DinerServed(next); return; }      // gave up waiting, or went elsewhere
-            if (!Activities.IsFree(keeper) || !Governance.Free(c, keeperId) || !due("serve", now, 300)) return;
-            var meal = BestMeal(keeper, diner);
-            if (meal == null) return;                                                                    // nothing fit to serve right now; the wait is bounded
-            var serve = JobMaker.MakeJob(WFL_StoryDefOf.WFL_HallServe, diner, meal); serve.count = 1;
-            keeper.jobs.StartJob(serve, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+            if (!Activities.IsFree(keeper) || !Governance.Free(c, keeperId)) return;
+            var round = JobMaker.MakeJob(WFL_StoryDefOf.WFL_HallServe);
+            keeper.jobs.StartJob(round, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
         }
 
         private static void SeatGuests(FamilyRegistry r, CommunityOffice office, List<Pawn> guests, List<Seat> seats)
@@ -123,7 +122,7 @@ namespace FamilyLife
         }
 
         /// <summary>The best plain meal in the colony's stores the keeper can fetch and this person will eat. Nutrient paste dispensers are not used.</summary>
-        private static Thing BestMeal(Pawn keeper, Pawn diner)
+        internal static Thing BestMeal(Pawn keeper, Pawn diner)
         {
             Thing best = null; int bestRank = -1; float bestDist = float.MaxValue;
             foreach (var t in keeper.Map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
@@ -155,51 +154,81 @@ namespace FamilyLife
         {
             this.FailOn(() => pawn.Drafted || pawn.InMentalState);
             yield return Toils_Goto.GotoCell(TargetIndex.A, PathEndMode.OnCell);
-            var wait = Toils_General.Wait(4500);
+            var wait = Toils_General.Wait(7500);
             wait.socialMode = RandomSocialMode.Off;
             yield return wait;
         }
     }
 
-    /// <summary>The keeper brings a meal to someone waiting in the hall and sets it on the table before them. They then eat it where they sit.</summary>
+    /// <summary>
+    /// The keeper's round: for each person waiting in the hall, fetch a meal from the stores, carry it over and set it on the table before them, then
+    /// the next, until the queue is empty. Someone who has gone, or a meal that cannot be had, ends the round; the keeper starts another later.
+    /// </summary>
     public class JobDriver_HallServe : JobDriver
     {
-        private Pawn Diner => (Pawn)job.GetTarget(TargetIndex.A).Thing;
+        private Pawn Diner => job.GetTarget(TargetIndex.A).Thing as Pawn;
         private Thing Meal => job.GetTarget(TargetIndex.B).Thing;
 
-        public override bool TryMakePreToilReservations(bool errorOnFailed) => pawn.Reserve(job.targetB, job, 1, 1, null, errorOnFailed);
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOnDespawnedOrNull(TargetIndex.A);
-            this.FailOnDespawnedNullOrForbidden(TargetIndex.B);
-            this.FailOn(() => Diner.CurJobDef != WFL_StoryDefOf.WFL_HallSit || Diner.Downed || Diner.Drafted);
-            yield return Toils_Goto.GotoThing(TargetIndex.B, PathEndMode.Touch);
+            var pick = new Toil
+            {
+                defaultCompleteMode = ToilCompleteMode.Instant,
+                initAction = () =>
+                {
+                    var c = FamilyComponent.Current;
+                    if (c == null) { EndJobWith(JobCondition.Incompletable); return; }
+                    // Skip anyone who has left their seat; end the round when nobody is left or no meal can be had.
+                    for (int guard = 0; guard < 12; guard++)
+                    {
+                        int id = c.Registry.NextDiner(Activities.Now);
+                        if (id == 0) { EndJobWith(JobCondition.Succeeded); return; }
+                        var diner = c.TryGetPawn(id);
+                        if (diner == null || !diner.Spawned || diner.Map != pawn.Map || diner.CurJobDef != WFL_StoryDefOf.WFL_HallSit) { c.Registry.DinerServed(id); continue; }
+                        var meal = HallDriver.BestMeal(pawn, diner);
+                        if (meal == null || !pawn.Reserve(meal, job, 1, 1)) { EndJobWith(JobCondition.Incompletable); return; }
+                        job.SetTarget(TargetIndex.A, diner); job.SetTarget(TargetIndex.B, meal); job.count = 1;
+                        return;
+                    }
+                    EndJobWith(JobCondition.Incompletable);
+                }
+            };
+            yield return pick;
+            yield return Toils_Goto.GotoThing(TargetIndex.B, PathEndMode.Touch).FailOnDespawnedNullOrForbidden(TargetIndex.B);
             yield return new Toil
             {
                 defaultCompleteMode = ToilCompleteMode.Instant,
                 initAction = () => { if (pawn.carryTracker.TryStartCarry(Meal, 1) <= 0) EndJobWith(JobCondition.Incompletable); }
             };
-            yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
-            yield return new Toil
+            yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch).FailOnDespawnedOrNull(TargetIndex.A);
+            var hand = new Toil
             {
                 defaultCompleteMode = ToilCompleteMode.Instant,
                 initAction = () =>
                 {
-                    var diner = Diner; var sit = diner.CurJob;
-                    var carried = pawn.carryTracker.CarriedThing;
-                    if (sit == null || carried == null) { EndJobWith(JobCondition.Incompletable); return; }
+                    var diner = Diner; var carried = pawn.carryTracker.CarriedThing; var c = FamilyComponent.Current;
+                    var sit = diner?.CurJob;
+                    if (diner == null || carried == null || c == null || sit == null || diner.CurJobDef != WFL_StoryDefOf.WFL_HallSit)
+                    {
+                        if (diner != null && c != null) c.Registry.DinerServed(diner.thingIDNumber);         // they are gone; do not wait on them again
+                        pawn.carryTracker.TryDropCarriedThing(pawn.Position, ThingPlaceMode.Near, out _);
+                        return;
+                    }
                     IntVec3 table = sit.targetB.IsValid ? sit.targetB.Cell : diner.Position;
                     if (!pawn.carryTracker.TryDropCarriedThing(table, ThingPlaceMode.Near, out Thing placed) || placed == null) { EndJobWith(JobCondition.Incompletable); return; }
+                    pawn.Map.reservationManager.ReleaseAllClaimedBy(pawn);                                    // the meal is no longer ours, so the diner can take it
                     var eat = JobMaker.MakeJob(JobDefOf.Ingest, placed);
                     eat.count = FoodUtility.WillIngestStackCountOf(diner, placed.def, FoodUtility.GetNutrition(diner, placed, placed.def));
                     diner.jobs.StartJob(eat, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
-                    var c = FamilyComponent.Current;
-                    c?.Registry.DinerServed(diner.thingIDNumber);
-                    if (c != null) OfficeDriver.Served(c.Registry, OfficeKind.HallKeeper, pawn, diner, Activities.Now);
-                    c?.Registry.RecordOfficeWork(OfficeKind.HallKeeper, pawn.thingIDNumber, GovernanceMeetings.NextToken(), Activities.Now, HallDriver.MealQuality(placed, diner));
+                    c.Registry.DinerServed(diner.thingIDNumber);
+                    OfficeDriver.Served(c.Registry, OfficeKind.HallKeeper, pawn, diner, Activities.Now);
+                    c.Registry.RecordOfficeWork(OfficeKind.HallKeeper, pawn.thingIDNumber, GovernanceMeetings.NextToken(), Activities.Now, HallDriver.MealQuality(placed, diner));
                 }
             };
+            yield return hand;
+            yield return Toils_Jump.Jump(pick);
         }
     }
 }

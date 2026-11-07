@@ -73,6 +73,7 @@ namespace FamilyLife
             Safe(() => r.PruneOffices(office => OfficeCellValid(c, office)), "offices");
             if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.governance) Safe(() => r.MaintainSuccession(now), "succession");
             Safe(() => r.MaintainCrime(now), "crime upkeep");
+            Safe(() => OfficeDriver.Run(c, now), "community posts");
             Safe(() => CampingDriver.Run(c, now), "camping");
             Safe(() => KinVisitDriver.Run(c, now), "kin visits");
             GovernanceDriver.Run(c, now);

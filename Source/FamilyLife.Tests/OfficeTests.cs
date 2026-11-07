@@ -493,10 +493,11 @@ namespace FamilyLife.Tests
             r.ElectOffices(2000, Skilled(4, OfficeKind.Healer));
             Assert.Equal(4, r.OfficeFor(OfficeKind.Healer).HolderId);
             r.MaintainOffices(2000);
-            var ctx = new OfficeContext { Skill = (id, k) => id == 3 ? .9f : 0f, Passion = (id, k) => id == 3 };   // 4 has lost the skill; 3 is the chaplain
+            var ctx = new OfficeContext { Skill = (id, k) => id == 3 ? .9f : id == 2 && k == OfficeKind.Healer ? .8f : 0f, Passion = (id, k) => id == 3 || id == 2 };   // 4 has lost the skill; 3 is the chaplain
             var a = r.CallAssembly(r.NextAssemblyTick, ctx);
             Assert.False(r.OfficeFor(OfficeKind.Healer).Held);                                       // 4 stepped down, not fit any more
             Assert.DoesNotContain(a.Races, x => x.Candidates.Contains(3));                           // the chaplain does not also run
+            Assert.Contains(a.Races, x => x.Candidates.Contains(2));                                 // someone else who wants it does
         }
 
         [Fact]
@@ -522,6 +523,53 @@ namespace FamilyLife.Tests
             Assert.Equal(21, r.NextCheckupPatient(start + 5, id => true));                          // their own kin first, though others have lower ids
             Assert.True(r.KinOfHolder(21, OfficeKind.Healer));
             Assert.False(r.KinOfHolder(1, OfficeKind.Healer));
+        }
+
+        // ---- fixes from the logic check ----
+
+        [Fact]
+        public void An_assembly_with_nothing_to_decide_is_not_held_and_the_next_one_is_still_a_year_off()
+        {
+            var r = Colony();
+            r.MaintainOffices(2000);
+            int first = r.NextAssemblyTick;
+            Assert.Null(r.CallAssembly(first, new OfficeContext { Skill = (id, k) => 0f }));
+            Assert.Empty(r.Assemblies);
+            Assert.True(r.NextAssemblyTick > first);
+        }
+
+        [Fact]
+        public void A_game_named_chaplain_cannot_also_keep_an_elected_post()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            Assert.Equal(3, r.OfficeFor(OfficeKind.Healer).HolderId);
+            r.AppointOffice(OfficeKind.Chaplain, 3, 2100);
+            Assert.Equal(3, r.OfficeFor(OfficeKind.Chaplain).HolderId);
+            Assert.False(r.OfficeFor(OfficeKind.Healer).Held);                                         // one post per person
+            Assert.Single(r.OfficesHeldBy(3));
+        }
+
+        [Fact]
+        public void A_student_who_cannot_be_reached_goes_to_the_back_instead_of_holding_up_the_class()
+        {
+            var r = Teacher();
+            r.BeginClass(2100, 3 * Day, new[] { 1, 2, 4 });
+            Assert.Equal(1, r.NextStudent(2200));
+            r.SessionDefer(OfficeKind.Teacher, 1);
+            Assert.Equal(2, r.NextStudent(2300));
+            Assert.Equal(new[] { 2, 4, 1 }, r.OfficeFor(OfficeKind.Teacher).SessionQueue);
+        }
+
+        [Fact]
+        public void A_small_colony_is_not_expected_to_give_as_many_checkups_as_a_large_one()
+        {
+            var r = Colony();                                                                           // six people
+            Assert.True(r.ExpectedActs(OfficeKind.Healer) < 20);
+            Assert.True(r.ExpectedActs(OfficeKind.Healer) >= 6);
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            for (int i = 0; i < 12; i++) r.RecordOfficeWork(OfficeKind.Healer, 3, 900 + i, 2100 + (i / 3) * Day, 1f);
+            Assert.True(r.OfficeGrade(OfficeKind.Healer) > .9f);                                        // twelve good check-ups is a full year for a house this size
         }
     }
 }

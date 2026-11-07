@@ -61,7 +61,8 @@ namespace FamilyLife
                 if (holder == null) continue;
                 float grade = r.OfficeGrade(office.Kind);
                 bool appointed = FamilyRegistry.IsAppointed(office.Kind);
-                string mood = appointed || grade >= .65f ? "WFL_PostTrusted" : grade >= .35f ? "WFL_PostAdequate" : office.Work > 0 || now - office.ElectedTick > 6 * Day ? "WFL_PostFailing" : "WFL_PostAdequate";
+                bool neglecting = office.UnmetSinceTick != 0 && now - office.UnmetSinceTick > 3 * Day;       // work was needed and is not being done
+                string mood = appointed || grade >= .65f ? "WFL_PostTrusted" : grade >= .35f || !neglecting && office.Work == 0 ? "WFL_PostAdequate" : "WFL_PostFailing";
                 Activities.GainMemory(holder, mood, null);
                 if (!appointed && grade < .5f && office.Work > 0) continue;
                 foreach (var kin in r.MembersOf(office.HolderFamily).Where(m => m.InColony && m.Id != office.HolderId).Take(12))
@@ -122,6 +123,11 @@ namespace FamilyLife
                 Messages.Message("WFL_Chaplain_Named".Translate(p.LabelShort), p, MessageTypeDefOf.NeutralEvent, false);
         }
 
+        private static readonly Dictionary<int, int> skipUntil = new Dictionary<int, int>();
+
+        private static bool Skipped(int person, int now) => skipUntil.TryGetValue(person, out int until) && now < until;
+        private static void SkipFor(int person, int now, int ticks) { skipUntil[person] = now + ticks; if (skipUntil.Count > 200) skipUntil.Clear(); }
+
         private static bool Due(string key, int now, int gap)
         {
             if (lastAct.TryGetValue(key, out int last) && now >= last && now - last < gap) return false;
@@ -165,9 +171,9 @@ namespace FamilyLife
                     needed = true;
                     if (Due("checkup", now, 1500))
                     {
-                        int patientId = r.NextCheckupPatient(now, id => PatientAvailable(c, holder, id));
+                        int patientId = r.NextCheckupPatient(now, id => !Skipped(id, now) && PatientAvailable(c, holder, id));
                         var patient = patientId == 0 ? null : Spawned(c, patientId);
-                        if (patient != null) GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0);
+                        if (patient != null && !GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) SkipFor(patientId, now, 6000);       // unreachable or busy: try the others first
                     }
                 }
             }
@@ -261,7 +267,7 @@ namespace FamilyLife
             if (next == 0) return;
             var student = Spawned(c, next);
             if (student == null || student.Map != holder.Map || !Governance.Free(c, next) || LearnableSkill(holder, student) == null) { r.ClassDone(next); return; }      // cannot come today
-            if (Due("lesson", now, 600)) GovernanceMeetings.Start(holder, student, WFL_StoryDefOf.WFL_OfficeLesson, 0);
+            if (Due("lesson", now, 600) && !GovernanceMeetings.Start(holder, student, WFL_StoryDefOf.WFL_OfficeLesson, 0)) r.SessionDefer(OfficeKind.Teacher, next);
         }
 
         /// <summary>A lesson from the colony's teacher: a real conversation that ends with the student learning something the teacher is better at.</summary>

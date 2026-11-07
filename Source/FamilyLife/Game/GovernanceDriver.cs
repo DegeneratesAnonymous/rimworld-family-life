@@ -24,7 +24,6 @@ namespace FamilyLife
             if (s != null && !s.governance) return;
             Step(() => Duties(c, now), "duties");
             Step(() => Elections(c, now), "elections");
-            Step(() => OfficeDriver.Run(c, now), "community posts");
             Step(() => Crime(c, now), "house crime");
             Step(() => Coups(c, now), "schemes");
         }

@@ -112,8 +112,12 @@ namespace FamilyLife
                 var p = c.TryGetPawn(id);
                 if (!Eligible(p)) continue;                                                           // checked again now: things change in a day
                 Find.WorldPawns.RemovePawn(p);
-                GenSpawn.Spawn(p, CellFinder.RandomClosewalkCellNear(edge, map, 8), map);
-                placed.Add(p);
+                try { GenSpawn.Spawn(p, CellFinder.RandomClosewalkCellNear(edge, map, 8), map); placed.Add(p); }
+                catch (Exception ex)
+                {
+                    Log.Warning("[Wil's Family Life] Could not place a visiting relative: " + ex.Message);
+                    if (!p.Spawned) Find.WorldPawns.PassToWorld(p);          // never leave anyone in limbo
+                }
             }
             if (!r.MarkKinArrived(visit.Id, placed.Select(p => p.thingIDNumber), now)) return;
             Greet(placed, map, Math.Max(Day, KinStayLeft(visit, now)));
