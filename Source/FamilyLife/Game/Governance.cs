@@ -71,7 +71,7 @@ namespace FamilyLife
             Safe(() => r.AdvanceCeremonyPlans(now, family => PlanContextFor(c, family)), "plan upkeep");
             Safe(() => r.MaintainStewardDuties(now, id => Free(c, id)), "duties");
             Safe(() => r.PruneOffices(office => OfficeCellValid(c, office)), "offices");
-            Safe(() => r.MaintainSuccession(now), "succession");
+            if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.governance) Safe(() => r.MaintainSuccession(now), "succession");
             Safe(() => r.MaintainCrime(now), "crime upkeep");
             GovernanceDriver.Run(c, now);
         }

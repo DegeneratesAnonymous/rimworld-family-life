@@ -131,7 +131,7 @@ namespace FamilyLife.Domain
             }
             else if (r.Approach != SupplyApproach.Repay)
             {
-                RecordIncident(IncidentKind.Gift, r.DonorId, r.RequesterId, r.MapId, now, 10, new[] { r.RequesterId, r.DonorId });
+                RecordIncident(IncidentKind.Gift, r.DonorId, r.RequesterId, r.MapId, now, r.Price > 0 ? 6 : 10, new[] { r.RequesterId, r.DonorId });
                 ChangeBond(r.DonorId, r.RequesterId, new BondChange(1, 1, -1, 2), now);
             }
             // Repayment needs the reverse, actually completed transfer of the same resource category.

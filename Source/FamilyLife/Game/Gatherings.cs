@@ -213,7 +213,8 @@ namespace FamilyLife
                 {
                     var planContext = Governance.PlanContextFor(component, request.LineageId);
                     var allowed = new HashSet<int>(plan.InvitedIds.Where(id => component.Registry.PlanMayDirect(plan, id, planContext)));
-                    invited = invited.Where(id => id == organizer.thingIDNumber || allowed.Contains(id) || request.VisitorIds.Contains(id)).ToList();
+                    var removed = new HashSet<int>(plan.Invitees.Where(i => i.Status == InviteStatus.Removed).Select(i => i.PersonId));
+                    invited = invited.Where(id => id == organizer.thingIDNumber || allowed.Contains(id) || request.VisitorIds.Contains(id) && !removed.Contains(id)).ToList();
                     // The card can narrow the list or add people the player chose; it never re-adds someone the usual opinion rule left out.
                     foreach (int id in plan.Invitees.Where(i => i.ByPlayer && i.Status == InviteStatus.Invited).Select(i => i.PersonId).Where(allowed.Contains))
                         if (!invited.Contains(id) && component.TryGetPawn(id) is Pawn guest && guest.Spawned && guest.Map == organizer.Map) invited.Add(id);

@@ -38,6 +38,14 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void A_paid_trade_is_goodwill_but_never_a_favor()
+        {
+            var r = World(out int giver, out _);
+            r.RecordIncident(IncidentKind.Gift, 1, 20, 0, 4 * Day, 6f, new[] { 1, 20 });     // what a paid sale records
+            Assert.Equal(0, r.RememberFavors(giver, 5 * Day));
+        }
+
+        [Fact]
         public void A_favor_is_settled_only_when_the_goods_really_arrive()
         {
             var r = World(out int giver, out int receiver);

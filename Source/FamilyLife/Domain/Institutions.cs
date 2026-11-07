@@ -326,7 +326,7 @@ namespace FamilyLife.Domain
         /// A council names the colony's leader when the post is empty or the term has run out. Each seated house's head casts one vote by their
         /// own weighing, so a small house counts as much as a large one.
         /// </summary>
-        public Election ConveneCouncil(int now, PoliticalContext ctx = null)
+        public Election ConveneCouncil(int now, PoliticalContext ctx = null, Func<int, bool> playerControlled = null)
         {
             if (Institution.Kind != InstitutionKind.Council) return null;
             bool vacant = GetPerson(Institution.LeaderId)?.InColony != true, due = Institution.TermEndTick != 0 && now >= Institution.TermEndTick;
@@ -342,6 +342,7 @@ namespace FamilyLife.Domain
             var e = new Election { Id = NextElectionId++, StartedTick = now, VotingTick = now, Candidates = field, State = ElectionState.Voting };
             foreach (int voter in voters)
             {
+                if (playerControlled != null && playerControlled(voter)) continue;     // the player's own ballot is never cast for them; unanswered counts as absent
                 var best = field.Select(c => Support(voter, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();
                 e.Voted.Add(voter);
                 if (best.Total < AbstainBelow) { e.Abstained++; continue; }

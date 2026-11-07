@@ -104,7 +104,7 @@ namespace FamilyLife
             var r = c.Registry;
             var political = GovernanceMeetings.Political(c);
             r.AdvanceElections(now, political, physicalVoting: true);
-            r.ConveneCouncil(now, political);
+            r.ConveneCouncil(now, political, id => Governance.IsAvatar(c, id));
             r.AdvanceCouncil(now, id => Governance.IsAvatar(c, id));
             r.CompleteApprovedUnions(now);
             foreach (var election in r.Elections.Where(e => e.Open).Take(1))
