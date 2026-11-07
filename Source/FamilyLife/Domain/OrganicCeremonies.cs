@@ -137,7 +137,7 @@ namespace FamilyLife.Domain
                 OrganizerId=r.OrganizerId,StartedTick=r.StartedTick,CompletedTick=now,Attendees=attendees,Visitors=r.VisitorIds.Count,Moments=moments,
                 Influences=r.Influences,Outcome=Math.Max(-1,Math.Min(1,outcome))};
             Ceremonies.Add(record);if(Ceremonies.Count>128)Ceremonies.RemoveRange(0,Ceremonies.Count-128);
-            if(record.OrganizerId!=0){var p=EnsurePrestige(record.OrganizerId);if(p!=null){p.CeremoniesOrganized++;NotePublicService(record.OrganizerId,record.LineageId,1+Math.Max(0,record.Outcome)*2,now);}
+            if(record.OrganizerId!=0){RecordOfficeWork(OfficeKind.Chaplain,record.OrganizerId,record.Id|0x40000000,now,.5f+record.Outcome/2f);var p=EnsurePrestige(record.OrganizerId);if(p!=null){p.CeremoniesOrganized++;NotePublicService(record.OrganizerId,record.LineageId,1+Math.Max(0,record.Outcome)*2,now);}
                 NoteStewardService(record.OrganizerId,record.LineageId,StewardServiceKind.Ceremony,record.Outcome>=0,now);}
             var house=GetLineage(record.LineageId);if(house!=null)house.Standing=Math.Max(-100,Math.Min(100,house.Standing+record.Outcome));
             if(record.Kind==CeremonyKind.Wedding)RememberCeremony(record.LineageId,MemoryKind.Wedding,now,record.SubjectId,record.SubjectBId);

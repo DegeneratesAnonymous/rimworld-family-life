@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased - community posts, camping and visiting kin
-- Add two community posts chosen by the colony and kept by real work: a teacher who holds a class every few days (adjustable, adults optional) and a doctor who gives everyone a check-up twice a year in the medical room; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
+- Add four community posts: a teacher who holds a class every few days (adjustable, adults optional), a doctor who gives everyone a check-up twice a year in the medical room, a hall keeper who cleans the hall and serves meals to people who sit and wait, and a chaplain named by the ideoligion. Elected posts are chosen at a yearly assembly where the incumbent's graded year weighs in the vote; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
 - A player-controlled head is asked for their council leadership ballot; a union a head accepted under a council now finishes when the council approves it.
 - Offline tests only; nothing here has been run in the game.
 

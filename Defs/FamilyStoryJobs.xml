@@ -23,5 +23,8 @@
   <JobDef><defName>WFL_ProtectionOffer</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>talking terms with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_OfficeLesson</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a lesson.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_Checkup</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_HallSit</defName><driverClass>FamilyLife.JobDriver_HallSit</driverClass><reportString>waiting for a meal in the hall.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_HallServe</defName><driverClass>FamilyLife.JobDriver_HallServe</driverClass><reportString>serving a meal to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_CastAssemblyVote</defName><driverClass>FamilyLife.JobDriver_CastAssemblyVote</driverClass><reportString>going to the assembly to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastVote</defName><driverClass>FamilyLife.JobDriver_CastVote</driverClass><reportString>going to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

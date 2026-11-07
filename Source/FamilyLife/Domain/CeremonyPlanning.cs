@@ -124,7 +124,7 @@ namespace FamilyLife.Domain
             if (steward != null) return steward.Id;
             var head = GetPerson(HeadOf(family));
             if (Fit(head)) return head.Id;
-            return MembersOf(family).Where(Fit).OrderByDescending(p => PrestigeOf(p.Id)?.Value ?? 0).ThenBy(p => p.BirthAbsTick).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();
+            return MembersOf(family).Where(Fit).OrderByDescending(p => OfficeFor(OfficeKind.Chaplain)?.HolderId == p.Id).ThenByDescending(p => PrestigeOf(p.Id)?.Value ?? 0).ThenBy(p => p.BirthAbsTick).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();
         }
 
         private IEnumerable<PersonRecord> Stewards(int family)

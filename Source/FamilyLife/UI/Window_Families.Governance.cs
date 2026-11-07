@@ -44,6 +44,15 @@ namespace FamilyLife
                     pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
                 }));
             }
+            if (registry.NeedsToVoteInAssembly(viewer) && pawn.Spawned && GovernanceDriver.PollingPlace(component, out var amap, out var acell) && amap == pawn.Map)
+            {
+                int assemblyId = registry.Assemblies.First(x => x.State == AssemblyState.Voting).Id; var acellCopy = acell;
+                Answer(ref y, "WFL_Ask_AssemblyVote".Translate(), new KeyValuePair<string, System.Action>("WFL_Ask_GoVote".Translate(), () =>
+                {
+                    var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_CastAssemblyVote, acellCopy); job.count = assemblyId;
+                    pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                }));
+            }
             foreach (var coup in registry.Coups.Where(c => c.Open && c.Participants.Any(p => p.PersonId == viewer && p.Stance == CrimeStance.Unasked)).ToList())
             {
                 int id = coup.Id;
@@ -238,9 +247,15 @@ namespace FamilyLife
                 var post = registry.OfficeFor(kind);
                 string title = ("WFL_OfficeKind_" + kind).Translate();
                 if (post == null || !post.Held) { Line(view, ref y, "WFL_Office_Vacant".Translate(title), 10f, true); continue; }
-                LineTip(view, ref y, "WFL_Office_Holder".Translate(title, FamilyUi.NameOf(registry, post.HolderId), FamilyUi.Date(post.TermEndTick)),
-                    "WFL_Office_Tip".Translate(post.Work, post.Backers, post.Opponents), 10f, true);
+                string until = FamilyRegistry.IsAppointed(kind) ? "WFL_Office_Appointed".Translate().ToString() : "WFL_Office_Until".Translate(FamilyUi.Date(post.TermEndTick)).ToString();
+                LineTip(view, ref y, "WFL_Office_Holder".Translate(title, FamilyUi.NameOf(registry, post.HolderId), until),
+                    "WFL_Office_Tip".Translate(post.Work, post.Backers, post.Opponents, AssemblyDriver.GradeWord(registry.OfficeGrade(kind))), 10f, true);
             }
+            if (registry.NextAssemblyTick > 0) Line(view, ref y, "WFL_Assembly_Next".Translate(FamilyUi.Date(registry.NextAssemblyTick)), 10f, true);
+            var openAssembly = registry.OpenAssembly;
+            if (openAssembly != null)
+                foreach (var race in openAssembly.Races)
+                    Line(view, ref y, "WFL_Assembly_RaceLine".Translate(("WFL_OfficeKind_" + race.Kind).Translate(), ("WFL_AssemblyState_" + openAssembly.State).Translate(), FamilyUi.NameList(registry, race.Candidates)), 20f, true);
             foreach (var trip in registry.CampTrips.Where(t => t.FamilyId == lineage.Id && t.Open).Take(1).ToList())
             {
                 Line(view, ref y, "WFL_Camp_Line".Translate(("WFL_CampMotive_" + trip.Motive).Translate(), ("WFL_CampState_" + trip.State).Translate(), (trip.StayTicks / 2500).ToString(),

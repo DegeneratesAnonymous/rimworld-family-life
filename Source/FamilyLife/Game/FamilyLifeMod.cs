@@ -28,6 +28,8 @@ namespace FamilyLife
         public int classEveryDays=3;
         public bool adultStudents=false;
         public bool healthChecks=true;
+        public bool holdHallMeals=true;
+        public int hallMealEveryDays=3;
         public int checkupsPerYear=2;
         public int campRadius=4;
         public bool babyBonding = true;
@@ -73,6 +75,8 @@ namespace FamilyLife
             Scribe_Values.Look(ref classEveryDays,"classEveryDays",3);
             Scribe_Values.Look(ref adultStudents,"adultStudents",false);
             Scribe_Values.Look(ref healthChecks,"healthChecks",true);
+            Scribe_Values.Look(ref holdHallMeals,"holdHallMeals",true);
+            Scribe_Values.Look(ref hallMealEveryDays,"hallMealEveryDays",3);
             Scribe_Values.Look(ref checkupsPerYear,"checkupsPerYear",2);
             Scribe_Values.Look(ref campRadius,"campRadius",4);
             Scribe_Values.Look(ref babyBonding, "babyBonding", true);
@@ -126,7 +130,7 @@ namespace FamilyLife
         public override string SettingsCategory() => "Wil's Family Life";
 
         private Vector2 settingsScroll;
-        private float settingsHeight = 1700;
+        private float settingsHeight = 1800;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
@@ -160,6 +164,12 @@ namespace FamilyLife
             {
                 list.Label("WFL_S_CheckupsPerYear".Translate(Settings.checkupsPerYear),tooltip:"WFL_S_CheckupsPerYearTip".Translate());
                 Settings.checkupsPerYear=Mathf.RoundToInt(list.Slider(Settings.checkupsPerYear,1f,4f));
+            }
+            list.CheckboxLabeled("WFL_S_HallMeals".Translate(),ref Settings.holdHallMeals,"WFL_S_HallMealsTip".Translate());
+            if(Settings.holdHallMeals)
+            {
+                list.Label("WFL_S_HallEvery".Translate(Settings.hallMealEveryDays),tooltip:"WFL_S_HallEveryTip".Translate());
+                Settings.hallMealEveryDays=Mathf.RoundToInt(list.Slider(Settings.hallMealEveryDays,1f,10f));
             }
             list.CheckboxLabeled("WFL_S_Camping".Translate(),ref Settings.camping,"WFL_S_CampingTip".Translate());
             if(Settings.camping)

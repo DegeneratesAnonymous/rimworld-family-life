@@ -50,12 +50,32 @@ namespace FamilyLife
                 var pawn = c.TryGetPawn(office.HolderId);
                 if (pawn != null) Messages.Message("WFL_Office_Elected".Translate(pawn.LabelShort, ("WFL_OfficeKind_" + office.Kind).Translate()), pawn, MessageTypeDefOf.PositiveEvent, false);
             }
+            SyncChaplain(c, r, now);
             r.MaintainOffices(now);
+            AssemblyDriver.Run(c, r, now);
             foreach (var office in r.Offices.Where(o => o.Held).ToList())
             {
                 try { Work(c, r, office, now); }
                 catch (Exception ex) { Log.Warning("[Wil's Family Life] Community post '" + office.Kind + "' skipped: " + ex.Message); }
             }
+        }
+
+        /// <summary>The chaplain is the ideoligion's moral guide, the one who converts and speaks for the faith. The post simply follows the game.</summary>
+        private static void SyncChaplain(FamilyComponent c, FamilyRegistry r, int now)
+        {
+            int person = 0;
+            try
+            {
+                if (ModsConfig.IdeologyActive)
+                {
+                    var ideo = Faction.OfPlayer.ideos?.PrimaryIdeo;
+                    var guide = ideo?.RolesListForReading.FirstOrDefault(x => x.def == PreceptDefOf.IdeoRole_Moralist)?.ChosenPawnSingle();
+                    if (guide != null && guide.Faction == Faction.OfPlayer && !guide.Dead) person = guide.thingIDNumber;
+                }
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not read the moral guide: " + ex.Message); }
+            if (r.AppointOffice(OfficeKind.Chaplain, person, now) && person != 0 && c.TryGetPawn(person) is Pawn p)
+                Messages.Message("WFL_Chaplain_Named".Translate(p.LabelShort), p, MessageTypeDefOf.NeutralEvent, false);
         }
 
         private static bool Due(string key, int now, int gap)
@@ -73,7 +93,8 @@ namespace FamilyLife
             int holderId = office.HolderId;
             var holder = Spawned(c, holderId);
             if (office.Kind == OfficeKind.Healer) HealerWork(c, r, office, holder, s, now);
-            else TeacherWork(c, r, office, holder, s, now);
+            else if (office.Kind == OfficeKind.Teacher) TeacherWork(c, r, office, holder, s, now);
+            else if (office.Kind == OfficeKind.HallKeeper) HallDriver.Work(c, r, office, holder, s, now, (key, n, gap) => Due(key, n, gap));
         }
 
         // ------------------------------------------------------------------ the doctor
@@ -87,7 +108,7 @@ namespace FamilyLife
             else if (tended > office.Counter)
             {
                 int delta = Math.Min(3, tended - office.Counter); office.Counter = tended;
-                for (int i = 0; i < delta; i++) r.RecordOfficeWork(OfficeKind.Healer, holderId, GovernanceMeetings.NextToken(), now);
+                for (int i = 0; i < delta; i++) r.RecordOfficeWork(OfficeKind.Healer, holderId, GovernanceMeetings.NextToken(), now, .4f + .6f * SkillFor(holder, OfficeKind.Healer));
             }
             bool needed = holder.Map.mapPawns.FreeColonistsSpawned.Take(80).Any(p => HealthAIUtility.ShouldBeTendedNowByPlayer(p));
             if (s == null || s.healthChecks)
@@ -144,7 +165,8 @@ namespace FamilyLife
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
             r.RecordTogether(doctor.thingIDNumber, patient.thingIDNumber, 1200, now, BondCause.Care);
-            r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, GovernanceMeetings.NextToken(), now);
+            bool inRoom = patient.Position.GetRoom(patient.Map)?.ContainedBeds?.Any(b => b.Medical) == true;
+            r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, GovernanceMeetings.NextToken(), now, .4f + .4f * SkillFor(doctor, OfficeKind.Healer) + (inRoom ? .2f : 0f));
         }
 
         // ------------------------------------------------------------------ the teacher
@@ -172,7 +194,7 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Teacher, anyone && (s == null || s.holdClasses), now);
             if (s != null && !s.holdClasses) return;
 
-            if (now >= office.NextClassTick && office.ClassQueue.Count == 0)
+            if (now >= office.NextSessionTick && office.SessionQueue.Count == 0)
             {
                 var students = r.Persons.Where(p => p.InColony && p.Id != holderId && (p.Juvenile || adults))
                     .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == holder.Map && Governance.Free(c, p.Id) && LearnableSkill(holder, pawn) != null)
@@ -192,12 +214,13 @@ namespace FamilyLife
         internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now)
         {
             var office = r.OfficeFor(OfficeKind.Teacher);
-            if (office == null || office.HolderId != teacher.thingIDNumber || !office.ClassQueue.Contains(student.thingIDNumber)) return;
+            if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
             var skill = LearnableSkill(teacher, student);
             if (skill != null) student.skills.Learn(skill, student.ageTracker.AgeBiologicalYears >= 18 ? 150f : 250f, true);
             r.ClassDone(student.thingIDNumber);
             r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, 1800, now, BondCause.Teaching);
-            r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now);
+            int gap = skill == null ? 0 : teacher.skills.GetSkill(skill).Level - student.skills.GetSkill(skill).Level;
+            r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, Math.Min(1f, .4f + gap / 10f));
         }
     }
 }

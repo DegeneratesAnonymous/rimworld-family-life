@@ -290,7 +290,8 @@ namespace FamilyLife
                 if (PerspectiveShiftBridge.IsAvatar(pawn)) continue;      // the avatar leads only if they said so on the card
                 if (!Activities.IsFree(pawn, checkCurrentJob: false)) continue;
                 int score = Activities.SocialOf(pawn) + (registry.HeadOf(lineage.Id)==record.Id?30:registry.RoleInHouse(record.Id,lineage.Id)==HouseRole.Steward?15:0)
-                            + (registry.GetPerson(request.SubjectId)?.ParentIds.Contains(record.Id) == true ? 20 : 0);
+                            + (registry.GetPerson(request.SubjectId)?.ParentIds.Contains(record.Id) == true ? 20 : 0)
+                            + (registry.OfficeFor(OfficeKind.Chaplain)?.HolderId == record.Id ? 25 : 0);      // the ideoligion's moral guide leads the rites
                 if (score > bestScore) { best = pawn; bestScore = score; }
             }
             return best;

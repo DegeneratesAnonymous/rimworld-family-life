@@ -199,13 +199,47 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref ActsToday, "actsToday"); Scribe_Values.Look(ref Counter, "counter"); Scribe_Values.Look(ref Backers, "backers"); Scribe_Values.Look(ref Opponents, "opponents");
             Scribe_Values.Look(ref UnmetSinceTick, "unmetSince"); Scribe_Values.Look(ref NextVoteTick, "nextVote"); Scribe_Values.Look(ref LastHolderId, "lastHolder");
             Scribe_Values.Look(ref BarredId, "barred"); Scribe_Values.Look(ref BarredUntil, "barredUntil"); Scribe_Values.Look(ref EndedTick, "ended");
-            Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
+            Scribe_Values.Look(ref Terms, "terms"); Scribe_Values.Look(ref QualityCount, "qualityCount"); Scribe_Values.Look(ref QualitySum, "qualitySum"); Scribe_Values.Look(ref LastGrade, "lastGrade");
             Scribe_Values.Look(ref NextRoundTick, "nextRound"); Scribe_Values.Look(ref RoundStartTick, "roundStart");
-            Scribe_Values.Look(ref NextClassTick, "nextClass"); Scribe_Values.Look(ref ClassStartTick, "classStart");
-            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Examined, "examined", LookMode.Value); Scribe_Collections.Look(ref ClassQueue, "classQueue", LookMode.Value);
+            Scribe_Values.Look(ref NextSessionTick, "nextSession"); Scribe_Values.Look(ref SessionStartTick, "sessionStart");
+            Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
+            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Examined, "examined", LookMode.Value); Scribe_Collections.Look(ref SessionQueue, "sessionQueue", LookMode.Value);
             if (Tokens == null) Tokens = new List<int>();
             if (Examined == null) Examined = new List<int>();
-            if (ClassQueue == null) ClassQueue = new List<int>();
+            if (SessionQueue == null) SessionQueue = new List<int>();
+        }
+    }
+
+    public sealed partial class AssemblyEndorsement : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref EndorserId, "endorser"); Scribe_Values.Look(ref CandidateId, "candidate"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer);
+        }
+    }
+
+    public sealed partial class AssemblyRace : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref IncumbentId, "incumbent"); Scribe_Values.Look(ref WinnerId, "winner");
+            Scribe_Values.Look(ref Abstained, "abstained"); Scribe_Values.Look(ref IncumbentGrade, "incumbentGrade"); Scribe_Values.Look(ref Margin, "margin");
+            Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep);
+            if (Candidates == null) Candidates = new List<int>();
+            if (Votes == null) Votes = new List<ElectionVote>();
+        }
+    }
+
+    public sealed partial class CommunityAssembly : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref StartedTick, "started"); Scribe_Values.Look(ref VotingTick, "voting"); Scribe_Values.Look(ref CountedTick, "counted");
+            Scribe_Values.Look(ref State, "state", AssemblyState.Campaign);
+            Scribe_Collections.Look(ref Races, "races", LookMode.Deep); Scribe_Collections.Look(ref Voted, "voted", LookMode.Value); Scribe_Collections.Look(ref Endorsements, "endorsements", LookMode.Deep);
+            if (Races == null) Races = new List<AssemblyRace>();
+            if (Voted == null) Voted = new List<int>();
+            if (Endorsements == null) Endorsements = new List<AssemblyEndorsement>();
         }
     }
 
