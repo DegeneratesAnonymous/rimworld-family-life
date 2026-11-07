@@ -39,6 +39,10 @@ namespace FamilyLife.Domain
             return false;
         }
 
+        /// <summary>Whether a union between these two houses would have to go to the council and has not yet been approved.</summary>
+        public bool CouncilWouldBlock(int a, int b)
+            => CouncilSits && !CouncilMatters.Any(m => m.Kind == CouncilMatterKind.Union && m.State == CouncilMatterState.Approved && Pair(m, a, b));
+
         /// <summary>Asks the council to censure a house whose conduct is known. The house loses standing only if the council agrees.</summary>
         public CouncilMatter RequestCensure(int family, int now)
         {
@@ -105,6 +109,16 @@ namespace FamilyLife.Domain
                 if (alliance == null) continue;
                 int target = alliance.UnionTargetFamilyId, source = target == alliance.FamilyA ? alliance.FamilyB : alliance.FamilyA;
                 if (UniteFamilies(source, target, now)) { alliance.UnionState = HouseUnionState.Completed; alliance.LastChangedTick = now; done++; }
+            }
+            // A head's accepted petition waits for the same decision. If the council refuses, or never answers, the petition ends there.
+            foreach (var q in HousePetitions.Where(x => x.AwaitingCouncil && x.Kind == PetitionKind.Union).ToList())
+            {
+                int from = FamilyOf(q.PersonId);
+                var matter = CouncilMatters.Where(m => m.Kind == CouncilMatterKind.Union && Pair(m, q.FamilyId, from)).OrderByDescending(m => m.Id).FirstOrDefault();
+                if (GetPerson(q.PersonId)?.InColony != true || from != q.SourceFamilyId || HeadOf(q.SourceFamilyId) != q.PersonId || !CouncilSits) { q.AwaitingCouncil = false; q.State = PetitionState.Expired; continue; }
+                if (matter == null || matter.State == CouncilMatterState.Pending) continue;
+                if (matter.State == CouncilMatterState.Approved && UniteFamilies(q.FamilyId, from, now)) { q.AwaitingCouncil = false; done++; continue; }
+                if (matter.State != CouncilMatterState.Approved) { q.AwaitingCouncil = false; q.State = PetitionState.Denied; }
             }
             return done;
         }

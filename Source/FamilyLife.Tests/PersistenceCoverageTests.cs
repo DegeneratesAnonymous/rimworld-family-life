@@ -76,6 +76,9 @@ namespace FamilyLife.Tests
         [InlineData(typeof(CoupPlan))]
         [InlineData(typeof(FavorDebt))]
         [InlineData(typeof(CouncilMatter))]
+        [InlineData(typeof(CommunityOffice))]
+        [InlineData(typeof(CampTrip))]
+        [InlineData(typeof(KinVisit))]
         [InlineData(typeof(SupplyRequest))]
         [InlineData(typeof(FamilyRegistry))]
         public void Every_field_is_written_to_the_save(Type type)

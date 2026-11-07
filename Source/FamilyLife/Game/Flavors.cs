@@ -197,6 +197,8 @@ namespace FamilyLife
             }
 
             Activities.CompleteFamilyTime(pawn, partner, ticks, def == WFL_FlavorDefOf.WFL_Teach ? BondCause.Teaching : BondCause.Together);
+            if (def == WFL_FlavorDefOf.WFL_Teach && ticks >= 1200 && registry.GetPerson(partner.thingIDNumber)?.Juvenile == true)
+                registry.RecordOfficeWork(OfficeKind.Teacher, pawn.thingIDNumber, GovernanceMeetings.NextToken(), now);      // the colony's teacher teaching a child, however it came about
             registry.Reinforce(lineage, Dim.Hearth, 0.2f);
             registry.Reinforce(lineage, Dim.Devotion, 0.3f);
 

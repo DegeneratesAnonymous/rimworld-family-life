@@ -88,6 +88,13 @@ namespace FamilyLife
                     new KeyValuePair<string, System.Action>("WFL_Ask_Agree".Translate(), () => registry.AnswerCouncil(id, viewer, true, now)),
                     new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.AnswerCouncil(id, viewer, false, now)));
             }
+            foreach (var seat in registry.Elections.Where(e => e.Council && e.State == ElectionState.Voting && e.Pending.Contains(viewer)).ToList())
+            {
+                int electionId = seat.Id;
+                var buttons = seat.Candidates.Take(4).Select(cand => { int id = cand; return new KeyValuePair<string, System.Action>(FamilyUi.NameOf(registry, id), () => registry.CastCouncilBallot(electionId, viewer, id, now)); }).ToList();
+                buttons.Add(new KeyValuePair<string, System.Action>("WFL_Ask_Abstain".Translate(), () => registry.CastCouncilBallot(electionId, viewer, 0, now)));
+                Answer(ref y, "WFL_Ask_CouncilLeader".Translate(), buttons.ToArray());
+            }
             int myFamily = registry.FamilyOf(viewer);
             if (myFamily != 0 && registry.CanManageHouse(viewer, myFamily))
                 foreach (var petition in registry.HousePetitions.Where(p => p.FamilyId == myFamily && p.State == PetitionState.Proposed && p.ReceivedBy == 0).Take(3).ToList())
@@ -222,6 +229,39 @@ namespace FamilyLife
                 if (level == CrimeKnowledgeLevel.None) continue;
                 string who = level == CrimeKnowledgeLevel.Fact ? FamilyUi.NameOf(registry, heist.OrganizerId) : "WFL_Crime_Unknown".Translate().ToString();
                 Line(view, ref y, "WFL_Heist_Line".Translate(("WFL_HeistState_" + heist.State).Translate(), who, ("WFL_CrimeKnowledge_" + level).Translate()), 20f, true);
+            }
+
+            // The colony's posts, any camping wish this house has, and relatives on the road.
+            Line(view, ref y, "WFL_Offices_Title".Translate(), 0f, true);
+            foreach (OfficeKind kind in System.Enum.GetValues(typeof(OfficeKind)))
+            {
+                var post = registry.OfficeFor(kind);
+                string title = ("WFL_OfficeKind_" + kind).Translate();
+                if (post == null || !post.Held) { Line(view, ref y, "WFL_Office_Vacant".Translate(title), 10f, true); continue; }
+                LineTip(view, ref y, "WFL_Office_Holder".Translate(title, FamilyUi.NameOf(registry, post.HolderId), FamilyUi.Date(post.TermEndTick)),
+                    "WFL_Office_Tip".Translate(post.Work, post.Backers, post.Opponents), 10f, true);
+            }
+            foreach (var trip in registry.CampTrips.Where(t => t.FamilyId == lineage.Id && t.Open).Take(1).ToList())
+            {
+                Line(view, ref y, "WFL_Camp_Line".Translate(("WFL_CampMotive_" + trip.Motive).Translate(), ("WFL_CampState_" + trip.State).Translate(), (trip.StayTicks / 2500).ToString(),
+                    FamilyUi.NameList(registry, trip.Suggested)), 10f, true);
+                float x = 10f;
+                if (trip.State == CampState.Proposed)
+                {
+                    if (Widgets.ButtonText(new Rect(x, y, 150f, 26f), "WFL_Camp_Plan".Translate())) CampingDriver.Authorize(component, trip);
+                    x += 156f;
+                    if (Widgets.ButtonText(new Rect(x, y, 120f, 26f), "WFL_Camp_Decline".Translate())) registry.DeclineCamp(trip.Id, Activities.Now);
+                    x += 126f;
+                }
+                if (trip.State == CampState.Authorized && Widgets.ButtonText(new Rect(x, y, 150f, 26f), "WFL_Camp_FormCaravan".Translate())) CampingDriver.OpenCaravanForm();
+                if (trip.State == CampState.Authorized) x += 156f;
+                if (Widgets.ButtonText(new Rect(x, y, 140f, 26f), "WFL_Camp_ShowPlace".Translate())) WorldTiles.Jump(trip.Tile);
+                y += 32f;
+            }
+            foreach (var visit in registry.KinVisits.Where(v => v.FamilyId == lineage.Id && v.Open).Take(2).ToList())
+            {
+                Line(view, ref y, "WFL_Kin_Line".Translate(("WFL_KinState_" + visit.State).Translate(), FamilyUi.NameList(registry, visit.KinIds)), 10f, true);
+                if (visit.State == KinVisitState.Stranded && Widgets.ButtonText(new Rect(10f, y, 150f, 26f), "WFL_Kin_ShowPlace".Translate())) { WorldTiles.Jump(visit.StrandTile); y += 32f; }
             }
         }
     }

@@ -260,6 +260,7 @@ namespace FamilyLife
                 if(component.Registry.HeadOf(request.LineageId)==organizer.thingIDNumber||component.Registry.RoleInHouse(organizer.thingIDNumber,request.LineageId)==HouseRole.Steward)
                     request.Influences|=CeremonyInfluence.HeadSupport;
                 component.Registry.MarkCeremonyStarted(request.Id,organizer.thingIDNumber,map.uniqueID,now,request.InvitedIds);
+                KinVisitDriver.JoinGathering(component,request,organizer);
                 int dutyHolder=component.Registry.DutyHolder(request.LineageId,id=>Governance.Free(component,id)||id==organizer.thingIDNumber,out _);
                 if(dutyHolder==organizer.thingIDNumber)
                     component.Registry.BeginStewardDuty(request.LineageId,StewardDutyKind.OrganizeCeremony,request.Id,id=>id==dutyHolder,now);

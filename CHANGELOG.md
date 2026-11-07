@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - community posts, camping and visiting kin
+- Add five community posts (healer, teacher, quartermaster, mediator, judge) chosen by the colony and kept by real work; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
+- A player-controlled head is asked for their council leadership ballot; a union a head accepted under a council now finishes when the council approves it.
+- Offline tests only; nothing here has been run in the game.
+
 ## Unreleased — family stories and supplies
 
 - Add 48 tradition episodes with independent directed bond outcomes and real-context eligibility.

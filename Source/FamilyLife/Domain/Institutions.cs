@@ -61,6 +61,8 @@ namespace FamilyLife.Domain
         public float Margin;
         public int Abstained;
         public List<int> Candidates = new List<int>();
+        public List<int> Pending = new List<int>();    // council voters who are player-controlled and have not answered
+        public bool Council;                           // a council naming the leader, not a vote of the whole colony
         public List<ElectionEndorsement> Endorsements = new List<ElectionEndorsement>();
         public List<ElectionVote> Votes = new List<ElectionVote>();
         public bool Open => State == ElectionState.Campaign || State == ElectionState.Voting;
@@ -187,6 +189,13 @@ namespace FamilyLife.Domain
             foreach (var e in Elections.Where(x => x.Open).ToList())
             {
                 e.Candidates.RemoveAll(c => GetPerson(c)?.InColony != true);
+                if (e.Council)
+                {
+                    e.Pending.RemoveAll(p => GetPerson(p)?.InColony != true);
+                    if (e.Candidates.Count == 0) { e.State = ElectionState.Aborted; continue; }
+                    if (e.Pending.Count == 0 || now >= e.VotingTick + CouncilWindowTicks) Tally(e, now);     // a head who never answers is simply absent
+                    continue;
+                }
                 if (e.Candidates.Count < 2 && e.State == ElectionState.Campaign) { e.State = ElectionState.Aborted; continue; }
                 if (e.State == ElectionState.Campaign && now >= e.VotingTick) e.State = ElectionState.Voting;
                 if (e.State != ElectionState.Voting) continue;
@@ -226,8 +235,20 @@ namespace FamilyLife.Domain
 
         public bool NeedsToVote(int voter)
         {
-            var e = Elections.FirstOrDefault(x => x.State == ElectionState.Voting);
+            var e = Elections.FirstOrDefault(x => x.State == ElectionState.Voting && !x.Council);
             return e != null && !e.Voted.Contains(voter) && GetPerson(voter)?.InColony == true && !GetPerson(voter).Juvenile;
+        }
+
+        /// <summary>A player-controlled head answers a council vote for the colony's leader. Choosing nobody abstains. Anything else is refused.</summary>
+        public bool CastCouncilBallot(int electionId, int voter, int candidate, int now)
+        {
+            var e = Elections.FirstOrDefault(x => x.Id == electionId);
+            if (e == null || !e.Council || e.State != ElectionState.Voting || !e.Pending.Contains(voter) || candidate != 0 && !e.Candidates.Contains(candidate)) return false;
+            e.Pending.Remove(voter); e.Voted.Add(voter);
+            if (candidate == 0) e.Abstained++;
+            else e.Votes.Add(new ElectionVote { VoterId = voter, CandidateId = candidate, Reason = PoliticalFactor.Policy });
+            if (e.Pending.Count == 0) Tally(e, now);
+            return true;
         }
 
         private void Tally(Election e, int now)
@@ -328,7 +349,7 @@ namespace FamilyLife.Domain
         /// </summary>
         public Election ConveneCouncil(int now, PoliticalContext ctx = null, Func<int, bool> playerControlled = null)
         {
-            if (Institution.Kind != InstitutionKind.Council) return null;
+            if (Institution.Kind != InstitutionKind.Council || Elections.Any(x => x.Open && x.Council)) return null;
             bool vacant = GetPerson(Institution.LeaderId)?.InColony != true, due = Institution.TermEndTick != 0 && now >= Institution.TermEndTick;
             if (!vacant && !due) return null;
             var seats = Institution.CouncilHouseIds.Where(IsActiveHouse).ToList();
@@ -342,14 +363,15 @@ namespace FamilyLife.Domain
             var e = new Election { Id = NextElectionId++, StartedTick = now, VotingTick = now, Candidates = field, State = ElectionState.Voting };
             foreach (int voter in voters)
             {
-                if (playerControlled != null && playerControlled(voter)) continue;     // the player's own ballot is never cast for them; unanswered counts as absent
+                if (playerControlled != null && playerControlled(voter)) { e.Pending.Add(voter); continue; }   // asked, never assumed: their ballot waits for them
                 var best = field.Select(c => Support(voter, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();
                 e.Voted.Add(voter);
                 if (best.Total < AbstainBelow) { e.Abstained++; continue; }
                 e.Votes.Add(new ElectionVote { VoterId = voter, CandidateId = best.CandidateId, Reason = best.Dominant });
             }
+            e.Council = true;
             Elections.Add(e);
-            Tally(e, now);
+            if (e.Pending.Count == 0) Tally(e, now);
             return e;
         }
 

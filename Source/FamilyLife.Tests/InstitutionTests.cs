@@ -483,5 +483,62 @@ namespace FamilyLife.Tests
             Assert.Equal(HouseUnionState.Completed, r.MarriageAlliances.Single().UnionState);
             Assert.NotEqual(0, r.GetLineage(b).AbsorbedIntoId);
             Assert.Equal(0, r.CompleteApprovedUnions(3300));
-        }    }
+        }
+
+        [Fact]
+        public void A_player_controlled_head_is_asked_for_their_leadership_ballot_not_voted_for()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            r.SetInstitution(InstitutionKind.Council, 0, 3000);
+            var seat = r.ConveneCouncil(3000, new PoliticalContext(), id => id == 20);
+            Assert.NotNull(seat);
+            Assert.Equal(ElectionState.Voting, seat.State);                                  // not counted until they answer
+            Assert.Contains(20, seat.Pending);
+            Assert.DoesNotContain(seat.Votes, v => v.VoterId == 20);
+            Assert.Null(r.ConveneCouncil(3010, new PoliticalContext(), id => id == 20));      // no second vote opened meanwhile
+            Assert.False(r.CastCouncilBallot(seat.Id, 1, seat.Candidates[0], 3100));          // only the one asked may answer
+            Assert.True(r.CastCouncilBallot(seat.Id, 20, seat.Candidates[0], 3100));
+            Assert.Equal(ElectionState.Counted, seat.State);
+            Assert.False(r.CastCouncilBallot(seat.Id, 20, seat.Candidates[0], 3101));
+        }
+
+        [Fact]
+        public void An_unanswered_council_ballot_is_absent_after_the_window()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            r.SetInstitution(InstitutionKind.Council, 0, 3000);
+            var seat = r.ConveneCouncil(3000, new PoliticalContext(), id => id == 20);
+            r.AdvanceElections(3000 + ActivityTuning.TicksPerDay, new PoliticalContext(), true);
+            Assert.Equal(ElectionState.Voting, seat.State);
+            r.AdvanceElections(3000 + 2 * ActivityTuning.TicksPerDay, new PoliticalContext(), true);
+            Assert.NotEqual(ElectionState.Voting, seat.State);
+            Assert.DoesNotContain(seat.Votes, v => v.VoterId == 20);
+        }
+
+        [Fact]
+        public void A_union_a_head_accepted_is_finished_when_the_council_approves_and_ends_if_it_refuses()
+        {
+            var r = Council(out int a, out int b, out int c);
+            var petition = new HousePetition { Id = 1, PersonId = 20, FamilyId = a, SourceFamilyId = b, Kind = PetitionKind.Union, State = PetitionState.Accepted, AwaitingCouncil = true, CreatedTick = 3000 };
+            r.HousePetitions.Add(petition);
+            Assert.True(r.CouncilWouldBlock(a, b));
+            r.CouncilClears(a, b, 3000);                                                      // the head's yes put the question to the council
+            r.CompleteApprovedUnions(3050);
+            Assert.True(petition.AwaitingCouncil);                                            // still being weighed
+            r.AdvanceCouncil(3100);
+            Assert.Equal(CouncilMatterState.Approved, r.CouncilMatters.Single().State);
+            Assert.Equal(1, r.CompleteApprovedUnions(3200));
+            Assert.False(petition.AwaitingCouncil);
+            Assert.Equal(r.FamilyOf(1), r.FamilyOf(20));
+
+            var r2 = Council(out a, out b, out c);
+            var refused = new HousePetition { Id = 1, PersonId = 1, FamilyId = c, SourceFamilyId = a, Kind = PetitionKind.Union, State = PetitionState.Accepted, AwaitingCouncil = true, CreatedTick = 3000 };
+            r2.HousePetitions.Add(refused);
+            r2.CouncilClears(c, a, 3000);
+            r2.AdvanceCouncil(3100);                                                           // four of seven in one block: refused
+            r2.CompleteApprovedUnions(3200);
+            Assert.False(refused.AwaitingCouncil);
+            Assert.Equal(PetitionState.Denied, refused.State);
+        }
+    }
 }

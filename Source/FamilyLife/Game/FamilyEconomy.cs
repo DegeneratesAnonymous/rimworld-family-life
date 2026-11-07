@@ -12,7 +12,7 @@ namespace FamilyLife
     [DefOf]
     public static class WFL_StoryDefOf
     {
-        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_StewardNegotiate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote, WFL_ProtectionOffer;
+        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_StewardNegotiate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote, WFL_ProtectionOffer, WFL_OfficeLesson, WFL_JudgeHearing;
         static WFL_StoryDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(WFL_StoryDefOf)); }
     }
 

@@ -139,9 +139,10 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref StartedTick, "started"); Scribe_Values.Look(ref VotingTick, "voting");
             Scribe_Values.Look(ref CountedTick, "counted"); Scribe_Values.Look(ref WinnerId, "winner"); Scribe_Values.Look(ref Margin, "margin"); Scribe_Values.Look(ref Abstained, "abstained");
             Scribe_Values.Look(ref State, "state", ElectionState.Campaign);
-            Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Endorsements, "endorsements", LookMode.Deep);
+            Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Pending, "pending", LookMode.Value); Scribe_Values.Look(ref Council, "council"); Scribe_Collections.Look(ref Endorsements, "endorsements", LookMode.Deep);
             Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep); Scribe_Collections.Look(ref Voted, "voted", LookMode.Value);
             if (Candidates == null) Candidates = new List<int>();
+            if (Pending == null) Pending = new List<int>();
             if (Endorsements == null) Endorsements = new List<ElectionEndorsement>();
             if (Votes == null) Votes = new List<ElectionVote>();
             if (Voted == null) Voted = new List<int>();
@@ -187,4 +188,50 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Voted, "voted", LookMode.Value);
             if (Voted == null) Voted = new List<int>();
         }
-    }}
+    }
+
+    public sealed partial class CommunityOffice : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref HolderId, "holder"); Scribe_Values.Look(ref HolderFamily, "holderFamily"); Scribe_Values.Look(ref ElectedTick, "elected");
+            Scribe_Values.Look(ref TermEndTick, "termEnd"); Scribe_Values.Look(ref LastWorkTick, "lastWork"); Scribe_Values.Look(ref Work, "work"); Scribe_Values.Look(ref DayStamp, "dayStamp");
+            Scribe_Values.Look(ref ActsToday, "actsToday"); Scribe_Values.Look(ref Counter, "counter"); Scribe_Values.Look(ref Backers, "backers"); Scribe_Values.Look(ref Opponents, "opponents");
+            Scribe_Values.Look(ref UnmetSinceTick, "unmetSince"); Scribe_Values.Look(ref NextVoteTick, "nextVote"); Scribe_Values.Look(ref LastHolderId, "lastHolder");
+            Scribe_Values.Look(ref BarredId, "barred"); Scribe_Values.Look(ref BarredUntil, "barredUntil"); Scribe_Values.Look(ref EndedTick, "ended");
+            Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
+            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Judged, "judged", LookMode.Value);
+            if (Tokens == null) Tokens = new List<int>();
+            if (Judged == null) Judged = new List<int>();
+        }
+    }
+
+    public sealed partial class CampTrip : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref OrganizerId, "organizer"); Scribe_Values.Look(ref ProposedTick, "proposed");
+            Scribe_Values.Look(ref ExpiresTick, "expires"); Scribe_Values.Look(ref AuthorizedTick, "authorized"); Scribe_Values.Look(ref ArrivedTick, "arrived");
+            Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Tile, "tile", -1); Scribe_Values.Look(ref StayTicks, "stay"); Scribe_Values.Look(ref Seed, "seed");
+            Scribe_Values.Look(ref SubjectId, "subject"); Scribe_Values.Look(ref Quality, "quality"); Scribe_Values.Look(ref Motive, "motive", CampMotive.Recreation);
+            Scribe_Values.Look(ref State, "state", CampState.Proposed);
+            Scribe_Collections.Look(ref Suggested, "suggested", LookMode.Value); Scribe_Collections.Look(ref Members, "members", LookMode.Value);
+            if (Suggested == null) Suggested = new List<int>();
+            if (Members == null) Members = new List<int>();
+        }
+    }
+
+    public sealed partial class KinVisit : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref RequestId, "request"); Scribe_Values.Look(ref CreatedTick, "created");
+            Scribe_Values.Look(ref ArriveTick, "arrive"); Scribe_Values.Look(ref StayEndTick, "stayEnd"); Scribe_Values.Look(ref StrandTile, "strandTile", -1);
+            Scribe_Values.Look(ref RescueDeadlineTick, "rescueDeadline"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Seed, "seed");
+            Scribe_Values.Look(ref Complication, "complication"); Scribe_Values.Look(ref State, "state", KinVisitState.Travelling);
+            Scribe_Collections.Look(ref KinIds, "kin", LookMode.Value); Scribe_Collections.Look(ref ArrivedIds, "arrivedIds", LookMode.Value);
+            if (KinIds == null) KinIds = new List<int>();
+            if (ArrivedIds == null) ArrivedIds = new List<int>();
+        }
+    }
+}

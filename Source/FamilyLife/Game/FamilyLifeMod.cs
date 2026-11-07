@@ -23,6 +23,8 @@ namespace FamilyLife
         public bool ceremonies=true;
         public bool governance=true;
         public bool visitingKin=true;
+        public bool camping=true;
+        public int campRadius=4;
         public bool babyBonding = true;
         public bool bedside = true;
         public bool conflicts = true;
@@ -61,6 +63,8 @@ namespace FamilyLife
             Scribe_Values.Look(ref ceremonies,"ceremonies",true);
             Scribe_Values.Look(ref governance,"governance",true);
             Scribe_Values.Look(ref visitingKin,"visitingKin",true);
+            Scribe_Values.Look(ref camping,"camping",true);
+            Scribe_Values.Look(ref campRadius,"campRadius",4);
             Scribe_Values.Look(ref babyBonding, "babyBonding", true);
             Scribe_Values.Look(ref bedside, "bedside", true);
             Scribe_Values.Look(ref conflicts, "conflicts", true);
@@ -112,7 +116,7 @@ namespace FamilyLife
         public override string SettingsCategory() => "Wil's Family Life";
 
         private Vector2 settingsScroll;
-        private float settingsHeight = 1400;
+        private float settingsHeight = 1480;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
@@ -134,6 +138,12 @@ namespace FamilyLife
             list.CheckboxLabeled("WFL_S_Ceremonies".Translate(),ref Settings.ceremonies,"WFL_S_CeremoniesTip".Translate());
             list.CheckboxLabeled("WFL_S_Governance".Translate(),ref Settings.governance,"WFL_S_GovernanceTip".Translate());
             if(Settings.ceremonies)list.CheckboxLabeled("WFL_S_VisitingKin".Translate(),ref Settings.visitingKin,"WFL_S_VisitingKinTip".Translate());
+            list.CheckboxLabeled("WFL_S_Camping".Translate(),ref Settings.camping,"WFL_S_CampingTip".Translate());
+            if(Settings.camping)
+            {
+                list.Label("WFL_S_CampRadius".Translate(Settings.campRadius),tooltip:"WFL_S_CampRadiusTip".Translate());
+                Settings.campRadius=Mathf.RoundToInt(list.Slider(Settings.campRadius,2f,8f));
+            }
             list.CheckboxLabeled("WFL_S_Conflicts".Translate(), ref Settings.conflicts, "WFL_S_ConflictsTip".Translate());
             if (Settings.conflicts)
             {

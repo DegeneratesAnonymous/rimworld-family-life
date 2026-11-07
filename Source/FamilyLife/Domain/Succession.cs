@@ -108,7 +108,7 @@ namespace FamilyLife.Domain
             float seniority = adults.Count <= 1 ? 1f : 1f - (float)adults.Count(a => a.BirthAbsTick < p.BirthAbsTick) / (adults.Count - 1);
             var term = StewardRecords.Where(s => s.PersonId == person && s.FamilyId == family).OrderByDescending(s => s.AppointedTick).FirstOrDefault();
             float prestige = (PrestigeOf(person)?.Value ?? 0f) / 100f;
-            float service = Math.Min(1f, (term == null ? 0f : term.Successes / 12f) + prestige * .5f);
+            float service = Math.Min(1f, (term == null ? 0f : term.Successes / 12f) + prestige * .5f + OfficeWeight(person) * .25f);
             float competence = Math.Min(1f, p.TopSkillLevel / 15f);
             var judges = adults.Where(a => a.Id != person).Take(20).ToList();
             float relations = judges.Count == 0 ? .5f : judges.Average(j => ((GetBond(j.Id, person)?.Trust ?? 0f) + (GetBond(j.Id, person)?.Attachment ?? 0f) + 100f) / 200f);

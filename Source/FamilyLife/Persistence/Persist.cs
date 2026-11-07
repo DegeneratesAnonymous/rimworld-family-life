@@ -435,7 +435,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref CreatedTick,"createdTick");
             Scribe_Values.Look(ref HeardTick,"heardTick");
             Scribe_Values.Look(ref HeardBy,"heardBy");
-            Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");
+            Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");Scribe_Values.Look(ref AwaitingCouncil,"awaitingCouncil");
             Scribe_Values.Look(ref ReceivedBy,"receivedBy");
             Scribe_Values.Look(ref Kind,"kind");
             Scribe_Values.Look(ref State,"state");
@@ -551,6 +551,9 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);
             Scribe_Collections.Look(ref Favors,"favors",LookMode.Deep);Scribe_Values.Look(ref NextFavorId,"nextFavorId",1);
             Scribe_Collections.Look(ref CouncilMatters,"councilMatters",LookMode.Deep);Scribe_Values.Look(ref NextCouncilMatterId,"nextCouncilMatterId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
+            Scribe_Collections.Look(ref Offices,"communityOffices",LookMode.Deep);Scribe_Values.Look(ref NextOfficeId,"nextOfficeId",1);
+            Scribe_Collections.Look(ref KinVisits,"kinVisits",LookMode.Deep);Scribe_Values.Look(ref NextKinVisitId,"nextKinVisitId",1);
+            Scribe_Collections.Look(ref CampTrips,"campTrips",LookMode.Deep);Scribe_Values.Look(ref NextCampId,"nextCampId",1);Scribe_Values.Look(ref CampCursor,"campCursor");Scribe_Values.Look(ref LastCampScanTick,"lastCampScanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
             Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
             Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
@@ -577,7 +580,7 @@ namespace FamilyLife.Domain
                 SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
                 ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();
                 Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
-                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();
+                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();Offices=Offices??new List<CommunityOffice>();CampTrips=CampTrips??new List<CampTrip>();KinVisits=KinVisits??new List<KinVisit>();
             }
         }
     }

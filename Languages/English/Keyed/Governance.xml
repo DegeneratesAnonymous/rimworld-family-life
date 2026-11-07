@@ -158,4 +158,63 @@
   <WFL_FavorState_Settled>honoured</WFL_FavorState_Settled>
   <WFL_FavorState_Defaulted>refused</WFL_FavorState_Defaulted>
   <WFL_FavorState_Lapsed>forgotten</WFL_FavorState_Lapsed>
+  <WFL_S_Camping>Family camping trips</WFL_S_Camping>
+  <WFL_S_CampingTip>Families may wish for a day or two away from the colony. You always decide: nothing is sent until you form the caravan yourself. Declining costs nothing.</WFL_S_CampingTip>
+  <WFL_S_CampRadius>Camping trip distance: up to {0} tiles from home</WFL_S_CampRadius>
+  <WFL_S_CampRadiusTip>How far from the colony a family may suggest camping.</WFL_S_CampRadiusTip>
+  <WFL_Office_Elected>{0} was chosen as the colony's {1}.</WFL_Office_Elected>
+  <WFL_OfficeKind_Healer>healer</WFL_OfficeKind_Healer>
+  <WFL_OfficeKind_Teacher>teacher</WFL_OfficeKind_Teacher>
+  <WFL_OfficeKind_Quartermaster>quartermaster</WFL_OfficeKind_Quartermaster>
+  <WFL_OfficeKind_Mediator>mediator</WFL_OfficeKind_Mediator>
+  <WFL_OfficeKind_Judge>judge</WFL_OfficeKind_Judge>
+  <WFL_Judge_Upheld>{0} heard {1} out and found the accusation true.</WFL_Judge_Upheld>
+  <WFL_Offices_Title>Community posts</WFL_Offices_Title>
+  <WFL_Office_Vacant>The {0}: nobody holds it.</WFL_Office_Vacant>
+  <WFL_Office_Holder>The {0}: {1} until {2}</WFL_Office_Holder>
+  <WFL_Office_Tip>Acts of real work this term: {0}. Chosen with {1} for and {2} against. A post is kept by doing its work; it never changes what a person can do.</WFL_Office_Tip>
+  <WFL_Ask_CouncilLeader>The council is choosing the colony's leader. Whom do you back?</WFL_Ask_CouncilLeader>
+  <WFL_Ask_Abstain>Abstain</WFL_Ask_Abstain>
+  <WFL_Camp_LetterTitle>A family would like to go camping</WFL_Camp_LetterTitle>
+  <WFL_Camp_LetterText>{0} and the {2} family would like a day or two away ({1}). Nothing happens unless you agree and send a caravan yourself.</WFL_Camp_LetterText>
+  <WFL_CampMotive_Recreation>time together</WFL_CampMotive_Recreation>
+  <WFL_CampMotive_Reconciliation>to make peace</WFL_CampMotive_Reconciliation>
+  <WFL_CampMotive_Teaching>to teach the young ones</WFL_CampMotive_Teaching>
+  <WFL_CampMotive_ComingOfAge>to mark a coming of age</WFL_CampMotive_ComingOfAge>
+  <WFL_CampMotive_Tradition>an old family custom</WFL_CampMotive_Tradition>
+  <WFL_CampState_Proposed>waiting for your answer</WFL_CampState_Proposed>
+  <WFL_CampState_Authorized>agreed; waiting for the caravan</WFL_CampState_Authorized>
+  <WFL_CampState_Away>camping now</WFL_CampState_Away>
+  <WFL_CampState_Completed>finished</WFL_CampState_Completed>
+  <WFL_CampState_Declined>declined</WFL_CampState_Declined>
+  <WFL_CampState_Expired>lapsed</WFL_CampState_Expired>
+  <WFL_CampState_Cut>cut short</WFL_CampState_Cut>
+  <WFL_Camp_Line>Camping trip ({0}): {1}. About {2} hours. They would like to bring: {3}</WFL_Camp_Line>
+  <WFL_Camp_Plan>Agree to the trip</WFL_Camp_Plan>
+  <WFL_Camp_Decline>Not now</WFL_Camp_Decline>
+  <WFL_Camp_FormCaravan>Form the caravan</WFL_Camp_FormCaravan>
+  <WFL_Camp_ShowPlace>Show the place</WFL_Camp_ShowPlace>
+  <WFL_Camp_Authorized>Agreed. Form a caravan and take it to the place shown on the world map. The trip counts once people have stayed there the whole time.</WFL_Camp_Authorized>
+  <WFL_Camp_Unavailable>That camping trip can no longer be agreed to.</WFL_Camp_Unavailable>
+  <WFL_Camp_NeedHomeMap>Open one of your colony maps first, then form the caravan from there.</WFL_Camp_NeedHomeMap>
+  <WFL_Camp_Arrived>The {0} family has made camp.</WFL_Camp_Arrived>
+  <WFL_Camp_Good>The {0} family's camping trip was lovely. They are closer for it.</WFL_Camp_Good>
+  <WFL_Camp_Fine>The {0} family's camping trip passed quietly.</WFL_Camp_Fine>
+  <WFL_Camp_Bad>The {0} family's camping trip went badly.</WFL_Camp_Bad>
+  <WFL_Camp_Cut>The {0} family's camping trip ended early.</WFL_Camp_Cut>
+  <WFL_Kin_Line>Relatives on the way ({0}): {1}</WFL_Kin_Line>
+  <WFL_KinState_Travelling>travelling</WFL_KinState_Travelling>
+  <WFL_KinState_Stranded>held up on the road</WFL_KinState_Stranded>
+  <WFL_KinState_Arrived>visiting</WFL_KinState_Arrived>
+  <WFL_KinState_Leaving>leaving</WFL_KinState_Leaving>
+  <WFL_KinState_Completed>home again</WFL_KinState_Completed>
+  <WFL_KinState_Failed>did not come</WFL_KinState_Failed>
+  <WFL_KinState_Expired>called off</WFL_KinState_Expired>
+  <WFL_Kin_ShowPlace>Show where they are</WFL_Kin_ShowPlace>
+  <WFL_Kin_StrandedTitle>Relatives held up on the road</WFL_Kin_StrandedTitle>
+  <WFL_Kin_StrandedText>Relatives of the {0} family, on their way to the reunion, are stuck on the road. A caravan that reaches them within about {1} days can help. If nobody comes, they will turn back and the reunion will go ahead without them.</WFL_Kin_StrandedText>
+  <WFL_Kin_Rescued>Help reached the {0} family's relatives. They are on their way again.</WFL_Kin_Rescued>
+  <WFL_Kin_Failed>The {0} family's relatives did not make it to the reunion.</WFL_Kin_Failed>
+  <WFL_Kin_ArrivedTitle>Relatives have arrived</WFL_Kin_ArrivedTitle>
+  <WFL_Kin_ArrivedText>Kin of the {0} family have arrived for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedText>
 </LanguageData>

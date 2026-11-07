@@ -14,6 +14,7 @@ namespace FamilyLife.Domain
     public sealed partial class HousePetition
     {
         public int Id, PersonId, FamilyId, CreatedTick, HeardTick, HeardBy, SourceFamilyId, ReceivedBy;
+        public bool AwaitingCouncil;        // accepted by the head, finished once a council approves the union
         public PetitionKind Kind;
         public PetitionState State;
     }
@@ -113,7 +114,14 @@ namespace FamilyLife.Domain
             {
                 if(q.Kind==PetitionKind.Admission && !SetSocialFamily(q.PersonId,q.FamilyId,now)) return false;
                 if(q.Kind==PetitionKind.Recognition && !DelegateHouse(leader,q.PersonId,q.FamilyId,true,now)) return false;
-                if(q.Kind==PetitionKind.Union && (FamilyOf(q.PersonId)!=q.SourceFamilyId || HeadOf(q.SourceFamilyId)!=q.PersonId || !CanUniteThroughMarriage(q.FamilyId,q.SourceFamilyId) || !UniteFamilies(q.FamilyId,FamilyOf(q.PersonId),now))) return false;
+                if(q.Kind==PetitionKind.Union && (FamilyOf(q.PersonId)!=q.SourceFamilyId || HeadOf(q.SourceFamilyId)!=q.PersonId || !CanUniteThroughMarriage(q.FamilyId,q.SourceFamilyId))) return false;
+                if(q.Kind==PetitionKind.Union)
+                {
+                    int from=FamilyOf(q.PersonId);
+                    // Under a council the head's yes is only the first step: the question goes to the council and the union is finished when it agrees.
+                    if(CouncilWouldBlock(q.FamilyId,from)) {CouncilClears(q.FamilyId,from,now);q.AwaitingCouncil=true;}
+                    else if(!UniteFamilies(q.FamilyId,from,now)) return false;
+                }
             }
             q.State=accept?PetitionState.Accepted:PetitionState.Denied;q.HeardBy=leader;q.HeardTick=heardAt;return true;
         }
