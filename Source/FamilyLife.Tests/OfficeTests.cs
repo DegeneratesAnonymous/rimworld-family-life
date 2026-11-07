@@ -235,7 +235,7 @@ namespace FamilyLife.Tests
         // ---- the yearly assembly ----
 
         private static OfficeContext TwoGood(int incumbent, int challenger, float inc = .6f, float chal = .7f)
-            => new OfficeContext { Skill = (id, k) => k != OfficeKind.Healer ? 0f : id == incumbent ? inc : id == challenger ? chal : .1f };
+            => new OfficeContext { Skill = (id, k) => k != OfficeKind.Healer ? 0f : id == incumbent ? inc : id == challenger ? chal : .1f, Passion = (id, k) => id == challenger };
 
         private static FamilyRegistry Contested(int worked, float quality, out int start)
         {
@@ -390,6 +390,138 @@ namespace FamilyLife.Tests
             r2.ElectOffices(2000, Skilled(3, OfficeKind.Teacher));
             for (int i = 0; i < 30; i++) r2.RecordOfficeWork(OfficeKind.Teacher, 3, 700 + i, 2100 + (i / 3) * Day, 1f);
             Assert.True(r2.OfficeGrade(OfficeKind.Teacher) > poor + .25f);
+        }
+
+        // ---- why someone stands, and what a post is worth ----
+
+        private static OfficeContext Fit(params int[] fit)
+            => new OfficeContext { Skill = (id, k) => fit.Contains(id) ? .8f : .1f };
+
+        [Fact]
+        public void A_fit_person_with_no_reason_does_not_stand_unless_nobody_else_would()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            r.MaintainOffices(2000);
+            var ctx = new OfficeContext { Skill = (id, k) => k != OfficeKind.Healer ? 0f : id == 3 || id == 4 ? .8f : .1f, Passion = (id, k) => id == 4 };
+            var a = r.CallAssembly(r.NextAssemblyTick, ctx);
+            var race = a.Races.Single();
+            Assert.Equal(new[] { 3, 4 }, race.Candidates.OrderBy(x => x));
+            Assert.True(r.MotivesOf(race, 4).HasFlag(PostMotive.Calling));                          // a calling for the work
+            Assert.True(r.MotivesOf(race, 3).HasFlag(PostMotive.Incumbent));                        // already doing it
+        }
+
+        [Fact]
+        public void With_no_one_wanting_it_the_most_capable_is_asked_as_a_duty()
+        {
+            var r = Colony();
+            r.MaintainOffices(2000);
+            var a = r.CallAssembly(r.NextAssemblyTick, new OfficeContext { Skill = (id, k) => k == OfficeKind.Teacher && (id == 3 || id == 4) ? (id == 4 ? .9f : .6f) : 0f });
+            var race = a.Races.Single();
+            Assert.Equal(new[] { 4 }, race.Candidates);
+            Assert.Equal(PostMotive.Duty, r.MotivesOf(race, 4));
+        }
+
+        [Fact]
+        public void A_personal_aim_of_recognition_is_a_reason_to_stand()
+        {
+            var r = Colony();
+            r.Agency.Add(new AgencyRecord { PersonId = 4, FamilyId = r.FamilyOf(4), Goal = PersonalGoal.Recognition, StartedTick = 1500 });
+            r.MaintainOffices(2000);
+            var race = r.CallAssembly(r.NextAssemblyTick, new OfficeContext { Skill = (id, k) => k == OfficeKind.Teacher && (id == 3 || id == 4) ? .8f : 0f }).Races.Single();
+            Assert.Equal(new[] { 4 }, race.Candidates);
+            Assert.True(r.MotivesOf(race, 4).HasFlag(PostMotive.Recognition));
+        }
+
+        [Fact]
+        public void Doing_the_work_well_moves_a_recognition_seeker_toward_their_aim_and_winning_moves_them_more()
+        {
+            var r = Colony();
+            r.Agency.Add(new AgencyRecord { PersonId = 3, FamilyId = r.FamilyOf(3), Goal = PersonalGoal.Recognition, StartedTick = 1500 });
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            float chosen = r.AgencyOf(3).Progress;
+            Assert.True(chosen > 0f);                                                                 // being chosen counts
+            r.RecordOfficeWork(OfficeKind.Healer, 3, 1, 2100, .9f);
+            Assert.True(r.AgencyOf(3).Progress > chosen);
+            float before = r.AgencyOf(3).Progress;
+            r.RecordOfficeWork(OfficeKind.Healer, 3, 2, 2100, .2f);                                   // poor work does not
+            Assert.Equal(before, r.AgencyOf(3).Progress);
+        }
+
+        [Fact]
+        public void A_house_with_a_need_wants_the_post_that_meets_it_and_sponsors_its_best_member()
+        {
+            var r = Colony();
+            int house = r.FamilyOf(1);
+            Assert.Equal(HouseWish.None, r.HouseWishFor(house, OfficeKind.Teacher));
+            r.GetLineage(house).Ambition.Primary = HouseAmbitionKind.TrainNextGeneration;
+            Assert.Equal(HouseWish.Teach, r.HouseWishFor(house, OfficeKind.Teacher));
+            Assert.Equal(HouseWish.None, r.HouseWishFor(house, OfficeKind.Healer));                  // it wants what meets its need, not everything
+            r.GetLineage(house).Situation.Sustenance = 20f;
+            Assert.Equal(HouseWish.Feed, r.HouseWishFor(house, OfficeKind.HallKeeper));
+            r.GetLineage(house).Ambition.Primary = HouseAmbitionKind.IncreaseInfluence;
+            Assert.Equal(HouseWish.Standing, r.HouseWishFor(house, OfficeKind.Healer));              // influence-seekers want any post
+            Assert.Equal(HouseWish.None, r.HouseWishFor(house, OfficeKind.Chaplain));                 // but not an appointed one
+
+            r.GetLineage(house).Ambition.Primary = HouseAmbitionKind.TrainNextGeneration;
+            r.MaintainOffices(2000);
+            var ctx = new OfficeContext { Skill = (id, k) => k == OfficeKind.Teacher ? (id == 2 ? .9f : id == 3 ? .5f : id == 20 ? .7f : 0f) : 0f };
+            var race = r.CallAssembly(r.NextAssemblyTick, ctx).Races.Single();
+            Assert.True(r.MotivesOf(race, 2).HasFlag(PostMotive.Sponsored));                         // the house puts forward its best
+            Assert.False(r.MotivesOf(race, 3).HasFlag(PostMotive.Sponsored));
+            Assert.DoesNotContain(20, race.Candidates);                                              // another house wanting nothing sends no one without a reason
+        }
+
+        [Fact]
+        public void A_person_stands_for_one_post_only_and_never_ends_with_two()
+        {
+            var r = Colony();
+            var all = new OfficeContext { Skill = (id, k) => id == 3 ? (k == OfficeKind.Healer ? .9f : k == OfficeKind.Teacher ? .6f : .5f) : .1f, Passion = (id, k) => id == 3 };
+            r.ElectOffices(2000, all);
+            r.MaintainOffices(2000);
+            Assert.Single(r.Offices, o => o.Held);
+            var a = r.CallAssembly(r.NextAssemblyTick, all);
+            Assert.Equal(1, a.Races.Count(x => x.Candidates.Contains(3)));                            // only in the race they are best at
+            Assert.Equal(OfficeKind.Healer, a.Races.First(x => x.Candidates.Contains(3)).Kind);
+        }
+
+        [Fact]
+        public void The_chaplain_does_not_also_stand_and_an_unfit_holder_steps_down_at_the_assembly()
+        {
+            var r = Colony();
+            r.AppointOffice(OfficeKind.Chaplain, 3, 1500);
+            r.ElectOffices(2000, Skilled(4, OfficeKind.Healer));
+            Assert.Equal(4, r.OfficeFor(OfficeKind.Healer).HolderId);
+            r.MaintainOffices(2000);
+            var ctx = new OfficeContext { Skill = (id, k) => id == 3 ? .9f : 0f, Passion = (id, k) => id == 3 };   // 4 has lost the skill; 3 is the chaplain
+            var a = r.CallAssembly(r.NextAssemblyTick, ctx);
+            Assert.False(r.OfficeFor(OfficeKind.Healer).Held);                                       // 4 stepped down, not fit any more
+            Assert.DoesNotContain(a.Races, x => x.Candidates.Contains(3));                           // the chaplain does not also run
+        }
+
+        [Fact]
+        public void Serving_people_earns_their_trust_which_is_what_wins_later_votes()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(3, OfficeKind.Healer));
+            float before = r.GetBond(2, 3)?.Trust ?? 0f;
+            for (int i = 0; i < 5; i++) r.ThankPost(OfficeKind.Healer, 3, 2, 2100 + i);
+            Assert.True((r.GetBond(2, 3)?.Trust ?? 0f) > before);
+            float other = r.GetBond(20, 3)?.Trust ?? 0f;
+            r.ThankPost(OfficeKind.Teacher, 3, 20, 2200);                                           // wrong post: nothing
+            Assert.Equal(other, r.GetBond(20, 3)?.Trust ?? 0f);
+        }
+
+        [Fact]
+        public void The_holders_own_house_is_seen_first_and_taught_first()
+        {
+            var r = Colony();
+            r.ElectOffices(2000, Skilled(20, OfficeKind.Healer));                                   // a doctor from the other house
+            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            r.BeginCheckupRound(start, 30 * Day);
+            Assert.Equal(21, r.NextCheckupPatient(start + 5, id => true));                          // their own kin first, though others have lower ids
+            Assert.True(r.KinOfHolder(21, OfficeKind.Healer));
+            Assert.False(r.KinOfHolder(1, OfficeKind.Healer));
         }
     }
 }

@@ -224,8 +224,9 @@ namespace FamilyLife.Domain
         {
             Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref IncumbentId, "incumbent"); Scribe_Values.Look(ref WinnerId, "winner");
             Scribe_Values.Look(ref Abstained, "abstained"); Scribe_Values.Look(ref IncumbentGrade, "incumbentGrade"); Scribe_Values.Look(ref Margin, "margin");
-            Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep);
+            Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Motives, "motives", LookMode.Value); Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep);
             if (Candidates == null) Candidates = new List<int>();
+            if (Motives == null) Motives = new List<int>();
             if (Votes == null) Votes = new List<ElectionVote>();
         }
     }

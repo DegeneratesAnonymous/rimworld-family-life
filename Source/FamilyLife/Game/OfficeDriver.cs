@@ -30,8 +30,51 @@ namespace FamilyLife
         {
             Skill = (id, kind) => SkillFor(c.TryGetPawn(id), kind),
             Free = id => Governance.Free(c, id),
-            Player = id => Governance.IsAvatar(c, id)
+            Player = id => Governance.IsAvatar(c, id),
+            Passion = (id, kind) => PassionFor(c.TryGetPawn(id), kind)
         };
+
+        /// <summary>Whether the pawn burns for the skills the post uses: a calling, which is the clearest reason to want it.</summary>
+        internal static bool PassionFor(Pawn p, OfficeKind kind)
+        {
+            if (p?.skills == null) return false;
+            bool Burns(SkillDef def) { var s = p.skills.GetSkill(def); return s != null && !s.TotallyDisabled && s.passion != Passion.None; }
+            switch (kind)
+            {
+                case OfficeKind.Healer: return Burns(SkillDefOf.Medicine);
+                case OfficeKind.Teacher: return Burns(SkillDefOf.Intellectual) || Burns(SkillDefOf.Social);
+                case OfficeKind.HallKeeper: return Burns(SkillDefOf.Cooking) || Burns(SkillDefOf.Social);
+                default: return false;
+            }
+        }
+
+        /// <summary>
+        /// Once a day: the holder feels how the post is going (trusted when they do it well, let down when they do not), and the rest of their house feels
+        /// pride in kin who holds a post worth having. These are the pawn's and the family's own stake in a post, not a penalty for an empty one.
+        /// </summary>
+        private static void Esteem(FamilyComponent c, FamilyRegistry r, int now)
+        {
+            if (!Due("esteem", now, Day)) return;
+            foreach (var office in r.Offices.Where(o => o.Held).ToList())
+            {
+                var holder = Spawned(c, office.HolderId);
+                if (holder == null) continue;
+                float grade = r.OfficeGrade(office.Kind);
+                bool appointed = FamilyRegistry.IsAppointed(office.Kind);
+                string mood = appointed || grade >= .65f ? "WFL_PostTrusted" : grade >= .35f ? "WFL_PostAdequate" : office.Work > 0 || now - office.ElectedTick > 6 * Day ? "WFL_PostFailing" : "WFL_PostAdequate";
+                Activities.GainMemory(holder, mood, null);
+                if (!appointed && grade < .5f && office.Work > 0) continue;
+                foreach (var kin in r.MembersOf(office.HolderFamily).Where(m => m.InColony && m.Id != office.HolderId).Take(12))
+                    if (Spawned(c, kin.Id) is Pawn k) Activities.GainMemory(k, "WFL_KinInPost", holder);
+            }
+        }
+
+        /// <summary>The person served by one of their own house's post-holders feels it, and the holder earns the trust of anyone they serve.</summary>
+        internal static void Served(FamilyRegistry r, OfficeKind kind, Pawn holder, Pawn served, int now)
+        {
+            r.ThankPost(kind, holder.thingIDNumber, served.thingIDNumber, now);
+            if (r.KinOfHolder(served.thingIDNumber, kind)) Activities.GainMemory(served, "WFL_ServedByKin", holder);
+        }
 
         /// <summary>0 to 1. A pawn we cannot see, or who cannot do the kind of work, is not fit.</summary>
         internal static float SkillFor(Pawn p, OfficeKind kind)
@@ -52,6 +95,7 @@ namespace FamilyLife
             }
             SyncChaplain(c, r, now);
             r.MaintainOffices(now);
+            Esteem(c, r, now);
             AssemblyDriver.Run(c, r, now);
             foreach (var office in r.Offices.Where(o => o.Held).ToList())
             {
@@ -161,10 +205,20 @@ namespace FamilyLife
                 if (patient.health?.hediffSet != null && patient.health.HasHediffsNeedingTend()) TendUtility.DoTend(doctor, patient, null);
                 var existing = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
                 if (existing != null) patient.health.RemoveHediff(existing);
-                if (WFL_HediffDefOf.WFL_CheckedUp != null) patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
+                if (WFL_HediffDefOf.WFL_CheckedUp != null)
+                {
+                    patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
+                    // The doctor looks after their own house better: the effect lasts twice as long for kin.
+                    if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer))
+                    {
+                        var comp = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp)?.TryGetComp<HediffComp_Disappears>();
+                        if (comp != null) comp.ticksToDisappear *= 2;
+                    }
+                }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
             r.RecordTogether(doctor.thingIDNumber, patient.thingIDNumber, 1200, now, BondCause.Care);
+            Served(r, OfficeKind.Healer, doctor, patient, now);
             bool inRoom = patient.Position.GetRoom(patient.Map)?.ContainedBeds?.Any(b => b.Medical) == true;
             r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, GovernanceMeetings.NextToken(), now, .4f + .4f * SkillFor(doctor, OfficeKind.Healer) + (inRoom ? .2f : 0f));
         }
@@ -216,7 +270,10 @@ namespace FamilyLife
             var office = r.OfficeFor(OfficeKind.Teacher);
             if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
             var skill = LearnableSkill(teacher, student);
-            if (skill != null) student.skills.Learn(skill, student.ageTracker.AgeBiologicalYears >= 18 ? 150f : 250f, true);
+            float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 150f : 250f;
+            if (r.KinOfHolder(student.thingIDNumber, OfficeKind.Teacher)) xp *= 1.5f;          // the teacher's own house learns more from them
+            if (skill != null) student.skills.Learn(skill, xp, true);
+            Served(r, OfficeKind.Teacher, teacher, student, now);
             r.ClassDone(student.thingIDNumber);
             r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, 1800, now, BondCause.Teaching);
             int gap = skill == null ? 0 : teacher.skills.GetSkill(skill).Level - student.skills.GetSkill(skill).Level;

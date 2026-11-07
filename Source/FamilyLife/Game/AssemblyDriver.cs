@@ -30,6 +30,15 @@ namespace FamilyLife
             if (a != null && a.State == AssemblyState.Voting) SendVoters(c, r, a);
         }
 
+        /// <summary>Why someone is standing, in plain words: a calling, a personal aim, their house's wish, a duty, or already holding it.</summary>
+        internal static string MotiveWords(PostMotive m)
+        {
+            var parts = new List<string>();
+            foreach (PostMotive flag in new[] { PostMotive.Calling, PostMotive.Recognition, PostMotive.Sponsored, PostMotive.Duty, PostMotive.Incumbent })
+                if (m.HasFlag(flag)) parts.Add(("WFL_Motive_" + flag).Translate().ToString());
+            return string.Join(", ", parts);
+        }
+
         private static string Names(FamilyRegistry r, IEnumerable<int> ids) => string.Join(", ", ids.Select(i => FamilyUi.NameOf(r, i)));
 
         private static void Announce(FamilyComponent c, FamilyRegistry r, CommunityAssembly a)
@@ -40,8 +49,10 @@ namespace FamilyLife
                 string post = ("WFL_OfficeKind_" + race.Kind).Translate();
                 var challengers = race.Candidates.Where(x => x != race.IncumbentId).ToList();
                 lines.Add(race.IncumbentId != 0
-                    ? "WFL_Assembly_RaceIncumbent".Translate(post, FamilyUi.NameOf(r, race.IncumbentId), GradeWord(race.IncumbentGrade), challengers.Count).ToString()
-                    : "WFL_Assembly_RaceOpen".Translate(post, Names(r, race.Candidates)).ToString());
+                    ? "WFL_Assembly_RaceIncumbent".Translate(post, FamilyUi.NameOf(r, race.IncumbentId), GradeWord(race.IncumbentGrade)).ToString()
+                    : "WFL_Assembly_RaceOpen".Translate(post).ToString());
+                foreach (int cand in challengers)
+                    lines.Add("    " + "WFL_Assembly_Stands".Translate(FamilyUi.NameOf(r, cand), MotiveWords(r.MotivesOf(race, cand))).ToString());
             }
             Find.LetterStack.ReceiveLetter("WFL_Assembly_Title".Translate(), "WFL_Assembly_Text".Translate(string.Join("\n", lines)), LetterDefOf.PositiveEvent);
         }

@@ -249,7 +249,14 @@ namespace FamilyLife
                 if (post == null || !post.Held) { Line(view, ref y, "WFL_Office_Vacant".Translate(title), 10f, true); continue; }
                 string until = FamilyRegistry.IsAppointed(kind) ? "WFL_Office_Appointed".Translate().ToString() : "WFL_Office_Until".Translate(FamilyUi.Date(post.TermEndTick)).ToString();
                 LineTip(view, ref y, "WFL_Office_Holder".Translate(title, FamilyUi.NameOf(registry, post.HolderId), until),
-                    "WFL_Office_Tip".Translate(post.Work, post.Backers, post.Opponents, AssemblyDriver.GradeWord(registry.OfficeGrade(kind))), 10f, true);
+                    "WFL_Office_Tip".Translate(post.Work, post.Backers, post.Opponents, AssemblyDriver.GradeWord(registry.OfficeGrade(kind))).ToString() + "\n\n" + ("WFL_Perk_" + kind).Translate(), 10f, true);
+            }
+            foreach (OfficeKind kind in System.Enum.GetValues(typeof(OfficeKind)))
+            {
+                var wish = registry.HouseWishFor(lineage.Id, kind);
+                if (wish == HouseWish.None) continue;
+                string post = ("WFL_OfficeKind_" + kind).Translate();
+                LineTip(view, ref y, ("WFL_HouseWish_" + wish).Translate(post), ("WFL_Perk_" + kind).Translate(), 20f, true);
             }
             if (registry.NextAssemblyTick > 0) Line(view, ref y, "WFL_Assembly_Next".Translate(FamilyUi.Date(registry.NextAssemblyTick)), 10f, true);
             var openAssembly = registry.OpenAssembly;

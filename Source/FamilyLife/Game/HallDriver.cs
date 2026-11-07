@@ -196,6 +196,7 @@ namespace FamilyLife
                     diner.jobs.StartJob(eat, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
                     var c = FamilyComponent.Current;
                     c?.Registry.DinerServed(diner.thingIDNumber);
+                    if (c != null) OfficeDriver.Served(c.Registry, OfficeKind.HallKeeper, pawn, diner, Activities.Now);
                     c?.Registry.RecordOfficeWork(OfficeKind.HallKeeper, pawn.thingIDNumber, GovernanceMeetings.NextToken(), Activities.Now, HallDriver.MealQuality(placed, diner));
                 }
             };

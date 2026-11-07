@@ -9,6 +9,15 @@ namespace FamilyLife.Domain
     public enum OfficeEnd : byte { None, TermEnded, Neglected, Left, Resigned, Replaced }
     public enum AssemblyState : byte { Campaign, Voting, Counted, Cancelled }
 
+    /// <summary>Why someone stands for a post. A person who has none of these does not stand: nobody is drafted by a score.</summary>
+    [Flags]
+    public enum PostMotive : byte { None = 0, Calling = 1, Recognition = 2, Sponsored = 4, Duty = 8, Incumbent = 16 }
+
+    /// <summary>What a house wants a post for, drawn from its own ambition and situation. It is why a head backs one of their own and why a house sponsors a member.</summary>
+    public enum HouseWish : byte { None, Care, Teach, Feed, Standing }
+
+    public sealed class PostCandidate { public int Id; public PostMotive Motives; }
+
     /// <summary>
     /// A post in the community. Holding one is public standing, so people and houses want it, but it is earned by being chosen and kept by doing the
     /// work well. It never changes what a person can do, only how they are regarded. At the next assembly the colony grades the holder's year: how much
@@ -36,6 +45,7 @@ namespace FamilyLife.Domain
         public Func<int, OfficeKind, float> Skill;
         public Func<int, bool> Free;
         public Func<int, bool> Player;     // a player-controlled pawn is never made a candidate or voted for
+        public Func<int, OfficeKind, bool> Passion;     // the person burns for the skill the post uses
     }
 
     public sealed partial class AssemblyEndorsement { public int FamilyId, EndorserId, CandidateId; public OfficeKind Kind; }
@@ -47,6 +57,7 @@ namespace FamilyLife.Domain
         public int IncumbentId, WinnerId, Abstained;
         public float IncumbentGrade, Margin;
         public List<int> Candidates = new List<int>();
+        public List<int> Motives = new List<int>();     // why each candidate stands, parallel to Candidates
         public List<ElectionVote> Votes = new List<ElectionVote>();
     }
 
@@ -155,12 +166,61 @@ namespace FamilyLife.Domain
         private float SkillOf(OfficeContext ctx, int id, OfficeKind kind)
             => Math.Max(0f, Math.Min(1f, ctx.Skill != null ? ctx.Skill(id, kind) : (GetPerson(id)?.TopSkillLevel ?? 0) / 20f));
 
-        private List<int> OfficeCandidates(OfficeKind kind, int now, OfficeContext ctx, CommunityOffice office, bool allowHolders)
+        /// <summary>
+        /// What each house wants a post for. A house with a gap in medical skill, a safety worry or hurt members wants a doctor; one with children to raise
+        /// wants a teacher; one that is hungry or fractured wants a hall; one seeking influence or a legacy wants any post as standing.
+        /// </summary>
+        public HouseWish HouseWishFor(int family, OfficeKind kind)
+        {
+            var h = GetLineage(family);
+            if (h == null || !IsActiveHouse(family) || IsAppointed(kind)) return HouseWish.None;
+            var amb = h.Ambition ?? new HouseAmbitionRecord(); var sit = h.Situation ?? new HouseSituation();
+            bool Is(HouseAmbitionKind k) => amb.Primary == k || amb.Secondary == k;
+            bool Gap(HouseCapability c) => Is(HouseAmbitionKind.FillSkillGap) && amb.TargetCapability == c;
+            switch (kind)
+            {
+                case OfficeKind.Healer: if (Gap(HouseCapability.Medical) || Is(HouseAmbitionKind.ImproveSafety) || sit.Safety < 45f) return HouseWish.Care; break;
+                case OfficeKind.Teacher:
+                    if (Is(HouseAmbitionKind.TrainNextGeneration) || Gap(HouseCapability.Intellectual) || Gap(HouseCapability.Social) || Gap(HouseCapability.Childcare) || sit.Children >= 2) return HouseWish.Teach;
+                    break;
+                case OfficeKind.HallKeeper: if (Is(HouseAmbitionKind.SecureProvisions) || Is(HouseAmbitionKind.RestoreCohesion) || Gap(HouseCapability.Cooking) || sit.Sustenance < 45f) return HouseWish.Feed; break;
+            }
+            return Is(HouseAmbitionKind.IncreaseInfluence) || Is(HouseAmbitionKind.ExpandLegacy) ? HouseWish.Standing : HouseWish.None;
+        }
+
+        /// <summary>The person a house would put forward for a post: its most capable fit member. Null when the house wants nothing from it.</summary>
+        private int SponsoredBy(int family, OfficeKind kind, IEnumerable<int> pool, OfficeContext ctx)
+            => HouseWishFor(family, kind) == HouseWish.None ? 0 : pool.Where(p => FamilyOf(p) == family).OrderByDescending(p => SkillOf(ctx, p, kind)).ThenBy(p => p).FirstOrDefault();
+
+        /// <summary>
+        /// Who stands for a post, and why. A person must be fit and willing, and must also have a reason: a calling for the skill, a personal aim for
+        /// recognition, a house that sponsors them, or already holding the post. If nobody has a reason, the most capable fit person is asked as a
+        /// duty, so a post a colony needs does not stay empty.
+        /// </summary>
+        private List<PostCandidate> OfficeCandidates(OfficeKind kind, int now, OfficeContext ctx, CommunityOffice office, bool allowHolders)
         {
             ctx = ctx ?? new OfficeContext();
-            return Persons.Where(p => p.InColony && !p.Juvenile && (office == null || p.Id != office.BarredId || now >= office.BarredUntil) && (allowHolders || !OfficesHeldBy(p.Id).Any()) &&
+            var pool = Persons.Where(p => p.InColony && !p.Juvenile && (office == null || p.Id != office.BarredId || now >= office.BarredUntil) && (allowHolders || !OfficesHeldBy(p.Id).Any()) &&
                     !(ctx.Player != null && ctx.Player(p.Id)) && SkillOf(ctx, p.Id, kind) >= MinOfficeSkill && WillingnessOf(p.Id, FamilyOf(p.Id), false) >= 35f)
                 .Select(p => p.Id).OrderBy(i => i).Take(24).ToList();
+            var sponsored = new HashSet<int>(Lineages.Where(h => h.AbsorbedIntoId == 0).Select(h => SponsoredBy(h.Id, kind, pool, ctx)).Where(x => x != 0));
+            var list = new List<PostCandidate>();
+            foreach (int id in pool)
+            {
+                var m = PostMotive.None;
+                if (ctx.Passion != null && ctx.Passion(id, kind)) m |= PostMotive.Calling;
+                var ag = AgencyOf(id);
+                if (ag != null && ag.Active && ag.Goal == PersonalGoal.Recognition) m |= PostMotive.Recognition;
+                if (sponsored.Contains(id)) m |= PostMotive.Sponsored;
+                if (office != null && office.HolderId == id) m |= PostMotive.Incumbent;
+                if (m != PostMotive.None) list.Add(new PostCandidate { Id = id, Motives = m });
+            }
+            if (list.Count == 0 && pool.Count > 0)
+            {
+                int best = pool.OrderByDescending(p => SkillOf(ctx, p, kind)).ThenBy(p => p).First();
+                list.Add(new PostCandidate { Id = best, Motives = PostMotive.Duty });
+            }
+            return list;
         }
 
         private List<int> OfficeElectors(OfficeContext ctx)
@@ -176,7 +236,7 @@ namespace FamilyLife.Domain
         private bool Elect(CommunityOffice office, int now, OfficeContext ctx)
         {
             ctx = ctx ?? new OfficeContext();
-            var candidates = OfficeCandidates(office.Kind, now, ctx, office, false);
+            var candidates = OfficeCandidates(office.Kind, now, ctx, office, false).Select(x => x.Id).ToList();
             if (candidates.Count == 0) return false;
             var electors = OfficeElectors(ctx);
             if (electors.Count == 0) return false;
@@ -209,6 +269,7 @@ namespace FamilyLife.Domain
             office.NextRoundTick = now + ActivityTuning.TicksPerDay; office.RoundStartTick = 0; office.Examined.Clear();
             office.NextSessionTick = now; office.SessionStartTick = 0; office.SessionQueue.Clear();
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
+            AdvanceRecognition(winner, .25f, now);
         }
 
         /// <summary>One voter's regard for one candidate: how well they do the work, how far the voter trusts them, shared house, and known misconduct.</summary>
@@ -283,6 +344,7 @@ namespace FamilyLife.Domain
             office.Tokens.Add(token);
             if (office.Tokens.Count > 64) office.Tokens.RemoveAt(0);
             NotePublicService(person, office.HolderFamily, .5f, now);
+            if (quality >= .6f) AdvanceRecognition(person, .03f, now);
             return true;
         }
 
@@ -319,24 +381,46 @@ namespace FamilyLife.Domain
             if (NextAssemblyTick == 0 || now < NextAssemblyTick || OpenAssembly != null) return null;
             while (NextAssemblyTick <= now) NextAssemblyTick += AssemblyYearTicks;
             var assembly = new CommunityAssembly { Id = NextAssemblyId++, StartedTick = now, VotingTick = now + AssemblyCampaignTicks, State = AssemblyState.Campaign };
-            foreach (OfficeKind kind in Enum.GetValues(typeof(OfficeKind)))
+            var kinds = Enum.GetValues(typeof(OfficeKind)).Cast<OfficeKind>().Where(k => !IsAppointed(k)).ToList();
+            var fields = kinds.ToDictionary(k => k, k => OfficeCandidates(k, now, ctx, EnsureOffice(k), true));
+
+            // A holder who is no longer fit or willing for their own post steps down; those who remain keep standing for it.
+            foreach (var kind in kinds)
             {
-                if (IsAppointed(kind)) continue;
                 var office = EnsureOffice(kind);
-                var field = OfficeCandidates(kind, now, ctx, office, true);
-                if (field.Count == 0) continue;
-                var race = new AssemblyRace { Kind = kind, Candidates = field.Take(6).ToList() };
-                if (office.Held && field.Contains(office.HolderId))
-                {
-                    race.IncumbentId = office.HolderId; race.IncumbentGrade = OfficeGrade(kind);
-                    if (!race.Candidates.Contains(office.HolderId)) race.Candidates[race.Candidates.Count - 1] = office.HolderId;
-                }
+                if (office.Held && !fields[kind].Any(c => c.Id == office.HolderId)) EndOffice(office, OfficeEnd.TermEnded, now);
+            }
+
+            // A person stands for one post only: the one they hold, otherwise the one they are best at. The ideoligion's chaplain already has a post.
+            int chaplain = OfficeFor(OfficeKind.Chaplain)?.HolderId ?? 0;
+            var home = new Dictionary<int, OfficeKind>();
+            foreach (var kind in kinds) { var office = EnsureOffice(kind); if (office.Held) home[office.HolderId] = kind; }
+            foreach (int person in fields.Values.SelectMany(f => f.Select(c => c.Id)).Distinct().OrderBy(i => i))
+            {
+                if (person == chaplain || home.ContainsKey(person)) continue;
+                home[person] = kinds.Where(k => fields[k].Any(c => c.Id == person)).OrderByDescending(k => SkillOf(ctx, person, k)).ThenBy(k => k).First();
+            }
+
+            foreach (var kind in kinds)
+            {
+                var office = EnsureOffice(kind);
+                var standing = fields[kind].Where(c => c.Id != chaplain && home.TryGetValue(c.Id, out var h) && h == kind).Take(6).ToList();
+                if (standing.Count == 0) continue;
+                var race = new AssemblyRace { Kind = kind, Candidates = standing.Select(c => c.Id).ToList(), Motives = standing.Select(c => (int)c.Motives).ToList() };
+                if (office.Held && race.Candidates.Contains(office.HolderId)) { race.IncumbentId = office.HolderId; race.IncumbentGrade = OfficeGrade(kind); }
                 assembly.Races.Add(race);
             }
             if (Assemblies.Count >= 8) Assemblies.RemoveAt(0);
             Assemblies.Add(assembly);
             foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind))) office.TermEndTick = NextAssemblyTick;
             return assembly;
+        }
+
+        /// <summary>Why a candidate stands in a race, as flags. Empty if they are not in it.</summary>
+        public PostMotive MotivesOf(AssemblyRace race, int person)
+        {
+            int i = race?.Candidates.IndexOf(person) ?? -1;
+            return i < 0 || i >= race.Motives.Count ? PostMotive.None : (PostMotive)race.Motives[i];
         }
 
         /// <summary>The candidate a house head would back in a race: the one they themselves think best, with a lean toward their own house.</summary>
@@ -426,7 +510,7 @@ namespace FamilyLife.Domain
                 var office = EnsureOffice(race.Kind);
                 var ranked = race.Candidates.Select(c => new { Id = c, Votes = race.Votes.Count(v => v.CandidateId == c) })
                     .OrderByDescending(x => x.Votes).ThenByDescending(x => x.Id == race.IncumbentId).ThenBy(x => x.Id).ToList();
-                var pick = ranked.FirstOrDefault(x => !seated.Contains(x.Id) && (x.Votes > 0 || race.Candidates.Count == 1));
+                var pick = ranked.FirstOrDefault(x => !seated.Contains(x.Id) && !HoldsOtherPost(x.Id, race.Kind) && (x.Votes > 0 || race.Candidates.Count == 1));
                 if (pick == null)
                 {
                     // Nobody got a vote and nobody is standing alone: the incumbent, if there is one, simply carries on.
@@ -442,6 +526,7 @@ namespace FamilyLife.Domain
                     office.LastGrade = race.IncumbentGrade; office.TermEndTick = NextAssemblyTick; office.Backers = pick.Votes; office.Opponents = against;
                     office.Work = 0; office.QualitySum = 0f; office.QualityCount = 0; office.Terms++; office.UnmetSinceTick = 0; office.LastWorkTick = now;
                     NotePublicService(pick.Id, office.HolderFamily, 1f, now);
+                    AdvanceRecognition(pick.Id, .15f, now);
                 }
                 else
                 {
@@ -451,6 +536,39 @@ namespace FamilyLife.Domain
             }
             a.State = AssemblyState.Counted; a.CountedTick = now;
             return a.Races;
+        }
+
+        private bool HoldsOtherPost(int person, OfficeKind kind) => Offices.Any(o => o.HolderId == person && o.Kind != kind);
+
+        // ---- what a post is worth ----
+
+        public CommunityOffice PostOf(OfficeKind kind) { var o = OfficeFor(kind); return o != null && o.Held ? o : null; }
+
+        /// <summary>Whether someone in this house holds the post. It is what the house gets from it: first call on the service, and pride.</summary>
+        public bool HouseHoldsPost(int family, OfficeKind kind)
+        {
+            var o = PostOf(kind);
+            return o != null && family != 0 && o.HolderFamily == family;
+        }
+
+        /// <summary>Whether this person belongs to the house that holds the post: the kin of the holder, with the perks of kinship.</summary>
+        public bool KinOfHolder(int person, OfficeKind kind) => HouseHoldsPost(FamilyOf(person), kind);
+
+        /// <summary>People served by a post come to feel something for the one who served them: a little trust and affection each time, which later counts in votes and in succession.</summary>
+        public void ThankPost(OfficeKind kind, int holder, int served, int now)
+        {
+            var o = PostOf(kind);
+            if (o == null || o.HolderId != holder || served == holder || GetPerson(served)?.InColony != true) return;
+            ChangeBond(served, holder, new BondChange(.5f, 1f, -.5f, 0f), now);
+        }
+
+        /// <summary>A person with a personal aim of being recognised moves toward it by doing the work of a post well, and more by being chosen.</summary>
+        public void AdvanceRecognition(int person, float amount, int now)
+        {
+            var ag = AgencyOf(person);
+            if (ag == null || !ag.Active || ag.Goal != PersonalGoal.Recognition) return;
+            ag.Progress = Math.Min(1f, ag.Progress + amount);
+            if (ag.Progress >= 1f) ag.EndedTick = now;
         }
 
         // ---- the doctor's check-ups ----
@@ -479,7 +597,7 @@ namespace FamilyLife.Domain
             var office = OfficeFor(OfficeKind.Healer);
             if (office == null || !CheckupOpen(now)) return 0;
             return Persons.Where(p => p.InColony && p.Id != office.HolderId && !office.Examined.Contains(p.Id) && (available == null || available(p.Id)))
-                .OrderBy(p => p.Id).Select(p => p.Id).FirstOrDefault();
+                .OrderBy(p => FamilyOf(p.Id) != office.HolderFamily).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // the doctor's own house is seen first
         }
 
         /// <summary>The doctor has really seen this person. Counted once per round; a round ends when everyone present has been seen.</summary>
@@ -502,7 +620,7 @@ namespace FamilyLife.Domain
         {
             var office = OfficeFor(kind);
             if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextSessionTick || office.SessionQueue.Count > 0) return false;
-            var chosen = (people ?? Enumerable.Empty<int>()).Distinct().Where(s => s != office.HolderId && GetPerson(s)?.InColony == true).OrderBy(s => s).Take(MaxSessionSize).ToList();
+            var chosen = (people ?? Enumerable.Empty<int>()).Distinct().Where(s => s != office.HolderId && GetPerson(s)?.InColony == true).OrderBy(s => FamilyOf(s) != office.HolderFamily).ThenBy(s => s).Take(MaxSessionSize).ToList();
             if (chosen.Count == 0) return false;
             office.SessionQueue = chosen; office.SessionStartTick = now; office.NextSessionTick = now + intervalTicks;
             return true;
