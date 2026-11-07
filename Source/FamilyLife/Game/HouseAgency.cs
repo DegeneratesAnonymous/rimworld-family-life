@@ -62,6 +62,12 @@ namespace FamilyLife
             int mine = r.FamilyOf(me.Id);
             bool head = mine != 0 && r.HeadOf(mine) == me.Id;
 
+            if(mine!=0&&r.CanManageHouse(me.Id,mine)&&Rand.Chance(.25f))
+            {
+                var alliance=r.MarriageAlliances.FirstOrDefault(a=>(a.FamilyA==mine||a.FamilyB==mine)&&a.State==MarriageAllianceState.Opportunity);
+                if(alliance!=null&&MarriageAlliancePlanner.StartNegotiation(c,alliance,pawn))return true;
+            }
+
             if (head)
             {
                 // Standing is given, not asked for: a head honors a member who has earned their trust and the house's respect.
@@ -118,6 +124,19 @@ namespace FamilyLife
             }
             if(me.Juvenile)yield break;
             bool iLead = myFamily != 0 && r.HeadOf(myFamily) == me.Id, theyLead = theirFamily != 0 && r.HeadOf(theirFamily) == them.Id;
+
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Opportunity&&(a.FamilyA==myFamily||a.FamilyB==myFamily)))
+                if(r.CanManageHouse(me.Id,myFamily)&&actor!=clicked&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
+                    yield return Act("WFL_Act_NegotiateMarriage".Translate(b),()=>MarriageAlliancePlanner.StartNegotiation(c,alliance,actor,true));
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Negotiating&&
+                (System.Math.Abs(a.NegotiatorA)==me.Id||System.Math.Abs(a.NegotiatorB)==me.Id)))
+            {
+                var pending=alliance;
+                int counterpart=System.Math.Abs(alliance.NegotiatorA)==me.Id?System.Math.Abs(alliance.NegotiatorB):System.Math.Abs(alliance.NegotiatorA);
+                if(them.Id!=counterpart)continue;
+                yield return Act("WFL_Act_SupportMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,true));
+                yield return Act("WFL_Act_OpposeMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,false));
+            }
 
             // A petition waiting on this pawn's word.
             foreach (var q in r.HousePetitions.Where(q => q.State == PetitionState.Heard && q.PersonId == them.Id && q.HeardBy == me.Id && r.HeadOf(q.FamilyId) == me.Id))

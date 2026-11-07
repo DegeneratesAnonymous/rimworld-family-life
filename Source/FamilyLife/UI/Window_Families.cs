@@ -285,6 +285,19 @@ namespace FamilyLife
             foreach (var q in petitions)
                 Line(view, ref y, "WFL_Petition_Status".Translate(FamilyUi.NameOf(registry, q.PersonId), ("WFL_PetitionKind_" + q.Kind).Translate(), ("WFL_PetitionState_" + q.State).Translate(), registry.LineageDisplayName(registry.GetLineage(q.FamilyId))), 10f);
 
+            Heading(view,ref y,"WFL_MarriageAlliance_Title".Translate());
+            var alliances=registry.MarriageAlliances.Where(a=>a.FamilyA==lineage.Id||a.FamilyB==lineage.Id).OrderByDescending(a=>a.CreatedTick).Take(8).ToList();
+            if(alliances.Count==0)Line(view,ref y,"WFL_MarriageAlliance_None".Translate(),10f,true);
+            foreach(var a in alliances)
+            {
+                int otherFamily=a.FamilyA==lineage.Id?a.FamilyB:a.FamilyA;
+                float interest=a.FamilyA==lineage.Id?a.HouseAInterest:a.HouseBInterest;
+                var objections=a.FamilyA==lineage.Id?a.ObjectionsA:a.ObjectionsB;
+                LineTip(view,ref y,"WFL_MarriageAlliance_Line".Translate(FamilyUi.NameOf(registry,a.PawnA),FamilyUi.NameOf(registry,a.PawnB),("WFL_MarriageAllianceState_"+a.State).Translate()),
+                    "WFL_MarriageAlliance_Tip".Translate(registry.LineageDisplayName(registry.GetLineage(otherFamily)),interest.ToString("0"),
+                        a.PawnAWillingness.ToString("0"),a.PawnBWillingness.ToString("0"),a.Reasons.ToString(),objections.ToString()),10f);
+            }
+
             Heading(view, ref y, "WFL_Stewardship_Title".Translate());
             Line(view, ref y, "WFL_Stewardship_Head".Translate(FamilyUi.NameOf(registry, registry.HeadOf(lineage.Id))), 10f);
             var stewards = lineage.Stewards.Select(id => registry.GetPerson(id)).Where(p => p != null && p.InColony).ToList();

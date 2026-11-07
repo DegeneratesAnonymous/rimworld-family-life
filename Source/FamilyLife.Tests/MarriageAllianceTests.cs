@@ -50,5 +50,14 @@ namespace FamilyLife.Tests
             r.Apply(new[]{T.P(1,last:"Smith",spouses:new[]{2}),T.P(2,last:"Jones",spouses:new[]{1})},2*Day);
             Assert.True(r.CanUniteThroughMarriage(a,b));
         }
+
+        [Fact] public void Both_house_representatives_must_support_the_negotiation()
+        {
+            var r=World(out int a,out int b);var assessment=r.AssessMarriageAlliance(1,2,new MarriageCandidateContext{VanillaEligible=true});
+            var opportunity=r.RecordMarriageOpportunity(assessment,2*Day);
+            Assert.True(r.BeginMarriageNegotiation(opportunity.Id,r.HeadOf(a),r.HeadOf(b),2*Day));
+            Assert.True(r.DecideMarriageNegotiation(opportunity.Id,r.HeadOf(a),true,2*Day));Assert.Equal(MarriageAllianceState.Negotiating,opportunity.State);
+            Assert.True(r.DecideMarriageNegotiation(opportunity.Id,r.HeadOf(b),true,2*Day));Assert.Equal(MarriageAllianceState.Supported,opportunity.State);
+        }
     }
 }

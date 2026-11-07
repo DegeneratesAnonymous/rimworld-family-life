@@ -31,6 +31,7 @@ namespace FamilyLife.Domain
     public sealed partial class MarriageAlliance
     {
         public int Id, PawnA, PawnB, FamilyA, FamilyB, CreatedTick, ExpiresTick, LastChangedTick;
+        public int NegotiatorA, NegotiatorB;
         public float HouseAInterest, HouseBInterest, PawnAWillingness, PawnBWillingness;
         public MarriageAllianceReason Reasons;
         public MarriageAllianceObjection ObjectionsA, ObjectionsB;
@@ -89,6 +90,34 @@ namespace FamilyLife.Domain
             MarriageAlliances.Add(record);return record;
         }
 
+        public bool BeginMarriageNegotiation(int id,int firstRepresentative,int secondRepresentative,int now)
+        {
+            var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
+            if(a==null||a.State!=MarriageAllianceState.Opportunity||now>a.ExpiresTick||
+                !CanManageHouse(firstRepresentative,a.FamilyA)||!CanManageHouse(secondRepresentative,a.FamilyB))return false;
+            a.NegotiatorA=firstRepresentative;a.NegotiatorB=secondRepresentative;a.State=MarriageAllianceState.Negotiating;a.LastChangedTick=now;return true;
+        }
+
+        public bool DecideMarriageNegotiation(int id,int representative,bool support,int now)
+        {
+            var a=MarriageAlliances.FirstOrDefault(x=>x.Id==id);
+            if(a==null||a.State!=MarriageAllianceState.Negotiating||representative!=a.NegotiatorA&&representative!=a.NegotiatorB)return false;
+            if(!support){a.State=MarriageAllianceState.Opposed;a.LastChangedTick=now;return true;}
+            if(representative==a.NegotiatorA)a.NegotiatorA=-Math.Abs(a.NegotiatorA);
+            else a.NegotiatorB=-Math.Abs(a.NegotiatorB);
+            if(a.NegotiatorA<0&&a.NegotiatorB<0)a.State=MarriageAllianceState.Supported;
+            a.LastChangedTick=now;return true;
+        }
+
+        public bool WouldHouseSupportMarriage(MarriageAlliance a,int family)
+        {
+            if(a==null)return false;
+            float interest=family==a.FamilyA?a.HouseAInterest:family==a.FamilyB?a.HouseBInterest:-100f;
+            var objections=family==a.FamilyA?a.ObjectionsA:a.ObjectionsB;
+            const MarriageAllianceObjection urgent=MarriageAllianceObjection.FoodInsecure|MarriageAllianceObjection.NoRoom|MarriageAllianceObjection.HostileHouses;
+            return interest>=45f&&(objections&urgent)==0;
+        }
+
         public bool CanUniteThroughMarriage(int firstFamily,int secondFamily)
         {
             if(firstFamily==secondFamily||!IsActiveHouse(firstFamily)||!IsActiveHouse(secondFamily))return false;
@@ -103,11 +132,11 @@ namespace FamilyLife.Domain
 
         internal void MaintainMarriageAlliances(int now)
         {
-            foreach(var a in MarriageAlliances.Where(x=>x.State<MarriageAllianceState.Fulfilled).ToList())
+            foreach(var a in MarriageAlliances.Where(x=>x.State!=MarriageAllianceState.Fulfilled).ToList())
             {
                 var pa=GetPerson(a.PawnA);var pb=GetPerson(a.PawnB);
                 if(pa?.SpouseIds.Contains(a.PawnB)==true){a.State=MarriageAllianceState.Fulfilled;a.LastChangedTick=now;}
-                else if(now>a.ExpiresTick||pa?.InColony!=true||pb?.InColony!=true){a.State=MarriageAllianceState.Expired;a.LastChangedTick=now;}
+                else if(a.State<=MarriageAllianceState.Supported&&(now>a.ExpiresTick||pa?.InColony!=true||pb?.InColony!=true)){a.State=MarriageAllianceState.Expired;a.LastChangedTick=now;}
             }
         }
 

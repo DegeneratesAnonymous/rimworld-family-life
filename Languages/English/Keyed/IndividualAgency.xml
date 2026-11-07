@@ -55,6 +55,28 @@
 <WFL_HouseRole_Member>Member</WFL_HouseRole_Member>
 <WFL_HouseRole_Steward>Steward</WFL_HouseRole_Steward>
 <WFL_HouseRole_Head>Head</WFL_HouseRole_Head>
+<WFL_Act_NegotiateMarriage>Discuss a possible marriage alliance with {0}</WFL_Act_NegotiateMarriage>
+<WFL_Act_SupportMarriage>Support this possible match</WFL_Act_SupportMarriage>
+<WFL_Act_OpposeMarriage>Oppose this possible match</WFL_Act_OpposeMarriage>
+<WFL_MarriageAlliance_Waiting>{0} and {1} discussed a possible marriage alliance. Your representative's response is waiting.</WFL_MarriageAlliance_Waiting>
+<WFL_MarriageAlliance_Title>Possible marriage alliances</WFL_MarriageAlliance_Title>
+<WFL_MarriageAlliance_None>No current marriage alliance is being considered.</WFL_MarriageAlliance_None>
+<WFL_MarriageAlliance_Line>{0} and {1} — {2}</WFL_MarriageAlliance_Line>
+<WFL_MarriageAlliance_Tip>Other house: {0}
+House interest: {1}
+First pawn willingness: {2}
+Other pawn willingness: {3}
+Reasons: {4}
+Objections: {5}
+
+This is a possible match, not a forced romance or marriage.</WFL_MarriageAlliance_Tip>
+<WFL_MarriageAllianceState_Opportunity>opportunity</WFL_MarriageAllianceState_Opportunity>
+<WFL_MarriageAllianceState_Negotiating>being negotiated</WFL_MarriageAllianceState_Negotiating>
+<WFL_MarriageAllianceState_Supported>supported by both houses</WFL_MarriageAllianceState_Supported>
+<WFL_MarriageAllianceState_Opposed>opposed</WFL_MarriageAllianceState_Opposed>
+<WFL_MarriageAllianceState_Fulfilled>married</WFL_MarriageAllianceState_Fulfilled>
+<WFL_MarriageAllianceState_Expired>expired</WFL_MarriageAllianceState_Expired>
+<WFL_MarriageAllianceState_Withdrawn>withdrawn</WFL_MarriageAllianceState_Withdrawn>
 <WFL_PetitionKind_Admission>Admission</WFL_PetitionKind_Admission>
 <WFL_PetitionKind_Recognition>Steward appointment</WFL_PetitionKind_Recognition>
 <WFL_PetitionKind_Union>Union</WFL_PetitionKind_Union>

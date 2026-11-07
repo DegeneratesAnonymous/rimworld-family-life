@@ -148,6 +148,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id,"id");Scribe_Values.Look(ref PawnA,"pawnA");Scribe_Values.Look(ref PawnB,"pawnB");
             Scribe_Values.Look(ref FamilyA,"familyA");Scribe_Values.Look(ref FamilyB,"familyB");Scribe_Values.Look(ref CreatedTick,"created");
             Scribe_Values.Look(ref ExpiresTick,"expires");Scribe_Values.Look(ref LastChangedTick,"changed");
+            Scribe_Values.Look(ref NegotiatorA,"negotiatorA");Scribe_Values.Look(ref NegotiatorB,"negotiatorB");
             Scribe_Values.Look(ref HouseAInterest,"houseAInterest");Scribe_Values.Look(ref HouseBInterest,"houseBInterest");
             Scribe_Values.Look(ref PawnAWillingness,"pawnAWillingness");Scribe_Values.Look(ref PawnBWillingness,"pawnBWillingness");
             Scribe_Values.Look(ref Reasons,"reasons",MarriageAllianceReason.None);Scribe_Values.Look(ref ObjectionsA,"objectionsA",MarriageAllianceObjection.None);

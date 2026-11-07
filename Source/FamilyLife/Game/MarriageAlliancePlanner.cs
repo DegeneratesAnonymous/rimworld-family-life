@@ -1,0 +1,104 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using FamilyLife.Domain;
+using RimWorld;
+using Verse;
+using Verse.AI;
+
+namespace FamilyLife
+{
+    /// <summary>Daily bounded discovery plus physical representative-to-representative negotiation.</summary>
+    internal static class MarriageAlliancePlanner
+    {
+        private const int PairBudget=48;
+
+        internal static void AssessHouse(FamilyComponent component,Lineage house,List<Lineage> active,int now)
+        {
+            var r=component.Registry;
+            if(house?.Ambition==null||!WantsAlliance(house.Ambition.Primary)||r.MarriageAlliances.Any(a=>(a.FamilyA==house.Id||a.FamilyB==house.Id)&&a.State<=MarriageAllianceState.Supported))return;
+            var own=r.MembersOf(house.Id).Where(p=>p.InColony&&!p.Juvenile&&!p.PartnerIds().Any()).Take(6).ToList();
+            if(own.Count==0)return;
+            MarriageAllianceAssessment best=null;int tried=0;
+            foreach(var other in active.Where(h=>h.Id!=house.Id).OrderBy(h=>h.Id))
+            foreach(var candidate in r.MembersOf(other.Id).Where(p=>p.InColony&&!p.Juvenile&&!p.PartnerIds().Any()).Take(6))
+            foreach(var person in own)
+            {
+                if(++tried>PairBudget)break;
+                var a=component.TryGetPawn(person.Id);var b=component.TryGetPawn(candidate.Id);
+                if(a==null||b==null||a.Map!=b.Map||!a.Spawned||!b.Spawned)continue;
+                var context=Context(component,house,other,a,b);
+                var assessment=r.AssessMarriageAlliance(a.thingIDNumber,b.thingIDNumber,context);
+                if(!assessment.WorthConsidering)continue;
+                if(best==null||assessment.HouseAInterest+assessment.HouseBInterest>best.HouseAInterest+best.HouseBInterest)best=assessment;
+            }
+            if(best!=null)r.RecordMarriageOpportunity(best,now);
+        }
+
+        private static bool WantsAlliance(HouseAmbitionKind kind)=>kind==HouseAmbitionKind.SecureSuccession||kind==HouseAmbitionKind.ExpandLegacy||kind==HouseAmbitionKind.FillSkillGap||kind==HouseAmbitionKind.SeekProtection;
+
+        private static MarriageCandidateContext Context(FamilyComponent component,Lineage aHouse,Lineage bHouse,Pawn a,Pawn b)
+        {
+            bool eligible=false;try{eligible=RelationsUtility.RomanceEligiblePair(a,b,false).Accepted;}catch(Exception){eligible=false;}
+            float ideology=0f;
+            if(ModsConfig.IdeologyActive&&a.Ideo!=null&&b.Ideo!=null)ideology=a.Ideo==b.Ideo?1f:-.45f;
+            var ab=component.Registry.GetBond(a.thingIDNumber,b.thingIDNumber);var ba=component.Registry.GetBond(b.thingIDNumber,a.thingIDNumber);
+            return new MarriageCandidateContext{VanillaEligible=eligible,OpinionA=a.relations?.OpinionOf(b)??0,OpinionB=b.relations?.OpinionOf(a)??0,
+                IdeologyCompatibility=ideology,Potential=((ab?.Attachment??0)+(ba?.Attachment??0))/200f,
+                ContributionAToB=Contribution(a,bHouse),ContributionBToA=Contribution(b,aHouse)};
+        }
+
+        private static float Contribution(Pawn pawn,Lineage receiving)
+        {
+            var skill=HouseSituationPlanner.PreferredSkill(receiving?.Situation?.WeakestCapability??HouseCapability.None,pawn);
+            return skill==null?0f:Math.Min(1f,(pawn.skills?.GetSkill(skill)?.Level??0)/12f);
+        }
+
+        internal static int Representative(FamilyRegistry r,int family)
+        {
+            int head=r.HeadOf(family);if(head!=0)return head;
+            return r.GetLineage(family)?.Stewards.FirstOrDefault(id=>r.GetPerson(id)?.InColony==true)??0;
+        }
+
+        internal static bool StartNegotiation(FamilyComponent component,MarriageAlliance alliance,Pawn actor,bool byPlayer=false)
+        {
+            if(component==null||alliance==null||alliance.State!=MarriageAllianceState.Opportunity||actor==null)return false;
+            int family=component.Registry.FamilyOf(actor.thingIDNumber);if(family!=alliance.FamilyA&&family!=alliance.FamilyB||!component.Registry.CanManageHouse(actor.thingIDNumber,family))return false;
+            int otherFamily=family==alliance.FamilyA?alliance.FamilyB:alliance.FamilyA;int otherId=Representative(component.Registry,otherFamily);
+            var other=component.TryGetPawn(otherId);
+            if(other==null||other==actor||!other.Spawned||other.Map!=actor.Map||!Activities.IsFree(other)||other.CurJob?.playerForced==true||!actor.CanReach(other,PathEndMode.Touch,Danger.None))return false;
+            if(!byPlayer&&(!Activities.IsFree(actor)||actor.CurJob?.playerForced==true||PerspectiveShiftBridge.IsAvatar(actor)))return false;
+            var job=JobMaker.MakeJob(WFL_StoryDefOf.WFL_MarriageNegotiation,other);job.count=alliance.Id;
+            actor.jobs.StartJob(job,JobCondition.InterruptForced,null,false,tag:JobTag.Misc);return true;
+        }
+
+        internal static void CompleteNegotiation(Pawn speaker,Pawn other,int id)
+        {
+            var c=FamilyComponent.Current;var r=c?.Registry;var alliance=r?.MarriageAlliances.FirstOrDefault(a=>a.Id==id);
+            if(alliance==null||speaker.Map!=other.Map||speaker.Position.DistanceTo(other.Position)>3)return;
+            int speakerFamily=r.FamilyOf(speaker.thingIDNumber);
+            int repA=speakerFamily==alliance.FamilyA?speaker.thingIDNumber:other.thingIDNumber;
+            int repB=speakerFamily==alliance.FamilyA?other.thingIDNumber:speaker.thingIDNumber;
+            if(!r.BeginMarriageNegotiation(id,repA,repB,Activities.Now))return;
+            ResolveIfAutonomous(c,alliance,speaker);ResolveIfAutonomous(c,alliance,other);
+            if(alliance.State==MarriageAllianceState.Negotiating)
+                Messages.Message("WFL_MarriageAlliance_Waiting".Translate(speaker.LabelShort,other.LabelShort),speaker,MessageTypeDefOf.NeutralEvent,false);
+        }
+
+        private static void ResolveIfAutonomous(FamilyComponent c,MarriageAlliance alliance,Pawn representative)
+        {
+            if(Find.Selector.IsSelected(representative)||PerspectiveShiftBridge.IsAvatar(representative))return;
+            int family=c.Registry.FamilyOf(representative.thingIDNumber);bool support=c.Registry.WouldHouseSupportMarriage(alliance,family);
+            c.Registry.DecideMarriageNegotiation(alliance.Id,representative.thingIDNumber,support,Activities.Now);
+            c.Registry.NoteStewardService(representative.thingIDNumber,family,StewardServiceKind.Negotiation,support,Activities.Now);
+        }
+
+        internal static bool DecideAs(FamilyComponent c,MarriageAlliance alliance,Pawn representative,bool support)
+        {
+            if(c==null||alliance==null||representative==null)return false;
+            bool decided=c.Registry.DecideMarriageNegotiation(alliance.Id,representative.thingIDNumber,support,Activities.Now);
+            if(decided)c.Registry.NoteStewardService(representative.thingIDNumber,c.Registry.FamilyOf(representative.thingIDNumber),StewardServiceKind.Negotiation,support,Activities.Now);
+            return decided;
+        }
+    }
+}

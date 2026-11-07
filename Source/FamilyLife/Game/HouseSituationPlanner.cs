@@ -37,7 +37,10 @@ namespace FamilyLife
             var house = active[component.AmbitionCursor.Take(active.Count)];
             if (house.Situation != null && house.Situation.EvaluatedTick > 0 && now - house.Situation.EvaluatedTick < ActivityTuning.TicksPerDay) return;
             using (component.Performance.Measure("House ambition snapshot"))
+            {
                 component.Registry.UpdateHouseAmbition(house.Id, Assess(component, house, active, now), now);
+                MarriageAlliancePlanner.AssessHouse(component,house,active,now);
+            }
         }
 
         internal static void Invalidate(FamilyComponent component)
