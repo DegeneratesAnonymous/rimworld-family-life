@@ -78,6 +78,31 @@ namespace FamilyLife
             // The colony's institution.
             var inst = registry.Institution;
             Line(view, ref y, "WFL_Institution_Line".Translate(("WFL_Institution_" + inst.Kind).Translate(), FamilyUi.NameOf(registry, inst.LeaderId)), 10f);
+            bool anyHead = viewer == 0 || registry.Lineages.Any(h => h.AbsorbedIntoId == 0 && registry.HeadOf(h.Id) == viewer);
+            if (ActionButton(new Rect(10f, y, 250f, 26f), "WFL_Gov_ChangeLeadership".Translate(), anyHead))
+            {
+                int fallbackLeader = registry.GetPerson(inst.LeaderId)?.InColony == true ? inst.LeaderId :
+                    registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => registry.AssessLegitimacy(p.Id, registry.FamilyOf(p.Id), 0)).OrderByDescending(a => a.Score).Select(a => a.PersonId).FirstOrDefault();
+                var options = new List<FloatMenuOption>
+                {
+                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Consensus).Translate(), () => registry.SetInstitution(InstitutionKind.Consensus, 0, Activities.Now)),
+                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Council).Translate(), () => registry.SetInstitution(InstitutionKind.Council, 0, Activities.Now)),
+                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Election).Translate(), () => registry.SetInstitution(InstitutionKind.Election, fallbackLeader, Activities.Now))
+                };
+                foreach (var h in registry.Lineages.Where(x => x.AbsorbedIntoId == 0).Select(x => registry.HeadOf(x.Id)).Where(id => id != 0).Distinct().Take(8))
+                {
+                    int head = h;
+                    options.Add(new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Authoritarian).Translate() + ": " + FamilyUi.NameOf(registry, head), () => registry.SetInstitution(InstitutionKind.Authoritarian, head, Activities.Now)));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+            if (ActionButton(new Rect(270f, y, 200f, 26f), "WFL_Gov_CallElection".Translate(), anyHead && inst.Kind == InstitutionKind.Election))
+            {
+                var field = registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => registry.AssessLegitimacy(p.Id, registry.FamilyOf(p.Id), 0))
+                    .Where(a => a.Score >= 30f && !a.Reluctant).OrderByDescending(a => a.Score).ThenBy(a => a.PersonId).Take(4).Select(a => a.PersonId).ToList();
+                Messages.Message(registry.CallElection(field, Activities.Now) != null ? "WFL_Gov_ElectionCalled".Translate() : "WFL_Gov_ElectionNotPossible".Translate(), MessageTypeDefOf.NeutralEvent, false);
+            }
+            y += 32f;
             foreach (var election in registry.Elections.Where(e => e.Open).Take(2))
                 Line(view, ref y, "WFL_Election_Line".Translate(("WFL_ElectionState_" + election.State).Translate(), FamilyUi.NameList(registry, election.Candidates)), 20f, true);
             foreach (var coup in registry.Coups.Where(c => c.Open && registry.CoupVisibleTo(c, viewer)).Take(2))

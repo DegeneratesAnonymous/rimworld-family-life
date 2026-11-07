@@ -257,5 +257,61 @@ namespace FamilyLife.Tests
             Assert.False(r.CoupVisibleTo(coup, 1));
             Assert.False(r.CoupVisibleTo(coup, 22));
         }
-    }
+
+        [Fact]
+        public void Physical_voting_counts_only_the_people_who_reached_the_polling_place()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var e = r.CallElection(new[] { 3, 20 }, 3000);
+            int voting = 3000 + Day * 2 + 10;
+            r.AdvanceElections(voting, null, true);
+            Assert.Equal(ElectionState.Voting, e.State);                          // nothing is counted until people vote
+            var ctx = new PoliticalContext { IdeologyFit = (v, c) => c == 20 ? .9f : -.9f };
+            Assert.True(r.NeedsToVote(2));
+            Assert.True(r.CastBallot(e.Id, 2, ctx, voting + 5));
+            Assert.False(r.CastBallot(e.Id, 2, ctx, voting + 6));                  // once each
+            Assert.False(r.NeedsToVote(2));
+            r.AdvanceElections(voting + 10, null, true);
+            Assert.Equal(ElectionState.Voting, e.State);
+            r.AdvanceElections(voting + Day + 10, null, true);                     // the window closes; absent people simply did not vote
+            Assert.Equal(ElectionState.Counted, e.State);
+            Assert.Single(e.Votes);
+            Assert.Equal(20, e.WinnerId);
+        }
+
+        [Fact]
+        public void Physical_voting_ends_early_when_everyone_has_voted()
+        {
+            var r = Colony(out _, out _, out _);
+            r.SetInstitution(InstitutionKind.Election, 1, 3000);
+            var e = r.CallElection(new[] { 3, 20 }, 3000);
+            int voting = 3000 + Day * 2 + 10;
+            r.AdvanceElections(voting, null, true);
+            foreach (int v in r.EligibleVoters(e)) r.CastBallot(e.Id, v, null, voting + 1);
+            r.AdvanceElections(voting + 2, null, true);
+            Assert.Equal(ElectionState.Counted, e.State);
+        }
+
+        [Fact]
+        public void In_the_world_a_coup_waits_for_the_confrontation()
+        {
+            bool sawExecuting = false, resolved = false;
+            for (int start = 5; start < 80 && !resolved; start++)
+            {
+                var r = Ruled(out var coup, start * Day);
+                var strong = new PoliticalContext { MaterialCapacity = id => .6f, DefenceCapacity = id => 1f };
+                for (int d = 0; d < 12 && coup.Open && coup.Stage != CoupStage.Executing; d++) r.AdvanceCoup(coup.Id, strong, start * Day + d * (Day + 10), true);
+                if (coup.Stage != CoupStage.Executing || !coup.Open) continue;
+                sawExecuting = true;
+                int t = start * Day + 13 * (Day + 10);
+                r.AdvanceCoup(coup.Id, strong, t, true);
+                Assert.True(coup.Open && coup.Stage == CoupStage.Executing);                // nothing happens without the confrontation
+                Assert.Equal(1, r.Institution.LeaderId);
+                r.ResolveCoup(coup.Id, strong, t + Day + 10);
+                Assert.True(coup.State != CoupState.Active || coup.Stage != CoupStage.Executing);
+                resolved = true;
+            }
+            Assert.True(sawExecuting && resolved);
+        }    }
 }

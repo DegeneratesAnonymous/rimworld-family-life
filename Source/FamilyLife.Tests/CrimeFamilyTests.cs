@@ -285,5 +285,33 @@ namespace FamilyLife.Tests
             r.MaintainCrime(Now + 6 * Day);
             Assert.Equal(HeistState.Aborted, heist.State);
         }
-    }
+
+        [Fact]
+        public void A_theft_the_supply_system_already_recorded_is_not_recorded_twice()
+        {
+            var r = World(out int fam, out int target);
+            var heist = Active(r, fam, target);
+            r.RecruitForHeist(heist.Id, 4, RecruitAnswer.Join, Now);
+            r.ReadyHeist(heist.Id, Open(), Now); r.BeginHeist(heist.Id, Open(), Now);
+            var real = r.RecordIncident(IncidentKind.Theft, 3, 20, 0, Now + 5, 25f, new[] { 3 }, amount: 12);
+            int before = r.Incidents.Count;
+            Assert.True(r.ResolveHeist(heist.Id, 12, 4004, false, null, Now + 10, real.Id));
+            Assert.Equal(before, r.Incidents.Count);
+            Assert.Equal(real.Id, heist.IncidentId);
+        }
+
+        [Fact]
+        public void Restitution_already_recorded_counts_toward_reform_but_only_after_reform_began()
+        {
+            var r = World(out int fam, out int target);
+            Active(r, fam, target);
+            var early = r.RecordIncident(IncidentKind.Restitution, 3, 20, 0, Now + 1, 20f, new[] { 3, 20 }, amount: 40);
+            Assert.True(r.BeginReform(fam, Now + 10));
+            Assert.False(r.NoteAmends(fam, early.Id, Now + 11));                       // before reform began
+            var later = r.RecordIncident(IncidentKind.Restitution, 3, 20, 0, Now + 20, 20f, new[] { 3, 20 }, amount: 40);
+            float before = r.GetLineage(fam).Crime.ReformProgress;
+            Assert.True(r.NoteAmends(fam, later.Id, Now + 21));
+            Assert.True(r.GetLineage(fam).Crime.ReformProgress > before);
+            Assert.False(r.NoteAmends(fam + 99, later.Id, Now + 22));
+        }    }
 }

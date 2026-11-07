@@ -21,6 +21,7 @@ namespace FamilyLife
         public bool teaching = true;
         public bool traditions = true;
         public bool ceremonies=true;
+        public bool governance=true;
         public bool visitingKin=true;
         public bool babyBonding = true;
         public bool bedside = true;
@@ -58,6 +59,7 @@ namespace FamilyLife
             Scribe_Values.Look(ref teaching, "teaching", true);
             Scribe_Values.Look(ref traditions, "traditions", true);
             Scribe_Values.Look(ref ceremonies,"ceremonies",true);
+            Scribe_Values.Look(ref governance,"governance",true);
             Scribe_Values.Look(ref visitingKin,"visitingKin",true);
             Scribe_Values.Look(ref babyBonding, "babyBonding", true);
             Scribe_Values.Look(ref bedside, "bedside", true);
@@ -130,6 +132,7 @@ namespace FamilyLife
             }
             list.CheckboxLabeled("WFL_S_Traditions".Translate(), ref Settings.traditions, "WFL_S_TraditionsTip".Translate());
             list.CheckboxLabeled("WFL_S_Ceremonies".Translate(),ref Settings.ceremonies,"WFL_S_CeremoniesTip".Translate());
+            list.CheckboxLabeled("WFL_S_Governance".Translate(),ref Settings.governance,"WFL_S_GovernanceTip".Translate());
             if(Settings.ceremonies)list.CheckboxLabeled("WFL_S_VisitingKin".Translate(),ref Settings.visitingKin,"WFL_S_VisitingKinTip".Translate());
             list.CheckboxLabeled("WFL_S_Conflicts".Translate(), ref Settings.conflicts, "WFL_S_ConflictsTip".Translate());
             if (Settings.conflicts)

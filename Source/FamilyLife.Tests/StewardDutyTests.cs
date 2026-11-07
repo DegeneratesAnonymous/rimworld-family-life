@@ -185,5 +185,25 @@ namespace FamilyLife.Tests
             Assert.True((r.PrestigeOf(3)?.Value ?? 0f) > 0f);
             Assert.NotEqual(3, r.HeadOf(fam));                                        // service alone does not appoint anyone head
         }
-    }
+
+        [Fact]
+        public void A_shortage_duty_counts_only_when_the_goods_actually_arrived()
+        {
+            var r = House(out int fam);
+            var request = r.OpenSupplyRequest(4, 0, 55, 0, 3, SupplyKind.Food, SupplyApproach.PublicClaim, 2000);
+            var duty = r.BeginStewardDuty(fam, StewardDutyKind.SupplyShortage, request.Id, null, 2000);
+            Assert.False(r.CompleteStewardDuty(duty.Id, 0, 2100));                     // still only a request
+            request.State = SupplyState.Stored;
+            Assert.True(r.CompleteStewardDuty(duty.Id, 0, 2200));
+        }
+
+        [Fact]
+        public void Mediation_needs_the_meeting_to_have_happened()
+        {
+            var r = House(out int fam);
+            var duty = r.BeginStewardDuty(fam, StewardDutyKind.Mediate, 1, null, 2000);
+            Assert.False(r.CompleteStewardDuty(duty.Id, 0, 2100));
+            Assert.True(r.CompleteStewardDuty(duty.Id, 321, 2100));
+            Assert.Equal(1, r.StewardshipOf(3, fam, true).Reconciliations);
+        }    }
 }

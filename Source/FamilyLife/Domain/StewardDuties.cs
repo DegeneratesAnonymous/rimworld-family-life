@@ -70,8 +70,8 @@ namespace FamilyLife.Domain
             bool Taken(StewardDutyKind k, int t) => StewardDuties.Any(d => d.Open && d.FamilyId == family && d.Kind == k && d.TargetId == t);
             var petition = HousePetitions.Where(p => p.FamilyId == family && p.State == PetitionState.Proposed && p.ReceivedBy == 0).OrderBy(p => p.CreatedTick).FirstOrDefault();
             if (petition != null && !Taken(StewardDutyKind.ReceivePetition, petition.Id)) { kind = StewardDutyKind.ReceivePetition; target = petition.Id; return true; }
-            if ((house.Situation?.Sustenance ?? 50f) < 35f || Requests.Any(r => r.Open && FamilyOf(r.RequesterId) == family))
-            { if (!Taken(StewardDutyKind.SupplyShortage, 0)) { kind = StewardDutyKind.SupplyShortage; return true; } }
+            var shortage = Requests.Where(r => r.Open && r.Approach != SupplyApproach.Steal && FamilyOf(r.RequesterId) == family).OrderBy(r => r.CreatedTick).FirstOrDefault();
+            if (shortage != null && !Taken(StewardDutyKind.SupplyShortage, shortage.Id)) { kind = StewardDutyKind.SupplyShortage; target = shortage.Id; return true; }
             var request = GatheringRequests.Where(r => r.LineageId == family && r.State == CeremonyState.Planned && r.OrganizerId == 0).OrderBy(r => r.NotBefore).FirstOrDefault();
             if (request != null && !Taken(StewardDutyKind.OrganizeCeremony, request.Id)) { kind = StewardDutyKind.OrganizeCeremony; target = request.Id; return true; }
             var alliance = MarriageAlliances.FirstOrDefault(a => (a.FamilyA == family || a.FamilyB == family) && (a.State == MarriageAllianceState.Opportunity || a.State == MarriageAllianceState.Negotiating) && !Taken(StewardDutyKind.Negotiate, a.Id));
@@ -97,6 +97,13 @@ namespace FamilyLife.Domain
             var duty = new StewardDuty { Id = NextStewardDutyId++, FamilyId = family, HolderId = holder, Kind = kind, TargetId = target, StartedTick = now, HeadActed = headActed };
             StewardDuties.Add(duty);
             return duty;
+        }
+
+        /// <summary>Withdraws a duty that could not be started at all. Nothing was attempted, so nothing is recorded against anyone.</summary>
+        public bool CancelStewardDuty(int dutyId)
+        {
+            var duty = StewardDuties.FirstOrDefault(d => d.Id == dutyId);
+            return duty != null && duty.Open && StewardDuties.Remove(duty);
         }
 
         /// <summary>The Steward (or acting head) hears a petition. Only the head can then decide it.</summary>
@@ -165,16 +172,16 @@ namespace FamilyLife.Domain
                 case StewardDutyKind.Negotiate:
                     return MarriageAlliances.Any(a => a.Id == duty.TargetId && (a.NegotiatorA == duty.HolderId || a.NegotiatorB == duty.HolderId) &&
                         (a.State == MarriageAllianceState.Supported || a.State == MarriageAllianceState.Opposed || a.State == MarriageAllianceState.Consented || a.State == MarriageAllianceState.Fulfilled));
-                case StewardDutyKind.Mediate:
-                    if (token <= 0 || TokenUsed(token)) return false;
-                    return Rifts.Any(r => r.Id == duty.TargetId && r.ResolvedTick > duty.StartedTick) || Rifts.All(r => r.Id != duty.TargetId);
+                case StewardDutyKind.SupplyShortage:
+                    // The request must really have reached its destination (granted goods carried home) after the duty began.
+                    return Requests.Any(r => r.Id == duty.TargetId && r.CreatedTick >= duty.StartedTick - ActivityTuning.TicksPerDay && (r.State == SupplyState.Exchanged || r.State == SupplyState.Stored || r.State == SupplyState.Repaid));
                 default:
                     return token > 0 && !TokenUsed(token);
             }
         }
 
         /// <summary>Ceremonies, aid, reconciliations and negotiations are already credited by the systems that perform them; crediting them again here would double count.</summary>
-        private static bool CreditedHere(StewardDutyKind kind) => kind == StewardDutyKind.ReceivePetition || kind == StewardDutyKind.GuestCare;
+        private static bool CreditedHere(StewardDutyKind kind) => kind == StewardDutyKind.ReceivePetition || kind == StewardDutyKind.GuestCare || kind == StewardDutyKind.Mediate;
 
         private bool TokenUsed(int token) => StewardDuties.Any(d => d.EvidenceToken == token && d.State == StewardDutyState.Completed);
 

@@ -12,7 +12,7 @@ namespace FamilyLife
     [DefOf]
     public static class WFL_StoryDefOf
     {
-        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation;
+        public static JobDef WFL_CollectSupply, WFL_ExchangeSupply, WFL_StealSupply, WFL_StoryTalk, WFL_StoryListen, WFL_PersonalTime, WFL_BarterFunds, WFL_ReconcileStory, WFL_HousePetition, WFL_HouseInvite, WFL_MarriageNegotiation, WFL_MarriageConsent, WFL_HouseUnionNegotiation, WFL_StewardPetition, WFL_StewardGuest, WFL_StewardMediate, WFL_CoupRecruit, WFL_CoupConfront, WFL_HeistRecruit, WFL_CastVote;
         static WFL_StoryDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(WFL_StoryDefOf)); }
     }
 
@@ -66,6 +66,20 @@ namespace FamilyLife
             return Math.Max(Pressure(family.Id) ? 15f : 35f, current);
         }
         internal void Invalidate(Map map) { if (map != null && stocks.TryGetValue(map, out var snapshot)) snapshot.Refresh.Invalidate(); }
+        /// <summary>Stock the economy already tracks for a map, for planners that need to know what is physically there.</summary>
+        internal List<Thing> StockOf(Map map, int now) => Stock(map, now);
+
+        /// <summary>Starts a real theft of real goods: the actor walks to the item, carries it home, and the supply system records what happened.</summary>
+        internal bool StartTheft(Pawn actor, Pawn donor, Thing source, int count, int now)
+        {
+            if (actor == null || donor == null || source == null || !source.Spawned || !actor.CanReserve(source) || !actor.CanReach(source, PathEndMode.Touch, Danger.None)) return false;
+            var kind = KindOf(source);
+            var home = FamilyZones.AreaFor(R.GetLineage(R.FamilyOf(actor.thingIDNumber)));
+            if (home?.Map != actor.Map) return false;
+            var need = new Need { Kind = kind, ForPawn = actor, Target = count, Urgency = 1f };
+            return Start(actor, donor, source, count, need, SupplyApproach.Steal, home, now);
+        }
+
         private List<Thing> Stock(Map map, int now)
         {
             if (!stocks.TryGetValue(map, out var s)) stocks[map] = s = new Snapshot();

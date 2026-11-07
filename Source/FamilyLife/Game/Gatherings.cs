@@ -145,6 +145,11 @@ namespace FamilyLife
 
         protected override bool TryFindGatherSpot(Pawn organizer, out IntVec3 spot)
         {
+            // A house that has chosen a meeting place prefers it, when it is still standable and on this map.
+            var request = FamilyGatherings.Active;
+            var office = request == null ? null : FamilyComponent.Current?.Registry.UsableOffice(request.LineageId, (m, x, z) =>
+                m == organizer.Map.uniqueID && new IntVec3(x, 0, z).InBounds(organizer.Map) && new IntVec3(x, 0, z).Standable(organizer.Map));
+            if (office != null) { spot = new IntVec3(office.X, 0, office.Z); return true; }
             return RCellFinder.TryFindGatheringSpot(organizer, def, ignoreRequiredColonistCount: true, out spot);
         }
 

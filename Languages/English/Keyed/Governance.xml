@@ -124,4 +124,12 @@
   <WFL_Plan_Arrives>arrives {0}</WFL_Plan_Arrives>
   <WFL_Plan_Confirm>Confirm these choices</WFL_Plan_Confirm>
   <WFL_Plan_Close>Close</WFL_Plan_Close>
+  <WFL_S_Governance>Leadership, institutions and house politics</WFL_S_Governance>
+  <WFL_S_GovernanceTip>Lets Steward duties, succession, elections, schemes and house crime play out on their own. Turn off to keep only the records.</WFL_S_GovernanceTip>
+  <WFL_Coup_Confronted>{0} confronted {1}.</WFL_Coup_Confronted>
+  <WFL_Gov_ChangeLeadership>Change how the colony is led</WFL_Gov_ChangeLeadership>
+  <WFL_Gov_CallElection>Call an election</WFL_Gov_CallElection>
+  <WFL_Gov_ElectionCalled>An election has been called.</WFL_Gov_ElectionCalled>
+  <WFL_Gov_ElectionNotPossible>An election needs elected leadership, no election already open, and two people the colony would accept.</WFL_Gov_ElectionNotPossible>
+  <WFL_Gov_NeedsLeader>Choose who leads.</WFL_Gov_NeedsLeader>
 </LanguageData>

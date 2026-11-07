@@ -70,7 +70,7 @@ namespace FamilyLife.Domain
         {
             Scribe_Values.Look(ref Direction, "direction", CrimeDirection.None); Scribe_Values.Look(ref Status, "status", CrimeStatus.None);
             Scribe_Values.Look(ref StartedTick, "started"); Scribe_Values.Look(ref LastPlanTick, "lastPlan", -1000000); Scribe_Values.Look(ref EndedTick, "ended");
-            Scribe_Values.Look(ref Heat, "heat"); Scribe_Values.Look(ref ReformProgress, "reform");
+            Scribe_Values.Look(ref Heat, "heat"); Scribe_Values.Look(ref ReformProgress, "reform"); Scribe_Values.Look(ref LastAmendsIncident, "lastAmends");
         }
     }
 
@@ -116,6 +116,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Kind, "kind", InstitutionKind.Consensus); Scribe_Values.Look(ref SinceTick, "since");
             Scribe_Values.Look(ref LeaderId, "leader"); Scribe_Values.Look(ref TermEndTick, "termEnd");
             Scribe_Collections.Look(ref CouncilHouseIds, "council", LookMode.Value);
+            Scribe_Values.Look(ref PollMapId, "pollMap", -1); Scribe_Values.Look(ref PollX, "pollX"); Scribe_Values.Look(ref PollZ, "pollZ");
             if (CouncilHouseIds == null) CouncilHouseIds = new List<int>();
         }
     }
@@ -138,10 +139,11 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref CountedTick, "counted"); Scribe_Values.Look(ref WinnerId, "winner"); Scribe_Values.Look(ref Margin, "margin"); Scribe_Values.Look(ref Abstained, "abstained");
             Scribe_Values.Look(ref State, "state", ElectionState.Campaign);
             Scribe_Collections.Look(ref Candidates, "candidates", LookMode.Value); Scribe_Collections.Look(ref Endorsements, "endorsements", LookMode.Deep);
-            Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep);
+            Scribe_Collections.Look(ref Votes, "votes", LookMode.Deep); Scribe_Collections.Look(ref Voted, "voted", LookMode.Value);
             if (Candidates == null) Candidates = new List<int>();
             if (Endorsements == null) Endorsements = new List<ElectionEndorsement>();
             if (Votes == null) Votes = new List<ElectionVote>();
+            if (Voted == null) Voted = new List<int>();
         }
     }
 

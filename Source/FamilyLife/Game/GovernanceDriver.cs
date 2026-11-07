@@ -1,0 +1,321 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using FamilyLife.Domain;
+using RimWorld;
+using Verse;
+using Verse.AI;
+
+namespace FamilyLife
+{
+    /// <summary>
+    /// Starts the real, physical side of duties, voting, schemes and jobs. Every pass looks at one house or one scheme at a time and does a
+    /// handful of dictionary lookups; nothing here scans the map except the existing stock snapshot the supply planner already keeps.
+    /// </summary>
+    internal static class GovernanceDriver
+    {
+        private static int dutyRotate, crimeRotate, coupRotate;
+        private static readonly Dictionary<int, int> nextCrimeCheck = new Dictionary<int, int>();
+        private const int Day = ActivityTuning.TicksPerDay;
+
+        internal static void Run(FamilyComponent c, int now)
+        {
+            var s = FamilyLifeMod.Settings;
+            if (s != null && !s.governance) return;
+            Step(() => Duties(c, now), "duties");
+            Step(() => Elections(c, now), "elections");
+            Step(() => Crime(c, now), "house crime");
+            Step(() => Coups(c, now), "schemes");
+        }
+
+        private static void Step(Action action, string name)
+        {
+            try { action(); }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Governance step '" + name + "' skipped: " + ex.Message); }
+        }
+
+        private static Pawn Spawned(FamilyComponent c, int id) { var p = c.TryGetPawn(id); return p != null && p.Spawned ? p : null; }
+
+        // ------------------------------------------------------------------ steward duties
+
+        private static void Duties(FamilyComponent c, int now)
+        {
+            var r = c.Registry;
+            // Duties whose evidence arrives from other systems (a negotiation, a petition hearing, goods brought home) close when it does.
+            foreach (var duty in r.StewardDuties.Where(d => d.Open && (d.Kind == StewardDutyKind.Negotiate || d.Kind == StewardDutyKind.SupplyShortage || d.Kind == StewardDutyKind.ReceivePetition)).ToList())
+                r.CompleteStewardDuty(duty.Id, 0, now);
+
+            var houses = r.Lineages.Where(h => h.AbsorbedIntoId == 0).OrderBy(h => h.Id).ToList();
+            if (houses.Count == 0) return;
+            var house = houses[dutyRotate++ % houses.Count];
+            if (r.StewardDuties.Any(d => d.Open && d.FamilyId == house.Id)) return;
+            int guests = r.HouseContacts.Count(x => x.FamilyId == house.Id && x.Respect > 0f && !r.BelongsToFamily(r.GetPerson(x.PersonId), house.Id) && Spawned(c, x.PersonId) != null);
+            if (!r.TryChooseDuty(house.Id, guests, out var kind, out int target) || kind == StewardDutyKind.OrganizeCeremony) return;
+            var duty2 = r.BeginStewardDuty(house.Id, kind, target, id => Governance.Free(c, id), now);
+            if (duty2 == null) return;
+            var holder = Spawned(c, duty2.HolderId);
+            bool started = false;
+            if (holder != null)
+            {
+                switch (kind)
+                {
+                    case StewardDutyKind.ReceivePetition:
+                        var petition = r.HousePetitions.FirstOrDefault(p => p.Id == target);
+                        started = petition != null && GovernanceMeetings.Start(holder, Spawned(c, petition.PersonId), WFL_StoryDefOf.WFL_StewardPetition, target); break;
+                    case StewardDutyKind.GuestCare:
+                        foreach (var contact in r.HouseContacts.Where(x => x.FamilyId == house.Id && x.Respect > 0f).OrderByDescending(x => x.LastTick).Take(8))
+                        {
+                            var guest = Spawned(c, contact.PersonId);
+                            if (guest != null && !r.BelongsToFamily(r.GetPerson(guest.thingIDNumber), house.Id) && GovernanceMeetings.Start(holder, guest, WFL_StoryDefOf.WFL_StewardGuest, 0)) { started = true; break; }
+                        }
+                        break;
+                    case StewardDutyKind.Mediate:
+                        var rift = r.Rifts.FirstOrDefault(x => x.Id == target);
+                        started = rift != null && GovernanceMeetings.Start(holder, Spawned(c, rift.A == holder.thingIDNumber ? rift.B : rift.A), WFL_StoryDefOf.WFL_StewardMediate, target); break;
+                    case StewardDutyKind.Negotiate:
+                        var alliance = r.MarriageAlliances.FirstOrDefault(a => a.Id == target);
+                        started = alliance != null && MarriageAlliancePlanner.StartNegotiation(c, alliance, holder); break;
+                    case StewardDutyKind.SupplyShortage:
+                        started = true; break;       // the supply system does the carrying; the duty closes when the goods are home
+                }
+            }
+            if (!started) r.CancelStewardDuty(duty2.Id);
+        }
+
+        // ------------------------------------------------------------------ elections
+
+        private static void Elections(FamilyComponent c, int now)
+        {
+            var r = c.Registry;
+            var political = GovernanceMeetings.Political(c);
+            r.AdvanceElections(now, political, physicalVoting: true);
+            foreach (var election in r.Elections.Where(e => e.Open).Take(1))
+            {
+                if (election.State == ElectionState.Campaign)
+                {
+                    // Each house's head backs the candidate they themselves find best, unless that head is the avatar and speaks for themselves.
+                    foreach (var house in r.Lineages.Where(h => h.AbsorbedIntoId == 0 && !election.Endorsements.Any(e => e.FamilyId == h.Id)).Take(2))
+                    {
+                        int head = r.HeadOf(house.Id);
+                        var headPawn = head == 0 ? null : c.TryGetPawn(head);
+                        if (head == 0 || headPawn != null && PerspectiveShiftBridge.IsAvatar(headPawn)) continue;
+                        var best = election.Candidates.Select(cand => r.Support(head, cand, political, election)).OrderByDescending(x => x.Total).ThenBy(x => x.CandidateId).FirstOrDefault();
+                        if (best != null && best.Total >= .1f) r.EndorseCandidate(election.Id, house.Id, head, best.CandidateId);
+                    }
+                }
+                else if (election.State == ElectionState.Voting && PollingPlace(c, out var map, out var cell))
+                {
+                    int sent = 0;
+                    foreach (int voterId in r.EligibleVoters(election))
+                    {
+                        if (sent >= 3) break;
+                        var pawn = Spawned(c, voterId);
+                        if (pawn == null || pawn.Map != map || !r.NeedsToVote(voterId) || PerspectiveShiftBridge.IsAvatar(pawn)) continue;
+                        if (!Activities.IsFree(pawn) || pawn.CurJob?.playerForced == true || pawn.CurJobDef == WFL_StoryDefOf.WFL_CastVote || !pawn.CanReach(cell, PathEndMode.OnCell, Danger.None)) continue;
+                        var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_CastVote, cell); job.count = election.Id;
+                        pawn.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc); sent++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>The leader's house office if it has a usable one, else any house's office, else the middle of a house's own area.</summary>
+        internal static bool PollingPlace(FamilyComponent c, out Map map, out IntVec3 cell)
+        {
+            var r = c.Registry; var inst = r.Institution;
+            map = null; cell = IntVec3.Invalid;
+            if (inst.PollMapId >= 0)
+            {
+                map = Find.Maps.FirstOrDefault(m => m.uniqueID == inst.PollMapId);
+                cell = new IntVec3(inst.PollX, 0, inst.PollZ);
+                if (map != null && cell.InBounds(map) && cell.Standable(map)) return true;
+            }
+            var houses = r.Lineages.Where(h => h.AbsorbedIntoId == 0).OrderByDescending(h => h.Id == r.FamilyOf(inst.LeaderId)).ThenByDescending(h => h.Standing).ThenBy(h => h.Id).ToList();
+            foreach (var house in houses)
+            {
+                var office = r.UsableOffice(house.Id, (m, x, z) => Find.Maps.Any(mm => mm.uniqueID == m && new IntVec3(x, 0, z).InBounds(mm) && new IntVec3(x, 0, z).Standable(mm)));
+                if (office != null) { map = Find.Maps.First(m => m.uniqueID == office.MapId); cell = new IntVec3(office.X, 0, office.Z); Remember(inst, map, cell); return true; }
+            }
+            foreach (var house in houses)
+            {
+                var area = FamilyZones.AreaFor(house);
+                if (area?.Map == null) continue;
+                var pick = area.ActiveCells.FirstOrDefault(x => x.Standable(area.Map));
+                if (pick.IsValid) { map = area.Map; cell = pick; Remember(inst, map, cell); return true; }
+            }
+            return false;
+        }
+
+        private static void Remember(ColonyInstitution inst, Map map, IntVec3 cell) { inst.PollMapId = map.uniqueID; inst.PollX = cell.x; inst.PollZ = cell.z; }
+
+        // ------------------------------------------------------------------ house crime
+
+        private static List<Thing> Targets(FamilyComponent c, Lineage house, Map map, int now)
+        {
+            var r = c.Registry;
+            return c.Economy.StockOf(map, now).Where(t => t.Spawned && r.ClaimFor(t.thingIDNumber) is StockClaim claim && claim.HolderFamily != house.Id &&
+                r.IsActiveHouse(claim.HolderFamily) && r.HeadOf(claim.HolderFamily) != 0).Take(40).ToList();
+        }
+
+        private static Thing FindTarget(FamilyComponent c, Heist heist, int now)
+        {
+            var map = Find.Maps.FirstOrDefault(m => m.uniqueID == heist.TargetMapId);
+            if (map == null) return null;
+            var thing = c.Economy.StockOf(map, now).FirstOrDefault(t => t.thingIDNumber == heist.TargetToken && t.Spawned);
+            return thing != null && c.Registry.ClaimFor(thing.thingIDNumber)?.HolderFamily == heist.TargetFamilyId ? thing : null;
+        }
+
+        private static CrimeContext CrimeContextFor(FamilyComponent c, int opportunities, int now) => new CrimeContext
+        {
+            Opportunities = opportunities,
+            TargetValid = h => FindTarget(c, h, now) != null,
+            Free = id => Governance.Free(c, id)
+        };
+
+        private static void Crime(FamilyComponent c, int now)
+        {
+            var r = c.Registry;
+            var houses = r.Lineages.Where(h => h.AbsorbedIntoId == 0 && h.ZoneMapId >= 0).OrderBy(h => h.Id).ToList();
+            if (houses.Count == 0) return;
+            var house = houses[crimeRotate++ % houses.Count];
+            var map = Find.Maps.FirstOrDefault(m => m.uniqueID == house.ZoneMapId);
+            if (map == null) return;
+            ManageHeists(c, house, now);
+            if (nextCrimeCheck.TryGetValue(house.Id, out int due) && now < due) return;
+            nextCrimeCheck[house.Id] = now + Day / 2;
+            var targets = Targets(c, house, map, now);
+            var crime = house.Crime;
+            if (crime.Status == CrimeStatus.None || crime.Status == CrimeStatus.Reformed && now - crime.EndedTick > 30 * Day)
+            {
+                if (r.AssessCrimeDirection(house.Id, CrimeContextFor(c, targets.Count, now), now).Eligible)
+                    r.AdoptCrimeDirection(house.Id, CrimeDirection.Theft, CrimeContextFor(c, targets.Count, now), now);
+            }
+            else if (crime.Status == CrimeStatus.Active)
+            {
+                var last = r.Heists.Where(h => h.FamilyId == house.Id).OrderByDescending(h => h.Id).FirstOrDefault();
+                bool refusal = last != null && last.Participants.Any(p => p.Stance == CrimeStance.Refused || p.Stance == CrimeStance.Exposed);
+                var ambition = house.Ambition?.Primary ?? HouseAmbitionKind.None;
+                if (crime.Heat >= 50f && (refusal || ambition == HouseAmbitionKind.RestoreCohesion || ambition == HouseAmbitionKind.SeekProtection)) { r.BeginReform(house.Id, now); return; }
+                if ((house.Situation?.Sustenance ?? 50f) >= 60f && now - crime.LastPlanTick > 30 * Day) { r.AbandonCrimeDirection(house.Id, now); return; }
+                if (r.Heists.Any(h => h.FamilyId == house.Id && h.Active) || targets.Count == 0) return;
+                var actors = r.Incidents.Where(i => i.ActorFamily == house.Id && (i.Kind == IncidentKind.Theft || i.Kind == IncidentKind.Intimidation)).Select(i => i.ActorId).Distinct().ToList();
+                var organizer = actors.Select(id => Spawned(c, id)).FirstOrDefault(p => p != null && p.Map == map && !p.DevelopmentalStage.Juvenile() && Governance.Free(c, p.thingIDNumber));
+                var target = targets.OrderBy(t => organizer == null ? 0 : t.Position.DistanceToSquared(organizer.Position)).FirstOrDefault();
+                if (organizer == null || target == null) return;
+                r.PlanHeist(house.Id, organizer.thingIDNumber, r.ClaimFor(target.thingIDNumber).HolderFamily, map.uniqueID, target.thingIDNumber, CrimeContextFor(c, targets.Count, now), now);
+            }
+            else if (crime.Status == CrimeStatus.Reforming)
+            {
+                foreach (var restitution in r.Incidents.Where(i => i.Kind == IncidentKind.Restitution && i.ActorFamily == house.Id && i.Id > crime.LastAmendsIncident).OrderBy(i => i.Id).Take(4).ToList())
+                    r.NoteAmends(house.Id, restitution.Id, now);
+            }
+        }
+
+        private static void ManageHeists(FamilyComponent c, Lineage house, int now)
+        {
+            var r = c.Registry;
+            foreach (var heist in r.Heists.Where(h => h.FamilyId == house.Id).ToList())
+            {
+                var context = CrimeContextFor(c, 1, now);
+                var organizer = Spawned(c, heist.OrganizerId);
+                switch (heist.State)
+                {
+                    case HeistState.Planning:
+                        if (organizer == null) { r.AbortHeist(heist.Id, now); break; }
+                        if (organizer.CurJobDef == WFL_StoryDefOf.WFL_HeistRecruit) break;
+                        var next = r.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile && heist.Participants.All(x => x.PersonId != p.Id)).OrderBy(p => p.Id)
+                            .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map && !PerspectiveShiftBridge.IsAvatar(p));
+                        if (next != null && heist.WillingCount < 3) { GovernanceMeetings.Start(organizer, next, WFL_StoryDefOf.WFL_HeistRecruit, heist.Id); break; }
+                        if (heist.WillingCount >= 2) r.ReadyHeist(heist.Id, context, now); else r.AbortHeist(heist.Id, now);
+                        break;
+                    case HeistState.Ready:
+                        if (r.BeginHeist(heist.Id, context, now) && !Launch(c, heist, now)) r.InterruptHeist(heist.Id, now);
+                        break;
+                    case HeistState.Executing:
+                        Monitor(c, heist, now); break;
+                    case HeistState.Completed: case HeistState.Exposed: case HeistState.Interrupted: case HeistState.Aborted:
+                        if (now - heist.StateTick > Day / 2) r.CleanupHeist(heist.Id, now); break;
+                }
+            }
+        }
+
+        /// <summary>Each willing participant starts a real theft of a real item. Whatever then happens is what the supply system records.</summary>
+        private static bool Launch(FamilyComponent c, Heist heist, int now)
+        {
+            var r = c.Registry;
+            var donor = Spawned(c, r.HeadOf(heist.TargetFamilyId));
+            var map = Find.Maps.FirstOrDefault(m => m.uniqueID == heist.TargetMapId);
+            if (donor == null || map == null) return false;
+            var items = c.Economy.StockOf(map, now).Where(t => t.Spawned && r.ClaimFor(t.thingIDNumber)?.HolderFamily == heist.TargetFamilyId).ToList();
+            var first = FindTarget(c, heist, now);
+            int started = 0;
+            foreach (var part in heist.Participants.Where(p => p.Stance == CrimeStance.Willing).Take(3))
+            {
+                var actor = Spawned(c, part.PersonId);
+                if (actor == null || actor.Map != map || !Governance.Free(c, actor.thingIDNumber) || !Activities.IsFree(actor)) continue;
+                var thing = started == 0 && first != null ? first : items.Where(t => t != first).OrderBy(t => t.Position.DistanceToSquared(actor.Position)).FirstOrDefault(t => actor.CanReserve(t));
+                if (thing != null && c.Economy.StartTheft(actor, donor, thing, Math.Min(thing.stackCount, 5), now)) started++;
+            }
+            return started > 0;
+        }
+
+        private static void Monitor(FamilyComponent c, Heist heist, int now)
+        {
+            var r = c.Registry;
+            var people = heist.Participants.Where(p => p.Stance == CrimeStance.Willing).Select(p => p.PersonId).ToList();
+            var requests = r.Requests.Where(q => q.Approach == SupplyApproach.Steal && people.Contains(q.RequesterId) && q.CreatedTick >= heist.StateTick).ToList();
+            if (requests.Count == 0 || requests.Any(q => q.Open))
+            {
+                if (now - heist.StateTick > 2 * Day) r.InterruptHeist(heist.Id, now);
+                return;
+            }
+            int goods = requests.Where(q => q.State == SupplyState.Exchanged || q.State == SupplyState.Stored).Sum(q => q.Count);
+            var theft = r.Incidents.Where(i => i.Kind == IncidentKind.Theft && people.Contains(i.ActorId) && i.Tick >= heist.StateTick).OrderByDescending(i => i.Id).FirstOrDefault();
+            bool caught = theft != null && theft.KnownBy.Any(id => r.FamilyOf(id) == heist.TargetFamilyId);
+            int token = goods > 0 ? requests.Max(q => q.Id) + 1000000 : 0;
+            if (!r.ResolveHeist(heist.Id, goods, token, caught, theft?.KnownBy, now, theft?.Id ?? 0)) r.InterruptHeist(heist.Id, now);
+        }
+
+        // ------------------------------------------------------------------ schemes against the leader
+
+        private static void Coups(FamilyComponent c, int now)
+        {
+            var r = c.Registry;
+            if (r.Institution.Kind == InstitutionKind.Consensus || r.Institution.LeaderId == 0) return;
+            var political = GovernanceMeetings.Political(c);
+            var open = r.Coups.Where(x => x.Open).ToList();
+            if (open.Count == 0)
+            {
+                // At most one adult is considered per pass: deeply aggrieved, with little attachment, and no reason given to wait.
+                var adults = r.Persons.Where(p => p.InColony && !p.Juvenile && p.Id != r.Institution.LeaderId).OrderBy(p => p.Id).ToList();
+                if (adults.Count == 0) return;
+                var person = adults[coupRotate++ % adults.Count];
+                var pawn = Spawned(c, person.Id);
+                var bond = r.GetBond(person.Id, r.Institution.LeaderId);
+                if (pawn == null || PerspectiveShiftBridge.IsAvatar(pawn) || bond == null || bond.Tension < 55f || bond.Attachment >= 20f) return;
+                r.PlanCoup(person.Id, CoupGoal.ReplaceLeader, 0, political, now);
+                return;
+            }
+            foreach (var coup in open.Take(1))
+            {
+                var organizer = Spawned(c, coup.OrganizerId);
+                if ((r.GetBond(coup.OrganizerId, coup.TargetLeaderId)?.Tension ?? 0f) < 20f) { r.ReconcileCoup(coup.Id, now); continue; }
+                r.AdvanceCoup(coup.Id, political, now, physical: true);
+                if (!coup.Open || organizer == null) continue;
+                if (coup.Stage == CoupStage.Recruiting && organizer.CurJobDef != WFL_StoryDefOf.WFL_CoupRecruit)
+                {
+                    var recruit = r.Persons.Where(p => p.InColony && !p.Juvenile && p.Id != coup.TargetLeaderId && coup.Participants.All(x => x.PersonId != p.Id)).OrderBy(p => p.Id)
+                        .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && p.Map == organizer.Map && !PerspectiveShiftBridge.IsAvatar(p) &&
+                            ((r.GetBond(p.thingIDNumber, coup.OrganizerId)?.Trust ?? 0f) >= 25f || (r.GetBond(p.thingIDNumber, coup.TargetLeaderId)?.Tension ?? 0f) >= 30f));
+                    if (recruit != null) GovernanceMeetings.Start(organizer, recruit, WFL_StoryDefOf.WFL_CoupRecruit, coup.Id);
+                }
+                else if (coup.Stage == CoupStage.Executing && organizer.CurJobDef != WFL_StoryDefOf.WFL_CoupConfront)
+                {
+                    var leader = Spawned(c, coup.TargetLeaderId);
+                    if (leader != null && leader.Map == organizer.Map) GovernanceMeetings.Start(organizer, leader, WFL_StoryDefOf.WFL_CoupConfront, coup.Id);
+                    else if (now - coup.StageTick > 3 * Day) r.ResolveCoup(coup.Id, political, now);
+                }
+            }
+        }
+    }
+}

@@ -47,6 +47,7 @@ namespace FamilyLife.Domain
         public InstitutionKind Kind;
         public int SinceTick, LeaderId, TermEndTick;
         public List<int> CouncilHouseIds = new List<int>();
+        public int PollMapId = -1, PollX, PollZ;
     }
 
     public sealed partial class ElectionEndorsement { public int FamilyId, EndorserId, CandidateId; public float Weight; }
@@ -55,6 +56,7 @@ namespace FamilyLife.Domain
     public sealed partial class Election
     {
         public int Id, StartedTick, VotingTick, CountedTick, WinnerId;
+        public List<int> Voted = new List<int>();
         public ElectionState State;
         public float Margin;
         public int Abstained;
@@ -82,6 +84,7 @@ namespace FamilyLife.Domain
     {
         public const int TermTicks = 15 * ActivityTuning.TicksPerDay;
         public const int CampaignTicks = 2 * ActivityTuning.TicksPerDay;
+        public const int VotingWindowTicks = ActivityTuning.TicksPerDay;
         public const float AbstainBelow = .05f;
         public ColonyInstitution Institution = new ColonyInstitution();
         public List<Election> Elections = new List<Election>();
@@ -179,14 +182,19 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>Moves open elections along. Call from maintenance; it does nothing when no election is open.</summary>
-        public void AdvanceElections(int now, PoliticalContext ctx = null)
+        public void AdvanceElections(int now, PoliticalContext ctx = null, bool physicalVoting = false)
         {
             foreach (var e in Elections.Where(x => x.Open).ToList())
             {
                 e.Candidates.RemoveAll(c => GetPerson(c)?.InColony != true);
                 if (e.Candidates.Count < 2 && e.State == ElectionState.Campaign) { e.State = ElectionState.Aborted; continue; }
                 if (e.State == ElectionState.Campaign && now >= e.VotingTick) e.State = ElectionState.Voting;
-                if (e.State == ElectionState.Voting) Count(e, now, ctx);
+                if (e.State != ElectionState.Voting) continue;
+                if (!physicalVoting) { Count(e, now, ctx); continue; }
+                // Physical voting: ballots are cast by people who actually went to the polling place; the rest are absent.
+                var eligible = EligibleVoters(e);
+                bool everyone = eligible.All(v => e.Votes.Any(b => b.VoterId == v) || e.Voted.Contains(v));
+                if (everyone || now >= e.VotingTick + VotingWindowTicks) Tally(e, now);
             }
             // A term ending is an event, not a poll: only then does a new election open on its own.
             if (Institution.Kind == InstitutionKind.Election && Institution.TermEndTick != 0 && now >= Institution.TermEndTick && !Elections.Any(e => e.Open))
@@ -195,6 +203,40 @@ namespace FamilyLife.Domain
                     .OrderByDescending(a => a.Score).ThenBy(a => a.PersonId).Take(4).Select(a => a.PersonId).ToList();
                 if (CallElection(field, now) == null) Institution.TermEndTick = now + ActivityTuning.TicksPerDay;
             }
+        }
+
+        /// <summary>Colonists who could vote: adults living in the colony. The game decides who is free to go.</summary>
+        public List<int> EligibleVoters(Election e) => Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => p.Id).Take(160).Select(p => p.Id).ToList();
+
+        /// <summary>
+        /// Records one ballot from a voter who has physically reached the polling place. Their choice follows their own weighing of the candidates,
+        /// or no ballot at all if none of them is worth it. A person can vote once.
+        /// </summary>
+        public bool CastBallot(int electionId, int voter, PoliticalContext ctx, int now)
+        {
+            var e = Elections.FirstOrDefault(x => x.Id == electionId); var p = GetPerson(voter);
+            if (e == null || e.State != ElectionState.Voting || p?.InColony != true || p.Juvenile || e.Voted.Contains(voter)) return false;
+            e.Voted.Add(voter);
+            var best = e.Candidates.Select(c => Support(voter, c, ctx, e)).OrderByDescending(r => r.Total).ThenBy(r => r.CandidateId).First();
+            if (best.Total < AbstainBelow) { e.Abstained++; return true; }
+            e.Votes.Add(new ElectionVote { VoterId = voter, CandidateId = best.CandidateId, Reason = best.Dominant });
+            return true;
+        }
+
+        public bool NeedsToVote(int voter)
+        {
+            var e = Elections.FirstOrDefault(x => x.State == ElectionState.Voting);
+            return e != null && !e.Voted.Contains(voter) && GetPerson(voter)?.InColony == true && !GetPerson(voter).Juvenile;
+        }
+
+        private void Tally(Election e, int now)
+        {
+            var tally = e.Candidates.Select(c => new { Id = c, Votes = e.Votes.Count(v => v.CandidateId == c) }).OrderByDescending(x => x.Votes).ThenByDescending(x => AssessLegitimacy(x.Id, FamilyOf(x.Id), 0).Score).ThenBy(x => x.Id).ToList();
+            int total = Math.Max(1, e.Votes.Count);
+            if (tally.Count == 0 || tally[0].Votes == 0) { e.State = ElectionState.Aborted; return; }
+            e.WinnerId = tally[0].Id; e.Margin = (tally[0].Votes - (tally.Count > 1 ? tally[1].Votes : 0)) / (float)total;
+            e.State = ElectionState.Counted; e.CountedTick = now;
+            Institution.LeaderId = e.WinnerId; Institution.TermEndTick = now + TermTicks;
         }
 
         private void Count(Election e, int now, PoliticalContext ctx)
@@ -266,7 +308,7 @@ namespace FamilyLife.Domain
         /// One bounded step. Capacity is what people can actually bring (equipped, able, free), not how many agree; discovery risk grows with each stage.
         /// Every stage can set back, stall, or end the plan, and a plan with too little support simply lapses.
         /// </summary>
-        public void AdvanceCoup(int coupId, PoliticalContext ctx, int now)
+        public void AdvanceCoup(int coupId, PoliticalContext ctx, int now, bool physical = false)
         {
             ctx = ctx ?? new PoliticalContext();
             var coup = Coups.FirstOrDefault(c => c.Id == coupId);
@@ -288,6 +330,7 @@ namespace FamilyLife.Domain
                     if (capacity < needed) { coup.Setbacks++; coup.StageTick = now; if (coup.Setbacks >= 3) { coup.State = CoupState.Abandoned; coup.EndedTick = now; } return; }
                     coup.Stage = CoupStage.Executing; coup.StageTick = now; return;
                 case CoupStage.Executing:
+                    if (physical) return;                         // in the world, the confrontation itself decides, via ResolveCoup
                     if (willing.Count < 3 || capacity < needed) { coup.Setbacks++; coup.Stage = CoupStage.Preparing; coup.StageTick = now; if (coup.Setbacks >= 3) { coup.State = CoupState.Abandoned; coup.EndedTick = now; } return; }
                     bool found = Roll(coup.Id, 2, now) < coup.Discovery;
                     if (found) { Discover(coup, 0, now); return; }
@@ -297,6 +340,15 @@ namespace FamilyLife.Domain
                     ChangeBond(coup.TargetLeaderId, coup.OrganizerId, new BondChange(-6f, -10f, 10f, 0f), now);
                     return;
             }
+        }
+
+        /// <summary>The moment of confrontation in the world. Same checks as the abstract step: capacity, discovery, and who is free.</summary>
+        public void ResolveCoup(int coupId, PoliticalContext ctx, int now)
+        {
+            var coup = Coups.FirstOrDefault(c => c.Id == coupId);
+            if (coup == null || !coup.Open || coup.Stage != CoupStage.Executing) return;
+            coup.StageTick = now - ActivityTuning.TicksPerDay;
+            AdvanceCoup(coupId, ctx, now, false);
         }
 
         /// <summary>Both sides can step back before the plan lands; it ends cleanly and eases the strain rather than leaving a loose thread.</summary>

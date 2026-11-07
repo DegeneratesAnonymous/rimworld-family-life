@@ -39,6 +39,7 @@ namespace FamilyLife.Domain
         public CrimeStatus Status;
         public int StartedTick, LastPlanTick = -1000000, EndedTick;
         public float Heat, ReformProgress;
+        public int LastAmendsIncident;
     }
 
     public sealed partial class HeistParticipant
@@ -246,7 +247,7 @@ namespace FamilyLife.Domain
         /// Records the outcome of a job that was actually carried out. Goods count only with the one-time token the game issues when the items
         /// moved; with no victim to harm there is no incident; nobody learns who did it unless they were there.
         /// </summary>
-        public bool ResolveHeist(int heistId, int goodsMoved, int evidenceToken, bool caught, IEnumerable<int> witnesses, int now)
+        public bool ResolveHeist(int heistId, int goodsMoved, int evidenceToken, bool caught, IEnumerable<int> witnesses, int now, int existingIncidentId = 0)
         {
             var heist = Heists.FirstOrDefault(h => h.Id == heistId);
             if (heist == null || heist.State != HeistState.Executing) return false;
@@ -257,7 +258,9 @@ namespace FamilyLife.Domain
             var seen = (witnesses ?? Enumerable.Empty<int>()).Concat(caught ? new[] { victim } : new int[0]).Distinct().ToList();
             var kind = heist.Direction == CrimeDirection.Intimidation || heist.Direction == CrimeDirection.Protection ? IncidentKind.Intimidation : IncidentKind.Theft;
             // An incident is recorded for the actor; its witnesses are the only people who learn who did it.
-            var incident = RecordIncident(kind, heist.OrganizerId, victim, heist.TargetMapId, now, Math.Min(100f, 25f + goodsMoved * .5f), seen, IncidentContext.Planned, Math.Max(0, goodsMoved));
+            // When the supply system already recorded the theft that really happened, that record is used rather than writing a second one.
+            var incident = existingIncidentId != 0 ? Incidents.FirstOrDefault(i => i.Id == existingIncidentId) :
+                RecordIncident(kind, heist.OrganizerId, victim, heist.TargetMapId, now, Math.Min(100f, 25f + goodsMoved * .5f), seen, IncidentContext.Planned, Math.Max(0, goodsMoved));
             heist.IncidentId = incident?.Id ?? 0; heist.GoodsMoved = Math.Max(0, goodsMoved); heist.EvidenceToken = goodsMoved > 0 ? evidenceToken : 0;
             heist.State = caught ? HeistState.Exposed : HeistState.Completed; heist.StateTick = now;
             foreach (int w in seen) LearnCrime(heistId, w, CrimeKnowledgeLevel.Fact);
@@ -350,7 +353,7 @@ namespace FamilyLife.Domain
         {
             var house = GetLineage(family);
             if (house == null || house.Crime.Status != CrimeStatus.Active) return false;
-            house.Crime.Status = CrimeStatus.Reforming; house.Crime.ReformProgress = Math.Max(house.Crime.ReformProgress, 10f);
+            house.Crime.Status = CrimeStatus.Reforming; house.Crime.ReformProgress = Math.Max(house.Crime.ReformProgress, 10f); house.Crime.StartedTick = now;
             foreach (var h in Heists.Where(h => h.FamilyId == family && h.Active)) AbortHeist(h.Id, now);
             return true;
         }
@@ -362,6 +365,18 @@ namespace FamilyLife.Domain
             if (house == null || house.Crime.Status != CrimeStatus.Reforming || amount <= 0 || FamilyOf(actor) != family || FamilyOf(victim) == family) return false;
             if (RecordIncident(IncidentKind.Restitution, actor, victim, -1, now, Math.Min(60f, 8f + amount * .4f), new[] { actor, victim }, IncidentContext.None, amount) == null) return false;
             house.Crime.ReformProgress = Math.Min(100f, house.Crime.ReformProgress + Math.Min(30f, 6f + amount * .5f));
+            if (house.Crime.ReformProgress >= 100f) { house.Crime.Status = CrimeStatus.Reformed; house.Crime.Direction = CrimeDirection.None; house.Crime.EndedTick = now; house.Crime.Heat = Math.Max(0f, house.Crime.Heat - 40f); }
+            return true;
+        }
+
+        /// <summary>Counts an act of restitution already recorded by the supply system toward reform.</summary>
+        public bool NoteAmends(int family, int incidentId, int now)
+        {
+            var house = GetLineage(family);
+            var incident = Incidents.FirstOrDefault(i => i.Id == incidentId);
+            if (house == null || house.Crime.Status != CrimeStatus.Reforming || incident == null || incident.Kind != IncidentKind.Restitution || incident.ActorFamily != family || incident.Tick < house.Crime.StartedTick || incident.Id <= house.Crime.LastAmendsIncident) return false;
+            house.Crime.LastAmendsIncident = incident.Id;
+            house.Crime.ReformProgress = Math.Min(100f, house.Crime.ReformProgress + Math.Min(30f, 6f + incident.Amount * .5f));
             if (house.Crime.ReformProgress >= 100f) { house.Crime.Status = CrimeStatus.Reformed; house.Crime.Direction = CrimeDirection.None; house.Crime.EndedTick = now; house.Crime.Heat = Math.Max(0f, house.Crime.Heat - 40f); }
             return true;
         }

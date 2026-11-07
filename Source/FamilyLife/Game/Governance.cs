@@ -52,8 +52,8 @@ namespace FamilyLife
             r.MaintainStewardDuties(now, id => Free(c, id));
             r.PruneOffices(map => Find.Maps.Any(m => m.uniqueID == map));
             r.MaintainSuccession(now);
-            r.AdvanceElections(now);
             r.MaintainCrime(now);
+            GovernanceDriver.Run(c, now);
         }
     }
 }
