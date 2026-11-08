@@ -425,7 +425,7 @@ namespace FamilyLife.Domain
                 if (!item.Contested) Assign(estate, item, lead.ClaimantId, now, ctx);
                 else item.ProposedHeirId = lead.ClaimantId;
                 // The one playing the avatar is asked about a claim that is rightfully theirs; the rest are decided by the pawns' own positions.
-                foreach (var c in item.Claims.Take(2).Where(c => ctx.IsAvatar != null && ctx.IsAvatar(c.ClaimantId)))
+                foreach (var c in item.Claims.Take(2).Where(c => ctx.IsAvatar != null && ctx.IsAvatar(c.ClaimantId) && (c == lead || item.Heirloom)))
                     AddAsk(estate, item.ThingId, c.ClaimantId, item.Contested || c != lead ? EstateAskKind.Press : EstateAskKind.Heir, now);
             }
             SetStage(estate, EstateStage.Claims, now);
@@ -626,7 +626,8 @@ namespace FamilyLife.Domain
             switch (answer)
             {
                 case EstateAnswer.Accept:
-                    if (item.Contested || item.HeirId != person && item.Outcome != ItemOutcome.Pending) { claim.Pressed = true; return true; }
+                    if (ask.Kind == EstateAskKind.Press) break;                       // accepting what is decided: nothing is pressed and nothing is given up
+                    if (item.Contested || item.HeirId != person && item.Outcome != ItemOutcome.Pending) break;
                     item.HeirId = person; item.Outcome = ItemOutcome.Assigned;
                     break;
                 case EstateAnswer.Relinquish:
@@ -775,7 +776,8 @@ namespace FamilyLife.Domain
 
         /// <summary>Open questions for the person playing this pawn. Nothing here ever answers on their behalf.</summary>
         public List<(EstateCase Case, EstateAsk Ask)> EstateAsksFor(int person) =>
-            Estates.Where(e => e.Open || e.Stage == EstateStage.Unresolved).SelectMany(e => e.Asks.Where(a => a.PersonId == person && (a.Open || a.Expired && e.Stage == EstateStage.Unresolved && e.Items.Any(i => i.ThingId == a.ItemThingId && !i.Terminal))).Select(a => (e, a))).ToList();
+            Estates.Where(e => e.Open || e.Stage == EstateStage.Unresolved).SelectMany(e => e.Asks.Where(a => a.PersonId == person && !a.Answered &&
+                (a.Open || a.Expired && a.Kind != EstateAskKind.Mediate && e.Items.Any(i => i.ThingId == a.ItemThingId && !i.Terminal))).Select(a => (e, a))).ToList();
 
         /// <summary>Owners an old or at-risk person is likely to name an heir for: the closest living relative who is not a child. Used to let the pawns settle things themselves.</summary>
         public int BestBeneficiary(int owner)

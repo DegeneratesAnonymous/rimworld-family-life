@@ -365,6 +365,49 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void A_question_that_lapsed_is_still_shown_to_the_person_playing_while_the_thing_is_unsettled()
+        {
+            var r = Home(); Own(r, 300, heirloom: false, value: 90, quality: 2);
+            var estate = Estate(r);
+            var ctx = Avatar(2);
+            RunAll(r, 5000, 5000 + 12 * Day, ctx);
+            Assert.True(estate.Asks[0].Expired);
+            var shown = Assert.Single(r.EstateAsksFor(2));
+            Assert.True(shown.Ask.Expired);
+            Assert.Empty(r.ReadyToCollect(2));
+            Assert.True(r.AnswerHeirAsk(estate.Id, 300, 2, EstateAnswer.Accept, 5000 + 13 * Day, ctx));
+            Assert.Empty(r.EstateAsksFor(2));
+            Assert.Single(r.ReadyToCollect(2));
+        }
+
+        [Fact]
+        public void Accepting_what_is_decided_does_not_press_a_claim_or_change_the_heir()
+        {
+            var r = Home(); Own(r, 300);
+            r.ChangeBond(2, 1, new BondChange(70, 20, 0, 20), 1000); r.ChangeBond(4, 1, new BondChange(10, 20, 0, 20), 1000);
+            r.ChangeBond(4, 2, new BondChange(0, 0, 60, 0), 1000);
+            var estate = Estate(r);
+            var ctx = Avatar(4);
+            RunAll(r, 5000, 5000 + EstateTuning.MournTicks + Day / 2, ctx);
+            var ask = r.EstateAsksFor(4).FirstOrDefault();
+            Assert.NotNull(ask.Ask);
+            Assert.Equal(EstateAskKind.Press, ask.Ask.Kind);
+            int heirBefore = estate.Items[0].HeirId;
+            Assert.True(r.AnswerHeirAsk(estate.Id, 300, 4, EstateAnswer.Accept, 5000 + 3 * Day, ctx));
+            Assert.False(estate.Items[0].Claims.First(c => c.ClaimantId == 4).Pressed);
+            Assert.Equal(heirBefore, estate.Items[0].HeirId);
+        }
+
+        [Fact]
+        public void An_ordinary_item_asks_no_one_to_press_a_claim_it_cannot_win()
+        {
+            var r = Home(); Own(r, 300, heirloom: false, value: 90, quality: 2);
+            Estate(r);
+            RunAll(r, 5000, 5000 + EstateTuning.MournTicks + Day / 2, Avatar(4));
+            Assert.Empty(r.EstateAsksFor(4));
+        }
+
+        [Fact]
         public void Only_the_person_named_can_answer_and_only_their_own_question()
         {
             var r = Home(); Own(r, 300, heirloom: false, value: 90, quality: 2);

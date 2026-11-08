@@ -209,7 +209,7 @@ namespace FamilyLife
         internal static void Tick(FamilyComponent c, int now)
         {
             var r = c.Registry;
-            if (r.KinVisits.Count == 0 || !r.KinVisits.Any(v => v.Rescue == RescueStage.OnSite) || !siteGate.Take(now)) return;
+            if (!siteGate.Take(now) || !r.KinVisits.Any(v => v.Rescue == RescueStage.OnSite)) return;
             using (c.Performance.Measure("Kin rescue: site"))
                 foreach (var visit in r.KinVisits.Where(v => v.State == KinVisitState.Stranded && v.Rescue == RescueStage.OnSite).ToList())
                 {

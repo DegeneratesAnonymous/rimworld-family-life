@@ -109,6 +109,7 @@ namespace FamilyLife
                 }
                 PruneGone(c, r, id, now);
             }
+            PruneGone(c, r, 0, now);                                                  // things a house keeps
             r.NameBeneficiariesNow(now, id => Governance.IsAvatar(c, id), 1);
             if (seen.Count > 256) foreach (int stale in seen.Where(kv => now - kv.Value > 10 * ActivityTuning.TicksPerDay).Select(kv => kv.Key).ToList()) seen.Remove(stale);
         }
@@ -217,7 +218,7 @@ namespace FamilyLife
                 r.ReportDeliveryBlocked(estate.Id, item.ThingId, LostReason.Held, false, now);                            // someone is wearing or carrying it: it is not taken from them
                 return;
             }
-            if (Governance.IsAvatar(c, carrier.thingIDNumber) || Find.Selector.IsSelected(carrier)) return;      // a pawn the player is playing or has selected is never sent off
+            if (Governance.IsAvatar(c, carrier.thingIDNumber) || Find.Selector.IsSelected(carrier)) { r.ReportDeliveryBlocked(estate.Id, item.ThingId, LostReason.None, false, now); return; }      // a pawn the player is playing or has selected is never sent off; try again later without holding up the rest
             if (!thing.Spawned || thing.Map != carrier.Map) { r.ReportDeliveryBlocked(estate.Id, item.ThingId, LostReason.None, false, now); return; }
             if (thing.IsForbidden(carrier)) { r.ReportDeliveryBlocked(estate.Id, item.ThingId, LostReason.Forbidden, false, now); return; }
             if (!carrier.Map.reservationManager.CanReserve(carrier, thing)) { r.ReportDeliveryBlocked(estate.Id, item.ThingId, LostReason.None, false, now); return; }
