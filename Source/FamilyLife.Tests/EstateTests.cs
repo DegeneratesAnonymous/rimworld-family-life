@@ -48,11 +48,21 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Plain_cheap_clothes_and_scrap_tools_are_nobodys_own()
+        {
+            var r = Home();
+            Assert.False(r.RecordPersonalItem(70, "Shirt", "plain shirt", PersonalItemKind.Apparel, 1, 18, 1, 1000));
+            Assert.False(r.RecordPersonalItem(71, "Knife", "scrap knife", PersonalItemKind.Weapon, 1, 25, 0, 1000));
+            Assert.True(r.RecordPersonalItem(72, "Knife", "good knife", PersonalItemKind.Weapon, 1, 25, 3, 1000));        // a well-made thing is worth keeping even if cheap
+            Assert.True(r.RecordPersonalItem(73, "Coat", "coat", PersonalItemKind.Apparel, 1, 60, 1, 1000));
+        }
+
+        [Fact]
         public void Sustained_use_makes_a_worthwhile_item_an_heirloom_but_a_cheap_one_stays_ordinary()
         {
             var r = Home();
             r.RecordPersonalItem(60, "Rifle", "rifle", PersonalItemKind.Weapon, 1, 200, 3, 1000);
-            r.RecordPersonalItem(61, "Shirt", "shirt", PersonalItemKind.Apparel, 1, 20, 1, 1000);
+            r.RecordPersonalItem(61, "Shirt", "shirt", PersonalItemKind.Apparel, 1, 50, 1, 1000);
             for (int i = 0; i < 20; i++) { r.NoteItemHeld(60, 1, 24, 2000 + i); r.NoteItemHeld(61, 1, 24, 2000 + i); }
             Assert.True(r.PersonalItemFor(60).Heirloom);
             Assert.Equal(HeirloomBasis.Use, r.PersonalItemFor(60).Basis);

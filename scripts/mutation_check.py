@@ -37,11 +37,11 @@ MUTATIONS = [
     ("a friend joins a plot against their loved one", "Domain/FamilyStories.cs",
      "targetLove >= 45 ||", "false ||"),
     ("insufficient goods count as a handover", "Domain/FamilySupplies.cs",
-     "actualCount < r.Count", "false"),
+     "actualCount<r.Count", "false"),
     ("theft transfers legal ownership", "Domain/FamilySupplies.cs",
      "r.Approach == SupplyApproach.Steal || source != null && source.OwnerFamily != source.HolderFamily ? source.OwnerFamily : receiver", "receiver"),
     ("public collection can confiscate private stock", "Domain/FamilySupplies.cs",
-     "if (r.Approach == SupplyApproach.PublicClaim && source != null) return false;", ""),
+     "if(r.Approach==SupplyApproach.PublicClaim) return source==null;", "if(r.Approach==SupplyApproach.PublicClaim) return true;"),
     ("splitting drops family ownership", "Domain/FamilySupplies.cs",
      "if (claim != null) ClaimStock(result, claim.OwnerFamily, claim.HolderFamily, claim.MapId, claim.Kind);", ""),
 
@@ -339,8 +339,13 @@ MUTATIONS = [
 
 
 def run_tests():
-    out = subprocess.run(["dotnet", "test", str(ROOT / "Source" / "FamilyLife.Tests" / "FamilyLife.Tests.csproj"), "--no-restore"],
-                         capture_output=True, text=True, timeout=600).stdout
+    try:
+        out = subprocess.run(["dotnet", "test", str(ROOT / "Source" / "FamilyLife.Tests" / "FamilyLife.Tests.csproj"), "--no-restore"],
+                             capture_output=True, text=True, timeout=240).stdout
+    except subprocess.TimeoutExpired:
+        # A rule broken so badly that the suite never finishes is noticed, not a reason to abandon the run.
+        subprocess.run(["taskkill", "/F", "/IM", "testhost.exe"] if sys.platform == "win32" else ["pkill", "-f", "testhost"], capture_output=True)
+        return (True, 1, 0)
     m = re.search(r"(Failed!|Passed!)\s+-\s+Failed:\s+(\d+), Passed:\s+(\d+)", out)
     return (m.group(1) == "Failed!", int(m.group(2)), int(m.group(3))) if m else (None, 0, 0)
 

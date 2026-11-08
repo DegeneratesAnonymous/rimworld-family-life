@@ -247,7 +247,7 @@ namespace FamilyLife
                 case RescueComplication.Injury: ok = site.contactTicks >= 250 && !needsAid; break;
                 case RescueComplication.Animals:
                 case RescueComplication.Raiders: ok = site.contactTicks >= 250 && !hostile; break;
-                case RescueComplication.Weather: ok = site.contactTicks >= 1250 && !exposed; break;
+                case RescueComplication.Weather: ok = site.contactTicks >= 1250 && (!exposed || site.contactTicks >= 7500); break;     // warmed or cooled, or hours of help given
                 default: ok = site.contactTicks >= 2500; break;
             }
             ok &= !living.Any(k => k.Downed);                                                   // nobody who still needs carrying is sent on

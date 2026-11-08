@@ -95,7 +95,7 @@ namespace FamilyLife.Domain
         public const int PossessionHours = 48, UseHeirloomHours = 15 * 24, MaxPersonalItems = 160, MaxItemsPerOwner = 14, MaxCaseItems = 12, MaxClaimsPerItem = 6,
             MaxEstateHistory = 24, MaxAttempts = 5, MaxAsks = 12, MaxNotedHoursPerVisit = 24;
         public const float ClaimFloor = .25f, ContestMargin = .15f, ContestFloor = .3f;
-        public const float HeirloomValue = 80f, LegacyValue = 800f, LegacyQualityValue = 150f, LegacyArtValue = 400f;
+        public const float PossessionValue = 40f, HeirloomValue = 80f, LegacyValue = 800f, LegacyQualityValue = 150f, LegacyArtValue = 400f;
         public const int GoodQuality = 3, ExcellentQuality = 4;
     }
 
@@ -127,6 +127,7 @@ namespace FamilyLife.Domain
         public bool RecordPersonalItem(int thingId, string defName, string label, PersonalItemKind kind, int owner, float value, int quality, int now)
         {
             if (thingId <= 0 || GetPerson(owner)?.InColony != true || (kind == PersonalItemKind.Other && value < EstateTuning.HeirloomValue)) return false;
+            if (value < EstateTuning.PossessionValue && quality < EstateTuning.GoodQuality) return false;           // too ordinary to be anyone's own: plain work clothes, a scrap tool
             var existing = PersonalItemFor(thingId);
             if (existing != null)
             {
