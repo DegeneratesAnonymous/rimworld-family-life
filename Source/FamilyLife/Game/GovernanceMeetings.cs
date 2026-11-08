@@ -34,6 +34,7 @@ namespace FamilyLife
             var job = JobMaker.MakeJob(def, other); job.count = id;
             if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate||def==WFL_StoryDefOf.WFL_InstitutionPetition)
                 PreferOffice(job,FamilyComponent.Current,FamilyComponent.Current?.Registry.FamilyOf(actor.thingIDNumber)??0,actor,other);
+            if (def == WFL_StoryDefOf.WFL_OfficeLesson && OfficeDriver.LecternCell(actor, out var lectern)) job.targetB = lectern;          // the teacher speaks from the classroom's lectern
             if (def == WFL_StoryDefOf.WFL_Checkup && OfficeDriver.MedicalRoomCell(actor, out var room)) job.targetB = room;       // the examination is held in the medical room when there is one
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;

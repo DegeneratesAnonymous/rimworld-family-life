@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - fixes after first play
+- Visitors and guests no longer wander into family areas (unless let in or at a family gathering). A house with one person in the colony no longer shows the Hd tag.
+- Teachers speak from a lectern in an enclosed room; lessons last two game hours; check-ups happen beside a hospital bed and last about five seconds at triple speed.
+
 ## Unreleased - heirlooms, estates and the reunion rescue quest
 - Add personal possessions and heirlooms (weapons, garments, books, art), kept apart from family stock claims, with an estate for each death, designated heirs, claims and disputes, mediation and compromise, and real physical delivery by the heir; ordinary stacked supplies stay communal. Head succession and inheritance are separate. The person you are playing is asked (accept, let go, press a claim, or mediate) and silence never counts as consent.
 - Replace the letter-only rescue destination with a real Quest-tab quest, a world site and a generated map where the stranded relatives are placed as the same pawns, with five kinds of trouble, honest endings (declined, ignored, abandoned, site lost, lost, partial survival, succeeded) that can each happen only once, and credit for the actual rescuers. Older saves with a stranded party still resolve.

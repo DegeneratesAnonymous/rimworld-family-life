@@ -60,7 +60,7 @@ namespace FamilyLife
                 if (house != null)
                 {
                     string name = r.LineageDisplayName(house);
-                    if (r.HeadOf(family) == id) list.Add(new Badge { Glyph = "Hd", Color = new Color(.85f, .85f, .9f), Title = "WFL_Role_Head".Translate(name).ToString() });
+                    if (r.HeadOf(family) == id) { if (r.MembersOf(family).Count(m => m.InColony) > 1) list.Add(new Badge { Glyph = "Hd", Color = new Color(.85f, .85f, .9f), Title = "WFL_Role_Head".Translate(name).ToString() }); }
                     else if (r.StewardshipOf(id, family, true) != null) list.Add(new Badge { Glyph = "St", Color = new Color(.7f, .8f, .85f), Title = "WFL_Role_Steward".Translate(name).ToString() });
                 }
             }

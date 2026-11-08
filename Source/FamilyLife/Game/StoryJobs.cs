@@ -116,7 +116,8 @@ namespace FamilyLife
                 // before treating distance as a failed conversation, and count the talk itself only once together.
                 if (Other.Position.DistanceTo(pawn.Position) > 3) { if (++waited > 600) EndJobWith(JobCondition.Incompletable); return; }
                 waited++;
-                if (++together >= 180) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
+                int needed = job.def == WFL_StoryDefOf.WFL_OfficeLesson ? OfficeDriver.LessonTicks : job.def == WFL_StoryDefOf.WFL_Checkup ? OfficeDriver.CheckupTicks : 180;
+                if (++together >= needed) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_MarriageConsent) MarriageAlliancePlanner.CompleteConsent(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HouseUnionNegotiation) MarriageAlliancePlanner.CompleteUnion(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HousePetition || job.def==WFL_StoryDefOf.WFL_HouseInvite) HouseInteractions.Complete(pawn,Other,job.count,job.def==WFL_StoryDefOf.WFL_HouseInvite);
@@ -135,7 +136,9 @@ namespace FamilyLife
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || job.targetA.Pawn?.CurJob == null ||
                 !GovernanceMeetings.Handles(job.targetA.Pawn.CurJobDef) && (job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_StoryTalk && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ExchangeSupply && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_ReconcileStory && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HousePetition && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseInvite && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageNegotiation && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_MarriageConsent && job.targetA.Pawn.CurJobDef != WFL_StoryDefOf.WFL_HouseUnionNegotiation));
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
-            yield return Toils_General.Wait(1200);
+            // A lesson or a check-up lasts as long as the speaker's; the wait ends when theirs does.
+            var talkDef = job.targetA.Pawn?.CurJobDef;
+            yield return Toils_General.Wait(talkDef == WFL_StoryDefOf.WFL_OfficeLesson ? OfficeDriver.LessonTicks + 1500 : talkDef == WFL_StoryDefOf.WFL_Checkup ? OfficeDriver.CheckupTicks + 600 : 1200);
         }
     }
 }

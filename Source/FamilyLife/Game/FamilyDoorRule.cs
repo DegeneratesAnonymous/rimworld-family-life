@@ -5,6 +5,7 @@ using HarmonyLib;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace FamilyLife
 {
@@ -31,11 +32,21 @@ namespace FamilyLife
         /// <summary>Whether this pawn must not enter this cell: it is in a family zone the pawn does not belong to, and they have not been let in.</summary>
         public static bool Blocks(IntVec3 cell, Pawn pawn, bool noteWish)
         {
-            if (!Enabled || pawn == null || pawn.playerSettings == null || Current.ProgramState != ProgramState.Playing) return false;
+            if (!Enabled || pawn == null || Current.ProgramState != ProgramState.Playing) return false;
+            bool visitor = IsVisitor(pawn);
+            if (pawn.playerSettings == null && !visitor) return false;
             var map = pawn.MapHeld;
             if (map == null || !cell.InBounds(map)) return false;
             var zone = map.zoneManager.ZoneAt(cell) as Zone_Family;
             if (zone == null || zone.areaId == 0) return false;
+            if (visitor)
+            {
+                // Visitors and guests of the colony stay out of other people's homes. They are not asked to knock; they simply do not go there,
+                // unless they have been let in or they are taking part in a family gathering.
+                if (pawn.Downed || pawn.InMentalState) return false;
+                if (pawn.GetLord()?.LordJob?.GetType().Name == "LordJob_FamilyGathering") return false;
+                return !GuestPasses.HasPassFor(pawn, zone);
+            }
             if (pawn.Faction != Faction.OfPlayer || pawn.Drafted || pawn.Downed || pawn.InMentalState || pawn.IsPrisoner || pawn.IsSlave) return false;
             var component = FamilyComponent.Current;
             var lineage = component == null ? null : zone.Family(component.Registry);
@@ -61,6 +72,10 @@ namespace FamilyLife
             }
             return true;
         }
+
+        /// <summary>A person of another faction who is not an enemy: a trader, a visitor, a guest, a relative come for a reunion.</summary>
+        private static bool IsVisitor(Pawn pawn)
+            => pawn.Faction != null && pawn.Faction != Faction.OfPlayer && pawn.RaceProps.Humanlike && !pawn.IsPrisoner && !pawn.HostileTo(Faction.OfPlayer);
 
         private static bool IsMember(FamilyComponent component, Lineage lineage, Pawn pawn)
         {

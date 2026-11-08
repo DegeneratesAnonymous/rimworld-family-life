@@ -192,12 +192,31 @@ namespace FamilyLife
             cell = IntVec3.Invalid;
             var map = doctor?.Map;
             if (map == null) return false;
-            foreach (var bed in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>().Where(b => b.Medical && !b.Destroyed).OrderBy(b => b.Position.DistanceToSquared(doctor.Position)).Take(6))
+            // The hospital: a room with a medical bed, or one the game itself calls a hospital. Dangerous-but-passable cells are fine; the doctor must simply be able to get there.
+            foreach (var bed in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>().Where(b => !b.Destroyed && !b.ForPrisoners && (b.Medical || b.GetRoom()?.Role == RoomRoleDefOf.Hospital))
+                         .OrderBy(b => b.Position.DistanceToSquared(doctor.Position)).Take(8))
             {
                 var room = bed.GetRoom();
                 if (room == null || room.PsychologicallyOutdoors) continue;
                 foreach (var near in GenAdj.CellsAdjacent8Way(bed))
-                    if (near.InBounds(map) && near.Standable(map) && near.GetRoom(map) == room && doctor.CanReach(near, PathEndMode.OnCell, Danger.None)) { cell = near; return true; }
+                    if (near.InBounds(map) && near.Standable(map) && near.GetRoom(map) == room && doctor.CanReach(near, PathEndMode.OnCell, Danger.Some)) { cell = near; return true; }
+            }
+            return false;
+        }
+
+        /// <summary>The standing place at a lectern in an enclosed room (the classroom), so the teacher speaks from it when there is one.</summary>
+        internal static bool LecternCell(Pawn teacher, out IntVec3 cell)
+        {
+            cell = IntVec3.Invalid;
+            var map = teacher?.Map;
+            var def = DefDatabase<ThingDef>.GetNamedSilentFail("Lectern");
+            if (map == null || def == null) return false;
+            foreach (var lectern in map.listerThings.ThingsOfDef(def).OfType<Building>().Where(b => b.Spawned && b.Faction == Faction.OfPlayer).OrderBy(b => b.Position.DistanceToSquared(teacher.Position)).Take(6))
+            {
+                var room = lectern.GetRoom();
+                if (room == null || room.PsychologicallyOutdoors) continue;
+                var spot = lectern.InteractionCell;
+                if (spot.IsValid && spot.InBounds(map) && spot.Standable(map) && teacher.CanReach(spot, PathEndMode.OnCell, Danger.Some)) { cell = spot; return true; }
             }
             return false;
         }
@@ -270,18 +289,21 @@ namespace FamilyLife
             if (Due("lesson", now, 600) && !GovernanceMeetings.Start(holder, student, WFL_StoryDefOf.WFL_OfficeLesson, 0)) r.SessionDefer(OfficeKind.Teacher, next);
         }
 
+        /// <summary>A lesson lasts two game hours; a check-up a few seconds at triple speed.</summary>
+        internal const int LessonTicks = 5000, CheckupTicks = 900;
+
         /// <summary>A lesson from the colony's teacher: a real conversation that ends with the student learning something the teacher is better at.</summary>
         internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now)
         {
             var office = r.OfficeFor(OfficeKind.Teacher);
             if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
             var skill = LearnableSkill(teacher, student);
-            float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 150f : 250f;
+            float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 450f : 700f;          // a lesson now lasts hours, not seconds
             if (r.KinOfHolder(student.thingIDNumber, OfficeKind.Teacher)) xp *= 1.5f;          // the teacher's own house learns more from them
             if (skill != null) student.skills.Learn(skill, xp, true);
             Served(r, OfficeKind.Teacher, teacher, student, now);
             r.ClassDone(student.thingIDNumber);
-            r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, 1800, now, BondCause.Teaching);
+            r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, LessonTicks, now, BondCause.Teaching);
             int gap = skill == null ? 0 : teacher.skills.GetSkill(skill).Level - student.skills.GetSkill(skill).Level;
             r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, Math.Min(1f, .4f + gap / 10f));
         }
