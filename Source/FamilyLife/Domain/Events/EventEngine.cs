@@ -472,7 +472,21 @@ namespace FamilyLife.Domain
                 r.BecameMemory = kept;
             }
 
-            EventLog.Add(new EventRecord { EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0 });
+            var after = AftermathFlags.None;
+            if (r.RiftOpened != 0) after |= AftermathFlags.RiftOpened;
+            if (r.RiftEased) after |= AftermathFlags.RiftEased;
+            if (r.RiftResolved) after |= AftermathFlags.RiftResolved;
+            if (r.PromiseMade != 0) after |= AftermathFlags.PromiseMade;
+            if (r.PromiseKept != 0) after |= AftermathFlags.PromiseKept;
+            if (r.BecameMemory) after |= AftermathFlags.Memory;
+            if (r.FamilyTieChanged) after |= AftermathFlags.TieChanged;
+            EventLog.Add(new EventRecord
+            {
+                EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0,
+                FeelA = Math.Max(-100, Math.Min(100, (int)Math.Round(r.InitiatorFeeling * 100f))),
+                FeelB = Math.Max(-100, Math.Min(100, (int)Math.Round(r.RecipientFeeling * 100f))),
+                Aftermath = (int)after
+            });
             TrimLog();
             NoteAgencyMoment(r, now);
         }

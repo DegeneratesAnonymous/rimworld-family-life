@@ -287,7 +287,7 @@ namespace FamilyLife
                         card.Body = FamilyText.MomentBody(registry, t.Moment);
                         if (card.Body == null) continue;
                         card.Type = FamilyText.MomentTitle(t.Moment);
-                        card.Consequence = FamilyText.TierWords(t.Moment.Tier);
+                        card.Consequence = FamilyText.Aftermath(registry, t.Moment);
                         break;
                     case TimelineKind.Ceremony:
                         card.Type = ("WFL_Ceremony_" + t.Ceremony.Kind).Translate();

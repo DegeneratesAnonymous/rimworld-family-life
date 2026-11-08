@@ -112,6 +112,7 @@ namespace FamilyLife.Domain
         public int Id;
         public string Name;          // short name, e.g. "Bob"
         public string LastName;      // surname, "" when none
+        public string FirstName;     // given name, "" when none
         public long BirthAbsTick;
         public int AgeTicks;
         public Presence Presence;

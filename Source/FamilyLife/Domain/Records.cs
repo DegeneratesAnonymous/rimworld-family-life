@@ -11,6 +11,7 @@ namespace FamilyLife.Domain
         public int Id;
         public string Name = "";
         public string LastName = "";
+        public string FirstName = "";        // the given name; Name is the nickname, which is often the surname too
         public long BirthAbsTick;
         public Presence Presence;
         public bool EverColonist;
@@ -45,7 +46,17 @@ namespace FamilyLife.Domain
 
         public bool HasPartner(int id) => SpouseIds.Contains(id) || LoverIds.Contains(id);
 
-        public string FullName => string.IsNullOrEmpty(LastName) ? Name : Name + " " + LastName;
+        public string FullName
+        {
+            get
+            {
+                string given = string.IsNullOrEmpty(FirstName) ? Name : FirstName;
+                if (string.IsNullOrEmpty(LastName)) return given;
+                // "Garrick Garrick" is a nickname that matches the surname, not a name
+                if (string.Equals(given, LastName, System.StringComparison.OrdinalIgnoreCase)) return given;
+                return given + " " + LastName;
+            }
+        }
     }
 
     /// <summary>A family identity that spans generations. It exists independently of any living member.</summary>

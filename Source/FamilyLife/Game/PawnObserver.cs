@@ -118,6 +118,7 @@ namespace FamilyLife
             {
                 o.Name = p.Name.ToStringShort;
                 o.LastName = (p.Name as NameTriple)?.Last ?? "";
+                o.FirstName = (p.Name as NameTriple)?.First ?? "";
             }
             else
             {

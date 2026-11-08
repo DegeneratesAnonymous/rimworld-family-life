@@ -24,6 +24,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id");
             Scribe_Values.Look(ref Name, "name", "");
             Scribe_Values.Look(ref LastName, "last", "");
+            Scribe_Values.Look(ref FirstName, "first", "");
             Scribe_Values.Look(ref BirthAbsTick, "birth");
             Scribe_Values.Look(ref Presence, "presence", Presence.Away);
             Scribe_Values.Look(ref EverColonist, "everColonist");
@@ -364,6 +365,9 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Weight, "weight", EventWeight.Ambient);
             Scribe_Values.Look(ref Setting, "setting");
             Scribe_Values.Look(ref Third, "third");
+            Scribe_Values.Look(ref FeelA, "feelA");
+            Scribe_Values.Look(ref FeelB, "feelB");
+            Scribe_Values.Look(ref Aftermath, "aftermath");
         }
     }
 

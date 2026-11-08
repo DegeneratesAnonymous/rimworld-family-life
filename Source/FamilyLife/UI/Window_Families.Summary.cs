@@ -146,13 +146,16 @@ namespace FamilyLife
             var card = FamilyKit.BeginCard(col, ref y, "s.story", "WFL_FW_Card_Story".Translate());
             var cv = card.View;
             float cy = 0f;
-            if (!view.Insider) FamilyKit.EmptyState(cv, ref cy, "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
-            else if (view.Story.Count == 0) FamilyKit.EmptyState(cv, ref cy, "WFL_FW_NothingStory".Translate());
+            // An outsider only knows what they were part of; say so only when there is nothing of that.
+            if (view.Story.Count == 0)
+                FamilyKit.EmptyState(cv, ref cy, view.Insider ? "WFL_FW_NothingStory".Translate() : "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
+            else if (!view.Insider)
+                cy += FamilyKit.Label(cv, cy, "WFL_FW_StoryOutsider".Translate(), 0f, true);
             foreach (var e in view.Story)
             {
                 string body = FamilyText.MomentBody(registry, e);
                 if (body == null) continue;
-                FamilyKit.EventCard(cv, ref cy, FamilyText.Date(e.Tick), FamilyText.MomentTitle(e), FamilyKit.Trust, FamilyText.Participants(registry, new TimelineEntry { Kind = TimelineKind.Moment, Moment = e }), body, null, e.Weight == EventWeight.Defining);
+                FamilyKit.EventCard(cv, ref cy, FamilyText.Date(e.Tick), FamilyText.MomentTitle(e), FamilyKit.Trust, FamilyText.Participants(registry, new TimelineEntry { Kind = TimelineKind.Moment, Moment = e }), body, FamilyText.Aftermath(registry, e), e.Weight == EventWeight.Defining);
             }
             if (FamilyKit.Action(new Rect(0f, cy + 2f, 170f, 24f), "WFL_FW_ViewTimeline".Translate(), true)) State.Navigate(FamilyTab.Events, (int)EventsSub.Recent);
             cy += 30f;

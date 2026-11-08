@@ -68,6 +68,32 @@ namespace FamilyLife
 
         public static string TierWords(EventTier tier) => ("WFL_FW_Tier_" + tier).Translate();
 
+        /// <summary>What came of a moment, told as a short sentence: how each person felt afterwards and what it set going.
+        /// Moments saved before this was recorded fall back to the plain tier words.</summary>
+        public static string Aftermath(FamilyRegistry r, EventRecord e)
+        {
+            string a = FamilyUi.NameOf(r, e.A), b = FamilyUi.NameOf(r, e.B);
+            var parts = new List<string>(4);
+            string fa = Feeling(e.FeelA), fb = Feeling(e.FeelB);
+            if (fa != null && fb != null && fa == fb) parts.Add(("WFL_FW_Feel_Both_" + fa).Translate(a, b).ToString());
+            else
+            {
+                if (fa != null) parts.Add(("WFL_FW_Feel_One_" + fa).Translate(a).ToString());
+                if (fb != null) parts.Add(("WFL_FW_Feel_One_" + fb).Translate(b).ToString());
+            }
+            var f = (AftermathFlags)e.Aftermath;
+            if ((f & AftermathFlags.RiftOpened) != 0) parts.Add("WFL_FW_After_RiftOpened".Translate(a, b).ToString());
+            if ((f & AftermathFlags.RiftResolved) != 0) parts.Add("WFL_FW_After_RiftResolved".Translate(a, b).ToString());
+            else if ((f & AftermathFlags.RiftEased) != 0) parts.Add("WFL_FW_After_RiftEased".Translate(a, b).ToString());
+            if ((f & AftermathFlags.PromiseMade) != 0) parts.Add("WFL_FW_After_PromiseMade".Translate(a, b).ToString());
+            if ((f & AftermathFlags.PromiseKept) != 0) parts.Add("WFL_FW_After_PromiseKept".Translate(a, b).ToString());
+            if ((f & AftermathFlags.TieChanged) != 0) parts.Add("WFL_FW_After_TieChanged".Translate().ToString());
+            if ((f & AftermathFlags.Memory) != 0) parts.Add("WFL_FW_After_Memory".Translate().ToString());
+            return parts.Count == 0 ? TierWords(e.Tier).ToString() : string.Join(" ", parts);
+        }
+
+        private static string Feeling(int v) => v >= 60 ? "Glad" : v >= 20 ? "Warm" : v <= -60 ? "Hurt" : v <= -20 ? "Uneasy" : null;
+
         public static string CeremonyBody(FamilyRegistry r, CeremonyRecord c) =>
             "WFL_Ceremony_Recent".Translate(Date(c.CompletedTick), ("WFL_Ceremony_" + c.Kind).Translate(), c.Attendees, c.Moments);
 

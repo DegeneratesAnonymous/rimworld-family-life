@@ -152,6 +152,7 @@ namespace FamilyLife.Domain
                 Id = p.Id,
                 Name = p.Name,
                 LastName = p.LastName,
+                FirstName = p.FirstName,
                 BirthAbsTick = p.BirthAbsTick,
                 AgeTicks = int.MaxValue,
                 Presence = presence,
@@ -182,6 +183,7 @@ namespace FamilyLife.Domain
 
             if (!string.IsNullOrEmpty(o.Name)) p.Name = o.Name;
             p.LastName = o.LastName ?? "";
+            if (!string.IsNullOrEmpty(o.FirstName)) p.FirstName = o.FirstName;
             p.BirthAbsTick = o.BirthAbsTick;
             bool wasJuvenile = p.Juvenile;
             p.Juvenile = o.Juvenile;

@@ -339,4 +339,20 @@
   <WFL_FW_BranchTip>Found a new house from a member of this one.</WFL_FW_BranchTip>
   <WFL_FW_WhyNot_Head>Only the head of House {1} can do this. {0} is not.</WFL_FW_WhyNot_Head>
   <WFL_FW_WhyNot_Manage>{0} does not run House {1}.</WFL_FW_WhyNot_Manage>
+  <WFL_FW_Feel_Both_Glad>{0} and {1} both came away glowing.</WFL_FW_Feel_Both_Glad>
+  <WFL_FW_Feel_Both_Warm>{0} and {1} both came away warmer.</WFL_FW_Feel_Both_Warm>
+  <WFL_FW_Feel_Both_Hurt>{0} and {1} both came away hurt.</WFL_FW_Feel_Both_Hurt>
+  <WFL_FW_Feel_Both_Uneasy>{0} and {1} were both left uneasy.</WFL_FW_Feel_Both_Uneasy>
+  <WFL_FW_Feel_One_Glad>{0} came away glowing.</WFL_FW_Feel_One_Glad>
+  <WFL_FW_Feel_One_Warm>{0} felt warmer for it.</WFL_FW_Feel_One_Warm>
+  <WFL_FW_Feel_One_Hurt>{0} was hurt by it.</WFL_FW_Feel_One_Hurt>
+  <WFL_FW_Feel_One_Uneasy>{0} was left uneasy.</WFL_FW_Feel_One_Uneasy>
+  <WFL_FW_After_RiftOpened>A rift opened between {0} and {1}.</WFL_FW_After_RiftOpened>
+  <WFL_FW_After_RiftEased>The rift between {0} and {1} eased a little.</WFL_FW_After_RiftEased>
+  <WFL_FW_After_RiftResolved>{0} and {1} settled the rift between them.</WFL_FW_After_RiftResolved>
+  <WFL_FW_After_PromiseMade>{0} made {1} a promise.</WFL_FW_After_PromiseMade>
+  <WFL_FW_After_PromiseKept>{0} kept a promise to {1}.</WFL_FW_After_PromiseKept>
+  <WFL_FW_After_TieChanged>It shifted how their two families stand.</WFL_FW_After_TieChanged>
+  <WFL_FW_After_Memory>The family will remember it.</WFL_FW_After_Memory>
+  <WFL_FW_StoryOutsider>What you were part of.</WFL_FW_StoryOutsider>
 </LanguageData>

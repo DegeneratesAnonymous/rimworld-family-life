@@ -132,7 +132,13 @@ namespace FamilyLife.Domain
         public EventWeight Weight;
         public byte Setting;                  // ActivityKind
         public int Third;
+        // How it landed, kept so the history can tell what came of it. Old saves have none of this and show nothing extra.
+        public int FeelA, FeelB;              // how each walked away feeling, -100..100
+        public int Aftermath;                 // AftermathFlags
     }
+
+    [System.Flags]
+    public enum AftermathFlags { None = 0, RiftOpened = 1, RiftEased = 2, RiftResolved = 4, PromiseMade = 8, PromiseKept = 16, Memory = 32, TieChanged = 64 }
 
     /// <summary>Everything an event looks at. Built by the game layer from a pair of real people and the registry's records.</summary>
     public sealed class PairContext

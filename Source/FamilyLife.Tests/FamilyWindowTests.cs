@@ -531,5 +531,26 @@ namespace FamilyLife.Tests
             Assert.DoesNotContain("Tab.Overview", src); Assert.DoesNotContain("Tab.Moments", src); Assert.DoesNotContain("Tab.Zone", src);
             Assert.Contains("FamilyTab", src);
         }
+
+        [Fact]
+        public void A_nickname_that_matches_the_surname_is_not_shown_twice()
+        {
+            Assert.Equal("Garrick", new PersonRecord { Name = "Garrick", LastName = "Garrick" }.FullName);
+            Assert.Equal("Hiroshi Garrick", new PersonRecord { Name = "Garrick", FirstName = "Hiroshi", LastName = "Garrick" }.FullName);
+            Assert.Equal("Bob Smith", new PersonRecord { Name = "Bob", LastName = "Smith" }.FullName);
+            Assert.Equal("Bob", new PersonRecord { Name = "Bob" }.FullName);
+        }
+
+        [Fact]
+        public void A_moment_tells_how_it_landed_and_old_moments_still_load_empty()
+        {
+            var e = new EventRecord { EventId = "x", FeelA = 100, FeelB = -70, Aftermath = (int)(AftermathFlags.RiftOpened | AftermathFlags.Memory) };
+            Assert.Equal(AftermathFlags.RiftOpened | AftermathFlags.Memory, (AftermathFlags)e.Aftermath);
+            var old = new EventRecord { EventId = "x" };
+            Assert.Equal(0, old.FeelA); Assert.Equal(0, old.FeelB); Assert.Equal(0, old.Aftermath);
+            string xml = File.ReadAllText(Path.Combine(RepoRoot(), "Languages", "English", "Keyed", "FamilyWindow.xml"));
+            foreach (var k in new[] { "Feel_Both_Glad", "Feel_One_Hurt", "After_RiftOpened", "After_PromiseMade", "After_Memory" })
+                Assert.Contains("WFL_FW_" + k + ">", xml);
+        }
     }
 }
