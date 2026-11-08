@@ -3,6 +3,8 @@
 ## Unreleased - fixes after first play
 - Visitors and guests no longer wander into family areas (unless let in or at a family gathering). A house with one person in the colony no longer shows the Hd tag.
 - Teachers speak from a lectern in an enclosed room; lessons last two game hours; check-ups happen beside a hospital bed and last about five seconds at triple speed.
+- Door visits: only a family member who is inside the zone comes to the door; the one who lets a guest in stays with them until the visit ends; a guest with nothing to carry on with spends a while with their host, then leaves; a knock nobody answers is given up and not repeated for about half a day.
+- Children's beds: parents are housed before their children, and a child goes to the bed nearest a parent's by the walk (not a straight line), including when the parent keeps their own bed. A child whose bed is outside the family's zone, or whose bed this mod gave out and is now clearly farther from a parent than a free one, is looked at again.
 
 ## Unreleased - heirlooms, estates and the reunion rescue quest
 - Add personal possessions and heirlooms (weapons, garments, books, art), kept apart from family stock claims, with an estate for each death, designated heirs, claims and disputes, mediation and compromise, and real physical delivery by the heir; ordinary stacked supplies stay communal. Head succession and inheritance are separate. The person you are playing is asked (accept, let go, press a claim, or mediate) and silence never counts as consent.

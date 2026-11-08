@@ -70,6 +70,49 @@ namespace FamilyLife
 
         private static bool InZones(Building_Bed bed, List<Zone_Family> zones) => bed != null && bed.Spawned && zones.Any(z => z.Map == bed.Map && bed.OccupiedRect().Cells.Any(z.ContainsCell));
 
+        // ---- how far apart beds are to walk
+
+        private const int PathSearchCells = 6000;
+        private const float Unreachable = 100000f;
+
+        /// <summary>Walking distance (in cells) from a bed to each cell, found by a bounded search that goes round walls and through doors.</summary>
+        private static Dictionary<IntVec3, int> WalkFrom(Building_Bed bed)
+        {
+            var map = bed.Map;
+            var dist = new Dictionary<IntVec3, int>();
+            var queue = new Queue<IntVec3>();
+            foreach (var c in bed.OccupiedRect().Cells) { dist[c] = 0; queue.Enqueue(c); }
+            while (queue.Count > 0 && dist.Count < PathSearchCells)
+            {
+                var c = queue.Dequeue();
+                int d = dist[c];
+                for (int i = 0; i < 4; i++)
+                {
+                    var n = c + GenAdj.CardinalDirections[i];
+                    if (!n.InBounds(map) || dist.ContainsKey(n) || !n.Walkable(map)) continue;
+                    dist[n] = d + 1; queue.Enqueue(n);
+                }
+            }
+            return dist;
+        }
+
+        /// <summary>A function giving the walk between any two of these beds (computed once per bed, as needed). Beds that cannot be walked between are far apart.</summary>
+        internal static Func<int, int, float> WalkingDistance(IEnumerable<Building_Bed> beds)
+        {
+            var byId = new Dictionary<int, Building_Bed>();
+            foreach (var b in beds) byId[b.thingIDNumber] = b;
+            var fields = new Dictionary<int, Dictionary<IntVec3, int>>();
+            return (a, b) =>
+            {
+                if (a == b) return 0f;
+                if (!byId.TryGetValue(a, out var bedA) || !byId.TryGetValue(b, out var bedB)) return Unreachable;
+                if (!fields.TryGetValue(a, out var field)) fields[a] = field = WalkFrom(bedA);
+                int best = int.MaxValue;
+                foreach (var c in bedB.OccupiedRect().Cells) if (field.TryGetValue(c, out int d) && d < best) best = d;
+                return best == int.MaxValue ? Unreachable : best;
+            };
+        }
+
         // ---- what this mod gave out
 
         private static bool WasDealt(Lineage lineage, Pawn pawn, Building_Bed bed)
@@ -123,6 +166,7 @@ namespace FamilyLife
                             if (record == null) continue;
                             var bed = p.ownership.OwnedBed;
                             if (bed == null) { if (!p.Dead) affected.Add(p.thingIDNumber); continue; }
+                            if (p.DevelopmentalStage == DevelopmentalStage.Child && NeedsCloserBed(component, lineage, p, bed, members, zones)) affected.Add(p.thingIDNumber);
                             if (IsBaby(p))
                             {
                                 var parentBeds = record.ParentIds.Select(id => members.TryGetValue(id, out var par) ? par.ownership.OwnedBed : null).Where(b => b != null && InZones(b, zones)).ToList();
@@ -180,6 +224,7 @@ namespace FamilyLife
             var dealt = new Dictionary<int, Pawn>();
             var keeps = new Dictionary<int, int>();
             var beds = new Dictionary<int, Building_Bed>();
+            var anchorBeds = new Dictionary<int, Building_Bed>();      // beds that stay as they are: a child still counts them when finding the way to a parent
             foreach (var bed in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>())
             {
                 if (bed.Medical || !bed.ForColonists || !bed.Spawned || !InZones(bed, zones)) continue;
@@ -188,7 +233,7 @@ namespace FamilyLife
                 bool released = owners.All(o => !IsLocked(bed, o) && (firstShare || WasDealt(lineage, o, bed))
                                               && (only == null || only.Contains(o.thingIDNumber)));
                 if (owners.Count == 0 || released) beds[bed.thingIDNumber] = bed;
-                else foreach (var o in owners) keeps[o.thingIDNumber] = bed.thingIDNumber;                 // theirs to keep
+                else { foreach (var o in owners) keeps[o.thingIDNumber] = bed.thingIDNumber; anchorBeds[bed.thingIDNumber] = bed; }                 // theirs to keep
             }
             foreach (var p in members.Values)
             {
@@ -196,7 +241,7 @@ namespace FamilyLife
                 if (only != null && !only.Contains(p.thingIDNumber))
                 {
                     var own = p.ownership.OwnedBed;
-                    if (own != null && InZones(own, zones)) keeps[p.thingIDNumber] = own.thingIDNumber;
+                    if (own != null && InZones(own, zones)) { keeps[p.thingIDNumber] = own.thingIDNumber; anchorBeds[own.thingIDNumber] = own; }
                     continue;
                 }
                 dealt[p.thingIDNumber] = p;
@@ -216,7 +261,11 @@ namespace FamilyLife
                 };
             }
             var sleepers = dealt.Values.Select(Describe).ToList();
-            var slots = beds.Values.Select(b => new BedSlot
+            // A parent's bed that stays put (even outside the zone) still anchors a child's: the child is placed near it.
+            foreach (var p in dealt.Values)
+                foreach (var parentId in (registry.GetPerson(p.thingIDNumber)?.ParentIds ?? new List<int>()))
+                    if (!dealt.ContainsKey(parentId) && component.TryGetPawn(parentId)?.ownership?.OwnedBed is Building_Bed pb && pb.Spawned && pb.Map == map) { anchorBeds[pb.thingIDNumber] = pb; if (!keeps.ContainsKey(parentId)) keeps[parentId] = pb.thingIDNumber; }
+            var slots = beds.Values.Concat(anchorBeds.Values.Where(b => !beds.ContainsKey(b.thingIDNumber))).Select(b => new BedSlot
             {
                 Id = b.thingIDNumber,
                 Capacity = Math.Max(1, b.SleepingSlotsCount),
@@ -226,7 +275,8 @@ namespace FamilyLife
                 Z = b.Position.z
             }).ToList();
 
-            var plan = BedPlan.Deal(sleepers, slots, (personId, bedId) => RestUtility.CanUseBedEver(dealt[personId], beds[bedId].def), keeps);
+            var walk = WalkingDistance(beds.Values.Concat(anchorBeds.Values).Concat(dealt.Values.Where(d => d.ownership.OwnedBed != null && d.ownership.OwnedBed.Spawned).Select(d => d.ownership.OwnedBed)).Distinct());
+            var plan = BedPlan.Deal(sleepers, slots, (personId, bedId) => beds.TryGetValue(bedId, out var candidate) && RestUtility.CanUseBedEver(dealt[personId], candidate.def), keeps, walk);
             if (plan.Count == 0) return 0;
 
             // In a careful pass a person only moves for a clear gain: a baby into a parent's room, a couple together, someone with no bed.
@@ -246,6 +296,16 @@ namespace FamilyLife
                         {
                             var parentBed = members.TryGetValue(parentId, out var par) ? par.ownership.OwnedBed : null;
                             if (parentBed != null && RoomOf(parentBed) >= 0 && RoomOf(parentBed) == RoomOf(target)) better = true;
+                        }
+                    }
+                    else if (pawn.DevelopmentalStage == DevelopmentalStage.Child && record != null)
+                    {
+                        // A child moves for a bed clearly nearer (by the walk) to a parent's.
+                        foreach (int parentId in record.ParentIds)
+                        {
+                            var parentBed = members.TryGetValue(parentId, out var par) ? par.ownership.OwnedBed : null;
+                            if (parentBed == null || !parentBed.Spawned) continue;
+                            if (walk(parentBed.thingIDNumber, target.thingIDNumber) + 4f < walk(parentBed.thingIDNumber, current.thingIDNumber)) better = true;
                         }
                     }
                     else if (record != null)
@@ -277,6 +337,27 @@ namespace FamilyLife
             if (FamilyLifeMod.Settings != null && FamilyLifeMod.Settings.logEvents && only == null)
                 Log.Message("[Wil's Family Life] Beds shared out: " + given + " of " + members.Count + " people have one.");
             return given;
+        }
+
+        /// <summary>
+        /// Whether a child's bed should be looked at again: it is outside the family's zone, or this mod gave it out and a free bed in the zone is clearly
+        /// nearer (by the walk) to a parent's. A bed the player set by hand, or locked, is left alone.
+        /// </summary>
+        private static bool NeedsCloserBed(FamilyComponent component, Lineage lineage, Pawn child, Building_Bed bed, Dictionary<int, Pawn> members, List<Zone_Family> zones)
+        {
+            if (bed.Medical || IsLocked(bed, child) || bed.OwnersForReading.Any(o => o != child)) return false;
+            if (!InZones(bed, zones)) return zones.Any(z => z.Map == child.Map);
+            if (!WasDealt(lineage, child, bed)) return false;
+            var record = component.Registry.GetPerson(child.thingIDNumber);
+            if (record == null) return false;
+            var parentBeds = record.ParentIds.Select(id => members.TryGetValue(id, out var par) ? par.ownership.OwnedBed : null).Where(b => b != null && b.Spawned && b.Map == bed.Map).ToList();
+            if (parentBeds.Count == 0) return false;
+            var candidates = bed.Map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>()
+                .Where(c => c != bed && !c.Medical && c.ForColonists && c.Spawned && c.OwnersForReading.Count == 0 && InZones(c, zones) && RestUtility.CanUseBedEver(child, c.def)).ToList();
+            if (candidates.Count == 0) return false;
+            var walk = WalkingDistance(parentBeds.Concat(candidates).Append(bed));
+            float here = parentBeds.Min(p => walk(p.thingIDNumber, bed.thingIDNumber));
+            return candidates.Any(c => parentBeds.Min(p => walk(p.thingIDNumber, c.thingIDNumber)) + 6f < here);
         }
 
         // ---- growing up

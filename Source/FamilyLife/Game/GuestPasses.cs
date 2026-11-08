@@ -34,7 +34,7 @@ namespace FamilyLife
     /// </summary>
     internal static class GuestPasses
     {
-        public const int WaitLimit = 2500, PassLimit = 15000, NeverEnteredLimit = 1800, LeaveDelay = 2500, CooldownAfterRefusal = 2500, CooldownAfterVisit = 0, CooldownNeverEntered = 5000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
+        public const int WaitLimit = 2500, PassLimit = 15000, NeverEnteredLimit = 1800, LeaveDelay = 2500, CooldownAfterRefusal = 2500, CooldownAfterVisit = 0, CooldownNeverEntered = 5000, CooldownUnanswered = 12000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
         public static readonly Dictionary<int, GuestPass> ByGuest = new Dictionary<int, GuestPass>();
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
@@ -229,7 +229,7 @@ namespace FamilyLife
                 if (atDoor && pass.ArrivedTick < 0) pass.ArrivedTick = now;
                 if (now - pass.Start > 180 && guest.CurJobDef != FamilyJobDefOf.WFL_WaitAtDoor) { End(pass, CooldownAfterRefusal); return; }     // called away
                 // They wait a reasonable while once they have arrived, and then give up and carry on with something else.
-                if ((pass.ArrivedTick >= 0 && now - pass.ArrivedTick > WaitLimit) || now - pass.Start > WalkLimit) { Trace(guest.LabelShort + " gave up waiting at " + pass.Zone.label); End(pass, CooldownAfterRefusal); return; }
+                if ((pass.ArrivedTick >= 0 && now - pass.ArrivedTick > WaitLimit) || now - pass.Start > WalkLimit) { Trace(guest.LabelShort + " gave up waiting at " + pass.Zone.label); End(pass, CooldownUnanswered); return; }      // nobody came: they go about their day and do not knock again for a while
                 if (!atDoor) return;
 
                 if (now - pass.LastKnock >= KnockEvery)
