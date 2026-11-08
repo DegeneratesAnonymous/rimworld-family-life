@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - door fixes
+- Nobody knocks at a home with no one in it: if no family member who can answer is inside the zone, the way in is simply closed (no knock, no waiting), and a knock that loses its last possible answerer is given up after a few tries.
+- A knock is made at a real way in (a door, or where one room meets another), never at furniture such as an animal bed or a spot inside a room.
+
 ## Unreleased - role icons
 - The supplied role icons replace the letter tags on the colonist bar: one emblem per pawn for their most senior public role, with a tooltip and a click that opens their family. Settings for visibility, size, corner, associates and leadership-only. The Family tab lists every role the played character may know with its icon. House Protector has its icon, label and description reserved but nothing assigns the role yet. See docs/ROLE-ICONS.md.
 
