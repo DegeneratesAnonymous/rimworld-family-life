@@ -33,7 +33,8 @@ namespace FamilyLife
         {
             Available = id => { var p = c.TryGetPawn(id); return p != null && p.Spawned && !p.Dead && !p.IsQuestLodger() && Governance.Free(c, id); },
             IsAvatar = id => Governance.IsAvatar(c, id),
-            Skill = id => (SkillLevel(c.TryGetPawn(id), SkillDefOf.Cooking) + SkillLevel(c.TryGetPawn(id), SkillDefOf.Medicine)) / 2f,
+            Skill = id => (SkillLevel(c.TryGetPawn(id), SkillDefOf.Plants) + SkillLevel(c.TryGetPawn(id), SkillDefOf.Animals)) / 2f,
+            Profile = id => c.ProfileOf(id),
             Weather = tile < 0 ? 0f : WeatherAt(tile)
         };
 
@@ -106,7 +107,11 @@ namespace FamilyLife
             if (!r.AdvanceCamp(trip.Id, here, now, ContextFor(c, trip.Tile))) return;
             string house = r.LineageDisplayName(r.GetLineage(trip.FamilyId));
             if (trip.State == CampState.Completed)
+            {
                 Messages.Message((trip.Quality > .25f ? "WFL_Camp_Good" : trip.Quality < -.1f ? "WFL_Camp_Bad" : "WFL_Camp_Fine").Translate(house), WorldTiles.Target(trip.Tile), MessageTypeDefOf.NeutralEvent, false);
+                foreach (var moment in trip.Moments.Take(3))
+                    Messages.Message(("WFL_CampMoment_" + moment.Kind).Translate(FamilyUi.NameOf(r, moment.ActorId), FamilyUi.NameOf(r, moment.OtherId)), MessageTypeDefOf.NeutralEvent, false);
+            }
             else Messages.Message("WFL_Camp_Cut".Translate(house), WorldTiles.Target(trip.Tile), MessageTypeDefOf.NeutralEvent, false);
         }
 

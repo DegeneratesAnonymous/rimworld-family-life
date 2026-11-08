@@ -86,6 +86,22 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Shuttle_passengers_do_not_unblock_the_reunion_until_they_are_really_on_the_map()
+        {
+            var r = World(out _, out var request);
+            var visit = r.PlanKinVisit(request.Id, new[] { 10, 11 }, 2000); visit.Complication = false;
+            Assert.True(r.MarkKinLanding(visit.Id, new[] { 10, 11 }, new[] { 10, 11 }, visit.ArriveTick));
+            Assert.Equal(KinVisitState.Landing, visit.State);
+            Assert.True(r.KinVisitBlocks(request.Id));
+            Assert.DoesNotContain(r.DueRequests(request.NotBefore + 10), x => x.Id == request.Id);
+
+            Assert.True(r.MarkKinArrived(visit.Id, new[] { 10, 11 }, visit.ArriveTick + 100));
+            Assert.Equal(KinVisitState.Arrived, visit.State);
+            Assert.Empty(visit.LandingIds);
+            Assert.Contains(r.DueRequests(request.NotBefore + 10), x => x.Id == request.Id);
+        }
+
+        [Fact]
         public void A_held_up_trip_can_be_rescued_in_time_and_the_relatives_are_grateful()
         {
             var r = World(out _, out var request);

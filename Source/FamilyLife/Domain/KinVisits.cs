@@ -4,7 +4,8 @@ using System.Linq;
 
 namespace FamilyLife.Domain
 {
-    public enum KinVisitState : byte { Travelling, Stranded, Arrived, Leaving, Completed, Failed, Expired }
+    // Landing is appended to preserve the numeric values written by earlier saves.
+    public enum KinVisitState : byte { Travelling, Stranded, Arrived, Leaving, Completed, Failed, Expired, Landing }
 
     /// <summary>
     /// Distant relatives coming to a grand reunion. Until the moment they walk onto the map they are untouched: they stay wherever the game keeps them, so
@@ -18,7 +19,8 @@ namespace FamilyLife.Domain
         public KinVisitState State;
         public List<int> KinIds = new List<int>();
         public List<int> ArrivedIds = new List<int>();
-        public bool Open => State == KinVisitState.Travelling || State == KinVisitState.Stranded || State == KinVisitState.Arrived || State == KinVisitState.Leaving;
+        public List<int> LandingIds = new List<int>();
+        public bool Open => State == KinVisitState.Travelling || State == KinVisitState.Stranded || State == KinVisitState.Landing || State == KinVisitState.Arrived || State == KinVisitState.Leaving;
     }
 
     public sealed partial class FamilyRegistry
@@ -34,7 +36,7 @@ namespace FamilyLife.Domain
         public bool KinVisitBlocks(int requestId)
         {
             var visit = KinVisits.FirstOrDefault(v => v.RequestId == requestId);
-            return visit != null && (visit.State == KinVisitState.Travelling || visit.State == KinVisitState.Stranded);
+            return visit != null && (visit.State == KinVisitState.Travelling || visit.State == KinVisitState.Stranded || visit.State == KinVisitState.Landing);
         }
 
         /// <summary>
@@ -89,12 +91,28 @@ namespace FamilyLife.Domain
         public bool MarkKinArrived(int id, IEnumerable<int> arrived, int now)
         {
             var visit = KinVisitFor(id);
-            if (visit == null || visit.State != KinVisitState.Travelling || now < visit.ArriveTick) return false;
+            if (visit == null || (visit.State != KinVisitState.Travelling && visit.State != KinVisitState.Landing) || now < visit.ArriveTick) return false;
             var here = (arrived ?? Enumerable.Empty<int>()).Where(visit.KinIds.Contains).Distinct().ToList();
             var request = GatheringRequests.FirstOrDefault(r => r.Id == visit.RequestId);
             if (request != null) request.VisitorIds.RemoveAll(p => !here.Contains(p));
             if (here.Count == 0) { visit.State = KinVisitState.Failed; visit.EndedTick = now; return true; }
-            visit.ArrivedIds = here; visit.State = KinVisitState.Arrived; visit.StayEndTick = now + KinStayTicks;
+            visit.ArrivedIds = here; visit.LandingIds.Clear(); visit.State = KinVisitState.Arrived; visit.StayEndTick = now + KinStayTicks;
+            return true;
+        }
+
+        /// <summary>A shuttle has accepted these pawns, but they do not count as present until it has actually unloaded them onto the map.</summary>
+        public bool MarkKinLanding(int id, IEnumerable<int> expected, IEnumerable<int> aboard, int now)
+        {
+            var visit = KinVisitFor(id);
+            if (visit == null || visit.State != KinVisitState.Travelling || now < visit.ArriveTick) return false;
+            var all = (expected ?? Enumerable.Empty<int>()).Where(visit.KinIds.Contains).Distinct().ToList();
+            var pending = new HashSet<int>((aboard ?? Enumerable.Empty<int>()).Where(all.Contains));
+            if (all.Count == 0 || pending.Count == 0) return false;
+            visit.ArrivedIds = all;
+            visit.LandingIds = pending.ToList();
+            visit.State = KinVisitState.Landing;
+            var request = GatheringRequests.FirstOrDefault(r => r.Id == visit.RequestId);
+            if (request != null) request.VisitorIds.RemoveAll(p => !all.Contains(p));
             return true;
         }
 

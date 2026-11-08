@@ -120,6 +120,8 @@ namespace FamilyLife.Tests
             Assert.True(r.AdvanceCamp(trip.Id, new[] { 1, 2, 3 }, 6 * Day + trip.StayTicks, ctx));
             Assert.Equal(CampState.Completed, trip.State);
             Assert.True(trip.Quality > 0f);
+            Assert.NotEmpty(trip.Moments);
+            Assert.All(trip.Moments, m => Assert.Contains(m.ActorId, trip.Members));
             Assert.True((r.GetBond(1, 2)?.Attachment ?? 0f) > before);
             Assert.True(r.Rifts[0].Severity < 40f);
             Assert.True(r.AdvanceCamp(trip.Id, new[] { 1, 2, 3 }, 7 * Day + trip.StayTicks, ctx));                // already over: nothing is applied again
@@ -146,6 +148,29 @@ namespace FamilyLife.Tests
             var r = House(out int f);
             Assert.NotNull(r.ProposeCamp(f, CampMotive.Recreation, 77, 5 * Day, Ctx()));
             Assert.Null(r.ProposeCamp(f, CampMotive.Recreation, 78, 5 * Day, Ctx()));
+        }
+
+        [Fact]
+        public void Character_disposition_changes_the_trip_and_produces_motive_specific_scenes()
+        {
+            var warm = House(out int f1);
+            var cold = House(out int f2);
+            float[] Profile(float value)
+            {
+                var p = new float[DimInfo.Count]; p[(int)Dim.Warmth] = value; p[(int)Dim.Steadiness] = value; return p;
+            }
+            CampTrip Finish(FamilyRegistry r, int family, float disposition)
+            {
+                var ctx = new CampContext { Available = _ => true, Skill = _ => .4f, Weather = 0f, Profile = _ => Profile(disposition) };
+                var trip = r.ProposeCamp(family, CampMotive.Reconciliation, 77, 5 * Day, ctx);
+                r.AuthorizeCamp(trip.Id, 5 * Day); r.BeginCampStay(trip.Id, new[] { 1, 2, 3 }, 6 * Day);
+                r.AdvanceCamp(trip.Id, new[] { 1, 2, 3 }, 6 * Day + trip.StayTicks, ctx);
+                return trip;
+            }
+            var good = Finish(warm, f1, 3f);
+            var guarded = Finish(cold, f2, -3f);
+            Assert.True(good.Quality > guarded.Quality);
+            Assert.Equal(CampMomentKind.Reconciliation, good.Moments[0].Kind);
         }
     }
 }

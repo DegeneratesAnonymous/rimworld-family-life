@@ -106,7 +106,9 @@ namespace FamilyLife.Domain
             };
             plan.OrganizerId = DefaultOrganizer(request, ctx);
             foreach (var candidate in PlanCandidates(request, plan, now, ctx))
-                if (candidate.Barriers == InviteBarrier.None) plan.Invitees.Add(candidate);
+                if (candidate.Barriers == InviteBarrier.None &&
+                    (candidate.Source != InviteSource.Distant || request.VisitorIds.Contains(candidate.PersonId)))
+                    plan.Invitees.Add(candidate);
             foreach (int person in new[] { plan.OrganizerId, HeadOf(request.LineageId) }.Concat(
                          plan.Invitees.Where(i => i.Source == InviteSource.Family).Select(i => i.PersonId)))
                 if (person != 0 && !plan.KnownBy.Contains(person)) plan.KnownBy.Add(person);
@@ -218,6 +220,8 @@ namespace FamilyLife.Domain
                 if (p2.IsAlive && !p2.InColony) candidate.Barriers |= InviteBarrier.CannotTravel;
             }
             if (candidate.Barriers != InviteBarrier.None) return false;
+            if (candidate.Source == InviteSource.Distant &&
+                plan.Invitees.Count(i => i.Source == InviteSource.Distant && i.Status == InviteStatus.Invited) >= MaxVisitingKin) return false;
             plan.Invitees.RemoveAll(i => i.PersonId == person);
             candidate.ByPlayer = true; plan.Invitees.Add(candidate); plan.PlayerAdjusted = true; Tell(plan, person);
             return true;
@@ -305,6 +309,11 @@ namespace FamilyLife.Domain
             plan.State = state;
             if (plan.Ask == AvatarAsk.Asked) plan.Ask = AvatarAsk.Unanswered;
             if (request != null) Repair(plan, request, now, ctx);
+            if (request != null && request.Ceremony == CeremonyKind.GrandReunion)
+            {
+                request.VisitorIds = plan.Invitees.Where(i => i.Source == InviteSource.Distant && i.Status == InviteStatus.Invited && i.Barriers == InviteBarrier.None)
+                    .Select(i => i.PersonId).Distinct().Take(MaxVisitingKin).ToList();
+            }
             if (request != null) request.NotBefore = Math.Min(Math.Max(request.NotBefore, plan.ScheduledTick), Math.Max(request.NotBefore, request.Expires - PlanMinimumLeadTicks));
         }
 

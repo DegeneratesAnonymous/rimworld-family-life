@@ -55,8 +55,14 @@ namespace FamilyLife
                 DefaultMapId = home,
                 Available = id => { var p = c.TryGetPawn(id); return p == null || (!p.Downed && !p.Drafted && !p.IsPrisoner && !p.InMentalState); },
                 IsAvatar = id => IsAvatar(c, id),
-                // Nobody is brought to the map from elsewhere. A relative counts as able to attend only if they are already here.
-                ArrivalEstimate = id => { var p = c.TryGetPawn(id); return p != null && p.Spawned && p.Map != null && (home < 0 || p.Map.uniqueID == home) ? 0 : -1; },
+                // Local guests can attend immediately. Distant kin use the same hard safety checks as the travel driver;
+                // the displayed day is deliberately an estimate because the actual trip is seeded when the card closes.
+                ArrivalEstimate = id =>
+                {
+                    var p = c.TryGetPawn(id);
+                    if (p != null && p.Spawned && p.Map != null && (home < 0 || p.Map.uniqueID == home)) return 0;
+                    return KinVisitDriver.Eligible(p) ? ActivityTuning.TicksPerDay : -1;
+                },
                 VenueValid = (map, area) => map < 0 || Find.Maps.Any(m => m.uniqueID == map &&
                     (area == 0 || m.areaManager.AllAreas.Any(a => a.ID == area)))
             };

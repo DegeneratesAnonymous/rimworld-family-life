@@ -54,7 +54,8 @@ namespace FamilyLife
 
         private static void PlanNew(FamilyComponent c, FamilyRegistry r, int now)
         {
-            foreach (var request in r.GatheringRequests.Where(q => q.Ceremony == CeremonyKind.GrandReunion && q.State == CeremonyState.Planned && q.VisitorIds.Count > 0 && r.KinVisitForRequest(q.Id) == null).Take(1).ToList())
+            foreach (var request in r.GatheringRequests.Where(q => q.Ceremony == CeremonyKind.GrandReunion && q.State == CeremonyState.Planned &&
+                         q.VisitorIds.Count > 0 && r.PlanFor(q.Id)?.Open == false && r.KinVisitForRequest(q.Id) == null).Take(1).ToList())
             {
                 var eligible = request.VisitorIds.Where(id => Eligible(c.TryGetPawn(id))).ToList();
                 r.PlanKinVisit(request.Id, eligible, now);          // anyone not confirmed is left off the request, so this is tried once
@@ -77,6 +78,9 @@ namespace FamilyLife
                     var rescuers = CampingDriver.CaravansAt(visit.StrandTile).SelectMany(cv => cv.PawnsListForReading).Where(p => p != null && !p.Dead).Select(p => p.thingIDNumber).Distinct().ToList();
                     if (rescuers.Count > 0 && r.RescueKinVisit(visit.Id, rescuers, now))
                         Messages.Message("WFL_Kin_Rescued".Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId))), MessageTypeDefOf.PositiveEvent, false);
+                    break;
+                case KinVisitState.Landing:
+                    FinishLanding(c, r, visit, now);
                     break;
                 case KinVisitState.Arrived:
                     TendGuests(c, r, visit, now);
@@ -128,11 +132,34 @@ namespace FamilyLife
                     if (!p.Spawned) Find.WorldPawns.PassToWorld(p);          // never leave anyone in limbo
                 }
             }
+            if (landed)
+            {
+                if (!r.MarkKinLanding(visit.Id, placed.Select(p => p.thingIDNumber), byShuttle.Select(p => p.thingIDNumber), now)) return;
+                var walking = placed.Where(p => p.Spawned).ToList();
+                if (walking.Count > 0) Greet(walking, map, Day);
+                return;
+            }
             if (!r.MarkKinArrived(visit.Id, placed.Select(p => p.thingIDNumber), now)) return;
-            Greet(placed.Where(p => p.Spawned).ToList(), map, Math.Max(Day, KinStayLeft(visit, now)));
-            if (placed.Count > 0)
-                Find.LetterStack.ReceiveLetter("WFL_Kin_ArrivedTitle".Translate(), (landed ? "WFL_Kin_ArrivedShuttleText" : "WFL_Kin_ArrivedText").Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId)), string.Join(", ", placed.Select(p => p.LabelShort))),
-                    LetterDefOf.PositiveEvent, new LookTargets(placed.Where(p => p.Spawned).ToList()));
+            AnnounceArrival(r, visit, placed.Where(p => p.Spawned).ToList(), map, false);
+        }
+
+        private static void FinishLanding(FamilyComponent c, FamilyRegistry r, KinVisit visit, int now)
+        {
+            var map = HomeMap(r, visit.FamilyId);
+            if (map == null) return;
+            var here = visit.ArrivedIds.Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && !p.Dead && p.Map == map).ToList();
+            bool waiting = visit.LandingIds.Any(id => c.TryGetPawn(id) is Pawn p && !p.Spawned && !p.Dead);
+            if (waiting && now <= visit.ArriveTick + Day) return;
+            if (!r.MarkKinArrived(visit.Id, here.Select(p => p.thingIDNumber), now)) return;
+            AnnounceArrival(r, visit, here, map, true);
+        }
+
+        private static void AnnounceArrival(FamilyRegistry r, KinVisit visit, List<Pawn> guests, Map map, bool shuttle)
+        {
+            Greet(guests, map, Math.Max(Day, KinStayLeft(visit, Activities.Now)));
+            if (guests.Count == 0) return;
+            Find.LetterStack.ReceiveLetter("WFL_Kin_ArrivedTitle".Translate(), (shuttle ? "WFL_Kin_ArrivedShuttleText" : "WFL_Kin_ArrivedText").Translate(
+                r.LineageDisplayName(r.GetLineage(visit.FamilyId)), string.Join(", ", guests.Select(p => p.LabelShort))), LetterDefOf.PositiveEvent, new LookTargets(guests));
         }
 
         /// <summary>

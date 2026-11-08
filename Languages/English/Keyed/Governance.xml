@@ -200,6 +200,16 @@
   <WFL_Camp_Fine>The {0} family's camping trip passed quietly.</WFL_Camp_Fine>
   <WFL_Camp_Bad>The {0} family's camping trip went badly.</WFL_Camp_Bad>
   <WFL_Camp_Cut>The {0} family's camping trip ended early.</WFL_Camp_Cut>
+  <WFL_CampMoment_FiresideTalk>{0} and {1} talked beside the fire long after the others settled down.</WFL_CampMoment_FiresideTalk>
+  <WFL_CampMoment_SharedMeal>{0} and {1} made a meal together from what the caravan brought.</WFL_CampMoment_SharedMeal>
+  <WFL_CampMoment_Lesson>{0} used the quiet trip to teach {1} something they knew well.</WFL_CampMoment_Lesson>
+  <WFL_CampMoment_Exploration>{0} and {1} explored the country around the camp together.</WFL_CampMoment_Exploration>
+  <WFL_CampMoment_Story>{0} told {1} a story that the family will remember.</WFL_CampMoment_Story>
+  <WFL_CampMoment_Argument>{0} and {1} carried an old disagreement into the camp.</WFL_CampMoment_Argument>
+  <WFL_CampMoment_Mishap>{0} and {1} struggled through a miserable part of the trip.</WFL_CampMoment_Mishap>
+  <WFL_CampMoment_Reconciliation>{0} and {1} finally found enough quiet to speak honestly.</WFL_CampMoment_Reconciliation>
+  <WFL_CampMoment_QuietSupport>{0} quietly helped {1} through the worst of the weather.</WFL_CampMoment_QuietSupport>
+  <WFL_CampMoment_Celebration>{0} and {1} marked the family's new adult with a private celebration.</WFL_CampMoment_Celebration>
   <WFL_Kin_Line>Relatives on the way ({0}): {1}</WFL_Kin_Line>
   <WFL_KinState_Travelling>travelling</WFL_KinState_Travelling>
   <WFL_KinState_Stranded>held up on the road</WFL_KinState_Stranded>

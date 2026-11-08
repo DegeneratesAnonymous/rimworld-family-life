@@ -20,6 +20,7 @@ namespace FamilyLife.Tests
             }, 1000);
             family = r.FamilyOf(1);
             request = r.RequestCeremony(CeremonyKind.GrandReunion, family, 0, 0, now, Day / 2, 8 * Day);
+            request.VisitorIds.Add(6);
             return r;
         }
 
@@ -84,6 +85,16 @@ namespace FamilyLife.Tests
             Assert.DoesNotContain(r.DueRequests(chosen - 1), x => x.Id == req.Id);
             Assert.Contains(r.DueRequests(chosen), x => x.Id == req.Id);
             Assert.False(r.SetPlanSchedule(plan.Id, chosen, 10100));                 // closed once confirmed
+        }
+
+        [Fact]
+        public void The_closed_reunion_card_is_the_single_source_of_truth_for_travelling_kin()
+        {
+            var r = World(out _, out var req);
+            var plan = r.OpenCeremonyPlan(req.Id, 10000, Ctx());
+            Assert.True(r.UninvitePlanPerson(plan.Id, 6));
+            Assert.True(r.ConfirmPlan(plan.Id, 10100, Ctx()));
+            Assert.Empty(req.VisitorIds);
         }
 
         [Fact]

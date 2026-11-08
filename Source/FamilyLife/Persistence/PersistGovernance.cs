@@ -5,6 +5,15 @@ using Verse;
 // Save/load for the planning, office, succession, crime and institution records. Ids and numbers only; every list recovers from null.
 namespace FamilyLife.Domain
 {
+    public sealed partial class CampMoment : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ActorId, "actor"); Scribe_Values.Look(ref OtherId, "other"); Scribe_Values.Look(ref Tick, "tick");
+            Scribe_Values.Look(ref Outcome, "outcome"); Scribe_Values.Look(ref Kind, "kind", CampMomentKind.FiresideTalk);
+        }
+    }
+
     public sealed partial class PlanInvitee : IExposable
     {
         public void ExposeData()
@@ -253,9 +262,10 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Tile, "tile", -1); Scribe_Values.Look(ref StayTicks, "stay"); Scribe_Values.Look(ref Seed, "seed");
             Scribe_Values.Look(ref SubjectId, "subject"); Scribe_Values.Look(ref Quality, "quality"); Scribe_Values.Look(ref Motive, "motive", CampMotive.Recreation);
             Scribe_Values.Look(ref State, "state", CampState.Proposed);
-            Scribe_Collections.Look(ref Suggested, "suggested", LookMode.Value); Scribe_Collections.Look(ref Members, "members", LookMode.Value);
+            Scribe_Collections.Look(ref Suggested, "suggested", LookMode.Value); Scribe_Collections.Look(ref Members, "members", LookMode.Value); Scribe_Collections.Look(ref Moments, "moments", LookMode.Deep);
             if (Suggested == null) Suggested = new List<int>();
             if (Members == null) Members = new List<int>();
+            if (Moments == null) Moments = new List<CampMoment>();
         }
     }
 
@@ -267,9 +277,10 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref ArriveTick, "arrive"); Scribe_Values.Look(ref StayEndTick, "stayEnd"); Scribe_Values.Look(ref StrandTile, "strandTile", -1);
             Scribe_Values.Look(ref RescueDeadlineTick, "rescueDeadline"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Seed, "seed");
             Scribe_Values.Look(ref Complication, "complication"); Scribe_Values.Look(ref State, "state", KinVisitState.Travelling);
-            Scribe_Collections.Look(ref KinIds, "kin", LookMode.Value); Scribe_Collections.Look(ref ArrivedIds, "arrivedIds", LookMode.Value);
+            Scribe_Collections.Look(ref KinIds, "kin", LookMode.Value); Scribe_Collections.Look(ref ArrivedIds, "arrivedIds", LookMode.Value); Scribe_Collections.Look(ref LandingIds, "landingIds", LookMode.Value);
             if (KinIds == null) KinIds = new List<int>();
             if (ArrivedIds == null) ArrivedIds = new List<int>();
+            if (LandingIds == null) LandingIds = new List<int>();
         }
     }
 }

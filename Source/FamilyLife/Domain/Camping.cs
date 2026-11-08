@@ -6,6 +6,14 @@ namespace FamilyLife.Domain
 {
     public enum CampMotive : byte { Recreation, Reconciliation, Teaching, ComingOfAge, Tradition }
     public enum CampState : byte { Proposed, Authorized, Away, Completed, Declined, Expired, Cut }
+    public enum CampMomentKind : byte { FiresideTalk, SharedMeal, Lesson, Exploration, Story, Argument, Mishap, Reconciliation, QuietSupport, Celebration }
+
+    public sealed partial class CampMoment
+    {
+        public int ActorId, OtherId, Tick;
+        public float Outcome;
+        public CampMomentKind Kind;
+    }
 
     /// <summary>
     /// A family's wish to spend a day or two away from the colony. It is only ever a proposal: the player decides, forms the caravan with the game's own
@@ -19,6 +27,7 @@ namespace FamilyLife.Domain
         public CampState State;
         public List<int> Suggested = new List<int>();     // who the family would like to bring; the player chooses the real caravan
         public List<int> Members = new List<int>();       // who actually stayed
+        public List<CampMoment> Moments = new List<CampMoment>();
         public bool Open => State == CampState.Proposed || State == CampState.Authorized || State == CampState.Away;
     }
 
@@ -28,6 +37,7 @@ namespace FamilyLife.Domain
         public Func<int, bool> Available;       // free, able, not quest-locked or otherwise tied up
         public Func<int, bool> IsAvatar;        // a player-controlled pawn is never suggested
         public Func<int, float> Skill;          // outdoors skill, 0-1
+        public Func<int, float[]> Profile;      // trait-derived dimensions; optional
         public float Weather;                   // -1 miserable to +1 lovely at the place
     }
 
@@ -142,10 +152,12 @@ namespace FamilyLife.Domain
             float regard = pairs.Count == 0 ? 0f : pairs.Average(p => (((GetBond(p.Key, p.Value)?.Attachment ?? 0f) + (GetBond(p.Key, p.Value)?.Trust ?? 0f)) / 200f));
             float tension = pairs.Count == 0 ? 0f : pairs.Average(p => (GetBond(p.Key, p.Value)?.Tension ?? 0f) / 100f);
             float skill = stayed.Max(p => Math.Max(0f, Math.Min(1f, ctx.Skill == null ? (GetPerson(p)?.TopSkillLevel ?? 0) / 20f : ctx.Skill(p))));
+            float disposition = CampDisposition(trip.Motive, stayed, ctx);
             int troubles = Incidents.Count(i => i.Tick >= trip.ArrivedTick && i.Kind != IncidentKind.Gift && i.Kind != IncidentKind.Restitution && stayed.Contains(i.ActorId) && stayed.Contains(i.VictimId));
-            float quality = .35f + regard * .35f - tension * .25f + Math.Max(-1f, Math.Min(1f, ctx.Weather)) * .15f + skill * .15f - Math.Min(.5f, troubles * .25f);
+            float quality = .3f + regard * .35f - tension * .25f + Math.Max(-1f, Math.Min(1f, ctx.Weather)) * .15f + skill * .15f + disposition * .1f - Math.Min(.5f, troubles * .25f);
             quality = Math.Max(-1f, Math.Min(1f, quality));
             trip.Quality = quality;
+            trip.Moments = BuildCampMoments(trip, stayed, now, quality, tension, ctx);
             foreach (var p in pairs)
             {
                 ChangeBond(p.Key, p.Value, new BondChange(2f * quality, 1.5f * quality, -2f * quality, 2f), now);
@@ -157,6 +169,54 @@ namespace FamilyLife.Domain
                 foreach (var rift in Rifts.Where(r => r.IsOpen && stayed.Contains(r.A) && stayed.Contains(r.B))) rift.Severity = Math.Max(0f, rift.Severity - 20f * quality);
             var house = GetLineage(trip.FamilyId);
             if (house != null && trip.Motive == CampMotive.Tradition) house.Standing = Math.Min(100f, house.Standing + Math.Max(0f, quality));
+        }
+
+        private static float CampDisposition(CampMotive motive, List<int> stayed, CampContext ctx)
+        {
+            if (ctx.Profile == null || stayed.Count == 0) return 0f;
+            float total = 0f; int n = 0;
+            foreach (int id in stayed)
+            {
+                var p = ctx.Profile(id);
+                if (p == null || p.Length < DimInfo.Count) continue;
+                float fit;
+                switch (motive)
+                {
+                    case CampMotive.Reconciliation: fit = (p[(int)Dim.Warmth] + p[(int)Dim.Steadiness]) / 6f; break;
+                    case CampMotive.Teaching: fit = (p[(int)Dim.Scholarly] + p[(int)Dim.Devotion]) / 6f; break;
+                    case CampMotive.ComingOfAge: fit = (p[(int)Dim.Devotion] + p[(int)Dim.Revelry]) / 6f; break;
+                    case CampMotive.Tradition: fit = (p[(int)Dim.Rootedness] + p[(int)Dim.Hearth]) / 6f; break;
+                    default: fit = (p[(int)Dim.Warmth] + p[(int)Dim.Revelry]) / 6f; break;
+                }
+                total += Math.Max(-1f, Math.Min(1f, fit)); n++;
+            }
+            return n == 0 ? 0f : total / n;
+        }
+
+        private List<CampMoment> BuildCampMoments(CampTrip trip, List<int> stayed, int now, float quality, float tension, CampContext ctx)
+        {
+            var moments = new List<CampMoment>();
+            var pairs = new List<KeyValuePair<int, int>>();
+            foreach (int a in stayed.OrderBy(x => x)) foreach (int b in stayed.OrderBy(x => x)) if (a < b) pairs.Add(new KeyValuePair<int, int>(a, b));
+            int count = Math.Min(4, Math.Max(1, pairs.Count));
+            for (int i = 0; i < count; i++)
+            {
+                var pair = pairs[(trip.Seed + i * 17) % pairs.Count];
+                bool youngPair = GetPerson(pair.Key)?.Juvenile != GetPerson(pair.Value)?.Juvenile;
+                CampMomentKind kind;
+                if (quality < -.15f && (tension > .2f || i == 0)) kind = CampMomentKind.Argument;
+                else if (ctx.Weather < -.5f && i == 0) kind = quality > 0f ? CampMomentKind.QuietSupport : CampMomentKind.Mishap;
+                else if (trip.Motive == CampMotive.Reconciliation && i == 0) kind = quality > 0f ? CampMomentKind.Reconciliation : CampMomentKind.Argument;
+                else if (trip.Motive == CampMotive.Teaching && youngPair) kind = CampMomentKind.Lesson;
+                else if (trip.Motive == CampMotive.ComingOfAge && i == 0) kind = CampMomentKind.Celebration;
+                else
+                {
+                    var calm = new[] { CampMomentKind.FiresideTalk, CampMomentKind.SharedMeal, CampMomentKind.Exploration, CampMomentKind.Story };
+                    kind = calm[(trip.Seed + i) % calm.Length];
+                }
+                moments.Add(new CampMoment { ActorId = pair.Key, OtherId = pair.Value, Tick = trip.ArrivedTick + (i + 1) * trip.StayTicks / (count + 1), Kind = kind, Outcome = quality });
+            }
+            return moments;
         }
     }
 }
