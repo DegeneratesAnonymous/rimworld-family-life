@@ -979,6 +979,7 @@ namespace FamilyLife
                     if (!comparison.Unequal) continue;
                     Line(view, ref y, "WFL_Attention_Comparison".Translate(FamilyUi.NameOf(registry,giver), FamilyUi.NameOf(registry,child.Id), (comparison.ChildTicks / 2500f).ToString("0.0"), FamilyUi.NameOf(registry,comparison.OtherChild), (comparison.OtherTicks / 2500f).ToString("0.0")),0f,true);
                 }
+            DrawEstateHistory(view, ref y, registry, lineage, component.PerspectivePawnId);
             Heading(view, ref y, "WFL_Moments_Standing".Translate());
             var ties = registry.TiesOf(lineage.Id);
             if (ties.Count == 0) Line(view, ref y, "WFL_Moments_NoTies".Translate(), 0f, true);

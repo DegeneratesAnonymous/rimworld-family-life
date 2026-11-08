@@ -288,4 +288,116 @@
   <WFL_Speech_1>"I ask for your voice for {1}," says {0}. The crowd listens.</WFL_Speech_1>
   <WFL_Speech_2>{0} stands before the assembly and makes the case for the {1}: {2}.</WFL_Speech_2>
   <WFL_Speech_3>There is a stir as {0} speaks about the {1}.</WFL_Speech_3>
+  <!-- Heirlooms and estates -->
+  <WFL_Estate_Title>Possessions, heirlooms and estates</WFL_Estate_Title>
+  <WFL_Estate_NoItems>Nothing here is yet someone's own: weapons, garments, books and works of art become so once they have been carried a while.</WFL_Estate_NoItems>
+  <WFL_Estate_ItemLine>{0}: {1} ({2})</WFL_Estate_ItemLine>
+  <WFL_Estate_Possession>a possession</WFL_Estate_Possession>
+  <WFL_Estate_HouseKeeps>kept by the {0} house</WFL_Estate_HouseKeeps>
+  <WFL_Estate_MakeHeirloom>Make it an heirloom</WFL_Estate_MakeHeirloom>
+  <WFL_Estate_MakeHouseHeirloom>Make it a house heirloom</WFL_Estate_MakeHouseHeirloom>
+  <WFL_Estate_NameHeir>Name an heir...</WFL_Estate_NameHeir>
+  <WFL_Estate_NameAndTell>Name {0}, and tell them</WFL_Estate_NameAndTell>
+  <WFL_Estate_NameSecretly>Name {0}, keeping it private</WFL_Estate_NameSecretly>
+  <WFL_Estate_Revoke>Take back the choice</WFL_Estate_Revoke>
+  <WFL_Estate_NoKin>No grown relative is here to name.</WFL_Estate_NoKin>
+  <WFL_Estate_Named>You have named {0} to have {1}.</WFL_Estate_Named>
+  <WFL_Estate_Everything>everything you own</WFL_Estate_Everything>
+  <WFL_Estate_CaseLine>The estate of {0}: {1}{2}</WFL_Estate_CaseLine>
+  <WFL_Estate_Mediator> (settled by {0})</WFL_Estate_Mediator>
+  <WFL_EstateItem_Line>{0}: {1}</WFL_EstateItem_Line>
+  <WFL_EstateItem_Waiting>waiting for the family</WFL_EstateItem_Waiting>
+  <WFL_EstateItem_Contested>claimed by more than one person</WFL_EstateItem_Contested>
+  <WFL_EstateItem_Pending>to go to {0}, not yet delivered</WFL_EstateItem_Pending>
+  <WFL_EstateItem_Delivered>now with {0}</WFL_EstateItem_Delivered>
+  <WFL_Estate_ClaimLine>{0} claims it: {1}</WFL_Estate_ClaimLine>
+  <WFL_Estate_History>Past estates</WFL_Estate_History>
+  <WFL_Estate_HistoryLine>The estate of {0}: {1} delivered, {2} lost ({3}).</WFL_Estate_HistoryLine>
+  <WFL_Estate_Opened>{0} has died. Their {1} keepsake(s) will be sorted out by the family.</WFL_Estate_Opened>
+  <WFL_Estate_Settled>The estate of {0} is settled: {1} item(s) delivered, {2} lost.</WFL_Estate_Settled>
+  <WFL_Estate_Received>{0} has taken {1}, left by {2}.</WFL_Estate_Received>
+  <WFL_EstateStage_Mourning>mourning</WFL_EstateStage_Mourning>
+  <WFL_EstateStage_Claims>claims being raised</WFL_EstateStage_Claims>
+  <WFL_EstateStage_Discussion>the family is talking it over</WFL_EstateStage_Discussion>
+  <WFL_EstateStage_Mediation>being mediated</WFL_EstateStage_Mediation>
+  <WFL_EstateStage_Delivery>being delivered</WFL_EstateStage_Delivery>
+  <WFL_EstateStage_Resolved>settled</WFL_EstateStage_Resolved>
+  <WFL_EstateStage_Unresolved>still unsettled</WFL_EstateStage_Unresolved>
+  <WFL_EstateLost_None>lost</WFL_EstateLost_None>
+  <WFL_EstateLost_Destroyed>destroyed</WFL_EstateLost_Destroyed>
+  <WFL_EstateLost_Missing>gone missing</WFL_EstateLost_Missing>
+  <WFL_EstateLost_Unreachable>could not be reached</WFL_EstateLost_Unreachable>
+  <WFL_EstateLost_Forbidden>left forbidden too long</WFL_EstateLost_Forbidden>
+  <WFL_EstateLost_Held>kept by someone else</WFL_EstateLost_Held>
+  <WFL_EstateLost_Buried>buried with them</WFL_EstateLost_Buried>
+  <WFL_EstateLost_Unanswered>never claimed</WFL_EstateLost_Unanswered>
+  <WFL_EstateLost_NoHeir>no one to have it</WFL_EstateLost_NoHeir>
+  <WFL_HeirloomBasis_None>an heirloom</WFL_HeirloomBasis_None>
+  <WFL_HeirloomBasis_Use>an heirloom, from long use</WFL_HeirloomBasis_Use>
+  <WFL_HeirloomBasis_Memory>an heirloom, tied to a family memory</WFL_HeirloomBasis_Memory>
+  <WFL_HeirloomBasis_Designated>an heirloom, declared so</WFL_HeirloomBasis_Designated>
+  <WFL_HeirloomBasis_Legacy>an heirloom, for its worth</WFL_HeirloomBasis_Legacy>
+  <WFL_HeirloomBasis_Recorded>an heirloom, handed down</WFL_HeirloomBasis_Recorded>
+  <WFL_ClaimBasis_Kin>kinship</WFL_ClaimBasis_Kin>
+  <WFL_ClaimBasis_Designation>they were named to have it</WFL_ClaimBasis_Designation>
+  <WFL_ClaimBasis_Bond>closeness to the one who died</WFL_ClaimBasis_Bond>
+  <WFL_ClaimBasis_Use>has used or cared for it</WFL_ClaimBasis_Use>
+  <WFL_ClaimBasis_Custom>the house's custom</WFL_ClaimBasis_Custom>
+  <WFL_ClaimBasis_HouseHeirloom>leads the house it belongs to</WFL_ClaimBasis_HouseHeirloom>
+  <WFL_Ask_EstateHeir>{1} has died, and {0} is yours by right. Will you take it?</WFL_Ask_EstateHeir>
+  <WFL_Ask_EstatePress>{1} has died. You have a claim to {0}, but someone has a stronger one. Will you press it?</WFL_Ask_EstatePress>
+  <WFL_Ask_EstateMediate>You are asked to settle who has the keepsakes of {0}. You may approve the fairest spread, give an item to a claimant yourself, or leave it to the family.</WFL_Ask_EstateMediate>
+  <WFL_Ask_GiveItem>Give {0} to:</WFL_Ask_GiveItem>
+  <WFL_Ask_Accept>Take it</WFL_Ask_Accept>
+  <WFL_Ask_Relinquish>Let it go</WFL_Ask_Relinquish>
+  <WFL_Ask_PressClaim>Press my claim</WFL_Ask_PressClaim>
+  <WFL_Ask_AcceptOutcome>Accept what is decided</WFL_Ask_AcceptOutcome>
+  <WFL_Ask_ApproveSpread>Approve the spread</WFL_Ask_ApproveSpread>
+  <WFL_Ask_LetSettle>Leave it to them</WFL_Ask_LetSettle>
+  <WFL_Ask_Collect>{0}, left by {1}, is yours. It still has to be picked up.</WFL_Ask_Collect>
+  <WFL_Ask_CollectGo>Go and collect it</WFL_Ask_CollectGo>
+
+  <!-- The reunion rescue quest -->
+  <WFL_Quest_Name>Relatives of the {0} family stranded</WFL_Quest_Name>
+  <WFL_Quest_Text>Relatives of the {0} family, on their way to the reunion, have been held up on the road: {1}. {2}\n\nA caravan can reach them. The offer stands for about {3} day(s); once accepted, a caravan has about three days to arrive, and the place is roughly {4} days' travel away. If nobody comes, they will turn back and the reunion will go ahead without them. Nothing here is asked of anyone in particular.</WFL_Quest_Text>
+  <WFL_Rescue_Trouble_BrokenTransport_low>A wheel has broken and they cannot go on without help.</WFL_Rescue_Trouble_BrokenTransport_low>
+  <WFL_Rescue_Trouble_BrokenTransport_high>Their craft has had to put down, and cannot lift off again.</WFL_Rescue_Trouble_BrokenTransport_high>
+  <WFL_Rescue_Trouble_Injury_low>Someone in the party is hurt and needs tending.</WFL_Rescue_Trouble_Injury_low>
+  <WFL_Rescue_Trouble_Injury_high>Someone in the party was hurt in the landing and needs tending.</WFL_Rescue_Trouble_Injury_high>
+  <WFL_Rescue_Trouble_Animals_low>Wild animals have turned on them.</WFL_Rescue_Trouble_Animals_low>
+  <WFL_Rescue_Trouble_Animals_high>Wild animals have turned on them.</WFL_Rescue_Trouble_Animals_high>
+  <WFL_Rescue_Trouble_Raiders_low>A band of raiders has caught them on the road.</WFL_Rescue_Trouble_Raiders_low>
+  <WFL_Rescue_Trouble_Raiders_high>A band of raiders has caught them on the ground.</WFL_Rescue_Trouble_Raiders_high>
+  <WFL_Rescue_Trouble_Weather_low>The weather has turned against them and they are suffering for it.</WFL_Rescue_Trouble_Weather_low>
+  <WFL_Rescue_Trouble_Weather_high>The weather has turned against them and they are suffering for it.</WFL_Rescue_Trouble_Weather_high>
+  <WFL_RescueTrouble_None>trouble</WFL_RescueTrouble_None>
+  <WFL_RescueTrouble_BrokenTransport>a breakdown</WFL_RescueTrouble_BrokenTransport>
+  <WFL_RescueTrouble_Injury>an injury</WFL_RescueTrouble_Injury>
+  <WFL_RescueTrouble_Animals>wild animals</WFL_RescueTrouble_Animals>
+  <WFL_RescueTrouble_Raiders>raiders</WFL_RescueTrouble_Raiders>
+  <WFL_RescueTrouble_Weather>bad weather</WFL_RescueTrouble_Weather>
+  <WFL_RescueStage_None>no offer</WFL_RescueStage_None>
+  <WFL_RescueStage_Offered>a quest is on offer</WFL_RescueStage_Offered>
+  <WFL_RescueStage_Accepted>the quest was accepted; a caravan is needed</WFL_RescueStage_Accepted>
+  <WFL_RescueStage_OnSite>a caravan is there</WFL_RescueStage_OnSite>
+  <WFL_RescueStage_Succeeded>rescued</WFL_RescueStage_Succeeded>
+  <WFL_RescueStage_Declined>declined</WFL_RescueStage_Declined>
+  <WFL_RescueStage_Expired>no one came in time</WFL_RescueStage_Expired>
+  <WFL_RescueStage_Abandoned>abandoned</WFL_RescueStage_Abandoned>
+  <WFL_RescueStage_Lost>lost</WFL_RescueStage_Lost>
+  <WFL_RescueStage_SiteLost>the place is gone</WFL_RescueStage_SiteLost>
+  <WFL_Rescue_Line>Rescue: {0} ({1}); about {2} day(s) left.</WFL_Rescue_Line>
+  <WFL_Rescue_SiteAppeared>The place where the {0} family's relatives are stranded is marked on the world map. A caravan has about {1} day(s) to reach it.</WFL_Rescue_SiteAppeared>
+  <WFL_Rescue_Approach>Go to the stranded relatives</WFL_Rescue_Approach>
+  <WFL_Rescue_Approaching>Travelling to the stranded relatives.</WFL_Rescue_Approaching>
+  <WFL_Rescue_Reached>The caravan has reached the {0} family's relatives.</WFL_Rescue_Reached>
+  <WFL_Rescue_Inspect>Stranded relatives: about {0} day(s) left.</WFL_Rescue_Inspect>
+  <WFL_Rescue_Succeeded>The {0} family's relatives are safe again, thanks to {1}. They will carry on to the reunion after a rest.</WFL_Rescue_Succeeded>
+  <WFL_Rescue_Lost>None of the {0} family's relatives survived the road.</WFL_Rescue_Lost>
+  <WFL_Kin_Failed_Declined>The {0} family's relatives were not helped, and went home.</WFL_Kin_Failed_Declined>
+  <WFL_Kin_Failed_Expired>No help reached the {0} family's relatives in time. They have turned back.</WFL_Kin_Failed_Expired>
+  <WFL_Kin_Failed_Abandoned>The {0} family's relatives were left where they were, and have turned back.</WFL_Kin_Failed_Abandoned>
+  <WFL_Kin_Failed_Lost>The {0} family's relatives did not survive, and will not be at the reunion.</WFL_Kin_Failed_Lost>
+  <WFL_Kin_Failed_SiteLost>The place where the {0} family's relatives waited is gone. They have turned back.</WFL_Kin_Failed_SiteLost>
+  <WFL_Estate_OnBody>Some of {0}'s things are still on the body. Strip it before the burial if they are to be handed down; otherwise they are buried with them.</WFL_Estate_OnBody>
 </LanguageData>

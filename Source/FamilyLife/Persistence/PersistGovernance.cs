@@ -291,9 +291,88 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref RescueDeadlineTick, "rescueDeadline"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref Seed, "seed");
             Scribe_Values.Look(ref Complication, "complication"); Scribe_Values.Look(ref State, "state", KinVisitState.Travelling);
             Scribe_Collections.Look(ref KinIds, "kin", LookMode.Value); Scribe_Collections.Look(ref ArrivedIds, "arrivedIds", LookMode.Value); Scribe_Collections.Look(ref LandingIds, "landingIds", LookMode.Value);
+            Scribe_Values.Look(ref Rescue, "rescue", RescueStage.None); Scribe_Values.Look(ref Trouble, "trouble", RescueComplication.None);
+            Scribe_Values.Look(ref QuestId, "questId"); Scribe_Values.Look(ref SiteId, "siteId"); Scribe_Values.Look(ref OfferExpiryTick, "offerExpiry");
+            Scribe_Values.Look(ref AcceptedTick, "acceptedTick"); Scribe_Values.Look(ref ReachedTick, "reachedTick"); Scribe_Values.Look(ref RescueEndedTick, "rescueEnded");
+            Scribe_Values.Look(ref SiteVisits, "siteVisits");
+            Scribe_Collections.Look(ref RescuerIds, "rescuers", LookMode.Value); Scribe_Collections.Look(ref LostIds, "lostIds", LookMode.Value);
             if (KinIds == null) KinIds = new List<int>();
             if (ArrivedIds == null) ArrivedIds = new List<int>();
             if (LandingIds == null) LandingIds = new List<int>();
+            if (RescuerIds == null) RescuerIds = new List<int>();
+            if (LostIds == null) LostIds = new List<int>();
+        }
+    }
+    public sealed partial class PersonalItem : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ThingId, "thing"); Scribe_Values.Look(ref OwnerId, "owner"); Scribe_Values.Look(ref HouseId, "house"); Scribe_Values.Look(ref RecordedTick, "recorded");
+            Scribe_Values.Look(ref LastNoteTick, "lastNote"); Scribe_Values.Look(ref HeldHours, "heldHours"); Scribe_Values.Look(ref Quality, "quality", -1);
+            Scribe_Values.Look(ref DefName, "def", ""); Scribe_Values.Look(ref Label, "label", ""); Scribe_Values.Look(ref Value, "value");
+            Scribe_Values.Look(ref Kind, "kind", PersonalItemKind.Other); Scribe_Values.Look(ref Heirloom, "heirloom"); Scribe_Values.Look(ref Basis, "basis", HeirloomBasis.None);
+            Scribe_Collections.Look(ref UsedBy, "usedBy", LookMode.Value);
+            if (UsedBy == null) UsedBy = new List<int>();
+            if (DefName == null) DefName = ""; if (Label == null) Label = "";
+        }
+    }
+
+    public sealed partial class Beneficiary : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref OwnerId, "owner"); Scribe_Values.Look(ref HeirId, "heir"); Scribe_Values.Look(ref ThingId, "thing"); Scribe_Values.Look(ref Tick, "tick");
+            Scribe_Collections.Look(ref KnownBy, "knownBy", LookMode.Value);
+            if (KnownBy == null) KnownBy = new List<int>();
+        }
+    }
+
+    public sealed partial class EstateClaim : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ClaimantId, "claimant"); Scribe_Values.Look(ref Basis, "basis", ClaimBasis.None); Scribe_Values.Look(ref Strength, "strength");
+            Scribe_Values.Look(ref Raised, "raised"); Scribe_Values.Look(ref Relinquished, "relinquished"); Scribe_Values.Look(ref Dormant, "dormant"); Scribe_Values.Look(ref Pressed, "pressed");
+        }
+    }
+
+    public sealed partial class EstateItem : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ThingId, "thing"); Scribe_Values.Look(ref HeirId, "heir"); Scribe_Values.Look(ref RecipientHouseId, "houseHeir"); Scribe_Values.Look(ref ProposedHeirId, "proposed");
+            Scribe_Values.Look(ref Attempts, "attempts"); Scribe_Values.Look(ref NextTryTick, "nextTry"); Scribe_Values.Look(ref DeliveryStartTick, "deliveryStart");
+            Scribe_Values.Look(ref BlockedSince, "blockedSince"); Scribe_Values.Look(ref HouseId, "house"); Scribe_Values.Look(ref ClosedTick, "closed");
+            Scribe_Values.Look(ref DefName, "def", ""); Scribe_Values.Look(ref Label, "label", ""); Scribe_Values.Look(ref Kind, "kind", PersonalItemKind.Other);
+            Scribe_Values.Look(ref Heirloom, "heirloom"); Scribe_Values.Look(ref Contested, "contested"); Scribe_Values.Look(ref Value, "value");
+            Scribe_Values.Look(ref Outcome, "outcome", ItemOutcome.Pending); Scribe_Values.Look(ref Lost, "lost", LostReason.None);
+            Scribe_Collections.Look(ref Claims, "claims", LookMode.Deep); Scribe_Collections.Look(ref UsedBy, "usedBy", LookMode.Value);
+            if (Claims == null) Claims = new List<EstateClaim>();
+            if (UsedBy == null) UsedBy = new List<int>();
+            if (DefName == null) DefName = ""; if (Label == null) Label = "";
+        }
+    }
+
+    public sealed partial class EstateAsk : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref ItemThingId, "thing"); Scribe_Values.Look(ref PersonId, "person"); Scribe_Values.Look(ref AskedTick, "asked"); Scribe_Values.Look(ref ExpiresTick, "expires");
+            Scribe_Values.Look(ref Kind, "kind", EstateAskKind.Heir); Scribe_Values.Look(ref Answered, "answered"); Scribe_Values.Look(ref Expired, "expired");
+        }
+    }
+
+    public sealed partial class EstateCase : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref DeceasedId, "deceased"); Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref OpenedTick, "opened");
+            Scribe_Values.Look(ref StageTick, "stageTick"); Scribe_Values.Look(ref ClosedTick, "closed"); Scribe_Values.Look(ref MediatorId, "mediator");
+            Scribe_Values.Look(ref Stage, "stage", EstateStage.Mourning); Scribe_Values.Look(ref MediatorAsked, "mediatorAsked"); Scribe_Values.Look(ref Compromised, "compromised");
+            Scribe_Values.Look(ref StewardAppointedId, "steward"); Scribe_Values.Look(ref GrievanceCount, "grievances");
+            Scribe_Collections.Look(ref Items, "items", LookMode.Deep); Scribe_Collections.Look(ref Asks, "asks", LookMode.Deep);
+            if (Items == null) Items = new List<EstateItem>();
+            if (Asks == null) Asks = new List<EstateAsk>();
         }
     }
 }

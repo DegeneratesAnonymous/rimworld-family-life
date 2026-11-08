@@ -14,7 +14,11 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationsh
 
 ## Organic ceremonies
 
-Families autonomously plan funerals after a death, a family wedding reception after RimWorld records a marriage, and an annual grand-reunion gathering when meaningful relatives are away. The player influences these stories through relationships, family culture, attendance, leadership and the spaces they build rather than selecting outcomes directly. Weddings, funerals and reunions have 26 dedicated social scenes, and successful organizers earn modest personal prestige while the house's standing changes gradually. A reunion card can invite up to six eligible distant relatives; they travel safely from the world, may need a caravan rescue, arrive on foot or by shuttle, visit for several days and are handed back to the world when they leave.
+Families autonomously plan funerals after a death, a family wedding reception after RimWorld records a marriage, and an annual grand-reunion gathering when meaningful relatives are away. The player influences these stories through relationships, family culture, attendance, leadership and the spaces they build rather than selecting outcomes directly. Weddings, funerals and reunions have 26 dedicated social scenes, and successful organizers earn modest personal prestige while the house's standing changes gradually. A reunion card can invite up to six eligible distant relatives; they travel safely from the world, may be held up on the road (a real quest in the Quest tab, a world site and a map, which the player may accept or ignore), arrive on foot or by shuttle, visit for several days and are handed back to the world when they leave.
+
+## Heirlooms and inheritance
+
+Weapons, garments, books and art that a person has carried a long time, or that mark a wedding or coming of age, become heirlooms. When someone dies, their estate goes to a named heir, their partner, their children and other close kin, or their house, and is carried over by the heir; a contested heirloom becomes a case with claimants, reasons, a mediator and a compromise. Ordinary supplies stay communal, the office of head and possessions are inherited separately, and the person you are playing is asked rather than answered for. See [docs/GOVERNANCE.md](docs/GOVERNANCE.md).
 
 ## Design principles
 

@@ -28,5 +28,6 @@
   <JobDef><defName>WFL_HallServe</defName><driverClass>FamilyLife.JobDriver_HallServe</driverClass><reportString>serving a meal to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastAssemblyVote</defName><driverClass>FamilyLife.JobDriver_CastAssemblyVote</driverClass><reportString>going to the assembly to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_Comfort</defName><driverClass>FamilyLife.JobDriver_Comfort</driverClass><reportString>comforting TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_FetchHeirloom</defName><driverClass>FamilyLife.JobDriver_FetchHeirloom</driverClass><reportString>fetching TargetA, an inheritance.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastVote</defName><driverClass>FamilyLife.JobDriver_CastVote</driverClass><reportString>going to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

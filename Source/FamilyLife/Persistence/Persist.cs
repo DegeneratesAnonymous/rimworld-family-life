@@ -555,6 +555,7 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Offices,"communityOffices",LookMode.Deep);Scribe_Values.Look(ref NextOfficeId,"nextOfficeId",1);
             Scribe_Collections.Look(ref Assemblies,"assemblies",LookMode.Deep);Scribe_Values.Look(ref NextAssemblyId,"nextAssemblyId",1);Scribe_Values.Look(ref NextAssemblyTick,"nextAssemblyTick");Scribe_Values.Look(ref HallMapId,"hallMap",-1);Scribe_Values.Look(ref HallX,"hallX");Scribe_Values.Look(ref HallZ,"hallZ");
             Scribe_Collections.Look(ref KinVisits,"kinVisits",LookMode.Deep);Scribe_Values.Look(ref NextKinVisitId,"nextKinVisitId",1);
+            Scribe_Collections.Look(ref PersonalItems,"personalItems",LookMode.Deep);Scribe_Collections.Look(ref Beneficiaries,"beneficiaries",LookMode.Deep);Scribe_Collections.Look(ref Estates,"estates",LookMode.Deep);Scribe_Values.Look(ref NextEstateId,"nextEstateId",1);
             Scribe_Collections.Look(ref CampTrips,"campTrips",LookMode.Deep);Scribe_Values.Look(ref NextCampId,"nextCampId",1);Scribe_Values.Look(ref CampCursor,"campCursor");Scribe_Values.Look(ref LastCampScanTick,"lastCampScanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
             Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
@@ -582,7 +583,7 @@ namespace FamilyLife.Domain
                 SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
                 ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();InstitutionMovements=InstitutionMovements??new List<InstitutionMovement>();
                 Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
-                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();Offices=Offices??new List<CommunityOffice>();Assemblies=Assemblies??new List<CommunityAssembly>();CampTrips=CampTrips??new List<CampTrip>();KinVisits=KinVisits??new List<KinVisit>();
+                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();Offices=Offices??new List<CommunityOffice>();Assemblies=Assemblies??new List<CommunityAssembly>();CampTrips=CampTrips??new List<CampTrip>();KinVisits=KinVisits??new List<KinVisit>();PersonalItems=PersonalItems??new List<PersonalItem>();Beneficiaries=Beneficiaries??new List<Beneficiary>();Estates=Estates??new List<EstateCase>();
             }
         }
     }

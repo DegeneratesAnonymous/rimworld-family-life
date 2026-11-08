@@ -29,6 +29,27 @@ A quick way to try every family feature without waiting weeks of game time. A sa
 | Guest door | Let a colonist from another family try to use a room in a family zone | They knock, are let in, and carry on with what they came for |
 | Crests | Start a new game with several surnames | Each house has a different crest; make a branch and its crest keeps the parent's main colour and mark |
 
+## Heirlooms, estates and the rescue quest
+
+Debug actions are under **Wil's Family Life, testing** (all of these bring forward what the game would do by itself through the same code; none writes a result into the records).
+
+| What to try | Action | What you should see |
+|---|---|---|
+| An heirloom | **Create an heirloom for the selected pawn** | A masterwork sword (or their best gear) recorded as an heirloom, listed under Governance, "Possessions, heirlooms and estates" |
+| A named heir | **Name the selected pawn's closest relative as heir** (or the "Name an heir..." button for a pawn you play) | The heir is told; the line appears in the pawn's own list only |
+| An estate | **Kill the selected pawn and open their estate** | A message with the number of keepsakes; if they are still on the body, a note that the body must be stripped before burial |
+| A dispute | **Force a contested inheritance** (the pawn needs two grown relatives), then **Skip the open estates' current wait** several times | Claims with reasons, the family talking it over, a mediator, a spread of different heirlooms, a grievance or a Steward appointed |
+| Questions to you | Select an heir or the mediator and use Perspective Shift, or select them in the Families window | A question under "Waiting for your answer"; leave it and it lapses with no delivery |
+| Delivery | **Try the pending heirloom deliveries now** | The heir walks to the item and carries it; the list shows "now with ..." |
+| A lost item | **Fail a delivery: destroy the next undelivered heirloom** | The item is recorded as lost and the case closes; nothing replaces it |
+| The rescue quest | **Create a reunion rescue quest (strand the selected house's travelling relatives now)** (after creating a distant relative and calling a grand reunion) | One letter, and a quest in the Quest tab naming the house and the relatives |
+| Trouble | **Choose the trouble for the open rescue** before accepting | Each of breakdown, injury, wild animals, raiders and weather |
+| Accepting | **Accept the open rescue quest now** (or accept it in the Quest tab) | A site on the world map; form a caravan to it; the relatives are on the map |
+| Endings | **Complete the open rescue**, **Let the open rescue expire**, **Abandon the open rescue** | Each ends it once; the reunion goes ahead; the quest closes; the site goes when you leave |
+| A check | **Validate heirloom and rescue state (read only)** | A log of anything inconsistent; it changes nothing |
+
+None of this has been run in the game yet; report anything odd with the validation log.
+
 ## When something looks wrong
 
 Run **Log the posts, hall, assembly and trips** and send the log lines (look for `[Wil's Family Life] ... skipped`) with what you saw.

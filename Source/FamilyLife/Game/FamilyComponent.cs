@@ -107,6 +107,7 @@ namespace FamilyLife
             if (now != lastSync && maintenance.Take(now)) Maintain(now);
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
             Economy.Tick(now);
+            KinRescueDriver.Tick(this, now);
             HouseAgency.Tick(this, now);
             HouseSituationPlanner.Tick(this, now);
         }
@@ -144,6 +145,7 @@ namespace FamilyLife
                 events.AddRange(Registry.UpdateBondMilestones(now));
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
+                EstateDriver.OnFamilyEvents(this, events, now);
                 if (forceReconcile) FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)
                     GriefApplier.Apply(griefs, TryGetPawn);

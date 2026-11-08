@@ -27,6 +27,7 @@ namespace FamilyLife
             var r = c.Registry;
             var s = FamilyLifeMod.Settings;
             r.MaintainKinVisits(now);
+            KinRescueDriver.Reconcile(c, r, now);
             if (s == null || (s.ceremonies && s.visitingKin)) PlanNew(c, r, now);
             foreach (var visit in r.KinVisits.Where(v => v.Open).ToList())
             {
@@ -34,7 +35,7 @@ namespace FamilyLife
                 catch (Exception ex) { Log.Warning("[Wil's Family Life] Kin visit " + visit.Id + " skipped: " + ex.Message); }
             }
             foreach (var visit in r.KinVisits.Where(v => v.State == KinVisitState.Failed && told.Add(v.Id) && now - v.EndedTick < 2 * Day).ToList())
-                Messages.Message("WFL_Kin_Failed".Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId))), MessageTypeDefOf.NeutralEvent, false);
+                Messages.Message((visit.Rescue >= RescueStage.Declined ? "WFL_Kin_Failed_" + visit.Rescue : "WFL_Kin_Failed").Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId))), MessageTypeDefOf.NeutralEvent, false);
         }
 
         /// <summary>The relatives the game confirms can safely come.</summary>
@@ -50,7 +51,7 @@ namespace FamilyLife
         private static bool QuestReserved(Pawn p)
         {
             foreach (var quest in Find.QuestManager.QuestsListForReading)
-                if (quest.State == QuestState.Ongoing && quest.QuestLookTargets.Contains(p)) return true;
+                if (quest.State == QuestState.Ongoing && quest.QuestLookTargets.Contains(p) && !quest.PartsListForReading.Any(part => part is QuestPart_KinRescue)) return true;
             return false;
         }
 
@@ -73,14 +74,11 @@ namespace FamilyLife
             {
                 case KinVisitState.Travelling:
                     if (now < visit.ArriveTick) return;
-                    if (visit.Complication) { Strand(r, visit, now); return; }
+                    if (visit.Complication) { KinRescueDriver.Strand(c, r, visit, now); return; }
                     Arrive(c, r, visit, now);
                     break;
                 case KinVisitState.Stranded:
-                    var rescuers = CampingDriver.CaravansAt(visit.StrandTile).SelectMany(cv => cv.PawnsListForReading).Where(p => p != null && !p.Dead).Select(p => p.thingIDNumber).Distinct().ToList();
-                    if (rescuers.Count > 0 && r.RescueKinVisit(visit.Id, rescuers, now))
-                        Messages.Message("WFL_Kin_Rescued".Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId))), MessageTypeDefOf.PositiveEvent, false);
-                    break;
+                    break;                                                                          // the quest and its site carry this; see KinRescueDriver
                 case KinVisitState.Landing:
                     FinishLanding(c, r, visit, now);
                     break;
@@ -94,17 +92,6 @@ namespace FamilyLife
                     else SendHome(c, visit);
                     break;
             }
-        }
-
-        private static void Strand(FamilyRegistry r, KinVisit visit, int now)
-        {
-            var map = Find.AnyPlayerHomeMap;
-            if (map == null) return;
-            int tile = CampingDriver.PickTile(WorldTiles.HomeTile(map), visit.Seed, 7);
-            if (tile < 0) { visit.Complication = false; return; }                                   // nowhere sensible to strand them: the trip simply goes well
-            if (r.StrandKinVisit(visit.Id, tile, now))
-                Find.LetterStack.ReceiveLetter("WFL_Kin_StrandedTitle".Translate(), "WFL_Kin_StrandedText".Translate(r.LineageDisplayName(r.GetLineage(visit.FamilyId)), (visit.RescueDeadlineTick - now) / Day),
-                    LetterDefOf.ThreatSmall, WorldTiles.Target(tile));
         }
 
         private static void Arrive(FamilyComponent c, FamilyRegistry r, KinVisit visit, int now)

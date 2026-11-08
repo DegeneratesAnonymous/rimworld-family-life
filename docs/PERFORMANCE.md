@@ -29,6 +29,13 @@ The observation cache compares IDs, names, birth dates, presence, juvenile statu
 
 The new caches are transient, scoped to a game/map/registry, and cleared or rebuilt on load. There is no save-format change. Existing unscoped family-area identity and player-restriction ownership problems remain tracked in issue #2; a map-local work cache does not resolve that policy issue.
 
+## Heirlooms, estates and rescues
+
+- Discovery looks at three colonists per hourly governance pass, reading only what they wear, wield and carry (at most 24 inventory items each). There is no map-wide item scan. An open estate is searched for by id only for the few items it holds, three deliveries per pass, with growing waits between tries so an unreachable item does not repeat path searches. Only open estates are advanced; finished ones are skipped and history is capped at 24.
+- The rescue site poll runs every 250 ticks and returns at once unless a rescue is on site; the hourly reconciliation touches only the sixteen kept visits.
+- The performance capture reports these as "Estates: discovery", "Estates: open and advance", "Estates: delivery", "Kin rescue: reconcile" and "Kin rescue: site". Per-game static state (cursors, told-sets, the site gate) is cleared on a new or loaded game.
+- A domain timing test advances 24 open estates of 12 items repeatedly in a loose bound; it is a sanity check on cost, not a TPS measurement.
+
 ## Measurement already available
 
 The existing Release benchmark uses 120 colonists, 456 total records, 960 bonds and 24 households. It measures domain operations only, with a warm-up and repeated calls; it excludes pawn observation, pathfinding, job drivers, zones, rendering and the new invalidation hooks.

@@ -83,6 +83,12 @@ namespace FamilyLife.Tests
         [InlineData(typeof(AssemblyEndorsement))]
         [InlineData(typeof(CampTrip))]
         [InlineData(typeof(KinVisit))]
+        [InlineData(typeof(PersonalItem))]
+        [InlineData(typeof(Beneficiary))]
+        [InlineData(typeof(EstateClaim))]
+        [InlineData(typeof(EstateItem))]
+        [InlineData(typeof(EstateAsk))]
+        [InlineData(typeof(EstateCase))]
         [InlineData(typeof(SupplyRequest))]
         [InlineData(typeof(FamilyRegistry))]
         public void Every_field_is_written_to_the_save(Type type)

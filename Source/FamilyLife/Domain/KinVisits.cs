@@ -74,18 +74,7 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>Someone from the colony reached the place in time. The relatives carry on to the colony a day later and think well of those who came.</summary>
-        public bool RescueKinVisit(int id, IEnumerable<int> rescuers, int now)
-        {
-            var visit = KinVisitFor(id);
-            if (visit == null || visit.State != KinVisitState.Stranded || now > visit.RescueDeadlineTick) return false;
-            visit.State = KinVisitState.Travelling; visit.ArriveTick = now + ActivityTuning.TicksPerDay; visit.StrandTile = -1;
-            foreach (int rescuer in (rescuers ?? Enumerable.Empty<int>()).Distinct().Where(p => GetPerson(p)?.InColony == true).Take(6))
-                foreach (int kin in visit.KinIds.Where(k => GetPerson(k)?.IsAlive == true).Take(MaxVisitingKin))
-                    ChangeBond(kin, rescuer, new BondChange(2f, 3f, -1f, 1f), now);
-            var request = GatheringRequests.FirstOrDefault(r => r.Id == visit.RequestId);
-            if (request != null) request.NotBefore = Math.Max(request.NotBefore, visit.ArriveTick + ActivityTuning.TicksPerDay / 4);
-            return true;
-        }
+        public bool RescueKinVisit(int id, IEnumerable<int> rescuers, int now) => CompleteKinRescue(id, rescuers, null, now);
 
         /// <summary>People the game actually placed on the map. If nobody could be placed the visit ends and the reunion goes on without them.</summary>
         public bool MarkKinArrived(int id, IEnumerable<int> arrived, int now)
@@ -140,13 +129,9 @@ namespace FamilyLife.Domain
             foreach (var visit in KinVisits.Where(v => v.State == KinVisitState.Travelling || v.State == KinVisitState.Stranded).ToList())
             {
                 var request = GatheringRequests.FirstOrDefault(r => r.Id == visit.RequestId);
-                if (request == null || request.State == CeremonyState.Cancelled || request.State == CeremonyState.Expired) { visit.State = KinVisitState.Expired; visit.EndedTick = now; continue; }
-                if (visit.State == KinVisitState.Stranded && now > visit.RescueDeadlineTick)
-                {
-                    visit.State = KinVisitState.Failed; visit.EndedTick = now;
-                    request.VisitorIds.Clear();                         // they never arrived; the family holds the reunion without them
-                }
+                if (request == null || request.State == CeremonyState.Cancelled || request.State == CeremonyState.Expired) { if (visit.RescueOpen) visit.Rescue = RescueStage.Expired; visit.State = KinVisitState.Expired; visit.EndedTick = now; continue; }
             }
+            MaintainKinRescues(now);                                    // offers that lapsed, parties out of time, relatives who died: they never arrived; the family holds the reunion without them
         }
     }
 }

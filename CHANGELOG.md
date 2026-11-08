@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - heirlooms, estates and the reunion rescue quest
+- Add personal possessions and heirlooms (weapons, garments, books, art), kept apart from family stock claims, with an estate for each death, designated heirs, claims and disputes, mediation and compromise, and real physical delivery by the heir; ordinary stacked supplies stay communal. Head succession and inheritance are separate. The person you are playing is asked (accept, let go, press a claim, or mediate) and silence never counts as consent.
+- Replace the letter-only rescue destination with a real Quest-tab quest, a world site and a generated map where the stranded relatives are placed as the same pawns, with five kinds of trouble, honest endings (declined, ignored, abandoned, site lost, lost, partial survival, succeeded) that can each happen only once, and credit for the actual rescuers. Older saves with a stranded party still resolve.
+- New developer actions for heirlooms, estates, deliveries and each rescue ending; a read-only validation; timings added to the performance capture.
+- Offline only: domain tests, source-contract tests, a simulated save/reload, 17 new mutation checks and both game builds. Nothing here has been run in RimWorld.
+
 ## Unreleased - community posts, camping and visiting kin
 - Add four community posts: a teacher who holds a class every few days (adjustable, adults optional), a doctor who gives everyone a check-up twice a year in the medical room, a hall keeper who cleans the hall and serves meals to people who sit and wait, and a chaplain named by the ideoligion. People stand for a post for a reason (a calling, a personal aim, a sponsoring house, or duty) and only one post each; houses with a need want the matching post and its holder's kin are served first and learn or heal more. Elected posts are chosen at a yearly assembly where the incumbent's graded year weighs in the vote; add player-authorized camping trips and relatives who really arrive for a grand reunion, with a rescue window and a safe hand-back.
 - A player-controlled head is asked for their council leadership ballot; a union a head accepted under a council now finishes when the council approves it.

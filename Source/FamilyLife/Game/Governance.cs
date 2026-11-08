@@ -82,6 +82,7 @@ namespace FamilyLife
             Safe(() => OfficeDriver.Run(c, now), "community posts");
             Safe(() => CampingDriver.Run(c, now), "camping");
             Safe(() => KinVisitDriver.Run(c, now), "kin visits");
+            Safe(() => EstateDriver.Run(c, now), "estates");
             GovernanceDriver.Run(c, now);
         }
     }

@@ -5,6 +5,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.AI;
+using KVP = System.Collections.Generic.KeyValuePair<string, System.Action>;
 
 namespace FamilyLife
 {
@@ -125,6 +126,47 @@ namespace FamilyLife
                                 Messages.Message("WFL_House_ActionUnavailable".Translate(), MessageTypeDefOf.NeutralEvent, false);
                         }));
                 }
+            // Questions about an estate wait for the pawn the player controls. An unanswered one lapses; it is never taken as a yes.
+            foreach (var pair in registry.EstateAsksFor(viewer))
+            {
+                var estate = pair.Case; var ask = pair.Ask;
+                int caseId = estate.Id, thing = ask.ItemThingId;
+                string dead = FamilyUi.NameOf(registry, estate.DeceasedId);
+                if (ask.Kind == EstateAskKind.Mediate)
+                {
+                    Answer(ref y, "WFL_Ask_EstateMediate".Translate(dead),
+                        new KVP("WFL_Ask_ApproveSpread".Translate(), () => registry.AnswerMediation(caseId, viewer, MediationChoice.Approve, 0, 0, now)),
+                        new KVP("WFL_Ask_LetSettle".Translate(), () => registry.AnswerMediation(caseId, viewer, MediationChoice.LetThemSettle, 0, 0, now)));
+                    foreach (var contested in estate.Items.Where(i => i.Contested && !i.Terminal).Take(3).ToList())
+                    {
+                        int itemId = contested.ThingId;
+                        var give = contested.Claims.Where(c => !c.Relinquished && !c.Dormant).Take(4)
+                            .Select(c => { int heir = c.ClaimantId; return new KVP(FamilyUi.NameOf(registry, heir), () => registry.AnswerMediation(caseId, viewer, MediationChoice.Give, itemId, heir, now)); }).ToArray();
+                        if (give.Length > 0) Answer(ref y, "WFL_Ask_GiveItem".Translate(contested.Label), give);
+                    }
+                    continue;
+                }
+                var item = estate.Items.FirstOrDefault(i => i.ThingId == thing);
+                if (item == null || item.Terminal) continue;
+                if (ask.Kind == EstateAskKind.Press)
+                    Answer(ref y, "WFL_Ask_EstatePress".Translate(item.Label, dead),
+                        new KVP("WFL_Ask_PressClaim".Translate(), () => registry.AnswerHeirAsk(caseId, thing, viewer, EstateAnswer.Contest, now)),
+                        new KVP("WFL_Ask_Relinquish".Translate(), () => registry.AnswerHeirAsk(caseId, thing, viewer, EstateAnswer.Relinquish, now)),
+                        new KVP("WFL_Ask_AcceptOutcome".Translate(), () => registry.AnswerHeirAsk(caseId, thing, viewer, EstateAnswer.Accept, now)));
+                else
+                    Answer(ref y, "WFL_Ask_EstateHeir".Translate(item.Label, dead),
+                        new KVP("WFL_Ask_Accept".Translate(), () => registry.AnswerHeirAsk(caseId, thing, viewer, EstateAnswer.Accept, now)),
+                        new KVP("WFL_Ask_Relinquish".Translate(), () => registry.AnswerHeirAsk(caseId, thing, viewer, EstateAnswer.Relinquish, now)));
+            }
+            foreach (var ready in registry.ReadyToCollect(viewer).Take(3))
+            {
+                var heirItem = ready.Item;
+                Answer(ref y, "WFL_Ask_Collect".Translate(heirItem.Label, FamilyUi.NameOf(registry, ready.Case.DeceasedId)),
+                    new KVP("WFL_Ask_CollectGo".Translate(), () =>
+                    {
+                        if (!EstateDriver.Collect(component, pawn, heirItem)) Messages.Message("WFL_House_ActionUnavailable".Translate(), MessageTypeDefOf.NeutralEvent, false);
+                    }));
+            }
             yOut = y;
         }
 
@@ -281,8 +323,12 @@ namespace FamilyLife
             foreach (var visit in registry.KinVisits.Where(v => v.FamilyId == lineage.Id && v.Open).Take(2).ToList())
             {
                 Line(view, ref y, "WFL_Kin_Line".Translate(("WFL_KinState_" + visit.State).Translate(), FamilyUi.NameList(registry, visit.KinIds)), 10f, true);
-                if (visit.State == KinVisitState.Stranded && Widgets.ButtonText(new Rect(10f, y, 150f, 26f), "WFL_Kin_ShowPlace".Translate())) { WorldTiles.Jump(visit.StrandTile); y += 32f; }
+                if (visit.RescueOpen && member)
+                    Line(view, ref y, "WFL_Rescue_Line".Translate(("WFL_RescueStage_" + visit.Rescue).Translate(), ("WFL_RescueTrouble_" + visit.Trouble).Translate(),
+                        Mathf.Max(0, (visit.RescueDeadlineTick - Activities.Now) / ActivityTuning.TicksPerDay)), 20f, true);
+                if (visit.State == KinVisitState.Stranded && visit.StrandTile >= 0 && Widgets.ButtonText(new Rect(10f, y, 150f, 26f), "WFL_Kin_ShowPlace".Translate())) { WorldTiles.Jump(visit.StrandTile); y += 32f; }
             }
+            DrawInheritance(view, ref y, component, registry, lineage);
         }
     }
 }

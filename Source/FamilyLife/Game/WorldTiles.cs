@@ -39,6 +39,7 @@ namespace FamilyLife
 
         internal static float Temperature(int id) => Find.WorldGrid[Native(id)].temperature;
         internal static float Rainfall(int id) => Find.WorldGrid[Native(id)].rainfall;
+        internal static float AnimalDensity(int id) => Find.WorldGrid[Native(id)].PrimaryBiome?.animalDensity ?? 0f;
         internal static void Jump(int id) => CameraJumper.TryJump(Target(id));
     }
 }
