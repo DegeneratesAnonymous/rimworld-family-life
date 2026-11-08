@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - doors and moods
+- A pawn approaching or following a person is now judged by where that person is, so nobody walks into a home after someone (a downed person is still reachable for rescue). Once a visit is over the door closes again at once, and the grace for stepping out and back is about 15 game minutes.
+- Social moments no longer pile up in the mood list: at most 2 'moments that mattered', 3 good moments, 2 awkward and 2 bad ones at a time.
+
 ## Unreleased - door fixes
 - Nobody knocks at a home with no one in it: if no family member who can answer is inside the zone, the way in is simply closed (no knock, no waiting), and a knock that loses its last possible answerer is given up after a few tries.
 - A knock is made at a real way in (a door, or where one room meets another), never at furniture such as an animal bed or a spot inside a room.

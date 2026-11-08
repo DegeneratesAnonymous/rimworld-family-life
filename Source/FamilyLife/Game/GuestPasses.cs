@@ -35,7 +35,7 @@ namespace FamilyLife
     /// </summary>
     internal static class GuestPasses
     {
-        public const int WaitLimit = 2500, PassLimit = 15000, NeverEnteredLimit = 1800, LeaveDelay = 2500, CooldownAfterRefusal = 2500, CooldownAfterVisit = 0, CooldownNeverEntered = 5000, CooldownUnanswered = 12000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
+        public const int WaitLimit = 2500, PassLimit = 15000, NeverEnteredLimit = 1800, LeaveDelay = 900, CooldownAfterRefusal = 2500, CooldownAfterVisit = 0, CooldownNeverEntered = 5000, CooldownUnanswered = 12000, WalkLimit = 6000, KnockEvery = 180, SummonEvery = 120, MaxVisits = 3;
         public static readonly Dictionary<int, GuestPass> ByGuest = new Dictionary<int, GuestPass>();
         private static readonly Dictionary<int, int> cooldown = new Dictionary<int, int>();
         private static readonly HashSet<string> IdleJobs = new HashSet<string> { "Wait_Wander", "GotoWander", "Wait", "Wait_MaintainPosture", "Wait_NoSleep" };
@@ -45,7 +45,7 @@ namespace FamilyLife
         public static bool IsActive(Pawn pawn) => pawn != null && ByGuest.ContainsKey(pawn.thingIDNumber);
         public static bool IsGranted(Pawn pawn) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted;
         /// <summary>Whether this pawn has been let into this zone and the visit is still going.</summary>
-        public static bool HasPassFor(Pawn pawn, Zone_Family zone) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted && p.Zone == zone;
+        public static bool HasPassFor(Pawn pawn, Zone_Family zone) => pawn != null && ByGuest.TryGetValue(pawn.thingIDNumber, out var p) && p.Granted && !p.Done && p.Zone == zone;      // once the visit is over the door is closed again
 
         private static void Trace(string text)
         {

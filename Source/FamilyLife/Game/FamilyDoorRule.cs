@@ -132,8 +132,12 @@ namespace FamilyLife
             {
                 var pawn = PawnRef(__instance);
                 var job = pawn?.CurJob;
-                if (job == null || job.playerForced || !dest.IsValid || dest.Thing is Pawn || job.def.defName.StartsWith("WFL_")) return true;
-                if (!FamilyDoorRule.Blocks(dest.Cell, pawn, true)) return true;
+                if (job == null || job.playerForced || !dest.IsValid || job.def.defName.StartsWith("WFL_")) return true;
+                // Following or approaching a person is judged by where that person is, so nobody walks into a home after someone. A person who is down is
+                // always reachable (a rescue or a tending is not stopped).
+                if (dest.Thing is Pawn target && (target.Downed || target.Dead || !target.Spawned)) return true;
+                var cell = dest.Thing is Pawn other ? other.Position : dest.Cell;
+                if (!FamilyDoorRule.Blocks(cell, pawn, true)) return true;
                 FamilyDoorRule.AttachJob(pawn, job);
                 pawn.jobs.curDriver?.Notify_PatherFailed();
                 return false;

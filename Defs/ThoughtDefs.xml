@@ -400,7 +400,7 @@
     <defName>WFL_MomentGreat</defName>
     <thoughtClass>Thought_MemorySocial</thoughtClass>
     <durationDays>10</durationDays>
-    <stackLimit>12</stackLimit>
+    <stackLimit>2</stackLimit>
     <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
     <stages>
       <li>
@@ -415,7 +415,7 @@
     <defName>WFL_MomentGood</defName>
     <thoughtClass>Thought_MemorySocial</thoughtClass>
     <durationDays>6</durationDays>
-    <stackLimit>12</stackLimit>
+    <stackLimit>3</stackLimit>
     <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
     <stages>
       <li>
@@ -430,7 +430,7 @@
     <defName>WFL_MomentAwkward</defName>
     <thoughtClass>Thought_MemorySocial</thoughtClass>
     <durationDays>4</durationDays>
-    <stackLimit>12</stackLimit>
+    <stackLimit>2</stackLimit>
     <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
     <stages>
       <li>
@@ -445,7 +445,7 @@
     <defName>WFL_MomentSore</defName>
     <thoughtClass>Thought_MemorySocial</thoughtClass>
     <durationDays>8</durationDays>
-    <stackLimit>12</stackLimit>
+    <stackLimit>2</stackLimit>
     <stackLimitForSameOtherPawn>1</stackLimitForSameOtherPawn>
     <stages>
       <li>
