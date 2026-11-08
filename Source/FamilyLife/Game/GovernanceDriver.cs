@@ -24,6 +24,7 @@ namespace FamilyLife
             if (s != null && !s.governance) return;
             Step(() => Duties(c, now), "duties");
             Step(() => Elections(c, now), "elections");
+            Step(() => InstitutionMovements(c, now), "political movements");
             Step(() => Crime(c, now), "house crime");
             Step(() => Coups(c, now), "schemes");
         }
@@ -134,6 +135,33 @@ namespace FamilyLife
                         pawn.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc); sent++;
                     }
                 }
+            }
+        }
+
+        private static void InstitutionMovements(FamilyComponent c, int now)
+        {
+            var r = c.Registry; var movement = r.ActiveInstitutionMovement;
+            if (movement == null)
+            {
+                movement = r.ConsiderInstitutionMovement(now, id => Spawned(c, id) is Pawn p && !PerspectiveShiftBridge.IsAvatar(p));
+                if (movement != null) Messages.Message("WFL_Movement_Begun".Translate(c.TryGetPawn(movement.ProposerId)?.LabelShort ?? "?", ("WFL_Institution_" + movement.Target).Translate()), MessageTypeDefOf.NeutralEvent, false);
+            }
+            if (movement == null) return;
+            var before = movement.State; r.AdvanceInstitutionMovements(now);
+            if (!movement.Open)
+            {
+                if (before != movement.State) Messages.Message((movement.State == InstitutionMovementState.Adopted ? "WFL_Movement_Adopted" : "WFL_Movement_Rejected").Translate(("WFL_Institution_" + movement.Target).Translate()), MessageTypeDefOf.NeutralEvent, false);
+                return;
+            }
+            int proposerFamily = r.FamilyOf(movement.ProposerId);
+            var speaker = r.MembersOf(proposerFamily).Where(p => p.InColony && !p.Juvenile).OrderByDescending(p => p.Id == movement.ProposerId)
+                .Select(p => Spawned(c, p.Id)).FirstOrDefault(p => p != null && !PerspectiveShiftBridge.IsAvatar(p) && Governance.Free(c, p.thingIDNumber));
+            if (speaker == null || speaker.CurJobDef == WFL_StoryDefOf.WFL_InstitutionPetition) return;
+            foreach (var house in r.Lineages.Where(h => h.AbsorbedIntoId == 0 && !movement.ContactedHouseIds.Contains(h.Id)).OrderByDescending(h => h.Standing).Take(8))
+            {
+                int headId = r.HeadOf(house.Id); var head = Spawned(c, headId);
+                if (head == null || head.Map != speaker.Map || PerspectiveShiftBridge.IsAvatar(head)) continue;
+                if (GovernanceMeetings.Start(speaker, head, WFL_StoryDefOf.WFL_InstitutionPetition, movement.Id)) break;
             }
         }
 

@@ -547,6 +547,7 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref CrimeKnowledgeRecords,"crimeKnowledge",LookMode.Deep);Scribe_Collections.Look(ref ProtectionArrangements,"protectionArrangements",LookMode.Deep);
             Scribe_Values.Look(ref NextHeistId,"nextHeistId",1);Scribe_Values.Look(ref NextProtectionId,"nextProtectionId",1);
             Scribe_Deep.Look(ref Institution,"institution");Scribe_Collections.Look(ref Elections,"elections",LookMode.Deep);
+            Scribe_Collections.Look(ref InstitutionMovements,"institutionMovements",LookMode.Deep);Scribe_Values.Look(ref NextInstitutionMovementId,"nextInstitutionMovementId",1);Scribe_Values.Look(ref LastInstitutionMovementTick,"lastInstitutionMovementTick",-1000000);
             Scribe_Collections.Look(ref Coups,"coups",LookMode.Deep);Scribe_Values.Look(ref NextElectionId,"nextElectionId",1);
             Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);
             Scribe_Collections.Look(ref Favors,"favors",LookMode.Deep);Scribe_Values.Look(ref NextFavorId,"nextFavorId",1);
@@ -579,7 +580,7 @@ namespace FamilyLife.Domain
                 Ceremonies=Ceremonies??new List<CeremonyRecord>();Prestige=Prestige??new List<PrestigeRecord>();
                 CeremonyPlans=CeremonyPlans??new List<CeremonyPlan>();StewardDuties=StewardDuties??new List<StewardDuty>();FamilyOffices=FamilyOffices??new List<FamilyOffice>();
                 SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
-                ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();
+                ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();InstitutionMovements=InstitutionMovements??new List<InstitutionMovement>();
                 Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
                 Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();Offices=Offices??new List<CommunityOffice>();Assemblies=Assemblies??new List<CommunityAssembly>();CampTrips=CampTrips??new List<CampTrip>();KinVisits=KinVisits??new List<KinVisit>();
             }

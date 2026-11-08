@@ -87,6 +87,14 @@ namespace FamilyLife
                     new KeyValuePair<string, System.Action>("WFL_Ask_Agree".Translate(), () => registry.AgreeProtection(id, viewer, now)),
                     new KeyValuePair<string, System.Action>("WFL_Ask_Refuse".Translate(), () => registry.EndProtection(id, now)));
             }
+            var movement = registry.ActiveInstitutionMovement; int viewerFamily = registry.FamilyOf(viewer);
+            if (movement != null && registry.HeadOf(viewerFamily) == viewer && !movement.ContactedHouseIds.Contains(viewerFamily))
+            {
+                int id = movement.Id; string target = ("WFL_Institution_" + movement.Target).Translate();
+                Answer(ref y, "WFL_Ask_Movement".Translate(FamilyUi.NameOf(registry, movement.ProposerId), target),
+                    new KeyValuePair<string, System.Action>("WFL_Movement_Support".Translate(), () => registry.AnswerInstitutionMovement(id, viewerFamily, viewer, true, now)),
+                    new KeyValuePair<string, System.Action>("WFL_Movement_Oppose".Translate(), () => registry.AnswerInstitutionMovement(id, viewerFamily, viewer, false, now)));
+            }
             foreach (var matter in registry.CouncilMatters.Where(m => m.Open && registry.CouncilVotersFor(m).Contains(viewer)).ToList())
             {
                 int id = matter.Id;
@@ -189,32 +197,11 @@ namespace FamilyLife
             // The colony's institution.
             var inst = registry.Institution;
             Line(view, ref y, "WFL_Institution_Line".Translate(("WFL_Institution_" + inst.Kind).Translate(), FamilyUi.NameOf(registry, inst.LeaderId)), 10f);
-            bool anyHead = viewer == 0 || registry.Lineages.Any(h => h.AbsorbedIntoId == 0 && registry.HeadOf(h.Id) == viewer);
-            // Constitutional setup is an overseer control, not a power a role-played head exercises by clicking a panel.
-            if (ActionButton(new Rect(10f, y, 250f, 26f), "WFL_Gov_ChangeLeadership".Translate(), viewer==0))
+            var movement = registry.ActiveInstitutionMovement;
+            if (movement != null)
             {
-                int fallbackLeader = registry.GetPerson(inst.LeaderId)?.InColony == true ? inst.LeaderId :
-                    registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => registry.AssessLegitimacy(p.Id, registry.FamilyOf(p.Id), 0)).OrderByDescending(a => a.Score).Select(a => a.PersonId).FirstOrDefault();
-                var options = new List<FloatMenuOption>
-                {
-                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Consensus).Translate(), () => registry.SetInstitution(InstitutionKind.Consensus, 0, Activities.Now)),
-                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Council).Translate(), () => registry.SetInstitution(InstitutionKind.Council, 0, Activities.Now)),
-                    new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Election).Translate(), () => registry.SetInstitution(InstitutionKind.Election, fallbackLeader, Activities.Now))
-                };
-                foreach (var h in registry.Lineages.Where(x => x.AbsorbedIntoId == 0).Select(x => registry.HeadOf(x.Id)).Where(id => id != 0).Distinct().Take(8))
-                {
-                    int head = h;
-                    options.Add(new FloatMenuOption(("WFL_Institution_" + InstitutionKind.Authoritarian).Translate() + ": " + FamilyUi.NameOf(registry, head), () => registry.SetInstitution(InstitutionKind.Authoritarian, head, Activities.Now)));
-                }
-                Find.WindowStack.Add(new FloatMenu(options));
+                Line(view, ref y, "WFL_Movement_Line".Translate(FamilyUi.NameOf(registry, movement.ProposerId), ("WFL_Institution_" + movement.Target).Translate(), movement.SupportHouseIds.Count, movement.OpposeHouseIds.Count), 20f, true);
             }
-            if (ActionButton(new Rect(270f, y, 200f, 26f), "WFL_Gov_CallElection".Translate(), anyHead && inst.Kind == InstitutionKind.Election))
-            {
-                var field = registry.Persons.Where(p => p.InColony && !p.Juvenile).Select(p => registry.AssessLegitimacy(p.Id, registry.FamilyOf(p.Id), 0))
-                    .Where(a => a.Score >= 30f && !a.Reluctant).OrderByDescending(a => a.Score).ThenBy(a => a.PersonId).Take(4).Select(a => a.PersonId).ToList();
-                Messages.Message(registry.CallElection(field, Activities.Now) != null ? "WFL_Gov_ElectionCalled".Translate() : "WFL_Gov_ElectionNotPossible".Translate(), MessageTypeDefOf.NeutralEvent, false);
-            }
-            y += 32f;
             foreach (var matter in registry.CouncilMatters.Where(m => m.Open).Take(3))
                 Line(view, ref y, matter.Kind == CouncilMatterKind.Union
                     ? "WFL_Ask_CouncilUnion".Translate(registry.LineageDisplayName(registry.GetLineage(matter.FamilyA)), registry.LineageDisplayName(registry.GetLineage(matter.FamilyB)))

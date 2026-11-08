@@ -69,6 +69,7 @@ namespace FamilyLife.Tests
         [InlineData(typeof(CrimeKnowledge))]
         [InlineData(typeof(ProtectionArrangement))]
         [InlineData(typeof(ColonyInstitution))]
+        [InlineData(typeof(InstitutionMovement))]
         [InlineData(typeof(ElectionEndorsement))]
         [InlineData(typeof(ElectionVote))]
         [InlineData(typeof(Election))]

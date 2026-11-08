@@ -55,6 +55,13 @@
   <WFL_Institution_Council>a council of houses</WFL_Institution_Council>
   <WFL_Institution_Election>elected leadership</WFL_Institution_Election>
   <WFL_Institution_Authoritarian>one ruler</WFL_Institution_Authoritarian>
+  <WFL_Movement_Begun>{0} has begun arguing that the colony should be governed by {1}.</WFL_Movement_Begun>
+  <WFL_Movement_Line>{0} is seeking {1}. Houses supporting: {2}; opposed: {3}.</WFL_Movement_Line>
+  <WFL_Movement_Support>Support the proposal</WFL_Movement_Support>
+  <WFL_Movement_Oppose>Oppose the proposal</WFL_Movement_Oppose>
+  <WFL_Ask_Movement>{0} wants your house to support {1}.</WFL_Ask_Movement>
+  <WFL_Movement_Adopted>The houses adopted {0}.</WFL_Movement_Adopted>
+  <WFL_Movement_Rejected>The proposal for {0} failed.</WFL_Movement_Rejected>
   <WFL_Election_Line>Election ({0}): {1}</WFL_Election_Line>
   <WFL_ElectionState_Campaign>campaigning</WFL_ElectionState_Campaign>
   <WFL_ElectionState_Voting>voting</WFL_ElectionState_Voting>

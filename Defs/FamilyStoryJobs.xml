@@ -17,6 +17,7 @@
   <JobDef><defName>WFL_StewardGuest</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>looking after TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_StewardMediate</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>mediating with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_StewardNegotiate</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>preparing a family negotiation with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_InstitutionPetition</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>arguing for political change with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CoupRecruit</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>speaking quietly with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CoupConfront</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>confronting TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_HeistRecruit</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>speaking quietly with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>

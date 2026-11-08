@@ -18,7 +18,7 @@ namespace FamilyLife
 
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
             def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_StewardNegotiate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
-            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_Checkup);
+            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_Checkup || def == WFL_StoryDefOf.WFL_InstitutionPetition);
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
         internal static int NextToken() => (int)(unchecked((uint)((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000u) + 1;
@@ -30,7 +30,7 @@ namespace FamilyLife
             if (!Activities.IsFree(other) || other.CurJob?.playerForced == true || (Find.Selector.IsSelected(other) || PerspectiveShiftBridge.IsAvatar(other)) && !recipientConsented) return false;
             if (!actor.CanReach(other, PathEndMode.Touch, Danger.None)) return false;
             var job = JobMaker.MakeJob(def, other); job.count = id;
-            if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate)
+            if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate||def==WFL_StoryDefOf.WFL_InstitutionPetition)
                 PreferOffice(job,FamilyComponent.Current,FamilyComponent.Current?.Registry.FamilyOf(actor.thingIDNumber)??0,actor,other);
             if (def == WFL_StoryDefOf.WFL_Checkup && OfficeDriver.MedicalRoomCell(actor, out var room)) job.targetB = room;       // the examination is held in the medical room when there is one
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
@@ -79,6 +79,13 @@ namespace FamilyLife
             }
             else if(def==WFL_StoryDefOf.WFL_StewardNegotiate)
                 FinishDuty(r,StewardDutyKind.Negotiate,-id,NextToken(),now,a);
+            else if (def == WFL_StoryDefOf.WFL_InstitutionPetition)
+            {
+                int family = r.FamilyOf(b);
+                var movement = r.InstitutionMovements.FirstOrDefault(x => x.Id == id);
+                if (r.AnswerInstitutionMovement(id, family, b, r.WouldSupportInstitutionMovement(id, family), now) && movement != null && !movement.Open)
+                    Messages.Message((movement.State == InstitutionMovementState.Adopted ? "WFL_Movement_Adopted" : "WFL_Movement_Rejected").Translate(("WFL_Institution_" + movement.Target).Translate()), MessageTypeDefOf.NeutralEvent, false);
+            }
             else if (def == WFL_StoryDefOf.WFL_CoupRecruit)
             {
                 var coup = r.Coups.FirstOrDefault(x => x.Id == id && x.Open);

@@ -141,6 +141,38 @@ namespace FamilyLife.Tests
             Assert.True(r.SetInstitution(InstitutionKind.Consensus, 0, 3000));
         }
 
+        [Fact]
+        public void Political_change_needs_a_majority_of_houses_not_an_overseer_toggle()
+        {
+            var r = Colony(out int a, out int b, out int c);
+            var movement = r.BeginInstitutionMovement(InstitutionKind.Council, r.HeadOf(a), 40 * Day);
+            Assert.NotNull(movement); Assert.Equal(InstitutionKind.Consensus, r.Institution.Kind);
+            Assert.True(r.AnswerInstitutionMovement(movement.Id, b, r.HeadOf(b), true, 40 * Day + 10));
+            Assert.Equal(InstitutionMovementState.Adopted, movement.State);
+            Assert.Equal(InstitutionKind.Council, r.Institution.Kind);
+            Assert.False(r.AnswerInstitutionMovement(movement.Id, c, r.HeadOf(c), false, 40 * Day + 20));
+        }
+
+        [Fact]
+        public void A_growing_consensus_colony_organically_asks_for_a_council()
+        {
+            var r = Colony(out _, out _, out _);
+            r.Institution.SinceTick = 1000;
+            var movement = r.ConsiderInstitutionMovement(40 * Day);
+            Assert.NotNull(movement); Assert.Equal(InstitutionKind.Council, movement.Target);
+            Assert.Equal(InstitutionKind.Consensus, r.Institution.Kind);                 // proposing does not enact it
+        }
+
+        [Fact]
+        public void An_unanswered_movement_expires_without_changing_government()
+        {
+            var r = Colony(out int a, out _, out _);
+            var movement = r.BeginInstitutionMovement(InstitutionKind.Council, r.HeadOf(a), 40 * Day);
+            r.AdvanceInstitutionMovements(movement.DeadlineTick + 1);
+            Assert.Equal(InstitutionMovementState.Rejected, movement.State);
+            Assert.Equal(InstitutionKind.Consensus, r.Institution.Kind);
+        }
+
         // ---------------- coups ----------------
 
         private static FamilyRegistry Ruled(out CoupPlan coup, int start = 5 * Day)

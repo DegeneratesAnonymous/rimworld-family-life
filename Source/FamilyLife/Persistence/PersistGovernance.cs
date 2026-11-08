@@ -131,6 +131,19 @@ namespace FamilyLife.Domain
         }
     }
 
+    public sealed partial class InstitutionMovement : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id, "id"); Scribe_Values.Look(ref ProposerId, "proposer"); Scribe_Values.Look(ref StartedTick, "started");
+            Scribe_Values.Look(ref DeadlineTick, "deadline"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref From, "from", InstitutionKind.Consensus);
+            Scribe_Values.Look(ref Target, "target", InstitutionKind.Council); Scribe_Values.Look(ref State, "state", InstitutionMovementState.Organizing);
+            Scribe_Collections.Look(ref SupportHouseIds, "support", LookMode.Value); Scribe_Collections.Look(ref OpposeHouseIds, "oppose", LookMode.Value);
+            Scribe_Collections.Look(ref ContactedHouseIds, "contacted", LookMode.Value);
+            SupportHouseIds = SupportHouseIds ?? new List<int>(); OpposeHouseIds = OpposeHouseIds ?? new List<int>(); ContactedHouseIds = ContactedHouseIds ?? new List<int>();
+        }
+    }
+
     public sealed partial class ElectionEndorsement : IExposable
     {
         public void ExposeData() { Scribe_Values.Look(ref FamilyId, "family"); Scribe_Values.Look(ref EndorserId, "endorser"); Scribe_Values.Look(ref CandidateId, "candidate"); Scribe_Values.Look(ref Weight, "weight"); }
