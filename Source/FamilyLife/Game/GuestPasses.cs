@@ -21,7 +21,7 @@ namespace FamilyLife
         public int Start, GrantedTick, LeftSince = -1;
         public int ArrivedTick = -1, LastKnock = -1000000, LastSummon = -1000000;
         public HashSet<int> Tried = new HashSet<int>();      // people already called who did not come
-        public bool Granted, Entered;
+        public bool Granted, Entered, Done;      // Done: the visit itself is over and the guest is on the way out
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ namespace FamilyLife
             {
                 var candidates = registry.MembersOf(lineage.Id).Concat(registry.AffiliatesOf(lineage.Id)).Distinct()
                     .Select(person => component.TryGetPawn(person.Id))
-                    .Where(candidate => candidate != null && candidate != guest && Available(candidate) && candidate.Map == guest.Map && CanOpenFor(candidate, guest))
+                    .Where(candidate => candidate != null && candidate != guest && Available(candidate) && candidate.Map == guest.Map && pass.Zone.ContainsCell(candidate.Position) && CanOpenFor(candidate, guest))
                     .Where(candidate => round != 0 || !pass.Tried.Contains(candidate.thingIDNumber))
                     .OrderBy(candidate => candidate.Position.DistanceTo(pass.Inside) + (candidate.DevelopmentalStage == DevelopmentalStage.Adult ? 0f : 40f));
                 // Cheap distance ranking first: stop at the nearest reachable opener rather than path-checking every relative.
@@ -133,7 +133,7 @@ namespace FamilyLife
                     if (candidate.CanReach(pass.Inside, PathEndMode.OnCell, Danger.Deadly)) { best = candidate; break; }
                 if (best == null) pass.Tried.Clear();                                    // everyone has been tried: start over
             }
-            if (best == null) { Trace(guest.LabelShort + " knocks but nobody in the family is able to come to " + pass.Zone.label); return; }
+            if (best == null) { Trace(guest.LabelShort + " knocks but nobody is home in " + pass.Zone.label); return; }      // nobody in the zone: the knock goes unanswered and the guest gives up in time
             pass.Opener = best;
             pass.Tried.Add(best.thingIDNumber);
             Trace(best.LabelShort + " is called to the door of " + pass.Zone.label + " for " + guest.LabelShort);
@@ -166,6 +166,11 @@ namespace FamilyLife
             pass.Granted = true;
             pass.GrantedTick = Find.TickManager.TicksGame;
             Trace(guest.LabelShort + " was let into " + pass.Zone.label);
+            if (pass.Opener != null && pass.Opener.Spawned && pass.Opener.jobs != null)
+            {
+                try { pass.Opener.jobs.jobQueue.EnqueueFirst(JobMaker.MakeJob(FamilyJobDefOf.WFL_HostGuest, guest), JobTag.Misc); }      // the host stays with the guest until the visit ends
+                catch (System.Exception ex) { HookSafety.Report("family door host", ex); }
+            }
             if (pass.Opener != null && pass.Opener.Spawned) MoteMaker.ThrowText(pass.Opener.DrawPos, pass.Opener.Map, Phrasing.Say("WFL_ComeIn", pass.Opener.thingIDNumber + Find.TickManager.TicksGame / 600), Color.white);
         }
 
@@ -186,6 +191,19 @@ namespace FamilyLife
         /// Called as the guest steps away from the door after being let in. They carry on with what they came for (the job the door stopped), and if that
         /// is no longer possible they walk to where they were headed, so the next thing they pick is in the home rather than somewhere else entirely.
         /// </summary>
+        /// <summary>Whether the visit this guest was let into is over: it was ended, they have left the zone, or they have finished visiting.</summary>
+        public static bool VisitOver(Pawn guest)
+            => guest == null || !ByGuest.TryGetValue(guest.thingIDNumber, out var pass) || !pass.Granted || pass.Done || pass.LeftSince >= 0;
+
+        /// <summary>The visit is done: the guest walks back out to the edge, and the host is free.</summary>
+        public static void FinishVisit(Pawn guest)
+        {
+            if (guest == null || !ByGuest.TryGetValue(guest.thingIDNumber, out var pass)) return;
+            pass.Done = true;
+            try { guest.jobs.jobQueue.EnqueueFirst(JobMaker.MakeJob(JobDefOf.Goto, pass.Outside), JobTag.Misc); }
+            catch (System.Exception ex) { HookSafety.Report("family door leave", ex); }
+        }
+
         public static void Resume(Pawn guest)
         {
             if (guest == null || !ByGuest.TryGetValue(guest.thingIDNumber, out var pass) || !pass.Granted || guest.jobs == null) return;
@@ -193,6 +211,7 @@ namespace FamilyLife
             try
             {
                 if (StillDoable(job, guest)) { guest.jobs.jobQueue.EnqueueFirst(job, JobTag.Misc); Trace(guest.LabelShort + " carries on with " + job.def.defName); return; }
+                if (pass.Opener != null && pass.Opener.Spawned && !pass.Opener.Dead) { guest.jobs.jobQueue.EnqueueFirst(JobMaker.MakeJob(FamilyJobDefOf.WFL_VisitHome, pass.Opener), JobTag.Misc); return; }      // nothing to do here: they visit
                 var spot = pass.WishCell.IsValid && pass.Zone.ContainsCell(pass.WishCell) && pass.WishCell.Standable(guest.Map) ? pass.WishCell : pass.Inside;
                 guest.jobs.jobQueue.EnqueueFirst(JobMaker.MakeJob(JobDefOf.Goto, spot), JobTag.Misc);
             }
@@ -247,7 +266,7 @@ namespace FamilyLife
     [DefOf]
     public static class FamilyJobDefOf
     {
-        public static JobDef WFL_WaitAtDoor, WFL_LetGuestIn;
+        public static JobDef WFL_WaitAtDoor, WFL_LetGuestIn, WFL_VisitHome, WFL_HostGuest;
         static FamilyJobDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(FamilyJobDefOf)); }
     }
 
@@ -282,6 +301,57 @@ namespace FamilyLife
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             yield return Toils_General.Wait(90, TargetIndex.A);
             yield return new Toil { defaultCompleteMode = ToilCompleteMode.Instant, initAction = () => GuestPasses.Grant(Guest) };
+        }
+    }
+
+    /// <summary>The guest, let in with nothing particular to do, spends a while with whoever let them in: stands near them and talks.</summary>
+    public class JobDriver_VisitHome : JobDriver
+    {
+        private const int VisitTicks = 1800, ChatEvery = 420;
+        private Pawn Host => job.GetTarget(TargetIndex.A).Thing as Pawn;
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
+
+        protected override IEnumerable<Toil> MakeNewToils()
+        {
+            this.FailOnDespawnedOrNull(TargetIndex.A);
+            this.FailOn(() => !GuestPasses.IsGranted(pawn));
+            yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
+            int ticks = 0;
+            var visit = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
+            visit.initAction = () => pawn.pather.StopDead();
+            visit.tickAction = () =>
+            {
+                var host = Host;
+                if (host == null || ++ticks > VisitTicks) { ReadyForNextToil(); return; }
+                if (pawn.Position.DistanceTo(host.Position) > 3.5f) { if (!pawn.pather.Moving) pawn.pather.StartPath(host, PathEndMode.Touch); return; }
+                pawn.rotationTracker.FaceTarget(host);
+                if (ticks % ChatEvery == 60 && pawn.interactions != null && host.Awake() && !host.InMentalState)
+                    pawn.interactions.TryInteractWith(host, InteractionDefOf.Chitchat);
+            };
+            yield return visit;
+            yield return new Toil { defaultCompleteMode = ToilCompleteMode.Instant, initAction = () => GuestPasses.FinishVisit(pawn) };
+        }
+    }
+
+    /// <summary>The one who let a guest in stays with them, close by, until the visit is over (or the guest has left the home).</summary>
+    public class JobDriver_HostGuest : JobDriver
+    {
+        private Pawn Guest => job.GetTarget(TargetIndex.A).Thing as Pawn;
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
+
+        protected override IEnumerable<Toil> MakeNewToils()
+        {
+            this.FailOnDespawnedOrNull(TargetIndex.A);
+            int ticks = 0;
+            var stay = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
+            stay.tickAction = () =>
+            {
+                var guest = Guest;
+                if (guest == null || ++ticks > GuestPasses.PassLimit || GuestPasses.VisitOver(guest)) { ReadyForNextToil(); return; }
+                if (pawn.Position.DistanceTo(guest.Position) > 4f) { if (!pawn.pather.Moving) pawn.pather.StartPath(guest, PathEndMode.Touch); }
+                else { if (pawn.pather.Moving) pawn.pather.StopDead(); if (ticks % 90 == 0) pawn.rotationTracker.FaceTarget(guest); }
+            };
+            yield return stay;
         }
     }
 
