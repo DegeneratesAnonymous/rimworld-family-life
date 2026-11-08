@@ -66,6 +66,22 @@ namespace FamilyLife
             if (current < 20f) return current; // observed severe hunger must outrank an unknown pantry
             return Math.Max(Pressure(family.Id) ? 15f : 35f, current);
         }
+        /// <summary>Physical stock of one kind that a house has claimed on a map, from the same bounded snapshot the economy already keeps. For the Families window.</summary>
+        internal float HeldBy(Lineage family, Map map, SupplyKind kind, int now)
+        {
+            if (family == null || map == null) return 0f;
+            var area = FamilyZones.AreaFor(family);
+            float held = 0f;
+            foreach (var thing in Stock(map, now))
+            {
+                if (KindOf(thing) != kind) continue;
+                var claim = R.ClaimFor(thing.thingIDNumber);
+                if (claim?.HolderFamily != family.Id) continue;
+                if (area != null && area.Map == map && !area[thing.Position]) continue;
+                held += thing.stackCount * Units(thing, kind);
+            }
+            return held;
+        }
         internal void Invalidate(Map map) { if (map != null && stocks.TryGetValue(map, out var snapshot)) snapshot.Refresh.Invalidate(); }
         /// <summary>Stock the economy already tracks for a map, for planners that need to know what is physically there.</summary>
         internal List<Thing> StockOf(Map map, int now) => Stock(map, now);

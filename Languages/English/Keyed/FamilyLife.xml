@@ -51,7 +51,7 @@
   <WFL_Generation>Generation {0}</WFL_Generation>
   <WFL_ChildOf>child of {0}</WFL_ChildOf>
   <WFL_PartnerOf>partner of {0}</WFL_PartnerOf>
-  <WFL_HouseholdsHelp>A household is the people who live together. Partners who move in together form a new household, children stay with their parents, and adult children stay until they pair up. Use Move to change it yourself.</WFL_HouseholdsHelp>
+  <WFL_HouseholdsHelp>A household is the people who live together. Partners who move in together form a new household, children stay with their parents, and adult children stay until they pair up. Use the row menu (...) beside a person to move them yourself.</WFL_HouseholdsHelp>
   <WFL_HouseholdN>Household {0}</WFL_HouseholdN>
   <WFL_Move>Move...</WFL_Move>
   <WFL_MoveTo>Move in with {0}</WFL_MoveTo>
@@ -312,7 +312,7 @@ Shortages averted: {5}</WFL_Stewardship_Tip>
   <WFL_Tree_Died>died</WFL_Tree_Died>
   <WFL_Tree_Away>elsewhere</WFL_Tree_Away>
   <WFL_Tree_MarriedIn>by marriage</WFL_Tree_MarriedIn>
-  <WFL_TreeClick>Click to compare closeness with everyone.</WFL_TreeClick>
+  <WFL_TreeClick>Click to open their details.</WFL_TreeClick>
   <WFL_TreeLegend>The coloured bar on a person is the household they live in. Dim boxes are people who are elsewhere or who have died.</WFL_TreeLegend>
   <WFL_TreeLinkPartners>Partners</WFL_TreeLinkPartners>
   <WFL_TreeLinkFormer>Former partners: the partnership ended (divorced or separated).</WFL_TreeLinkFormer>

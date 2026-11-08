@@ -46,6 +46,8 @@ namespace FamilyLife
             return true;
         }
 
+        /// <summary>Whether Perspective Shift is present at all. A field read: safe while drawing.</summary>
+        internal static bool Installed=>installed;
         internal static bool IsAvatar(Pawn pawn)=>installed&&pawn!=null&&avatar==pawn;
         /// <summary>The person being played, or 0 when Perspective Shift is absent or has no single character. Read from a field: safe in hot paths.</summary>
         internal static int AvatarId=>installed&&avatar!=null&&!avatar.Discarded?avatar.thingIDNumber:0;

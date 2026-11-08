@@ -26,11 +26,11 @@ namespace FamilyLife
             return string.Join(", ", parts);
         }
 
-        private void DrawInheritance(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage)
+        private void DrawInheritance(Rect view, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage lineage, bool heading = true)
         {
             int viewer = component.PerspectivePawnId;
             int now = Activities.Now;
-            Heading(view, ref y, "WFL_Estate_Title".Translate());
+            if (heading) Heading(view, ref y, "WFL_Estate_Title".Translate());
 
             // What members own: heirlooms are public (they are worn and handed down in plain sight); ordinary things only to their owner and the overview.
             var owners = registry.MembersOf(lineage.Id).Where(p => p.InColony && !p.Juvenile).Select(p => p.Id).ToHashSet();

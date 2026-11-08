@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - the Families window, reorganised
+- The eight tabs are now six: **Summary, People, Relationships, Events, Home, Leadership**, under a persistent header (crest, name, head, steward, members, households, cohesion, ambition, things needing attention, and whose eyes you are looking through). Overview became Summary and People; Moments, Traditions and History became Events; Households and Zone became Home; House became Leadership. Nothing was removed; docs/FAMILY-WINDOW.md says where each part went.
+- Summary is a dashboard: status, a short list of concerns (each one opens where it can be dealt with), what is coming, the three most meaningful recent events, and a portrait row. Concerns come only from records the mod already keeps.
+- The family list has search, sorting (name, size, standing, needs attention), a selected state, an attention dot and a collapse button. The tree no longer paints closeness over genealogy; closeness is in Relationships, which now has search, family / associates / everyone filters, four sort orders, coloured bars with a trend arrow, and a detail panel for each person.
+- Events has Upcoming, Recent and Chronicle with category filters and event cards. Home shows current against wanted amounts for food, fuel, medicine and apparel, beds and rooms per household, and the family area's coverage and missing essentials. Leadership shows an icon card for each office, the house's ambition and why, alliances and requests, and institutions.
+- Perspective is always visible in the header. Outsiders see 'Not known to <name>'; a privately named heir, other people's rifts and promises, and how another house is doing stay hidden. A missing colony leader reads 'No recognised colony leader' rather than 'Someone'.
+- Fixed: several office/assembly texts in Governance.xml had been written into one value and did not exist as texts.
+- Offline only: 37 new tests (859 in all), both game builds, 24 patch checks. Nothing here has been seen in RimWorld, and no screenshots exist yet.
+
 ## Unreleased - doors and moods
 - A pawn approaching or following a person is now judged by where that person is, so nobody walks into a home after someone (a downed person is still reachable for rescue). Once a visit is over the door closes again at once, and the grace for stepping out and back is about 15 game minutes.
 - Social moments no longer pile up in the mood list: at most 2 'moments that mattered', 3 good moments, 2 awkward and 2 bad ones at a time.

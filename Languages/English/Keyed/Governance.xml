@@ -244,7 +244,34 @@
   <WFL_S_CheckupsPerYearTip>A year here is 60 days; two rounds a year is one about every 30 days.</WFL_S_CheckupsPerYearTip>
   <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
   <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>
-  <WFL_Office_Until>until the next assembly, {0}</WFL_Office_Until>&#10;  <WFL_Office_Appointed>named by the ideoligion</WFL_Office_Appointed>&#10;  <WFL_Grade_Good>well</WFL_Grade_Good>&#10;  <WFL_Grade_Fair>fairly</WFL_Grade_Fair>&#10;  <WFL_Grade_Poor>poorly</WFL_Grade_Poor>&#10;  <WFL_Assembly_Title>The yearly assembly</WFL_Assembly_Title>&#10;  <WFL_Assembly_Text>The families are gathering to choose the colony's posts. Everyone who can goes to the polling place to vote.&#10;&#10;{0}</WFL_Assembly_Text>&#10;  <WFL_Assembly_RaceIncumbent>The {0}: {1} holds it, and has served {2}. Standing again.</WFL_Assembly_RaceIncumbent>&#10;  <WFL_Assembly_RaceOpen>The {0}: nobody holds it. Standing:</WFL_Assembly_RaceOpen>&#10;  <WFL_Assembly_ResultTitle>The assembly has chosen</WFL_Assembly_ResultTitle>&#10;  <WFL_Assembly_ResultText>The votes are counted.&#10;&#10;{0}</WFL_Assembly_ResultText>&#10;  <WFL_Assembly_ResultKept>The {0}: {1} is kept on, having served {2}.</WFL_Assembly_ResultKept>&#10;  <WFL_Assembly_ResultNew>The {0}: {1} is chosen. {2}</WFL_Assembly_ResultNew>&#10;  <WFL_Assembly_ResultNone>The {0}: nobody was chosen.</WFL_Assembly_ResultNone>&#10;  <WFL_Assembly_Next>The next assembly: {0}</WFL_Assembly_Next>&#10;  <WFL_Assembly_RaceLine>The {0} ({1}): {2}</WFL_Assembly_RaceLine>&#10;  <WFL_AssemblyState_Campaign>houses are choosing whom to back</WFL_AssemblyState_Campaign>&#10;  <WFL_AssemblyState_Voting>voting</WFL_AssemblyState_Voting>&#10;  <WFL_AssemblyState_Counted>counted</WFL_AssemblyState_Counted>&#10;  <WFL_AssemblyState_Cancelled>called off</WFL_AssemblyState_Cancelled>&#10;  <WFL_Ask_AssemblyVote>The yearly assembly is voting on the colony's posts. Go and cast your ballot?</WFL_Ask_AssemblyVote>&#10;  <WFL_Chaplain_Named>{0}, the ideoligion's moral guide, is now the colony's chaplain.</WFL_Chaplain_Named>&#10;  <WFL_Hall_Begins>{0} is serving a meal in the hall.</WFL_Hall_Begins>&#10;  <WFL_S_HallMeals>Hall meals (the hall keeper)</WFL_S_HallMeals>&#10;  <WFL_S_HallMealsTip>The colony's chosen hall keeper keeps the dining hall clean and serves meals to those who come and sit. Nothing starts unless the keeper is free.</WFL_S_HallMealsTip>&#10;  <WFL_S_HallEvery>A hall meal every {0} day(s)</WFL_S_HallEvery>&#10;  <WFL_S_HallEveryTip>How often the hall keeper calls people to a served meal.</WFL_S_HallEveryTip>&#10;  <WFL_Assembly_Stands>{0} stands: {1}.</WFL_Assembly_Stands>
+  <WFL_Office_Until>until the next assembly, {0}</WFL_Office_Until>
+  <WFL_Office_Appointed>named by the ideoligion</WFL_Office_Appointed>
+  <WFL_Grade_Good>well</WFL_Grade_Good>
+  <WFL_Grade_Fair>fairly</WFL_Grade_Fair>
+  <WFL_Grade_Poor>poorly</WFL_Grade_Poor>
+  <WFL_Assembly_Title>The yearly assembly</WFL_Assembly_Title>
+  <WFL_Assembly_Text>The families are gathering to choose the colony's posts. Everyone who can goes to the polling place to vote.&#10;&#10;{0}</WFL_Assembly_Text>
+  <WFL_Assembly_RaceIncumbent>The {0}: {1} holds it, and has served {2}. Standing again.</WFL_Assembly_RaceIncumbent>
+  <WFL_Assembly_RaceOpen>The {0}: nobody holds it. Standing:</WFL_Assembly_RaceOpen>
+  <WFL_Assembly_ResultTitle>The assembly has chosen</WFL_Assembly_ResultTitle>
+  <WFL_Assembly_ResultText>The votes are counted.&#10;&#10;{0}</WFL_Assembly_ResultText>
+  <WFL_Assembly_ResultKept>The {0}: {1} is kept on, having served {2}.</WFL_Assembly_ResultKept>
+  <WFL_Assembly_ResultNew>The {0}: {1} is chosen. {2}</WFL_Assembly_ResultNew>
+  <WFL_Assembly_ResultNone>The {0}: nobody was chosen.</WFL_Assembly_ResultNone>
+  <WFL_Assembly_Next>The next assembly: {0}</WFL_Assembly_Next>
+  <WFL_Assembly_RaceLine>The {0} ({1}): {2}</WFL_Assembly_RaceLine>
+  <WFL_AssemblyState_Campaign>houses are choosing whom to back</WFL_AssemblyState_Campaign>
+  <WFL_AssemblyState_Voting>voting</WFL_AssemblyState_Voting>
+  <WFL_AssemblyState_Counted>counted</WFL_AssemblyState_Counted>
+  <WFL_AssemblyState_Cancelled>called off</WFL_AssemblyState_Cancelled>
+  <WFL_Ask_AssemblyVote>The yearly assembly is voting on the colony's posts. Go and cast your ballot?</WFL_Ask_AssemblyVote>
+  <WFL_Chaplain_Named>{0}, the ideoligion's moral guide, is now the colony's chaplain.</WFL_Chaplain_Named>
+  <WFL_Hall_Begins>{0} is serving a meal in the hall.</WFL_Hall_Begins>
+  <WFL_S_HallMeals>Hall meals (the hall keeper)</WFL_S_HallMeals>
+  <WFL_S_HallMealsTip>The colony's chosen hall keeper keeps the dining hall clean and serves meals to those who come and sit. Nothing starts unless the keeper is free.</WFL_S_HallMealsTip>
+  <WFL_S_HallEvery>A hall meal every {0} day(s)</WFL_S_HallEvery>
+  <WFL_S_HallEveryTip>How often the hall keeper calls people to a served meal.</WFL_S_HallEveryTip>
+  <WFL_Assembly_Stands>{0} stands: {1}.</WFL_Assembly_Stands>
   <WFL_Motive_Calling>burns for the work</WFL_Motive_Calling>
   <WFL_Motive_Recognition>wants to be recognised</WFL_Motive_Recognition>
   <WFL_Motive_Sponsored>put forward by their house</WFL_Motive_Sponsored>
