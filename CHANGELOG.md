@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased - role icons
+- The supplied role icons replace the letter tags on the colonist bar: one emblem per pawn for their most senior public role, with a tooltip and a click that opens their family. Settings for visibility, size, corner, associates and leadership-only. The Family tab lists every role the played character may know with its icon. House Protector has its icon, label and description reserved but nothing assigns the role yet. See docs/ROLE-ICONS.md.
+
 ## Unreleased - fixes after first play
 - Visitors and guests no longer wander into family areas (unless let in or at a family gathering). A house with one person in the colony no longer shows the Hd tag.
 - Teachers speak from a lectern in an enclosed room; lessons last two game hours; check-ups happen beside a hospital bed and last about five seconds at triple speed.

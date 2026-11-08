@@ -265,9 +265,6 @@
   <WFL_Hall_Saved>That room is now the hall.</WFL_Hall_Saved>
   <WFL_Hall_Invalid>That is not an enclosed room.</WFL_Hall_Invalid>
   <WFL_Tab_Roles>Roles in the colony</WFL_Tab_Roles>
-  <WFL_Role_Leader>Colony leader</WFL_Role_Leader>
-  <WFL_Role_Head>Head of House {0}</WFL_Role_Head>
-  <WFL_Role_Steward>Steward of House {0}</WFL_Role_Steward>
   <WFL_S_MindComfort>Loved ones help with mental breaks</WFL_S_MindComfort>
   <WFL_S_MindComfortTip>A partner, or a parent, will try to talk someone through a mental break that is coming or has begun. How well it goes depends on how close they are and how good they are with people. They try a few times at most, and never during violent breaks.</WFL_S_MindComfortTip>
   <WFL_Comfort_Resolved_0>{0} found the right words, and {1} came back to themselves.</WFL_Comfort_Resolved_0>

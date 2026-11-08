@@ -12,6 +12,9 @@ namespace FamilyLife
     {
         public bool familyStories = true, familySupplies = true, familyTheft = true, familyViolence = true, lethalPlots;
         public bool logEvents;
+        // Colonist-bar role emblems. Size 0/1/2 = small/medium/large; corner 0/1/2/3 = top left/top right/bottom left/bottom right.
+        public bool showRoleIcons = true, showAssociateIcons = false, roleIconsLeadershipOnly = true;
+        public int roleIconSize = 0, roleIconCorner = 0;
         public bool griefAmplification = true;
         public bool familyActivities = true;
         public float dailyFamilyHours = 2f;
@@ -60,6 +63,11 @@ namespace FamilyLife
             Scribe_Values.Look(ref familyViolence, "familyViolence", true);
             Scribe_Values.Look(ref lethalPlots, "lethalPlots");
             Scribe_Values.Look(ref logEvents, "logEvents");
+            Scribe_Values.Look(ref showRoleIcons, "showRoleIcons", true);
+            Scribe_Values.Look(ref showAssociateIcons, "showAssociateIcons", false);
+            Scribe_Values.Look(ref roleIconsLeadershipOnly, "roleIconsLeadershipOnly", true);
+            Scribe_Values.Look(ref roleIconSize, "roleIconSize", 0);
+            Scribe_Values.Look(ref roleIconCorner, "roleIconCorner", 0);
             Scribe_Values.Look(ref griefAmplification, "griefAmplification", true);
             Scribe_Values.Look(ref familyActivities, "familyActivities", true);
             Scribe_Values.Look(ref dailyFamilyHours, "dailyFamilyHours", 2f);
@@ -209,6 +217,14 @@ namespace FamilyLife
             list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());
             list.CheckboxLabeled("WFL_S_FamilyMeals".Translate(), ref Settings.familyMeals, "WFL_S_FamilyMealsTip".Translate());
             list.CheckboxLabeled("WFL_S_FamilyDoors".Translate(), ref Settings.familyDoors, "WFL_S_FamilyDoorsTip".Translate());
+            list.CheckboxLabeled("WFL_S_RoleIcons".Translate(), ref Settings.showRoleIcons, "WFL_S_RoleIconsTip".Translate());
+            if (Settings.showRoleIcons)
+            {
+                if (list.ButtonText(("WFL_S_RoleIconSize_" + Settings.roleIconSize).Translate())) Settings.roleIconSize = (Settings.roleIconSize + 1) % 3;
+                if (list.ButtonText(("WFL_S_RoleIconCorner_" + Settings.roleIconCorner).Translate())) Settings.roleIconCorner = (Settings.roleIconCorner + 1) % 4;
+                list.CheckboxLabeled("WFL_S_RoleIconsLeadership".Translate(), ref Settings.roleIconsLeadershipOnly, "WFL_S_RoleIconsLeadershipTip".Translate());
+                list.CheckboxLabeled("WFL_S_AssociateIcons".Translate(), ref Settings.showAssociateIcons, "WFL_S_AssociateIconsTip".Translate());
+            }
             list.CheckboxLabeled("WFL_S_LogEvents".Translate(), ref Settings.logEvents, "WFL_S_LogEventsTip".Translate());
             settingsHeight = list.CurHeight + 12;
             list.End();

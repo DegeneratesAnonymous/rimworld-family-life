@@ -47,6 +47,8 @@ namespace FamilyLife
         }
 
         internal static bool IsAvatar(Pawn pawn)=>installed&&pawn!=null&&avatar==pawn;
+        /// <summary>The person being played, or 0 when Perspective Shift is absent or has no single character. Read from a field: safe in hot paths.</summary>
+        internal static int AvatarId=>installed&&avatar!=null&&!avatar.Discarded?avatar.thingIDNumber:0;
         internal static bool CanActAs(Pawn pawn)=>pawn!=null&&(!installed||avatar==null||avatar==pawn);
 
         private static void AfterSetAvatar(object[] __args)
