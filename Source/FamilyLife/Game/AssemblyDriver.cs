@@ -92,6 +92,8 @@ namespace FamilyLife
 
         private static readonly HashSet<int> spoken = new HashSet<int>();
 
+        internal static void Reset() => spoken.Clear();
+
         /// <summary>People at the assembly vote as they arrive, and one candidate speaks for each post as the day goes on.</summary>
         private static void VoteAtTheAssembly(FamilyComponent c, FamilyRegistry r, CommunityAssembly a, OfficeContext ctx, int now)
         {

@@ -18,6 +18,12 @@ namespace FamilyLife
         private static readonly Dictionary<int, int> nextCrimeCheck = new Dictionary<int, int>();
         private const int Day = ActivityTuning.TicksPerDay;
 
+        internal static void Reset()
+        {
+            dutyRotate = crimeRotate = coupRotate = 0; nextCrimeCheck.Clear();
+            claimedTick = -1; claimedMap = -1; claimedCache.Clear();
+        }
+
         internal static void Run(FamilyComponent c, int now)
         {
             var s = FamilyLifeMod.Settings;

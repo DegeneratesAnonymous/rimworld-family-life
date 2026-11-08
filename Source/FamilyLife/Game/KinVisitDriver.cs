@@ -20,6 +20,8 @@ namespace FamilyLife
         private const int Day = ActivityTuning.TicksPerDay;
         private static readonly HashSet<int> told = new HashSet<int>();
 
+        internal static void Reset() => told.Clear();
+
         internal static void Run(FamilyComponent c, int now)
         {
             var r = c.Registry;

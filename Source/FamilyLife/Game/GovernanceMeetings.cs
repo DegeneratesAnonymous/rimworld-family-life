@@ -16,6 +16,8 @@ namespace FamilyLife
     {
         private static int tokenCounter;
 
+        internal static void Reset() => tokenCounter = 0;
+
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
             def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_StewardNegotiate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
             def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_Checkup || def == WFL_StoryDefOf.WFL_InstitutionPetition);
