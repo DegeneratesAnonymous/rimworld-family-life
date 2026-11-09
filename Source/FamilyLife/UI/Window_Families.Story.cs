@@ -35,6 +35,9 @@ namespace FamilyLife
         public List<int> People = new List<int>();
         public List<string> Details = new List<string>();
         public int LinkA, LinkB;
+        public int Outcome;                       // -1 harmful, 0 unchanged, 1 positive
+        public bool Informational;                 // ongoing or informational: blue
+        public string OneLine = "", LinkAName = "", LinkBName = "";
     }
 
     /// <summary>
@@ -97,7 +100,14 @@ namespace FamilyLife
                         if (!b.Grouped)
                         {
                             card.Body = FamilyText.MomentBody(r, e);
-                            if (card.Body == null) return null;
+                            if (card.Body == null)
+                            {
+                                // A moment whose definition is gone (an older save, a removed mod): shown plainly as a legacy entry, never dropped or treated as broken.
+                                card.Type = "WFL_FW_Legacy_Title".Translate();
+                                card.Body = "WFL_FW_Legacy_Body".Translate(FamilyUi.NameOf(r, e.A), FamilyUi.NameOf(r, e.B));
+                                card.Consequence = FamilyText.TierWords(e.Tier);
+                                break;
+                            }
                             card.Type = FamilyText.MomentTitle(e);
                             card.Consequence = FamilyText.Aftermath(r, e);
                             break;
@@ -137,6 +147,16 @@ namespace FamilyLife
                     if (t.Chronicle.B != 0 && r.GetPerson(t.Chronicle.B) != null && t.Chronicle.Kind != FamilyEventKind.LineageFounded && t.Chronicle.Kind != FamilyEventKind.SocialBranch) card.People.Add(t.Chronicle.B);
                     break;
             }
+            if (t.Kind == TimelineKind.Moment) card.Outcome = System.Math.Sign(b.Parts.Sum(p => StoryConsolidation.Outcome(p)));
+            else if (t.Kind == TimelineKind.Ceremony) card.Outcome = t.Ceremony.Outcome >= 0.5f ? 1 : t.Ceremony.Outcome <= -0.5f ? -1 : 0;
+            else if (t.Kind == TimelineKind.Incident) card.Outcome = t.Incident.Resolved ? 0 : -1;
+            else if (t.Kind == TimelineKind.Plot) card.Outcome = -1;
+            else card.Informational = true;
+            if (card.LinkA != 0) card.LinkAName = FamilyUi.NameOf(r, card.LinkA);
+            if (card.LinkB != 0) card.LinkBName = FamilyUi.NameOf(r, card.LinkB);
+            card.OneLine = t.Kind == TimelineKind.Moment
+                ? "WFL_FW_Line_Moment".Translate(FamilyUi.NameOf(r, b.Initiator), FamilyUi.NameList(r, b.Others), card.Type).ToString()
+                : card.Type + ": " + card.Body;
             return card;
         }
 
@@ -273,41 +293,48 @@ namespace FamilyLife
             y = ys.Max();
         }
 
+        /// <summary>Gold for what defines the family, otherwise green for a good outcome, red for a harmful one, grey for nothing changed, blue for what is ongoing or only told.</summary>
+        internal static Color OutcomeColor(BeatCard c) =>
+            c.Importance == StoryImportance.Defining ? FamilyKit.Gold : c.Informational ? FamilyKit.Trust : c.Outcome > 0 ? FamilyKit.Closeness : c.Outcome < 0 ? FamilyKit.Tension : FamilyKit.Unknown;
+
         private void DrawBeatCard(Rect v, ref float y, BeatCard c, FamilyComponent component, FamilyRegistry registry, float width)
         {
             if (c.RoutineSummary)
             {
-                GUI.color = FamilyKit.Dim;
                 y += FamilyKit.Label(new Rect(0f, 0f, width, 0f), y, c.Body, 4f, true) + 4f;
-                GUI.color = Color.white;
                 return;
             }
             const float pad = 8f;
             float inner = width - 2f * pad;
             bool expanded = c.Grouped && expandedBeats.Contains(c.Key);
+            // The title takes the card's width (less the importance tag) and wraps; it is never cut off.
+            float tagW = c.ImportanceWord.Length > 0 ? FamilyKit.BadgeWidth(c.ImportanceWord) : 0f;
             Text.Font = GameFont.Small;
+            float titleW = inner - 4f - (tagW > 0f ? tagW + 8f : 0f);
+            float titleH = Text.CalcHeight(c.Type, titleW);
             float bodyH = string.IsNullOrEmpty(c.Body) ? 0f : Text.CalcHeight(c.Body, inner - 4f);
             Text.Font = GameFont.Tiny;
             float consH = string.IsNullOrEmpty(c.Consequence) ? 0f : Text.CalcHeight(c.Consequence, inner - 4f);
             float causeH = string.IsNullOrEmpty(c.Cause) ? 0f : 16f;
             Text.Font = GameFont.Small;
             bool anyPeople = c.People.Count > 0;
-            float footer = (c.Grouped || c.LinkA != 0) ? 28f : 0f;
+            bool canPair = c.LinkA != 0 && c.LinkB != 0;
+            bool manyPeople = !canPair && c.People.Count >= 3;
+            float footer = (c.Grouped || c.LinkA != 0 || manyPeople) ? 28f : 0f;
             float detailsH = expanded ? c.Details.Count * 16f + 4f : 0f;
-            float h = pad + 20f + (anyPeople ? 38f : 0f) + bodyH + (consH > 0f ? consH + 2f : 0f) + causeH + detailsH + footer + pad;
+            float h = pad + titleH + 18f + (anyPeople ? 38f : 0f) + bodyH + (consH > 0f ? consH + 2f : 0f) + causeH + detailsH + footer + pad;
             if (FamilyKit.Cull && (y + h < FamilyKit.ViewTop - 40f || y > FamilyKit.ViewBottom + 40f)) { y += h + 4f; return; }
             var rect = new Rect(0f, y, width, h);
             Widgets.DrawBoxSolid(rect, new Color(0.13f, 0.13f, 0.14f));
-            bool defining = c.Importance == StoryImportance.Defining;
-            Widgets.DrawBoxSolid(new Rect(rect.x, rect.y, 3f, rect.height), defining ? FamilyKit.Gold : c.Color);
+            Widgets.DrawBoxSolid(new Rect(rect.x, rect.y, 3f, rect.height), OutcomeColor(c));
             float cy = y + pad;
-            float bw = Mathf.Min(FamilyKit.BadgeWidth(c.Type), inner * 0.6f);
-            FamilyKit.Badge(new Rect(pad + 4f, cy, bw, 18f), c.Type.Truncate(bw), c.Color);
+            Widgets.Label(new Rect(pad + 4f, cy, titleW, titleH), c.Type);
+            if (tagW > 0f) FamilyKit.Badge(new Rect(rect.xMax - pad - tagW, cy + 1f, tagW, 18f), c.ImportanceWord, c.Importance == StoryImportance.Defining ? FamilyKit.Gold : c.Importance == StoryImportance.Major ? FamilyKit.Warn : FamilyKit.Unknown);
+            cy += titleH;
             Text.Font = GameFont.Tiny; GUI.color = FamilyKit.Dim;
-            string tag = c.ImportanceWord.Length > 0 ? c.Date + "  -  " + c.ImportanceWord : c.Date;
-            Widgets.Label(new Rect(pad + 4f + bw + 8f, cy + 1f, inner - bw - 8f, 18f), tag.Truncate(inner - bw - 8f));
+            Widgets.Label(new Rect(pad + 4f, cy, inner - 4f, 16f), c.Date);
             GUI.color = Color.white; Text.Font = GameFont.Small;
-            cy += 20f;
+            cy += 18f;
             if (anyPeople) { DrawPeopleStrip(pad + 4f, cy, c.People, component, registry); cy += 38f; }
             Text.Font = GameFont.Small;
             if (bodyH > 0f) { Widgets.Label(new Rect(pad + 4f, cy, inner - 4f, bodyH), c.Body); cy += bodyH; }
@@ -338,26 +365,45 @@ namespace FamilyLife
                     if (FamilyKit.Action(new Rect(fx, cy, 130f, 22f), label, true)) { if (!expandedBeats.Add(c.Key)) expandedBeats.Remove(c.Key); }
                     fx += 136f;
                 }
-                if (c.LinkA != 0 && c.LinkB != 0 && FamilyKit.Action(new Rect(fx, cy, 150f, 22f), "WFL_FW_OpenRelationship".Translate(), true, null, "WFL_FW_OpenRelationshipTip".Translate()))
-                { State.SelectedPerson = c.LinkA; State.SelectedRelation = c.LinkB; State.Navigate(FamilyTab.Relationships); }
-                else if (c.LinkA != 0 && c.LinkB == 0 && FamilyKit.Action(new Rect(fx, cy, 130f, 22f), "WFL_FW_OpenPerson".Translate(), true)) { State.SelectedPerson = c.LinkA; State.Navigate(FamilyTab.People); }
+                if (canPair)
+                {
+                    string label = "WFL_FW_ViewPair".Translate(c.LinkAName, c.LinkBName).ToString();
+                    float bw = Mathf.Min(inner - fx + pad, Text.CalcSize(label).x + 20f);
+                    if (FamilyKit.Action(new Rect(fx, cy, bw, 22f), label.Truncate(bw - 8f), true, null, label)) { State.SelectedPerson = c.LinkA; State.SelectedRelation = c.LinkB; State.Navigate(FamilyTab.Relationships); }
+                }
+                else if (manyPeople)
+                {
+                    if (FamilyKit.Action(new Rect(fx, cy, 150f, 22f), "WFL_FW_ViewParticipants".Translate(), true))
+                        Find.WindowStack.Add(new FloatMenu(c.People.Select(id => { int pid = id; return new FloatMenuOption(FamilyUi.NameOf(registry, pid), () => { State.SelectedPerson = pid; State.Navigate(FamilyTab.People); }); }).ToList()));
+                }
+                else if (c.LinkA != 0)
+                {
+                    string label = "WFL_FW_SelectPerson".Translate(c.LinkAName).ToString();
+                    if (FamilyKit.Action(new Rect(fx, cy, Text.CalcSize(label).x + 20f, 22f), label, true)) { State.SelectedPerson = c.LinkA; State.Navigate(FamilyTab.People); }
+                }
             }
             y += h + 4f;
         }
+
 
         // ------------------------------------------------------------------ the tab
 
         private void DrawStory(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
-            if (!view.Insider)
+            if (!view.Insider && (StorySub)State.EventsSub == StorySub.Current)
             {
-                DrawChapterCard(new Rect(0f, 0f, WindowLayout.ProseWidth(v.width), 0f), ref y, registry);
-                var beats = view.Highlights;
-                if (beats.Count > 0)
+                // A visitor's Current: the situations they are part of, then their own part in the House's story. Not the House's internal plans.
+                if (view.Threads.Count > 0)
+                {
+                    FamilyKit.SectionHeader(v, ref y, "WFL_FW_ActiveThreads".Translate());
+                    PlaceCards(v, ref y, view.Threads, (rect, ys, c, t) => { float cy = ys[c]; DrawThreadCard(rect, ref cy, t, component, registry, true); ys[c] = cy; });
+                }
+                if (view.Highlights.Count > 0)
                 {
                     FamilyKit.SectionHeader(v, ref y, "WFL_FW_StoryOutsider".Translate());
-                    foreach (var c in beats) DrawBeatCard(v, ref y, c, component, registry, Mathf.Min(v.width, 620f));
+                    foreach (var c in view.Highlights) DrawBeatCard(v, ref y, c, component, registry, Mathf.Min(v.width, 620f));
                 }
+                if (view.Threads.Count == 0 && view.Highlights.Count == 0) { var pub = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f); DrawChapterCard(pub, ref y, registry); }
                 return;
             }
             switch ((StorySub)State.EventsSub)
@@ -590,6 +636,7 @@ namespace FamilyLife
 
         private void DrawChronicle(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
+            if (!view.Insider) { DrawEventFilters(v, ref y, false); DrawTimelineCards(v, ref y, component, registry, StorySub.Chronicle); return; }
             var house = view.House;
             var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
             var culture = FamilyKit.BeginCard(col, ref y, "e.culture", "WFL_Culture".Translate());

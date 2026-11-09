@@ -100,7 +100,7 @@ namespace FamilyLife
             string a = FamilyUi.NameOf(r, e.A), b = FamilyUi.NameOf(r, e.B);
             var parts = new List<string>(4);
             string fa = Feeling(e.FeelA), fb = Feeling(e.FeelB);
-            if (fa != null && fb != null && fa == fb) parts.Add(("WFL_FW_Feel_Both_" + fa).Translate(a, b).ToString());
+            if (fa != null && fb != null && fa == fb) parts.Add(("WFL_FW_Feel_Both_" + fa).Translate(a, b, MomentTitle(e)).ToString());
             else
             {
                 if (fa != null) parts.Add(("WFL_FW_Feel_One_" + fa).Translate(a).ToString());

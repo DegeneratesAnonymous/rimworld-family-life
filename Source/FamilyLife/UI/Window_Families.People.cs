@@ -98,29 +98,69 @@ namespace FamilyLife
         private void DrawPortraitList(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry, PeopleModel model)
         {
             if (model.Rows.Count == 0) { FamilyKit.EmptyState(v, ref y, "WFL_NoHouseholds".Translate()); return; }
-            // Group by the household people really live in, then those elsewhere.
-            var groups = new SortedDictionary<int, List<PersonRow>>();
-            var gone = new List<PersonRow>();
-            foreach (var row in model.Rows)
+            DrawCategory(v, ref y, model, PersonCategory.Member, "WFL_FW_Group_Members", registry);
+            DrawCategory(v, ref y, model, PersonCategory.Resident, "WFL_FW_Group_Residents", registry);
+            DrawCategory(v, ref y, model, PersonCategory.Associate, "WFL_FW_Group_Associates", registry);
+            int gone = model.Rows.Count(r => r.Category == PersonCategory.Elsewhere);
+            if (gone > 0)
             {
-                if (row.Person.InColony) { if (!groups.TryGetValue(row.HouseholdId, out var list)) groups[row.HouseholdId] = list = new List<PersonRow>(); list.Add(row); }
-                else gone.Add(row);
+                if (peopleShowGone) DrawCategory(v, ref y, model, PersonCategory.Elsewhere, "WFL_FW_Group_Elsewhere", registry);
+                else { y += 4f; FamilyKit.EmptyState(v, ref y, "WFL_FW_GoneHidden".Translate(gone)); }
             }
-            foreach (var pair in groups)
+        }
+
+        private void DrawCategory(Rect v, ref float y, PeopleModel model, PersonCategory category, string headerKey, FamilyRegistry registry)
+        {
+            var rows = model.Rows.Where(r => r.Category == category).ToList();
+            if (rows.Count == 0) return;
+            FamilyKit.SectionHeader(v, ref y, headerKey.Translate(rows.Count));
+            const float minW = 290f, maxW = 360f;
+            int cols = Mathf.Max(1, Mathf.FloorToInt((v.width + WindowLayout.Gap) / (minW + WindowLayout.Gap)));
+            float w = Mathf.Min(maxW, (v.width - WindowLayout.Gap * (cols - 1)) / cols);
+            float rowY = y;
+            for (int i = 0; i < rows.Count; i++)
             {
-                string title = pair.Key == 0 ? "WFL_FW_NoHousehold".Translate().ToString() : (view.HouseholdLabels.TryGetValue(pair.Key, out var hhLabel) ? hhLabel : "WFL_FW_HH_Plain".Translate().ToString());
-                FamilyKit.SectionHeader(v, ref y, title + "  (" + pair.Value.Count + ")");
-                foreach (var row in pair.Value) DrawPersonRow(v, ref y, row, registry);
+                int c = i % cols;
+                if (c == 0 && i > 0) rowY += CardH + WindowLayout.Gap;
+                DrawPersonCard(new Rect(c * (w + WindowLayout.Gap), rowY, w, CardH), rows[i], registry);
             }
-            if (gone.Count > 0)
+            y = rowY + CardH + WindowLayout.Gap;
+        }
+
+        private const float CardH = 118f;
+
+        /// <summary>One person as a card: a portrait, who they are to the House and to the viewer, what they are doing and the part of the story they are in.</summary>
+        private void DrawPersonCard(Rect rect, PersonRow row, FamilyRegistry registry)
+        {
+            bool selected = State.SelectedPerson == row.Person.Id;
+            Widgets.DrawBoxSolid(rect, selected ? new Color(0.22f, 0.20f, 0.12f) : new Color(0.13f, 0.13f, 0.14f));
+            if (selected) Widgets.DrawBoxSolid(new Rect(rect.x, rect.y, 3f, rect.height), FamilyKit.Gold); else Widgets.DrawHighlightIfMouseover(rect);
+            if (row.Person.InColony && row.HouseholdId != 0) Widgets.DrawBoxSolid(new Rect(rect.x + 3f, rect.y, 4f, rect.height), HouseholdColor(row.HouseholdId));
+            DrawPortrait(new Rect(rect.x + 12f, rect.y + 8f, 56f, 68f), row.Person, FamilyComponent.Current);
+            float roleW = Mathf.Min(row.Roles.Count, 2) * 24f;
+            float tx = rect.x + 76f, tw = rect.width - 76f - 6f;
+            bool dim = !row.Person.InColony;
+            GUI.color = dim ? new Color(0.65f, 0.65f, 0.65f) : Color.white;
+            Widgets.Label(new Rect(tx, rect.y + 3f, tw - roleW, 22f), HouseholdNames.Short(row.Person).Truncate(tw - roleW));
+            Text.Font = GameFont.Tiny; GUI.color = FamilyKit.Dim;
+            string houseLine = row.Age + (row.HouseNote.Length > 0 ? "" : row.Category == PersonCategory.Member ? " - " + "WFL_FW_CardMember".Translate(view.Name) : "");
+            Widgets.Label(new Rect(tx, rect.y + 25f, tw, 16f), houseLine.Truncate(tw));
+            string rel = row.Relation.Length > 0 ? row.Relation : "";
+            string hh = row.Household.Length > 0 ? row.Household : "";
+            Widgets.Label(new Rect(tx, rect.y + 41f, tw, 16f), (rel.Length > 0 && hh.Length > 0 ? rel + " - " + hh : rel + hh).Truncate(tw));
+            Widgets.Label(new Rect(tx, rect.y + 57f, tw, 16f), (row.HouseNote.Length > 0 ? row.HouseNote : row.Status).Truncate(tw));
+            if (row.Concern.Length > 0) { GUI.color = FamilyKit.Warn; Widgets.Label(new Rect(tx, rect.y + 73f, tw, 16f), row.Concern.Truncate(tw)); }
+            else if (row.Thread.Length > 0) { GUI.color = FamilyKit.Trust; Widgets.Label(new Rect(tx, rect.y + 73f, tw, 16f), row.Thread.Truncate(tw)); }
+            GUI.color = Color.white; Text.Font = GameFont.Small;
+            for (int i = 0; i < row.Roles.Count && i < 2; i++)
             {
-                if (peopleShowGone)
-                {
-                    FamilyKit.SectionHeader(v, ref y, "WFL_FW_Elsewhere".Translate() + "  (" + gone.Count + ")");
-                    foreach (var row in gone) DrawPersonRow(v, ref y, row, registry);
-                }
-                else { y += 4f; FamilyKit.EmptyState(v, ref y, "WFL_FW_GoneHidden".Translate(gone.Count)); }
+                var icon = new Rect(rect.xMax - roleW - 4f + i * 24f, rect.y + 4f, 20f, 20f);
+                RoleIcons.Draw(icon, row.Roles[i].Role, true);
+                TooltipHandler.TipRegion(icon, RoleBar.TitleOf(registry, row.Roles[i]).CapitalizeFirst() + "\n" + RoleIcons.Description(row.Roles[i].Role));
             }
+            var shown = row;
+            TooltipHandler.TipRegion(rect, new TipSignal(() => shown.Person.FullName + " (" + FamilyUi.StatusText(shown.Person) + ")\n" + "WFL_FW_ClickForDetails".Translate(), 7200000 + row.Person.Id));
+            if (Widgets.ButtonInvisible(rect)) OnPersonClicked(row.Person);
         }
 
         private void DrawPersonRow(Rect v, ref float y, PersonRow row, FamilyRegistry registry)
@@ -232,7 +272,7 @@ namespace FamilyLife
 
             cy += 6f;
             float bx = 0f;
-            if (p.InColony && FamilyKit.Action(new Rect(bx, cy, 112f, 26f), "WFL_FW_FindInColony".Translate(), true, null, "WFL_FW_FindTip".Translate())) FamilyUi.Jump(p.Id);
+            if (p.InColony && FamilyKit.Action(new Rect(bx, cy, 112f, 26f), "WFL_FW_FindInColony".Translate(HouseholdNames.Short(p)), true, null, "WFL_FW_FindTip".Translate())) FamilyUi.Jump(p.Id);
             if (p.InColony) bx += 118f;
             if (FamilyKit.Action(new Rect(bx, cy, 130f, 26f), "WFL_FW_ViewRelationships".Translate(), p.InColony, "WFL_FW_NotInColony".Translate(), "WFL_FW_ViewRelationshipsTip".Translate()))
             { State.SelectedPerson = p.Id; State.SelectedRelation = 0; State.Navigate(FamilyTab.Relationships); }

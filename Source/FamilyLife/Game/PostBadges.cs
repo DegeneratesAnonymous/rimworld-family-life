@@ -131,6 +131,7 @@ namespace FamilyLife
         {
             string label = RoleIcons.Label(entry.Role);
             var house = entry.FamilyId == 0 ? null : r.GetLineage(entry.FamilyId);
+            if (house != null && entry.Role == FamilyRole.HouseHead) return "WFL_RoleTitleHead".Translate(r.LineageDisplayName(house)).ToString();
             return house == null ? label : "WFL_RoleTitleHouse".Translate(label, r.LineageDisplayName(house)).ToString();
         }
 

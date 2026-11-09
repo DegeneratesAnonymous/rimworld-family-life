@@ -45,16 +45,16 @@ namespace FamilyLife
                 Line(view, ref y, "WFL_Estate_ItemLine".Translate(item.Label, holder, kind), 10f, true);
                 float x = 20f; bool buttons = false;
                 int thing = item.ThingId;
-                if (viewer != 0 && item.OwnerId == viewer)
+                if (viewer != 0 && item.OwnerId == viewer && registry.RoleInHouse(viewer, lineage.Id) >= HouseRole.Member)
                 {
-                    if (!item.Heirloom && Widgets.ButtonText(new Rect(x, y, 170f, 26f), "WFL_Estate_MakeHeirloom".Translate())) registry.DesignateHeirloom(thing, viewer, now);
+                    if (!item.Heirloom && Widgets.ButtonText(new Rect(x, y, 170f, 26f), "WFL_Estate_MakeHeirloom".Translate())) HouseAuthority.DesignateHeirloom(registry, viewer, thing, now);
                     if (!item.Heirloom) x += 176f;
                     if (Widgets.ButtonText(new Rect(x, y, 150f, 26f), "WFL_Estate_NameHeir".Translate())) OpenHeirMenu(registry, viewer, thing, now);
                     buttons = true;
                 }
-                else if (head && item.OwnerId != 0 && !item.Heirloom)
+                else if (head && HouseAuthority.Check(registry, viewer, lineage.Id, HouseAct.DesignateHeirloom).Allowed && item.OwnerId != 0 && !item.Heirloom)
                 {
-                    if (Widgets.ButtonText(new Rect(x, y, 200f, 26f), "WFL_Estate_MakeHouseHeirloom".Translate())) registry.DesignateHeirloom(thing, viewer, now);
+                    if (Widgets.ButtonText(new Rect(x, y, 200f, 26f), "WFL_Estate_MakeHouseHeirloom".Translate())) HouseAuthority.DesignateHeirloom(registry, viewer, thing, now);
                     buttons = true;
                 }
                 if (buttons) y += 30f;

@@ -24,10 +24,14 @@ namespace FamilyLife
 
             if (!view.Insider)
             {
-                DrawChapterCard(cols[0], ref ys[0], registry);
+                // A visitor's Summary: their own history with the House first, then what is public. Nothing private, nothing blank.
                 int k = n > 1 ? 1 : 0;
+                DrawChapterCard(cols[0], ref ys[0], registry);
+                SummaryStatus(cols[n > 2 ? 2 : k], ref ys[n > 2 ? 2 : k], component, registry);
+                SummaryThreads(cols[k], ref ys[k], component, registry);
                 SummaryStory(cols[k], ref ys[k], component, registry);
                 y = ys.Max();
+                SummaryPeople(new Rect(0f, 0f, v.width, 0f), ref y, component, registry);
                 return;
             }
             if (n >= 3)
@@ -66,7 +70,7 @@ namespace FamilyLife
         private void SummaryThreads(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
             var lead = view.Chapter?.Lead;
-            var rest = view.Threads.Where(t => t.T != lead).Take(3).ToList();
+            var rest = view.Threads.Where(t => t.T != lead && t.T.Kind != ThreadKind.Dealings).Take(3).ToList();
             if (rest.Count == 0)
             {
                 var card = FamilyKit.BeginCard(col, ref y, "s.threads", "WFL_FW_Card_Threads".Translate());
@@ -205,8 +209,9 @@ namespace FamilyLife
                 FamilyKit.EmptyState(cv, ref cy, view.Insider ? "WFL_FW_NothingStory".Translate() : "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
             else if (!view.Insider)
                 cy += FamilyKit.Label(cv, cy, "WFL_FW_StoryOutsider".Translate(), 0f, true);
-            foreach (var c in view.Highlights) DrawBeatCard(cv, ref cy, c, component, registry, cv.width);
-            if (FamilyKit.Action(new Rect(0f, cy + 2f, 170f, 24f), "WFL_FW_ViewTimeline".Translate(), true)) State.Navigate(FamilyTab.Story, (int)StorySub.Timeline);
+            foreach (var c in view.Highlights.Take(2)) { cy += FamilyKit.Label(cv, cy, "- " + c.OneLine); }
+            if (view.Highlights.Count > 0) cy += 2f;
+            if (FamilyKit.Action(new Rect(0f, cy + 2f, 170f, 24f), "WFL_FW_ViewFullStory".Translate(), true)) State.Navigate(FamilyTab.Story, (int)StorySub.Timeline);
             cy += 30f;
             FamilyKit.EndCard(card, cy, ref y);
         }

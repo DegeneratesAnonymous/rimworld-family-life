@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <WFL_RoleTitleHouse>{0} of House {1}</WFL_RoleTitleHouse>
+  <WFL_RoleTitleHead>Head of House {0}</WFL_RoleTitleHead>
   <WFL_RoleAlsoHolds>Also:</WFL_RoleAlsoHolds>
   <WFL_RoleClickHint>Click to open their family.</WFL_RoleClickHint>
 

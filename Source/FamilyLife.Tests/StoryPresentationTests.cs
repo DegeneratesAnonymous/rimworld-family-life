@@ -43,7 +43,7 @@ namespace FamilyLife.Tests
             var r = Jessops();
             var house = House(r);
             var c = HouseCountsOf.Of(r, house);
-            Assert.Equal(r.MembersOf(house.Id).Count(p => p.InColony), c.HouseMembers);
+            Assert.Equal(r.Persons.Count(p => p.InColony && r.BelongsToFamily(p, house.Id)), c.HouseMembers);
             Assert.True(c.Residents >= 1);
             Assert.True(c.Households >= 1);
             Assert.Equal(c.Residents != c.HouseMembers, c.Differ);
@@ -54,7 +54,7 @@ namespace FamilyLife.Tests
         {
             var r = Jessops();
             var house = House(r);
-            var members = new HashSet<int>(r.MembersOf(house.Id).Select(p => p.Id));
+            var members = new HashSet<int>(r.Persons.Where(p => r.BelongsToFamily(p, house.Id)).Select(p => p.Id));
             var c = HouseCountsOf.Of(r, house);
             var households = r.HouseholdsOfLineage(house.Id);
             var strangers = households.SelectMany(h => h.ResidentIds).Distinct().Count(id => !members.Contains(id) && r.GetPerson(id).InColony);

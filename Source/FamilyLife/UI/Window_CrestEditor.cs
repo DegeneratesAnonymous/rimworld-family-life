@@ -1,5 +1,6 @@
 using FamilyLife.Domain;
 using UnityEngine;
+using RimWorld;
 using Verse;
 
 namespace FamilyLife
@@ -72,7 +73,8 @@ namespace FamilyLife
             if (Widgets.ButtonText(new Rect(inRect.width - 270f, by, 130f, 30f), "WFL_Crest_Cancel".Translate())) Close();
             if (FamilyKit.PrimaryButton(new Rect(inRect.width - 130f, by, 130f, 30f), "WFL_Crest_Confirm".Translate()))
             {
-                house.CrestPrimary = primary; house.CrestSecondary = secondary; house.CrestMark = mark; house.CrestPattern = pattern;
+                var registry = FamilyComponent.Current?.Registry; int actor = FamilyComponent.Current?.PerspectivePawnId ?? 0;
+                if (registry == null || !HouseAuthority.EditCrest(registry, actor, house.Id, primary, secondary, mark, pattern)) Messages.Message("WFL_FW_ActNotAllowed".Translate(), MessageTypeDefOf.RejectInput, false);
                 Close();
             }
         }

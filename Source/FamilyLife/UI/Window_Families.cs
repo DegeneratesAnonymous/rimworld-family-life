@@ -191,7 +191,7 @@ namespace FamilyLife
             foreach (var lineage in lineages)
             {
                 var s = SummaryOf(registry, component, lineage, now);
-                if (s == null) { pending.Add(lineage); s = new FamilySummary { LineageId = lineage.Id, Name = registry.LineageDisplayName(lineage), Members = registry.LivingCount(lineage.Id, Presence.Colony) }; }
+                if (s == null) { pending.Add(lineage); var counts = HouseCountsOf.Of(registry, lineage); s = new FamilySummary { LineageId = lineage.Id, Name = registry.LineageDisplayName(lineage), Members = counts.HouseMembers, Residents = counts.Residents }; }
                 rows.Add(s);
             }
             var sorted = FamilySummaries.Sort(rows, State.SidebarSort, State.Search);
@@ -216,7 +216,7 @@ namespace FamilyLife
                 Text.Font = GameFont.Tiny;
                 GUI.color = FamilyKit.Dim;
                 string second = s.FirstAlert.HasValue ? ("WFL_FW_AlertShort_" + s.FirstAlert.Value).Translate().ToString() : s.Tier != null ? ("WFL_Tier_" + s.Tier).Translate().ToString().CapitalizeFirst() : "";
-                Widgets.Label(new Rect(row.x + 38f, row.y + 23f, row.width - 44f, 18f), ("WFL_FW_MembersN".Translate(s.Members).ToString() + (second.Length > 0 ? " - " + second : "")).Truncate(row.width - 44f));
+                Widgets.Label(new Rect(row.x + 38f, row.y + 23f, row.width - 44f, 18f), ("WFL_FW_Counts_SideLine".Translate(s.Members, s.Residents).ToString() + (second.Length > 0 ? " - " + second : "")).Truncate(row.width - 44f));
                 GUI.color = Color.white;
                 Text.Font = GameFont.Small;
                 if (s.Alerts > 0) Widgets.DrawBoxSolid(new Rect(row.xMax - 14f, row.y + 6f, 8f, 8f), s.Urgent ? FamilyKit.Urgent : FamilyKit.Warn);

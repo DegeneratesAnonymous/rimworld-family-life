@@ -36,7 +36,7 @@ namespace FamilyLife
         public PersonRecord Perspective;
 
         public bool Fresh(FamilyComponent component, int lineageId, int now) =>
-            Registry == component.Registry && LineageId == lineageId && Revision == component.Revision && Viewer == component.PerspectivePawnId && now - BuiltTick < RefreshTicks;
+            ViewFreshness.IsFresh(Registry, component.Registry, LineageId, lineageId, Revision, component.Revision, Viewer, component.PerspectivePawnId, BuiltTick, now, RefreshTicks);
 
         public static FamilyView Build(FamilyComponent component, int lineageId, int now)
         {
@@ -69,6 +69,8 @@ namespace FamilyLife
     }
 
     /// <summary>One person as the People tab and the detail panel describe them. Built from the registry and, when the pawn is loaded, the pawn.</summary>
+    internal enum PersonCategory : byte { Member, Resident, Elsewhere, Associate }
+
     internal sealed class PersonRow
     {
         public PersonRecord Person;
@@ -76,6 +78,7 @@ namespace FamilyLife
         public string Relation = "", Age = "", Household = "", Status = "", Concern = "", HouseNote = "", Thread = "";
         /// <summary>Lives with the family but belongs to another House.</summary>
         public bool Outsider;
+        public PersonCategory Category;
         public int HouseholdId;
         public List<RoleEntry> Roles = new List<RoleEntry>();
     }
@@ -90,7 +93,7 @@ namespace FamilyLife
         public Dictionary<int, PersonRow> ById = new Dictionary<int, PersonRow>();
 
         public bool Fresh(FamilyComponent c, int lineageId, int now) =>
-            Registry == c.Registry && LineageId == lineageId && Revision == c.Revision && Viewer == c.PerspectivePawnId && now - BuiltTick < LiveTicks;
+            ViewFreshness.IsFresh(Registry, c.Registry, LineageId, lineageId, Revision, c.Revision, Viewer, c.PerspectivePawnId, BuiltTick, now, LiveTicks);
 
         public static PeopleModel Build(FamilyComponent component, FamilyView view, int now)
         {
@@ -101,6 +104,10 @@ namespace FamilyLife
             // Everyone in the family's households: its own members, and the people who live with them but belong to another House.
             var memberIds = new HashSet<int>(view.Members.Select(p => p.Id));
             var people = new List<PersonRecord>(view.Members);
+            foreach (var a in r.AffiliatesOf(view.LineageId)) if (a.InColony && memberIds.Add(a.Id)) people.Add(a);
+            var contactIds = new HashSet<int>();
+            foreach (var c in r.HouseContacts) if (c.FamilyId == view.LineageId) { var cp = r.GetPerson(c.PersonId); if (cp != null && cp.InColony && !r.BelongsToFamily(cp, view.LineageId)) { contactIds.Add(cp.Id); if (memberIds.Add(cp.Id)) people.Add(cp); } }
+            var memberOnly = new HashSet<int>(people.Where(p => r.BelongsToFamily(p, view.LineageId)).Select(p => p.Id));
             foreach (var household in r.HouseholdsOfLineage(view.LineageId))
                 foreach (var id in household.ResidentIds)
                 {
@@ -110,6 +117,7 @@ namespace FamilyLife
             foreach (var person in people.OrderBy(p => !view.Relevant.Contains(p.Id)).ThenByDescending(p => p.InColony).ThenBy(p => p.Juvenile).ThenBy(p => p.Name))
             {
                 var row = new PersonRow { Person = person, Pawn = component.TryGetPawn(person.Id), HouseholdId = person.HouseholdId, Outsider = !view.Relevant.Contains(person.Id) };
+                row.Category = memberOnly.Contains(person.Id) ? (person.InColony ? PersonCategory.Member : PersonCategory.Elsewhere) : contactIds.Contains(person.Id) ? PersonCategory.Associate : PersonCategory.Resident;
                 if (row.Outsider)
                 {
                     var home = r.GetLineage(person.SocialFamilyId > 0 ? person.SocialFamilyId : person.PrimaryLineageId);

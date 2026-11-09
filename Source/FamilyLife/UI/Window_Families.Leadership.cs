@@ -17,13 +17,18 @@ namespace FamilyLife
         {
             var house = view.House;
             DrawOfficeCards(v, ref y, component, registry);
+            var pub = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
             if (!view.Insider)
             {
-                FamilyKit.EmptyState(v, ref y, "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
+                DrawPrivacyCard(pub, ref y, "l.private", "WFL_FW_PrivateHouseTitle", "WFL_FW_PrivateHouse", registry);
+                DrawDiplomacyCard(pub, ref y, component, registry, house);
+                DrawCommunityInfluenceCard(pub, ref y, registry);
                 return;
             }
             var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
             DrawAmbitionCard(col, ref y, component, registry, house);
+            DrawDiplomacyCard(col, ref y, component, registry, house);
+            DrawCommunityInfluenceCard(col, ref y, registry);
             DrawAlliancesCard(col, ref y, component, registry, house);
             DrawInstitutionsCard(col, ref y, component, registry, house);
             DrawAssociatesCard(col, ref y, component, registry, house);
@@ -129,14 +134,16 @@ namespace FamilyLife
 
             // Actions the acting pawn could take, each greyed out with its reason when not available.
             float bx = 0f;
-            if (holder != null && holder.InColony && !data.Hidden && FamilyKit.Action(new Rect(bx, cy, 110f, 24f), "WFL_FW_FindInColony".Translate(), true, null, "WFL_FW_FindTip".Translate())) FamilyUi.Jump(holder.Id);
+            if (holder != null && holder.InColony && !data.Hidden && FamilyKit.Action(new Rect(bx, cy, 110f, 24f), "WFL_FW_FindInColony".Translate(HouseholdNames.Short(holder)), true, null, "WFL_FW_FindTip".Translate())) FamilyUi.Jump(holder.Id);
             if (holder != null && holder.InColony && !data.Hidden) bx += 116f;
             if (data.Role == FamilyRole.PublicHeir)
             {
-                int actor = component.PerspectivePawnId;
-                bool isHead = actor == 0 || registry.HeadOf(house.Id) == actor;
-                if (FamilyKit.Action(new Rect(bx, cy, 130f, 24f), "WFL_FW_NameHeir".Translate(), isHead, WhyNot(registry, house, true), "WFL_FW_NameHeirTip".Translate())) OpenNameHeirMenu(component, registry, house);
-                bx += 136f;
+                var auth = HouseAuthority.Check(registry, component.PerspectivePawnId, house.Id, HouseAct.DeclareHeir);
+                if (!auth.Hidden)
+                {
+                    if (FamilyKit.Action(new Rect(bx, cy, 130f, 24f), "WFL_FW_NameHeir".Translate(), auth.Allowed, FamilyText.Say(auth.Why), "WFL_FW_NameHeirTip".Translate())) OpenNameHeirMenu(component, registry, house);
+                    bx += 136f;
+                }
             }
             if (bx > 0f) cy += 28f;
             FamilyKit.EndCard(card, cy, ref y);
@@ -179,8 +186,8 @@ namespace FamilyLife
             foreach (var p in registry.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile && p.Id != head).OrderBy(p => p.Name).Take(12))
             {
                 int heir = p.Id;
-                options.Add(new FloatMenuOption("WFL_Estate_NameAndTell".Translate(p.Name), () => registry.DesignateHeir(house.Id, head, heir, told, Activities.Now)));
-                options.Add(new FloatMenuOption("WFL_Estate_NameSecretly".Translate(p.Name), () => registry.DesignateHeir(house.Id, head, heir, null, Activities.Now)));
+                options.Add(new FloatMenuOption("WFL_Estate_NameAndTell".Translate(p.Name), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, told, Activities.Now)));
+                options.Add(new FloatMenuOption("WFL_Estate_NameSecretly".Translate(p.Name), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, null, Activities.Now)));
             }
             if (options.Count == 0) options.Add(new FloatMenuOption("WFL_Estate_NoKin".Translate(), null));
             Find.WindowStack.Add(new FloatMenu(options));
@@ -466,7 +473,7 @@ namespace FamilyLife
             {
                 var options = registry.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile).Take(100).Select(p => new FloatMenuOption(FamilyUi.NameOf(registry, p.Id), () =>
                 {
-                    var branch = registry.CreateFamilyBranch(p.Id, house.Id, branchName, Activities.Now);
+                    var branch = HouseAuthority.CreateBranch(registry, component.PerspectivePawnId, house.Id, p.Id, branchName, Activities.Now);
                     if (branch != null) { State.Select(branch.Id); branchName = ""; component.FamilyMembershipChanged(); }
                 })).ToList();
                 if (options.Count > 0) Find.WindowStack.Add(new FloatMenu(options));

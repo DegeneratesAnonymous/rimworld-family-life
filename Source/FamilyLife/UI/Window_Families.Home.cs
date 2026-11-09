@@ -45,7 +45,7 @@ namespace FamilyLife
         public string MeetingPlace = "";
 
         public bool Fresh(FamilyComponent c, int lineageId, int now) =>
-            Registry == c.Registry && LineageId == lineageId && Revision == c.Revision && Viewer == c.PerspectivePawnId && now - BuiltTick < LiveTicks;
+            ViewFreshness.IsFresh(Registry, c.Registry, LineageId, lineageId, Revision, c.Revision, Viewer, c.PerspectivePawnId, BuiltTick, now, LiveTicks);
 
         public static HomeModel Build(FamilyComponent component, FamilyView view, int now)
         {
@@ -168,6 +168,7 @@ namespace FamilyLife
 
         private void DrawHome(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
+            if (!view.Insider) { DrawPrivacyCard(new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f), ref y, "h.private", "WFL_FW_PrivateHomeTitle", "WFL_FW_PrivateHome", registry); return; }
             var home = HomeFor(component);
             switch ((HomeSub)State.HomeSub)
             {
@@ -184,7 +185,41 @@ namespace FamilyLife
             var house = view.House;
             if (home.Households.Count == 0) { FamilyKit.EmptyState(v, ref y, "WFL_NoHouseholds".Translate()); return; }
             int actor = component.PerspectivePawnId;
-            PlaceCards(v, ref y, home.Households, (col, ys, ci, pair) => { float cardY = ys[ci]; DrawHouseholdCard(col, ref cardY, component, registry, pair, actor); ys[ci] = cardY; });
+            // Left: one compact card per household. Right: the selected household in full (beds, rooms, relationships, actions).
+            var selectedPair = home.Households.FirstOrDefault(p => p.Key == State.SelectedHousehold);
+            if (selectedPair.Value == null) { selectedPair = home.Households[0]; State.SelectedHousehold = selectedPair.Key; }
+            bool beside = WindowLayout.DrawerBeside(v.width);
+            float listW = beside ? Mathf.Min(480f, v.width - 440f - WindowLayout.Gap) : Mathf.Min(v.width, 480f);
+            float detailW = beside ? Mathf.Min(500f, v.width - listW - WindowLayout.Gap) : Mathf.Min(v.width, 520f);
+            float listY = y, detailY = y;
+            foreach (var pair in home.Households) DrawHouseholdSummary(new Rect(0f, 0f, listW, 0f), ref listY, component, registry, pair);
+            if (beside) DrawHouseholdCard(new Rect(listW + WindowLayout.Gap, 0f, detailW, 0f), ref detailY, component, registry, selectedPair, actor);
+            else { FamilyKit.SectionHeader(v, ref listY, "WFL_FW_HouseholdDetail".Translate()); DrawHouseholdCard(new Rect(0f, 0f, detailW, 0f), ref listY, component, registry, selectedPair, actor); }
+            y = Mathf.Max(listY, detailY);
+        }
+
+        /// <summary>A household in brief: its name, who lives there, how many beds and bedrooms, how steady it is and what concerns it. Click for the detail.</summary>
+        private void DrawHouseholdSummary(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, KeyValuePair<int, List<HomeRow>> pair)
+        {
+            var household = registry.GetHousehold(pair.Key);
+            string name = view.HouseholdLabels.TryGetValue(pair.Key, out var label) ? label : "WFL_FW_HH_Plain".Translate().ToString();
+            bool on = pair.Key == State.SelectedHousehold;
+            var card = FamilyKit.BeginCard(col, ref y, "hs" + pair.Key, name, null, on);
+            var cv = card.View;
+            float cy = 0f;
+            for (int i = 0; i < pair.Value.Count && i < 8; i++) DrawPortrait(new Rect(i * 32f, cy, 28f, 34f), pair.Value[i].Person, component);
+            cy += 40f;
+            int beds = pair.Value.Count(r => r.Bed.Length > 0);
+            int rooms = pair.Value.Where(r => r.Room.Length > 0).Select(r => r.Room).Distinct().Count();
+            float? cohesion = household == null ? null : registry.HouseholdCohesion(household);
+            string stable = cohesion.HasValue ? ("WFL_Tier_" + BondTuning.CohesionTier(cohesion.Value)).Translate().ToString() : "";
+            cy += FamilyKit.Label(cv, cy, "WFL_FW_HouseholdBrief".Translate(pair.Value.Count, beds, rooms).ToString() + (stable.Length > 0 ? " · " + stable : ""), 0f, true);
+            var problem = pair.Value.FirstOrDefault(r => r.Problem.Length > 0);
+            if (problem != null) cy += FamilyKit.Label(cv, cy, problem.Problem, 0f, false);
+            var area = new Rect(0f, 0f, cv.width, cy);
+            if (Widgets.ButtonInvisible(area)) State.SelectedHousehold = pair.Key;
+            TooltipHandler.TipRegion(area, "WFL_FW_HouseholdOpenTip".Translate(name));
+            FamilyKit.EndCard(card, cy, ref y);
         }
 
         /// <summary>One household as a card: its own name, who lives there, and where each sleeps. Residents who belong to another House say so.</summary>

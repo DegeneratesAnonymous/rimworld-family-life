@@ -428,4 +428,87 @@
   <WFL_FW_ThroughMarriage>Lives here through marriage; remains a member of House {0}.</WFL_FW_ThroughMarriage>
   <WFL_FW_ResidentOtherHouse>Lives here; a member of House {0}.</WFL_FW_ResidentOtherHouse>
   <WFL_FW_PersonThread>Part of the current story:</WFL_FW_PersonThread>
+
+  <!-- A House as someone outside it knows it -->
+  <WFL_FW_Ch_Dealings_Uneasy_Title>UNEASY DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Uneasy_Title>
+  <WFL_FW_Ch_Dealings_Warm_Title>WARM DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Warm_Title>
+  <WFL_FW_Ch_Dealings_Mixed_Title>MIXED DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Mixed_Title>
+  <WFL_FW_Ch_Dealings_Uneasy>{0}'s relationship with House {1} has become strained.</WFL_FW_Ch_Dealings_Uneasy>
+  <WFL_FW_Ch_Dealings_Warm>{0} has been getting on well with House {1}.</WFL_FW_Ch_Dealings_Warm>
+  <WFL_FW_Ch_Dealings_Mixed>{0}'s dealings with House {1} have gone both well and badly.</WFL_FW_Ch_Dealings_Mixed>
+  <WFL_FW_Ch_DealingsPrivate>This is only what has happened between them. House {0}'s own affairs are its business.</WFL_FW_Ch_DealingsPrivate>
+  <WFL_FW_Ch_RepTitle>KNOWN BY REPUTATION</WFL_FW_Ch_RepTitle>
+  <WFL_FW_Ch_Rep>{0} knows {1} as the publicly recognized Head of House {2}, but knows little about the House's private affairs.</WFL_FW_Ch_Rep>
+  <WFL_FW_Ch_LittleTitle>LITTLE IS KNOWN</WFL_FW_Ch_LittleTitle>
+  <WFL_FW_Ch_Little>{0} has had no meaningful contact with House {1}.</WFL_FW_Ch_Little>
+  <WFL_FW_Th_Dealings_Line>Dealings with House {0}</WFL_FW_Th_Dealings_Line>
+  <WFL_FW_Th_Dealings_Why>These come from moments you shared with its people.</WFL_FW_Th_Dealings_Why>
+  <WFL_FW_Th_Dealings_Path1>More time together, or an apology, can change how things stand</WFL_FW_Th_Dealings_Path1>
+  <WFL_FW_State_Known>Known to you</WFL_FW_State_Known>
+  <WFL_FW_PrivateHouseTitle>PRIVATE HOUSE AFFAIRS</WFL_FW_PrivateHouseTitle>
+  <WFL_FW_PrivateHouse>{0} does not know House {1}'s current ambition, private succession discussions or internal policies.</WFL_FW_PrivateHouse>
+  <WFL_FW_PrivateRelTitle>{0} does not know House {1}'s private relationships</WFL_FW_PrivateRelTitle>
+  <WFL_FW_PrivateRelBody>The relationships below are limited to {0}'s own experiences and publicly known family ties.</WFL_FW_PrivateRelBody>
+  <WFL_FW_RelYours>Your relationships with this House</WFL_FW_RelYours>
+  <WFL_FW_RelKnown>Known relationships within the House</WFL_FW_RelKnown>
+  <WFL_FW_RelNoKnown>No public family ties are known.</WFL_FW_RelNoKnown>
+  <WFL_FW_RelNoYours>You have no relationships with this House yet.</WFL_FW_RelNoYours>
+  <WFL_FW_PublicTie>{0} and {1}: {2}</WFL_FW_PublicTie>
+  <WFL_FW_Feeling_Strained>strained</WFL_FW_Feeling_Strained>
+  <WFL_FW_Feeling_Uneasy>uneasy</WFL_FW_Feeling_Uneasy>
+  <WFL_FW_Feeling_Warm>warm</WFL_FW_Feeling_Warm>
+  <WFL_FW_Feeling_Trusting>trusting</WFL_FW_Feeling_Trusting>
+  <WFL_FW_Feeling_Unfamiliar>unfamiliar</WFL_FW_Feeling_Unfamiliar>
+  <WFL_FW_Feeling_Uncertain>uncertain</WFL_FW_Feeling_Uncertain>
+  <WFL_FW_YourPart>Your part in their story</WFL_FW_YourPart>
+
+  <!-- Who may do what -->
+  <WFL_FW_Auth_NoHouse>There is no such House.</WFL_FW_Auth_NoHouse>
+  <WFL_FW_Auth_Outsider>You are not a member of House {0}, so you cannot act for it.</WFL_FW_Auth_Outsider>
+  <WFL_FW_Auth_Manage>Only the Head or a Steward of House {0} may do this.</WFL_FW_Auth_Manage>
+  <WFL_FW_Auth_DeclareHeir>Only the Head of House {0} may publicly declare an heir.</WFL_FW_Auth_DeclareHeir>
+  <WFL_FW_Auth_AppointSteward>Only the Head of House {0} may appoint or remove a Steward.</WFL_FW_Auth_AppointSteward>
+  <WFL_FW_Auth_AppointOfficer>Only the Head of House {0} may appoint its officers.</WFL_FW_Auth_AppointOfficer>
+  <WFL_FW_Auth_ChangeSuccessionCustom>Only the Head of House {0} may change its succession custom.</WFL_FW_Auth_ChangeSuccessionCustom>
+  <WFL_FW_ActNotAllowed>That is not yours to do for this House.</WFL_FW_ActNotAllowed>
+  <WFL_FW_Counts_SideLine>{0} House members · {1} residents</WFL_FW_Counts_SideLine>
+  <WFL_FW_Group_Members>House members ({0})</WFL_FW_Group_Members>
+  <WFL_FW_Group_Residents>Resident non-members ({0})</WFL_FW_Group_Residents>
+  <WFL_FW_Group_Elsewhere>Relatives elsewhere ({0})</WFL_FW_Group_Elsewhere>
+  <WFL_FW_Group_Associates>Associates ({0})</WFL_FW_Group_Associates>
+  <WFL_FW_ViewPair>View {0} and {1}</WFL_FW_ViewPair>
+  <WFL_FW_ViewParticipants>View participants</WFL_FW_ViewParticipants>
+  <WFL_FW_ViewFullStory>View full story</WFL_FW_ViewFullStory>
+  <WFL_FW_SelectPerson>Select {0}</WFL_FW_SelectPerson>
+  <WFL_FW_Legacy_Title>An earlier moment</WFL_FW_Legacy_Title>
+  <WFL_FW_Legacy_Body>{0} and {1} shared a moment that was recorded before the family story kept details.</WFL_FW_Legacy_Body>
+  <WFL_FW_Line_Moment>{2}: {0} and {1}</WFL_FW_Line_Moment>
+
+  <!-- Diplomacy and community influence -->
+  <WFL_FW_Card_Diplomacy>Diplomacy</WFL_FW_Card_Diplomacy>
+  <WFL_FW_NoDiplomacy>No relationship with another House is known.</WFL_FW_NoDiplomacy>
+  <WFL_FW_HouseN>House {0}</WFL_FW_HouseN>
+  <WFL_FW_KnownRelationship>Known relationship: {0}</WFL_FW_KnownRelationship>
+  <WFL_FW_TieNumbers>Goodwill {0} · Grievance {1}</WFL_FW_TieNumbers>
+  <WFL_FW_RecentEvent>Recent event: {0}</WFL_FW_RecentEvent>
+  <WFL_FW_NegotiationActive>A negotiation is under way.</WFL_FW_NegotiationActive>
+  <WFL_FW_NoNegotiation>No active public negotiation.</WFL_FW_NoNegotiation>
+  <WFL_FW_Tie_Strangers>unfamiliar</WFL_FW_Tie_Strangers>
+  <WFL_FW_Tie_Acquainted>acquainted</WFL_FW_Tie_Acquainted>
+  <WFL_FW_Tie_Friendly>friendly</WFL_FW_Tie_Friendly>
+  <WFL_FW_Tie_Allied>allied</WFL_FW_Tie_Allied>
+  <WFL_FW_Tie_Strained>strained</WFL_FW_Tie_Strained>
+  <WFL_FW_Tie_Feuding>feuding</WFL_FW_Tie_Feuding>
+  <WFL_FW_Card_Influence>Community influence</WFL_FW_Card_Influence>
+  <WFL_FW_InfluenceNote>Holding a public community office, such as healer, teacher, hall keeper or chaplain, raises a House's standing in the colony. These posts belong to the colony, not to any one House.</WFL_FW_InfluenceNote>
+  <WFL_FW_InfluenceNone>No one in House {0} holds a community office.</WFL_FW_InfluenceNone>
+  <WFL_FW_InfluenceHeld>{0} is the colony's {1}.</WFL_FW_InfluenceHeld>
+  <WFL_FW_InfluenceWanted>The House is seeking influence, so a community office would help it.</WFL_FW_InfluenceWanted>
+  <WFL_FW_StoryIndicatorTip>You have shared moments with this person.</WFL_FW_StoryIndicatorTip>
+  <WFL_FW_CardMember>Member of House {0}</WFL_FW_CardMember>
+  <WFL_FW_HouseholdBrief>{0} residents · {1} beds · {2} bedrooms</WFL_FW_HouseholdBrief>
+  <WFL_FW_HouseholdDetail>Household detail</WFL_FW_HouseholdDetail>
+  <WFL_FW_HouseholdOpenTip>Open {0}'s details.</WFL_FW_HouseholdOpenTip>
+  <WFL_FW_PrivateHomeTitle>PRIVATE HOUSEHOLD AFFAIRS</WFL_FW_PrivateHomeTitle>
+  <WFL_FW_PrivateHome>{0} has not seen inside House {1}'s homes. Its beds, rooms and supplies are its own.</WFL_FW_PrivateHome>
 </LanguageData>

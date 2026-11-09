@@ -49,3 +49,17 @@ namespace FamilyLife.Domain
         public static int OfficeColumns(float width) => Math.Max(1, Math.Min(4, (int)Math.Floor((width + Gap) / (200f + Gap))));
     }
 }
+
+namespace FamilyLife.Domain
+{
+    /// <summary>
+    /// When a cached view of a House is still good. The window builds its story, people and home models once and keeps them; this is the one rule that decides when
+    /// they must be rebuilt. The game raises the revision whenever the records change (a new event, a bond, membership, a household, a role, something disclosed);
+    /// a new registry (a loaded save), a different House, a different person being played, or the passing of the refresh interval also makes a view stale.
+    /// </summary>
+    public static class ViewFreshness
+    {
+        public static bool IsFresh(object builtRegistry, object currentRegistry, int builtLineage, int lineage, int builtRevision, int revision, int builtViewer, int viewer, int builtTick, int now, int maxAge) =>
+            ReferenceEquals(builtRegistry, currentRegistry) && builtLineage == lineage && builtRevision == revision && builtViewer == viewer && now - builtTick < maxAge && now >= builtTick;
+    }
+}

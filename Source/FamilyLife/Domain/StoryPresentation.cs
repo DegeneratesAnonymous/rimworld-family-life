@@ -170,12 +170,12 @@ namespace FamilyLife.Domain
     public static class StoryTimeline
     {
         public static List<StoryBeat> Recent(FamilyRegistry r, Lineage house, int viewer, int now, int mask, bool includeRoutine = false) =>
-            StoryConsolidation.Build(FamilyTimeline.Recent(r, house, viewer, now, mask), includeRoutine);
+            StoryConsolidation.Build(FamilyTimeline.Recent(r, house, viewer, now, mask).Where(t => StoryVisibility.Visible(r, house, viewer, t)).ToList(), includeRoutine);
 
         /// <summary>Only what defines the family's history. Moments told together are still one entry.</summary>
         public static List<StoryBeat> Chronicle(FamilyRegistry r, Lineage house, int viewer, int mask)
         {
-            var entries = FamilyTimeline.Chronicle(r, house, viewer, mask).Where(t => StoryRelevance.Of(t) == StoryImportance.Defining).ToList();
+            var entries = FamilyTimeline.Chronicle(r, house, viewer, mask).Where(t => StoryRelevance.Of(t) == StoryImportance.Defining && StoryVisibility.Visible(r, house, viewer, t)).ToList();
             return StoryConsolidation.Build(entries, false);
         }
     }
@@ -195,7 +195,8 @@ namespace FamilyLife.Domain
         {
             var c = new HouseCounts();
             if (r == null || house == null) return c;
-            var members = new HashSet<int>(r.MembersOf(house.Id).Where(p => p.InColony).Select(p => p.Id));
+            // A House member is anyone who belongs to the House (by descent, marriage or affiliation): the same test every action and the sidebar use.
+            var members = new HashSet<int>(r.Persons.Where(p => p.InColony && r.BelongsToFamily(p, house.Id)).Select(p => p.Id));
             var residents = new HashSet<int>();
             var households = r.HouseholdsOfLineage(house.Id);
             foreach (var h in households)
@@ -246,7 +247,7 @@ namespace FamilyLife.Domain
 
     public enum ThreadKind : byte
     {
-        Feud, Rift, Plot, Ceremony, Visit, Camp, Ambition, Turning, Promise, Negotiation, Petition, Grievance,
+        Dealings, Feud, Rift, Plot, Ceremony, Visit, Camp, Ambition, Turning, Promise, Negotiation, Petition, Grievance,
         Food, Housing, Safety, Capability, Teaching, Tradition
     }
 
@@ -286,6 +287,7 @@ namespace FamilyLife.Domain
         public List<StoryBeat> Recent = new List<StoryBeat>();
         public List<StoryBeat> Highlights = new List<StoryBeat>();
         public HouseCounts Counts;
+        public Acquaintance Acquaintance;
 
         public static StoryModel Build(FamilyRegistry r, Lineage house, int viewer, int now)
         {
@@ -293,16 +295,8 @@ namespace FamilyLife.Domain
             if (r == null || house == null) { m.Chapter.Unknown = true; m.Chapter.Title = new Narrative("WFL_FW_Ch_UnknownTitle"); return m; }
             m.Counts = HouseCountsOf.Of(r, house);
             bool insider = FamilyWindowFacts.IsInsider(r, house.Id, viewer);
-            if (!insider)
-            {
-                // What a house is going through is its own business. An outsider sees only what they took part in.
-                m.Chapter.Unknown = true;
-                m.Chapter.Title = new Narrative("WFL_FW_Ch_UnknownTitle");
-                m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Unknown", PerspectiveName(r, viewer)));
-                m.Recent = StoryTimeline.Recent(r, house, viewer, now, 0);
-                m.Highlights = StoryConsolidation.Highlights(m.Recent, 3);
-                return m;
-            }
+            m.Acquaintance = Knowledge.AcquaintanceWith(r, viewer, house);
+            if (!insider) { OutsiderStory.Fill(m, r, house, viewer, now); return m; }
             m.Recent = StoryTimeline.Recent(r, house, viewer, now, 0);
             m.Highlights = StoryConsolidation.Highlights(m.Recent, 3);
             m.Threads = StoryThreads.Build(r, house, viewer, now, m.Recent);
@@ -676,5 +670,100 @@ namespace FamilyLife.Domain
             n.Idea = new Narrative("WFL_FW_RS_Idea_" + (tense ? "Tense" : tone == "New" ? "New" : tone == "Warm" || tone == "Fond" ? "Warm" : "Cool") + you, a, b);
             return n;
         }
+    }
+}
+
+namespace FamilyLife.Domain
+{
+    /// <summary>
+    /// The story of a House as someone outside it can tell it: their own history with its people, then what is public, then (only then) that little is known.
+    /// Nothing here reads the House's private state (ambition, supplies, private relationships, plots).
+    /// </summary>
+    public static class OutsiderStory
+    {
+        public static void Fill(StoryModel m, FamilyRegistry r, Lineage house, int viewer, int now)
+        {
+            string houseName = r.LineageDisplayName(house);
+            string me = StoryModel.PerspectiveName(r, viewer);
+            var history = Knowledge.HistoryWith(r, viewer, house);
+            var entries = history.Select(e => new TimelineEntry { Kind = TimelineKind.Moment, Tick = e.Tick, Category = EventCategory.Relationships, Moment = e }).ToList();
+            var beats = StoryConsolidation.Build(entries, false).Where(b => !b.IsRoutineSummary).ToList();
+            m.Recent = beats;
+            m.Highlights = StoryConsolidation.Highlights(beats, 3);
+
+            if (beats.Count > 0)
+            {
+                int good = history.Count(e => StoryConsolidation.Outcome(e) > 0), bad = history.Count(e => StoryConsolidation.Outcome(e) < 0);
+                string tone = bad > good ? "Uneasy" : good > bad ? "Warm" : "Mixed";
+                m.Chapter.Title = new Narrative("WFL_FW_Ch_Dealings_" + tone + "_Title", houseName);
+                m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Dealings_" + tone, me, houseName));
+                foreach (var b in m.Highlights.Where(x => x.Entry != null && x.Entry.Kind == TimelineKind.Moment).Take(2).Reverse())
+                    m.Chapter.Body.Add(MomentLine(r, b));
+                m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_DealingsPrivate", houseName));
+                foreach (var b in m.Highlights.Take(3)) m.Chapter.Supporting.Add(MomentLine(r, b));
+                m.Threads.Add(new StoryThread
+                {
+                    Id = "dealings:" + house.Id, Kind = ThreadKind.Dealings, Priority = 4, Severity = bad > good ? 1 : 0,
+                    Title = new Narrative("WFL_FW_Ch_Dealings_" + tone + "_Title", houseName),
+                    Summary = new Narrative("WFL_FW_Ch_Dealings_" + tone, me, houseName),
+                    Line = new Narrative("WFL_FW_Th_Dealings_Line", houseName),
+                    State = new Narrative("WFL_FW_State_Known"),
+                    Why = new Narrative("WFL_FW_Th_Dealings_Why"),
+                    Paths = { new Narrative("WFL_FW_Th_Dealings_Path1") }, Actions = { new Narrative("WFL_FW_Act_TimeTogether"), new Narrative("WFL_FW_Act_Apologize") },
+                    People = history.Select(e => e.A == viewer ? e.B : e.A).Where(id => id != viewer).Distinct().Take(4).ToList(),
+                    Tab = FamilyTab.Story, Sub = (int)StorySub.Timeline
+                });
+            }
+            else if (m.Acquaintance == Acquaintance.Reputation)
+            {
+                int head = r.HeadOf(house.Id);
+                m.Chapter.Title = new Narrative("WFL_FW_Ch_RepTitle");
+                m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Rep", me, HouseholdNames.Short(r.GetPerson(head)), houseName));
+            }
+            else
+            {
+                m.Chapter.Title = new Narrative("WFL_FW_Ch_LittleTitle");
+                m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Little", me, houseName));
+            }
+            m.Chapter.Unknown = beats.Count == 0;
+
+            // Promises the viewer is part of with this House's people are theirs to know.
+            var theirs = FamilyTimeline.Relevant(r, house);
+            var promise = r.Commitments.FirstOrDefault(c => c.IsOpen && ((c.FromId == viewer && theirs.Contains(c.ToId)) || (c.ToId == viewer && theirs.Contains(c.FromId))));
+            if (promise != null)
+                m.Threads.Add(new StoryThread
+                {
+                    Id = "promise:" + promise.Id, Kind = ThreadKind.Promise, Priority = 5, Severity = 1,
+                    Title = new Narrative("WFL_FW_Th_Promise_Title"),
+                    Summary = new Narrative("WFL_FW_Th_Promise_Sum", HouseholdNames.Short(r.GetPerson(promise.FromId)), HouseholdNames.Short(r.GetPerson(promise.ToId)), "1"),
+                    Line = new Narrative("WFL_FW_Th_Promise_Line", HouseholdNames.Short(r.GetPerson(promise.FromId)), HouseholdNames.Short(r.GetPerson(promise.ToId))),
+                    State = new Narrative("WFL_FW_State_Due"), Why = new Narrative("WFL_FW_Th_Promise_Why", HouseholdNames.Short(r.GetPerson(promise.FromId))),
+                    Paths = { new Narrative("WFL_FW_Th_Promise_Path1"), new Narrative("WFL_FW_Th_Promise_Path2") }, Actions = { new Narrative("WFL_FW_Act_KeepPromise") },
+                    People = { promise.FromId, promise.ToId }, Tab = FamilyTab.Story, Sub = (int)StorySub.Current
+                });
+            m.Threads = m.Threads.OrderBy(t => t.Priority).ToList();
+        }
+
+        public static Narrative MomentLine(FamilyRegistry r, StoryBeat b)
+        {
+            string a = HouseholdNames.Short(r.GetPerson(b.Initiator));
+            string others = string.Join(", ", b.Others.Select(o => HouseholdNames.Short(r.GetPerson(o))));
+            string title = b.Entry?.Moment == null ? "" : "WFL_Ev_" + b.Entry.Moment.EventId.Replace('-', '_') + "_Title";
+            return new Narrative("WFL_FW_Clause_Moment", a, others, title);
+        }
+    }
+}
+
+namespace FamilyLife.Domain
+{
+    public static class StoryVisibility
+    {
+        /// <summary>The chronicle kinds anyone may know about another House: its births, deaths, marriages, foundation and comings of age. Rifts, bond drift and the like are private.</summary>
+        public static bool PublicKind(FamilyEventKind k) =>
+            k == FamilyEventKind.Birth || k == FamilyEventKind.Died || k == FamilyEventKind.MarriageFormed || k == FamilyEventKind.LineageFounded
+            || k == FamilyEventKind.SocialBranch || k == FamilyEventKind.CameOfAge || k == FamilyEventKind.PartnershipFormed;
+
+        public static bool Visible(FamilyRegistry r, Lineage house, int viewer, TimelineEntry t) =>
+            FamilyWindowFacts.IsInsider(r, house.Id, viewer) || t.Kind != TimelineKind.Chronicle || PublicKind(t.Chronicle.Kind);
     }
 }

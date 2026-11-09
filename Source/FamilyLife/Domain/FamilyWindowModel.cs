@@ -76,6 +76,7 @@ namespace FamilyLife.Domain
         public int SelectedPerson;           // the person whose detail panel is open (People), or whose relationships are shown (Relationships)
         public int SelectedRelation;         // the other person in an open relationship detail
         public int EventFilter;              // EventCategory mask; 0 = everything
+        public int SelectedHousehold;        // the household whose detail is open on Home
         public int StoryPerson;              // the Timeline shows only moments this person took part in; 0 = everyone
         public bool ShowRoutine;             // the Timeline lists everyday matters too
         public RelFilter RelFilter = RelFilter.Family;
@@ -202,7 +203,7 @@ namespace FamilyLife.Domain
     {
         public int LineageId;
         public string Name = "";
-        public int Members, Households, Alerts;
+        public int Members, Residents, Households, Alerts;
         public bool Urgent;
         /// <summary>The cohesion tier name ("Steady"), or null when the house has not been assessed yet.</summary>
         public string Tier;
@@ -217,7 +218,7 @@ namespace FamilyLife.Domain
             var s = new FamilySummary
             {
                 LineageId = house.Id, Name = r.LineageDisplayName(house),
-                Members = r.LivingCount(house.Id, Presence.Colony), Households = r.HouseholdsOfLineage(house.Id).Count
+                Members = HouseCountsOf.Of(r, house).HouseMembers, Residents = HouseCountsOf.Of(r, house).Residents, Households = r.HouseholdsOfLineage(house.Id).Count
             };
             if (FamilyWindowFacts.IsInsider(r, house.Id, viewer) && house.Situation != null && house.Situation.EvaluatedTick > 0) { s.Cohesion = house.Situation.Cohesion; s.Tier = BondTuning.CohesionTier(house.Situation.Cohesion); }
             var alerts = FamilyAlerts.Build(r, house, viewer, now);

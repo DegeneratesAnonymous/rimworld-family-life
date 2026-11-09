@@ -22,7 +22,7 @@ namespace FamilyLife
         private void DrawRelationships(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
             var house = view.House;
-            if (!view.Insider) { FamilyKit.EmptyState(v, ref y, "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry))); return; }
+            if (!view.Insider) { DrawVisitorRelationships(v, ref y, component, registry, house); return; }
             var people = registry.MembersOf(house.Id).Concat(registry.AffiliatesOf(house.Id)).Where(p => p.InColony).Distinct().ToList();
             if (people.Count == 0) { FamilyKit.EmptyState(v, ref y, "WFL_NoHouseholds".Translate()); return; }
 
