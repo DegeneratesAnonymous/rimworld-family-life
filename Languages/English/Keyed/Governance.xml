@@ -320,7 +320,7 @@
   <WFL_Estate_HouseKeeps>kept by the {0} house</WFL_Estate_HouseKeeps>
   <WFL_Estate_MakeHeirloom>Make it an heirloom</WFL_Estate_MakeHeirloom>
   <WFL_Estate_MakeHouseHeirloom>Make it a house heirloom</WFL_Estate_MakeHouseHeirloom>
-  <WFL_Estate_NameHeir>Name an heir...</WFL_Estate_NameHeir>
+  <WFL_Estate_NameHeir>Choose inheritor</WFL_Estate_NameHeir>
   <WFL_Estate_NameAndTell>Name {0}, and tell them</WFL_Estate_NameAndTell>
   <WFL_Estate_NameSecretly>Name {0}, keeping it private</WFL_Estate_NameSecretly>
   <WFL_Estate_Revoke>Take back the choice</WFL_Estate_Revoke>

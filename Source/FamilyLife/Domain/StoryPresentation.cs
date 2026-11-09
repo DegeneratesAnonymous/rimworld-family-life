@@ -646,3 +646,35 @@ namespace FamilyLife.Domain
         }
     }
 }
+
+namespace FamilyLife.Domain
+{
+    /// <summary>What a relationship's four meters add up to, in a few sentences. Chosen by fixed thresholds from the bond's own values and recent movement.</summary>
+    public sealed class RelationshipNarrative
+    {
+        public Narrative Tone, Trust, Trend, Concern, Idea;
+        public List<Narrative> All => new[] { Tone, Trust, Trend, Concern, Idea }.Where(n => !n.Empty).ToList();
+    }
+
+    public static class RelationshipStory
+    {
+        public const float WarmAt = 60f, FondAt = 35f, TrustHigh = 60f, TrustLow = 30f, TensionAt = 50f, StrangersBelow = 25f;
+
+        /// <param name="aIsYou">The first person is the one being played, so the lines can say "you".</param>
+        public static RelationshipNarrative Of(RelRow row, string a, string b, bool aIsYou)
+        {
+            var n = new RelationshipNarrative();
+            string you = aIsYou ? "_You" : "";
+            bool tense = row.Tension >= TensionAt;
+            string tone = tense ? "Tense" : row.Attachment >= WarmAt ? "Warm" : row.Attachment >= FondAt ? "Fond" : row.Familiarity < StrangersBelow ? "New" : "Cool";
+            n.Tone = new Narrative("WFL_FW_RS_Tone_" + tone + you, a, b);
+            if (row.Trust >= TrustHigh) n.Trust = new Narrative("WFL_FW_RS_Trust_High");
+            else if (row.Trust <= TrustLow) n.Trust = new Narrative("WFL_FW_RS_Trust_Low");
+            if (row.Trend > 0) n.Trend = new Narrative("WFL_FW_RS_Trend_Up");
+            else if (row.Trend < 0) n.Trend = new Narrative("WFL_FW_RS_Trend_Down");
+            n.Concern = new Narrative(tense ? "WFL_FW_RS_Concern_Tense" : "WFL_FW_RS_Concern_None");
+            n.Idea = new Narrative("WFL_FW_RS_Idea_" + (tense ? "Tense" : tone == "New" ? "New" : tone == "Warm" || tone == "Fond" ? "Warm" : "Cool") + you, a, b);
+            return n;
+        }
+    }
+}

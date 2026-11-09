@@ -71,7 +71,8 @@ namespace FamilyLife
             if (State.SelectedPerson != 0 && selected == null && registry.GetPerson(State.SelectedPerson) == null) State.SelectedPerson = 0;
 
             bool side = selected != null && viewRect.width >= 760f;
-            float listW = side ? viewRect.width - 320f - FamilyKit.Gap : viewRect.width;
+            float drawerW = WindowLayout.DrawerWidth(viewRect.width);
+            float listW = side ? Mathf.Min(viewRect.width - drawerW - FamilyKit.Gap, 760f) : viewRect.width;
             var listView = new Rect(0f, 0f, listW, viewRect.height);
 
             float listY = y, detailY = y;
@@ -86,7 +87,7 @@ namespace FamilyLife
 
             if (selected != null && side)
             {
-                var col = new Rect(listW + FamilyKit.Gap, 0f, 320f, 0f);
+                var col = new Rect(listW + FamilyKit.Gap, 0f, drawerW, 0f);
                 DrawPersonDetail(col, ref detailY, component, registry, selected);
             }
             y = Mathf.Max(listY, detailY);
@@ -107,7 +108,7 @@ namespace FamilyLife
             }
             foreach (var pair in groups)
             {
-                string title = pair.Key == 0 ? "WFL_FW_NoHousehold".Translate().ToString() : "WFL_FW_HouseholdN".Translate(pair.Key).ToString();
+                string title = pair.Key == 0 ? "WFL_FW_NoHousehold".Translate().ToString() : (view.HouseholdLabels.TryGetValue(pair.Key, out var hhLabel) ? hhLabel : "WFL_FW_HH_Plain".Translate().ToString());
                 FamilyKit.SectionHeader(v, ref y, title + "  (" + pair.Value.Count + ")");
                 foreach (var row in pair.Value) DrawPersonRow(v, ref y, row, registry);
             }
@@ -143,6 +144,7 @@ namespace FamilyLife
             string line = row.Age + (row.Household.Length > 0 ? " - " + row.Household : "") + " - " + row.Status;
             Widgets.Label(new Rect(textX, rect.y + 22f, textW, 16f), line.Truncate(textW));
             if (row.Concern.Length > 0) { GUI.color = FamilyKit.Warn; Widgets.Label(new Rect(textX, rect.y + 36f, textW, 16f), row.Concern.Truncate(textW)); }
+            else if (row.HouseNote.Length > 0 || row.Thread.Length > 0) { GUI.color = row.HouseNote.Length > 0 ? new Color(0.78f, 0.7f, 0.5f) : FamilyKit.Trust; Widgets.Label(new Rect(textX, rect.y + 36f, textW, 16f), (row.HouseNote.Length > 0 ? row.HouseNote : row.Thread).Truncate(textW)); }
             GUI.color = Color.white;
             Text.Font = GameFont.Small;
 
@@ -188,6 +190,8 @@ namespace FamilyLife
             cy += 88f;
 
             if (row.Concern.Length > 0) { var b = new Rect(0f, cy, v.width, 22f); FamilyKit.Badge(b, row.Concern, FamilyKit.Warn); cy += 28f; }
+            if (row.HouseNote.Length > 0) cy += FamilyKit.Label(v, cy, row.HouseNote, 0f, true);
+            if (row.Thread.Length > 0) { cy += FamilyKit.Label(v, cy, "WFL_FW_PersonThread".Translate(), 0f, true); cy += FamilyKit.Label(v, cy, row.Thread, 6f); }
 
             if (row.Roles.Count > 0)
             {

@@ -73,7 +73,9 @@ namespace FamilyLife
     {
         public PersonRecord Person;
         public Pawn Pawn;
-        public string Relation = "", Age = "", Household = "", Status = "", Concern = "";
+        public string Relation = "", Age = "", Household = "", Status = "", Concern = "", HouseNote = "", Thread = "";
+        /// <summary>Lives with the family but belongs to another House.</summary>
+        public bool Outsider;
         public int HouseholdId;
         public List<RoleEntry> Roles = new List<RoleEntry>();
     }
@@ -96,9 +98,26 @@ namespace FamilyLife
             var model = new PeopleModel { Registry = r, LineageId = view.LineageId, Revision = component.Revision, Viewer = component.PerspectivePawnId, BuiltTick = now };
             var anchor = view.Perspective ?? r.GetPerson(view.Head);
             var options = RoleDisplayOptions.Everything;
-            foreach (var person in view.Members.OrderByDescending(p => p.InColony).ThenBy(p => p.Juvenile).ThenBy(p => p.Name))
+            // Everyone in the family's households: its own members, and the people who live with them but belong to another House.
+            var memberIds = new HashSet<int>(view.Members.Select(p => p.Id));
+            var people = new List<PersonRecord>(view.Members);
+            foreach (var household in r.HouseholdsOfLineage(view.LineageId))
+                foreach (var id in household.ResidentIds)
+                {
+                    var resident = r.GetPerson(id);
+                    if (resident != null && resident.InColony && !memberIds.Contains(id) && !view.Relevant.Contains(id)) { people.Add(resident); memberIds.Add(id); }
+                }
+            foreach (var person in people.OrderBy(p => !view.Relevant.Contains(p.Id)).ThenByDescending(p => p.InColony).ThenBy(p => p.Juvenile).ThenBy(p => p.Name))
             {
-                var row = new PersonRow { Person = person, Pawn = component.TryGetPawn(person.Id), HouseholdId = person.HouseholdId };
+                var row = new PersonRow { Person = person, Pawn = component.TryGetPawn(person.Id), HouseholdId = person.HouseholdId, Outsider = !view.Relevant.Contains(person.Id) };
+                if (row.Outsider)
+                {
+                    var home = r.GetLineage(person.SocialFamilyId > 0 ? person.SocialFamilyId : person.PrimaryLineageId);
+                    string houseName = home != null ? r.LineageDisplayName(home) : "";
+                    bool spouse = view.Members.Any(m => r.KindOf(m, person) == BondKind.Partner);
+                    row.HouseNote = houseName.Length == 0 ? "" : (spouse ? "WFL_FW_ThroughMarriage" : "WFL_FW_ResidentOtherHouse").Translate(houseName).ToString();
+                }
+                foreach (var th in view.Threads) if (th.T.People.Contains(person.Id)) { row.Thread = th.Line; break; }
                 if (anchor != null && anchor.Id != person.Id)
                 {
                     var kind = r.KindOf(anchor, person);

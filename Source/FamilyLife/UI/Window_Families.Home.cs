@@ -183,13 +183,18 @@ namespace FamilyLife
         {
             var house = view.House;
             if (home.Households.Count == 0) { FamilyKit.EmptyState(v, ref y, "WFL_NoHouseholds".Translate()); return; }
-            var col = new Rect(0f, 0f, v.width, 0f);
             int actor = component.PerspectivePawnId;
-            foreach (var pair in home.Households)
+            PlaceCards(v, ref y, home.Households, (col, ys, ci, pair) => { float cardY = ys[ci]; DrawHouseholdCard(col, ref cardY, component, registry, pair, actor); ys[ci] = cardY; });
+        }
+
+        /// <summary>One household as a card: its own name, who lives there, and where each sleeps. Residents who belong to another House say so.</summary>
+        private void DrawHouseholdCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, KeyValuePair<int, List<HomeRow>> pair, int actor)
+        {
+            var house = view.House;
             {
                 var household = registry.GetHousehold(pair.Key);
                 float? cohesion = household == null ? null : registry.HouseholdCohesion(household);
-                string title = "WFL_HouseholdN".Translate(pair.Key).ToString();
+                string title = view.HouseholdLabels.TryGetValue(pair.Key, out var hhLabel) ? hhLabel : "WFL_FW_HH_Plain".Translate().ToString();
                 if (cohesion.HasValue) title += "  -  " + ("WFL_Tier_" + BondTuning.CohesionTier(cohesion.Value)).Translate();
                 var card = FamilyKit.BeginCard(col, ref y, "hh" + pair.Key, title);
                 var cv = card.View;
@@ -204,7 +209,8 @@ namespace FamilyLife
                     Widgets.Label(new Rect(tx, r.y, tw * 0.45f, 20f), (row.Person.FullName + (row.Person.Juvenile ? " (" + "WFL_Child".Translate() + ")" : "")).Truncate(tw * 0.45f));
                     Text.Font = GameFont.Tiny;
                     GUI.color = FamilyKit.Dim;
-                    Widgets.Label(new Rect(tx + tw * 0.45f, r.y + 2f, tw * 0.55f, 18f), row.Link.Truncate(tw * 0.55f));
+                    string linkText = People(component).ById.TryGetValue(row.Person.Id, out var personRow) && personRow.HouseNote.Length > 0 ? personRow.HouseNote : row.Link;
+                    Widgets.Label(new Rect(tx + tw * 0.45f, r.y + 2f, tw * 0.55f, 18f), linkText.Truncate(tw * 0.55f));
                     string bed = row.Bed.Length > 0 ? row.Bed + (row.Room.Length > 0 ? " - " + row.Room : "") + (row.Area.Length > 0 ? " - " + row.Area : "") : "";
                     if (bed.Length > 0) Widgets.Label(new Rect(tx, r.y + 20f, tw, 16f), bed.Truncate(tw));
                     GUI.color = Color.white;
@@ -265,8 +271,8 @@ namespace FamilyLife
         private void DrawSupplies(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry, HomeModel home)
         {
             var house = view.House;
+            var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
             bool may = MayManage(registry, house);
-            var col = new Rect(0f, 0f, v.width, 0f);
             var card = FamilyKit.BeginCard(col, ref y, "reserves", "WFL_Pantry_Title".Translate(), "WFL_FW_ReservesTip".Translate());
             var cv = card.View;
             float cy = 0f;
@@ -327,7 +333,7 @@ namespace FamilyLife
         private void DrawArea(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry, HomeModel home)
         {
             var house = view.House;
-            var col = new Rect(0f, 0f, v.width, 0f);
+            var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
             var current = house.ZoneAreaId == 0 ? null : FamilyZones.AreaFor(house);
             var card = FamilyKit.BeginCard(col, ref y, "area", "WFL_FW_FamilyArea".Translate());
             var cv = card.View;

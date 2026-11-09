@@ -1,6 +1,6 @@
 # The Families window
 
-The window is a persistent **header**, a **family list** on the left, and **six tabs**: Summary, People, Relationships, Events, Home, Leadership.
+The window is a persistent **header**, a **family list** on the left, and **six tabs**: Summary, People, Relationships, Story, Home, House Affairs.
 Older documents (PHASE1-7, EVENTS) talk about eight tabs; the table below says where each of those went. Nothing was removed.
 
 ## Where the old tabs went
@@ -8,27 +8,27 @@ Older documents (PHASE1-7, EVENTS) talk about eight tabs; the table below says w
 | Old tab / section | Now |
 |---|---|
 | Overview: founded, counts | Summary > Family status; header |
-| Overview: house ambition | Leadership > Ambition (with reasons, urgency, ways forward); header badge |
+| Overview: house ambition | House Affairs > Ambition (with reasons, urgency, ways forward); header badge |
 | Overview: family tree | People > Family tree (zoom, recenter, scroll; no closeness meter) |
-| Overview: culture, values, legacies, memories | Events > Chronicle > Family culture |
+| Overview: culture, values, legacies, memories | Story > Chronicle > Family culture |
 | Relationships | Relationships (four bars per person, search, filters, sorting, detail panel) |
-| Moments: ceremonies | Events > Upcoming (planned) and Recent (finished) |
+| Moments: ceremonies | Story > Current (planned) and Recent (finished) |
 | Moments: belonging, agency | People > person detail > How they belong |
 | Moments: attention between children | Relationships > Attention card (only when uneven) |
-| Moments: standing between families | Leadership > Alliances and requests |
-| Moments: incidents, plots, forgiveness | Events > Recent (Matters still open, with Forgive) |
-| Moments: supply requests | Events > Recent |
-| Moments: promises | Events > Upcoming; Summary |
-| Moments: recent moments | Events > Recent (event cards) |
+| Moments: standing between families | House Affairs > Alliances and requests |
+| Moments: incidents, plots, forgiveness | Story > Timeline (Matters still open, with Forgive) |
+| Moments: supply requests | Story > Timeline |
+| Moments: promises | Story > Current; Summary |
+| Moments: recent moments | Story > Timeline (event cards) |
 | Households (with Move...) | Home > Households (row menu `...`) |
-| House: petitions, marriage alliances | Leadership > Alliances and requests |
-| House: stewardship, offices, succession, colony institution, crime, favours, hall, assembly | Leadership > Family offices and Institutions |
-| House: associates, crest, branch | Leadership > Associates and identity |
+| House: petitions, marriage alliances | House Affairs > Alliances and requests |
+| House: stewardship, offices, succession, colony institution, crime, favours, hall, assembly | House Affairs > Family offices and Institutions |
+| House: associates, crest, branch | House Affairs > Associates and identity |
 | Zone: pantry reserves, emergency sharing, public funds | Home > Supplies (reserves and Household policies) |
 | Zone: family area, meeting place | Home > Family area |
-| Traditions (mute, hold now) | Events > Upcoming > Traditions |
-| History (chronicle) | Events > Chronicle |
-| Heirlooms and estates (in House) | Leadership > Heirlooms and estates |
+| Traditions (mute, hold now) | Story > Current > Traditions |
+| History (chronicle) | Story > Chronicle |
+| Heirlooms and estates (in House) | House Affairs > Heirlooms and estates |
 | Save records to a file | `...` menu in the header (colony overview only) |
 
 ## The header
@@ -75,3 +75,27 @@ is optional and read through the existing cached bridge; the window never reflec
 Offline: `FamilyWindowTests` (mapping, remembered state, alert navigation, perspective, filters, sorting, supplies, offices, missing leader, old-save shapes, text keys, drawing rules).
 In the game, with a family of each size, at 100 / 125 / 150 % UI scale and small and large windows: open every tab and sub-tab; collapse the family list; switch family and perspective;
 open a person, a relationship and an alert; zoom and recenter the tree; filter events; change a reserve slider; try each greyed-out action and read its reason.
+
+## The story layer (Story tab, Current Chapter)
+
+The window now leads with the family's story instead of its records. **Events** is **Story** (Current, Timeline, Chronicle) and **Leadership** is **House Affairs**
+(House offices, ambition, diplomacy and alliances, community offices, institutions, associates, crest, heirlooms).
+
+- **Nothing new is simulated.** `Domain/StoryPresentation.cs` reads records the registry already keeps. It saves nothing and changes nothing; tests build it three times
+  with different viewers and compare the records before and after. It is built when the window's data changes (`FamilyView.Build`), never while drawing.
+- **Family, House, household.** Family is kinship; the House is who belongs to it, leads it and carries its standing; a household is who shares a home. The header and
+  Summary show *House members*, *household residents* and *households* separately and explain any difference ("2 of the people living in its households belong to other
+  Houses"). Households are named for people ("Strick and Madeline's Household"), never numbered.
+- **Importance** (`StoryRelevance`): Defining (births, deaths, marriages, foundations, reconciliations, major ceremonies) > Major (rifts, kept promises, memories, tie changes,
+  newly-formed partnerships, coming of age) > Meaningful (teaching, stories, meals) > Routine (household moves, bond drift). The mod's own event weight comes first.
+- **Consolidation** (`StoryConsolidation`): moments of the same kind, from the same person, within a day, that went the same way are one scene ("Strick's lessons"). A moment
+  that went differently for someone, or that opened a rift or made or kept a promise, stays on its own. Routine entries fold into one line unless asked for.
+- **Story threads** (`StoryThreads`): rifts, feuds, unresolved incidents, plots, ceremonies being prepared, relatives visiting, camping trips, the House's ambition, turning
+  points, promises, marriage talks, petitions, food / housing / safety / skill shortages, teaching, traditions. Each has a title, summary, state, why, recent development,
+  possible paths (never promised outcomes) and what the acting pawn can do (suggestions that point at existing systems, not buttons).
+- **Current Chapter** (`StoryChapters`): the highest-priority thread leads (crisis, ceremony, ambition, turning point, promise, pressure, tradition, ordinary life); with nothing
+  pressing it says the family is having a quiet time. Every line is a translation key plus arguments (`Narrative`); see `Languages/English/Keyed/FamilyStory.xml`.
+- **Knowing.** Someone outside the House sees "not known to <name>" and no threads; a rift is a private matter between its two people; petitions need authority to manage the
+  House; promises and ceremony plans use the same visibility checks as before. When the pawn being played is the subject, lines use their `_You` variant.
+- **Layout** (`WindowLayout`): three dashboard columns from 1040 px, two from 660 px, one below; cards 320 to 520 px; prose at most 700 px; sidebar 210 to 240 px; detail
+  drawer 360 to 440 px (below the list when narrow); tabs a fixed width, left-aligned; up to four office cards a row.

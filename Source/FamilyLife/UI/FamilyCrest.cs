@@ -8,6 +8,7 @@ namespace FamilyLife
     {
         private static readonly Texture2D[] masks = new Texture2D[CrestStyle.Marks];
         private static readonly Color[] colors = { new Color(.55f,.12f,.12f),new Color(.12f,.25f,.55f),new Color(.15f,.4f,.2f),new Color(.48f,.3f,.1f),new Color(.35f,.18f,.5f),new Color(.15f,.15f,.17f),new Color(.12f,.4f,.4f),new Color(.9f,.85f,.65f) };
+        internal static Color ColorOf(int index) => colors[Mathf.Abs(index) % colors.Length];
         internal static void Draw(Rect rect,Lineage lineage)
         {
             int primary=CrestStyle.Index(lineage.CrestPrimary,lineage.Id,CrestStyle.Colors);

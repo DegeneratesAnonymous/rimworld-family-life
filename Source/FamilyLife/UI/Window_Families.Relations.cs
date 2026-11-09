@@ -82,7 +82,7 @@ namespace FamilyLife
 
             var other = State.SelectedRelation != 0 ? relRows.FirstOrDefault(r => r.OtherId == State.SelectedRelation) : (RelRow?)null;
             bool side = other.HasValue && v.width >= 800f;
-            float listW = side ? v.width - 330f - FamilyKit.Gap : v.width;
+            float listW = side ? Mathf.Min(WindowLayout.ListWidth(v.width, true), v.width - 330f - FamilyKit.Gap) : Mathf.Min(v.width, 620f);
             var list = new Rect(0f, 0f, listW, 0f);
             float listY = y, detailY = y;
             if (other.HasValue && !side)
@@ -91,7 +91,7 @@ namespace FamilyLife
                 listY = detailY;
             }
             DrawRelationList(list, ref listY, component, registry, subject);
-            if (other.HasValue && side) DrawRelationDetail(new Rect(listW + FamilyKit.Gap, 0f, 330f, 0f), ref detailY, component, registry, subject, other.Value);
+            if (other.HasValue && side) DrawRelationDetail(new Rect(listW + FamilyKit.Gap, 0f, Mathf.Min(WindowLayout.DrawerMax, v.width - listW - FamilyKit.Gap), 0f), ref detailY, component, registry, subject, other.Value);
             y = Mathf.Max(listY, detailY);
             DrawAttentionCard(new Rect(0f, 0f, v.width, 0f), ref y, component, registry, house);
         }
@@ -202,6 +202,16 @@ namespace FamilyLife
             Widgets.Label(new Rect(80f, cy + 20f, cv.width - 80f, 20f), ("WFL_FW_Trend_" + (row.Trend > 0 ? "Up" : row.Trend < 0 ? "Down" : "Flat")).Translate().ToString());
             GUI.color = Color.white;
             cy += 50f;
+
+            // The story of it: what the four meters add up to, in a few lines.
+            var tale = RelationshipStory.Of(row, FamilyUi.NameOf(registry, subject.Id), FamilyUi.NameOf(registry, other.Id), component.PerspectivePawnId == subject.Id);
+            var prose = new Rect(0f, 0f, cv.width, 0f);
+            foreach (var n in tale.All)
+            {
+                if (n.Key.StartsWith("WFL_FW_RS_Idea")) { cy += 2f; cy += FamilyKit.Label(prose, cy, "WFL_FW_RS_Possible".Translate(), 0f, true); cy += FamilyKit.Label(prose, cy, FamilyText.Say(n), 6f); }
+                else cy += FamilyKit.Label(prose, cy, FamilyText.Say(n), 0f, n.Key.StartsWith("WFL_FW_RS_Concern"));
+            }
+            cy += 4f;
 
             string[] names = { "WFL_Bond_Attachment", "WFL_Bond_Trust", "WFL_Bond_Tension", "WFL_Bond_Familiarity" };
             Color[] colors = { FamilyKit.Closeness, FamilyKit.Trust, FamilyKit.Tension, FamilyKit.Familiarity };

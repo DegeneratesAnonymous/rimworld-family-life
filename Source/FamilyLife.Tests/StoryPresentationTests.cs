@@ -402,6 +402,19 @@ namespace FamilyLife.Tests
             }
         }
 
+        [Fact]
+        public void Every_literal_translation_key_used_by_the_window_exists()
+        {
+            var keys = new System.Text.StringBuilder();
+            foreach (var f in System.IO.Directory.GetFiles(System.IO.Path.Combine(RepoRoot(), "Languages", "English", "Keyed"), "*.xml")) keys.Append(System.IO.File.ReadAllText(f));
+            var all = keys.ToString();
+            var missing = new List<string>();
+            foreach (var f in System.IO.Directory.GetFiles(System.IO.Path.Combine(RepoRoot(), "Source", "FamilyLife", "UI"), "*.cs"))
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(System.IO.File.ReadAllText(f), "\"(WFL_[A-Za-z0-9_]+)\"[.]Translate"))
+                    if (!all.Contains("<" + m.Groups[1].Value + ">")) missing.Add(System.IO.Path.GetFileName(f) + ": " + m.Groups[1].Value);
+            Assert.True(missing.Count == 0, string.Join(", ", missing.Distinct()));
+        }
+
         private static IEnumerable<string> KeysOf(StoryModel m)
         {
             foreach (var t in m.Threads)

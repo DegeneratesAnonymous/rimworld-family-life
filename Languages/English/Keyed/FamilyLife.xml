@@ -156,7 +156,7 @@ Shortages averted: {5}</WFL_Stewardship_Tip>
   <WFL_CohesionHelp>Closeness is a summary of how attached and trusting the people in a household are, less any tension between them. Individuals can feel differently from the household as a whole.</WFL_CohesionHelp>
   <WFL_RelPick>Showing: {0}</WFL_RelPick>
   <WFL_RelHelp>How this person feels about each of their relatives. It sits alongside the game's own opinion and never replaces it. Hover a row for the numbers.</WFL_RelHelp>
-  <WFL_Bond_Attachment>Attachment</WFL_Bond_Attachment>
+  <WFL_Bond_Attachment>Closeness</WFL_Bond_Attachment>
   <WFL_Bond_Trust>Trust</WFL_Bond_Trust>
   <WFL_Bond_Tension>Tension</WFL_Bond_Tension>
   <WFL_Bond_Familiarity>Familiarity</WFL_Bond_Familiarity>
@@ -167,7 +167,7 @@ Shortages averted: {5}</WFL_Stewardship_Tip>
   <WFL_BondKind_Sibling>sibling</WFL_BondKind_Sibling>
   <WFL_BondKind_Partner>partner</WFL_BondKind_Partner>
   <WFL_BondKind_Ex>former partner</WFL_BondKind_Ex>
-  <WFL_BondTip>{0} toward {1}: attachment {2}, trust {3}, tension {4}, familiarity {5}.</WFL_BondTip>
+  <WFL_BondTip>{0} toward {1}: closeness {2}, trust {3}, tension {4}, familiarity {5}.</WFL_BondTip>
 
   <!-- Phases 4-6 -->
   <WFL_S_Dates>Dates for partners (with a sitter for the children)</WFL_S_Dates>

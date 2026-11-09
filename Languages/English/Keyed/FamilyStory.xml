@@ -362,4 +362,70 @@
   <WFL_FW_FilterPersonTip>Show only the moments one person took part in.</WFL_FW_FilterPersonTip>
   <WFL_FW_ShowRoutine>Everyday matters</WFL_FW_ShowRoutine>
   <WFL_FW_ShowRoutineTip>Also list small, routine changes instead of folding them into one line.</WFL_FW_ShowRoutineTip>
+
+  <!-- What a relationship adds up to -->
+  <WFL_FW_RS_Tone_Warm>{0} and {1} share a warm bond.</WFL_FW_RS_Tone_Warm>
+  <WFL_FW_RS_Tone_Warm_You>You and {1} share a warm bond.</WFL_FW_RS_Tone_Warm_You>
+  <WFL_FW_RS_Tone_Fond>{0} and {1} get along well enough.</WFL_FW_RS_Tone_Fond>
+  <WFL_FW_RS_Tone_Fond_You>You and {1} get along well enough.</WFL_FW_RS_Tone_Fond_You>
+  <WFL_FW_RS_Tone_Cool>{0} and {1} are not close.</WFL_FW_RS_Tone_Cool>
+  <WFL_FW_RS_Tone_Cool_You>You and {1} are not close.</WFL_FW_RS_Tone_Cool_You>
+  <WFL_FW_RS_Tone_New>{0} and {1} hardly know each other yet.</WFL_FW_RS_Tone_New>
+  <WFL_FW_RS_Tone_New_You>You and {1} hardly know each other yet.</WFL_FW_RS_Tone_New_You>
+  <WFL_FW_RS_Tone_Tense>{0} and {1} are on edge with each other.</WFL_FW_RS_Tone_Tense>
+  <WFL_FW_RS_Tone_Tense_You>You and {1} are on edge with each other.</WFL_FW_RS_Tone_Tense_You>
+  <WFL_FW_RS_Trust_High>There is real trust between them.</WFL_FW_RS_Trust_High>
+  <WFL_FW_RS_Trust_Low>Trust is hard to come by.</WFL_FW_RS_Trust_Low>
+  <WFL_FW_RS_Trend_Up>Lately they have been growing closer.</WFL_FW_RS_Trend_Up>
+  <WFL_FW_RS_Trend_Down>Lately things have been cooling.</WFL_FW_RS_Trend_Down>
+  <WFL_FW_RS_Concern_None>Current concerns: no significant tension.</WFL_FW_RS_Concern_None>
+  <WFL_FW_RS_Concern_Tense>Current concerns: tension between them is notable.</WFL_FW_RS_Concern_Tense>
+  <WFL_FW_RS_Idea_Warm>{0} could spend more time with {1}.</WFL_FW_RS_Idea_Warm>
+  <WFL_FW_RS_Idea_Warm_You>You could spend more time with {1}.</WFL_FW_RS_Idea_Warm_You>
+  <WFL_FW_RS_Idea_Cool>{0} could try sharing a meal or a story with {1}.</WFL_FW_RS_Idea_Cool>
+  <WFL_FW_RS_Idea_Cool_You>You could try sharing a meal or a story with {1}.</WFL_FW_RS_Idea_Cool_You>
+  <WFL_FW_RS_Idea_New>{0} could get to know {1} over a shared task.</WFL_FW_RS_Idea_New>
+  <WFL_FW_RS_Idea_New_You>You could get to know {1} over a shared task.</WFL_FW_RS_Idea_New_You>
+  <WFL_FW_RS_Idea_Tense>An apology, a kindness or time apart may ease things.</WFL_FW_RS_Idea_Tense>
+  <WFL_FW_RS_Idea_Tense_You>An apology, a kindness or time apart may ease things for you.</WFL_FW_RS_Idea_Tense_You>
+  <WFL_FW_RS_Possible>Possible interaction:</WFL_FW_RS_Possible>
+
+  <!-- House Affairs -->
+  <WFL_FW_Card_HouseOffices>House offices</WFL_FW_Card_HouseOffices>
+  <WFL_FW_Card_CommunityOffices>Community offices</WFL_FW_Card_CommunityOffices>
+  <WFL_FW_CommunityOfficesNote>These posts belong to the whole colony, not to one House, and can be held by anyone. When a member of this House holds one, it raises the House's standing in the colony.</WFL_FW_CommunityOfficesNote>
+  <WFL_FW_OfHouse>of House {0}</WFL_FW_OfHouse>
+  <WFL_FW_AmbitionSince>Pursued since</WFL_FW_AmbitionSince>
+  <WFL_FW_Strengths>Strengths: {0}.</WFL_FW_Strengths>
+  <WFL_FW_Obstacles>Obstacles: {0}.</WFL_FW_Obstacles>
+  <WFL_FW_NeedFeeds_Sustenance>Food held against the days of meals the House wants to keep, and fuel in store.</WFL_FW_NeedFeeds_Sustenance>
+  <WFL_FW_NeedFeeds_LivingSpace>Beds and room for everyone who lives with the House.</WFL_FW_NeedFeeds_LivingSpace>
+  <WFL_FW_NeedFeeds_Safety>Defenders, defences, and how threatening nearby Houses are.</WFL_FW_NeedFeeds_Safety>
+  <WFL_FW_NeedFeeds_Continuity>A living head, a named heir and adults ready to take over.</WFL_FW_NeedFeeds_Continuity>
+  <WFL_FW_NeedFeeds_Capability>Skilled members in medicine, cooking, growing, building, crafting and the rest.</WFL_FW_NeedFeeds_Capability>
+  <WFL_FW_NeedFeeds_Cohesion>The closeness, trust and tension between members, and open rifts.</WFL_FW_NeedFeeds_Cohesion>
+  <WFL_FW_NeedFeeds_Influence>Community offices held by members, and the House's standing among others.</WFL_FW_NeedFeeds_Influence>
+  <WFL_FW_NeedFeeds_Independence>How little the House owes to, or depends on, other Houses.</WFL_FW_NeedFeeds_Independence>
+  <WFL_FW_NeedEnough>The House considers this enough.</WFL_FW_NeedEnough>
+  <WFL_FW_NeedLow>The House considers this lower than it would like.</WFL_FW_NeedLow>
+  <WFL_FW_NeedShort>The House considers this short.</WFL_FW_NeedShort>
+  <WFL_FW_NeedDrives>This is what is driving the House's current ambition.</WFL_FW_NeedDrives>
+  <WFL_FW_NoAssociates>No friends or associates are close to the House yet.</WFL_FW_NoAssociates>
+  <WFL_Crest_Edit>Edit crest</WFL_Crest_Edit>
+  <WFL_Crest_EditTip>Choose the House's colours, symbol and pattern, with a preview, before confirming.</WFL_Crest_EditTip>
+  <WFL_Crest_EditTitle>Edit crest</WFL_Crest_EditTitle>
+  <WFL_Crest_Preview>Preview</WFL_Crest_Preview>
+  <WFL_Crest_PrimaryLabel>Main colour</WFL_Crest_PrimaryLabel>
+  <WFL_Crest_SecondaryLabel>Second colour</WFL_Crest_SecondaryLabel>
+  <WFL_Crest_SymbolLabel>Symbol</WFL_Crest_SymbolLabel>
+  <WFL_Crest_PatternLabel>Pattern</WFL_Crest_PatternLabel>
+  <WFL_Crest_Confirm>Confirm</WFL_Crest_Confirm>
+  <WFL_Crest_Cancel>Cancel</WFL_Crest_Cancel>
+  <WFL_FW_Card_Branch>Found a new House</WFL_FW_Card_Branch>
+  <WFL_FW_BranchExplain>A member can found a branch: a new House of their own, with its own name and crest. Type a name, then choose who founds it.</WFL_FW_BranchExplain>
+
+  <!-- People -->
+  <WFL_FW_ThroughMarriage>Lives here through marriage; remains a member of House {0}.</WFL_FW_ThroughMarriage>
+  <WFL_FW_ResidentOtherHouse>Lives here; a member of House {0}.</WFL_FW_ResidentOtherHouse>
+  <WFL_FW_PersonThread>Part of the current story:</WFL_FW_PersonThread>
 </LanguageData>

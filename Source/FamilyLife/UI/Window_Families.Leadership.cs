@@ -22,33 +22,46 @@ namespace FamilyLife
                 FamilyKit.EmptyState(v, ref y, "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
                 return;
             }
-            var col = new Rect(0f, 0f, v.width, 0f);
-            DrawAmbitionCard(col, ref y, registry, house);
+            var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
+            DrawAmbitionCard(col, ref y, component, registry, house);
             DrawAlliancesCard(col, ref y, component, registry, house);
             DrawInstitutionsCard(col, ref y, component, registry, house);
+            DrawAssociatesCard(col, ref y, component, registry, house);
             DrawIdentityCard(col, ref y, component, registry, house);
+            DrawBranchCard(col, ref y, component, registry, house);
             DrawEstatesCard(col, ref y, component, registry, house);
         }
 
         // ------------------------------------------------------------------ offices
 
+        private static bool IsHouseOffice(FamilyRole role) => role == FamilyRole.HouseHead || role == FamilyRole.Steward || role == FamilyRole.PublicHeir || role == FamilyRole.HouseProtector;
+
         private void DrawOfficeCards(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry)
         {
-            FamilyKit.SectionHeader(v, ref y, "WFL_FW_Card_Offices".Translate());
-            const float cardW = 300f;
-            int perRow = Mathf.Max(1, Mathf.FloorToInt((v.width + FamilyKit.Gap) / (cardW + FamilyKit.Gap)));
-            float w = Mathf.Floor((v.width - (perRow - 1) * FamilyKit.Gap) / perRow);
+            // The House's own offices first; community offices are the colony's, and are explained apart.
+            FamilyKit.SectionHeader(v, ref y, "WFL_FW_Card_HouseOffices".Translate());
+            DrawOfficeGrid(v, ref y, component, registry, view.Roles.Where(r => IsHouseOffice(r.Role)).ToList());
+            var community = view.Roles.Where(r => !IsHouseOffice(r.Role)).ToList();
+            if (community.Count == 0) return;
+            FamilyKit.SectionHeader(v, ref y, "WFL_FW_Card_CommunityOffices".Translate());
+            y += FamilyKit.Label(new Rect(0f, 0f, WindowLayout.ProseWidth(v.width), 0f), y, "WFL_FW_CommunityOfficesNote".Translate(), 0f, true) + 2f;
+            DrawOfficeGrid(v, ref y, component, registry, community);
+        }
+
+        private void DrawOfficeGrid(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry, List<RoleCardData> cards)
+        {
+            int perRow = WindowLayout.OfficeColumns(v.width);
+            float w = Mathf.Min(300f, Mathf.Floor((v.width - (perRow - 1) * FamilyKit.Gap) / perRow));
             float rowTop = y, rowMax = y;
             int i = 0;
-            foreach (var data in view.Roles)
+            foreach (var data in cards)
             {
                 int c = i % perRow;
-                if (c == 0 && i > 0) { rowTop = rowMax; }
+                if (c == 0 && i > 0) rowTop = rowMax;
                 float cardY = rowTop;
                 DrawOfficeCard(new Rect(c * (w + FamilyKit.Gap), 0f, w, 0f), ref cardY, component, registry, data);
                 rowMax = Mathf.Max(rowMax, cardY);
                 i++;
-                if (c == perRow - 1) rowTop = rowMax;
             }
             y = rowMax;
         }
@@ -75,6 +88,11 @@ namespace FamilyLife
             {
                 DrawPortrait(new Rect(0f, cy, 24f, 30f), holder, component);
                 Widgets.Label(new Rect(30f, cy + 4f, textW - 30f, 22f), holder.FullName.Truncate(textW - 30f));
+                if (!view.Relevant.Contains(holder.Id))
+                {
+                    var home = registry.GetLineage(holder.SocialFamilyId > 0 ? holder.SocialFamilyId : holder.PrimaryLineageId);
+                    if (home != null) { Text.Font = GameFont.Tiny; GUI.color = FamilyKit.Dim; Widgets.Label(new Rect(30f, cy + 20f, textW - 30f, 16f), "WFL_FW_OfHouse".Translate(registry.LineageDisplayName(home)).ToString().Truncate(textW - 30f)); GUI.color = Color.white; Text.Font = GameFont.Small; }
+                }
             }
             else
             {
@@ -170,7 +188,21 @@ namespace FamilyLife
 
         // ------------------------------------------------------------------ ambition
 
-        private void DrawAmbitionCard(Rect col, ref float y, FamilyRegistry registry, Lineage house)
+        private static readonly Dictionary<string, string> needTips = new Dictionary<string, string>();
+
+        /// <summary>What a House need is, what feeds it, whether the House counts it as enough and why it matters now. Worked out once per state and kept.</summary>
+        private static string NeedTip(HouseNeed need, float score, HouseNeed driver)
+        {
+            string key = need + "|" + (score >= 55f ? "ok" : score >= 35f ? "low" : "short") + "|" + (need == driver);
+            if (needTips.TryGetValue(key, out var hit)) return hit;
+            string nl = System.Environment.NewLine;
+            string tip = ("WFL_FW_NeedTip_" + need).Translate().ToString() + nl + nl + ("WFL_FW_NeedFeeds_" + need).Translate().ToString() + nl + nl
+                + (score >= 55f ? "WFL_FW_NeedEnough" : score >= 35f ? "WFL_FW_NeedLow" : "WFL_FW_NeedShort").Translate().ToString()
+                + (need == driver ? nl + "WFL_FW_NeedDrives".Translate().ToString() : "");
+            return needTips[key] = tip;
+        }
+
+        private void DrawAmbitionCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
         {
             var card = FamilyKit.BeginCard(col, ref y, "l.ambition", "WFL_Ambition_Title".Translate());
             var cv = card.View;
@@ -182,34 +214,56 @@ namespace FamilyLife
                 FamilyKit.EndCard(card, cy, ref y);
                 return;
             }
+            string k = a.Primary.ToString();
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0f, cy, cv.width, 30f), ("WFL_Ambition_" + a.Primary).Translate());
+            Widgets.Label(new Rect(0f, cy, cv.width, 30f), FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Title")));
             Text.Font = GameFont.Small;
             cy += 32f;
-            string target = a.TargetFamilyId == 0 ? "" : " " + "WFL_Ambition_Target".Translate(registry.LineageDisplayName(registry.GetLineage(a.TargetFamilyId)));
-            cy += FamilyKit.Label(cv, cy, ("WFL_Need_" + a.PrimaryReason).Translate() + target);
-            if (a.TargetCapability != HouseCapability.None) cy += FamilyKit.Label(cv, cy, "WFL_Ambition_SkillGap".Translate(("WFL_Capability_" + a.TargetCapability).Translate()), 0f, true);
-            cy += FamilyKit.KeyValue(cv, cy, "WFL_FW_Urgency".Translate(), Mathf.RoundToInt(a.Urgency).ToString(), 80f);
-            FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_Approaches".Translate());
-            foreach (var line in ("WFL_FW_Approach_" + a.Primary).Translate().ToString().Split('\n')) if (line.Trim().Length > 0) cy += FamilyKit.Label(cv, cy, "- " + line.Trim(), 6f);
+            var prose = new Rect(0f, 0f, WindowLayout.ProseWidth(cv.width), 0f);
+            cy += FamilyKit.Label(prose, cy, FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Sum", view.Name)));
+            cy += FamilyKit.Label(prose, cy, FamilyText.Say(new Narrative("WFL_FW_Why_" + a.PrimaryReason, Mathf.RoundToInt(s.Score(a.PrimaryReason)).ToString())), 0f, true);
+            if (a.TargetFamilyId != 0 && registry.GetLineage(a.TargetFamilyId) != null)
+                cy += FamilyKit.Label(prose, cy, "WFL_Ambition_Target".Translate(registry.LineageDisplayName(registry.GetLineage(a.TargetFamilyId))), 0f, true);
+            if (a.TargetCapability != HouseCapability.None) cy += FamilyKit.Label(prose, cy, "WFL_Ambition_SkillGap".Translate(("WFL_Capability_" + a.TargetCapability).Translate()), 0f, true);
+            string urgency = a.Urgency >= 70f ? "WFL_FW_Urgency_High" : a.Urgency >= 40f ? "WFL_FW_Urgency_Medium" : "WFL_FW_Urgency_Low";
+            cy += FamilyKit.KeyValue(cv, cy, "WFL_FW_Urgency".Translate(), urgency.Translate().ToString().CapitalizeFirst(), 80f);
+            if (a.StartedTick > 0) cy += FamilyKit.KeyValue(cv, cy, "WFL_FW_AmbitionSince".Translate(), FamilyText.Date(a.StartedTick), 80f);
+
+            // Strengths and obstacles, from where the House stands on each need.
+            var needs = new[] { HouseNeed.Sustenance, HouseNeed.LivingSpace, HouseNeed.Safety, HouseNeed.Continuity, HouseNeed.Capability, HouseNeed.Cohesion, HouseNeed.Influence, HouseNeed.Independence };
+            string strengths = string.Join(", ", needs.Where(n => s.Score(n) >= 65f).Select(n => ("WFL_FW_Need_" + n).Translate().ToString()));
+            string obstacles = string.Join(", ", needs.Where(n => s.Score(n) < 35f).Select(n => ("WFL_FW_Need_" + n).Translate().ToString()));
+            if (strengths.Length > 0) cy += FamilyKit.Label(prose, cy, "WFL_FW_Strengths".Translate(strengths));
+            if (obstacles.Length > 0) cy += FamilyKit.Label(prose, cy, "WFL_FW_Obstacles".Translate(obstacles));
+
+            FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_ThreadPaths".Translate());
+            cy += FamilyKit.Label(prose, cy, "- " + FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Path1")), 6f);
+            cy += FamilyKit.Label(prose, cy, "- " + FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Path2")), 6f);
+            int viewer = component.PerspectivePawnId;
+            FamilyKit.SectionHeader(cv, ref cy, (viewer == 0 ? "WFL_FW_ThreadActionsAny" : "WFL_FW_ThreadActions").Translate(viewer == 0 ? "" : FamilyUi.NameOf(registry, viewer)));
+            cy += FamilyKit.Label(prose, cy, "- " + FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Act1")), 6f);
+            cy += FamilyKit.Label(prose, cy, "- " + FamilyText.Say(new Narrative("WFL_FW_Amb_" + k + "_Act2")), 6f);
+            cy += DrawPeopleStrip(0f, cy + 4f, new[] { view.Head, view.Steward }.Where(id => id != 0).ToList(), component, registry) + 4f;
             if (a.Secondary != HouseAmbitionKind.None)
                 cy += FamilyKit.Label(cv, cy + 2f, "WFL_Ambition_Secondary".Translate(("WFL_Ambition_" + a.Secondary).Translate(), ("WFL_Need_" + a.SecondaryReason).Translate()), 0f, true);
 
-            // How the house stands on each need, so the reason can be seen and not only read.
+            // How the House stands on each need: small bars, never stretched across the window, each with a tooltip that says what it is.
             FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_Needs".Translate());
-            var needs = new[] { HouseNeed.Sustenance, HouseNeed.LivingSpace, HouseNeed.Safety, HouseNeed.Continuity, HouseNeed.Capability, HouseNeed.Cohesion, HouseNeed.Influence, HouseNeed.Independence };
             foreach (var need in needs)
             {
                 float score = s.Score(need);
+                var row = new Rect(0f, cy, 300f, 20f);
                 GUI.color = need == a.PrimaryReason ? FamilyKit.Gold : FamilyKit.Dim;
                 Widgets.Label(new Rect(0f, cy, 110f, 20f), ("WFL_FW_Need_" + need).Translate());
                 GUI.color = Color.white;
-                FamilyKit.MetricBar(new Rect(114f, cy + 4f, cv.width - 114f - 36f, 11f), score, score < 35f ? FamilyKit.Urgent : score < 55f ? FamilyKit.Warn : FamilyKit.Good, ("WFL_FW_NeedTip_" + need).Translate());
-                Widgets.Label(new Rect(cv.width - 32f, cy, 32f, 20f), Mathf.RoundToInt(score).ToString());
+                FamilyKit.MetricBar(new Rect(114f, cy + 4f, 130f, 11f), score, score < 35f ? FamilyKit.Urgent : score < 55f ? FamilyKit.Warn : FamilyKit.Good);
+                Widgets.Label(new Rect(250f, cy, 36f, 20f), Mathf.RoundToInt(score).ToString());
+                TooltipHandler.TipRegion(row, NeedTip(need, score, a.PrimaryReason));
                 cy += 20f;
             }
             FamilyKit.EndCard(card, cy, ref y);
         }
+
 
         // ------------------------------------------------------------------ alliances and requests
 
@@ -373,29 +427,39 @@ namespace FamilyLife
 
         // ------------------------------------------------------------------ identity
 
-        private void DrawIdentityCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
+        private void DrawAssociatesCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
         {
-            var card = FamilyKit.BeginCard(col, ref y, "l.identity", "WFL_FW_Card_Identity".Translate());
+            var associates = registry.HouseContacts.Where(c => c.FamilyId == house.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId), house.Id)).OrderByDescending(c => c.Respect).Take(12).ToList();
+            var card = FamilyKit.BeginCard(col, ref y, "l.associates", "WFL_Associates_Title".Translate());
             var cv = card.View;
             float cy = 0f;
-            var associates = registry.HouseContacts.Where(c => c.FamilyId == house.Id && !registry.BelongsToFamily(registry.GetPerson(c.PersonId), house.Id)).OrderByDescending(c => c.Respect).Take(12).ToList();
-            if (associates.Count > 0)
-            {
-                FamilyKit.SectionHeader(cv, ref cy, "WFL_Associates_Title".Translate());
-                foreach (var c in associates)
-                    cy += FamilyKit.Label(cv, cy, "WFL_Associates_Line".Translate(FamilyUi.NameOf(registry, c.PersonId), ("WFL_HouseRole_" + registry.RoleInHouse(c.PersonId, house.Id)).Translate(), c.Respect.ToString("0")), 6f, true);
-            }
+            if (associates.Count == 0) FamilyKit.EmptyState(cv, ref cy, "WFL_FW_NoAssociates".Translate());
+            foreach (var c in associates)
+                cy += FamilyKit.Label(cv, cy, "WFL_Associates_Line".Translate(FamilyUi.NameOf(registry, c.PersonId), ("WFL_HouseRole_" + registry.RoleInHouse(c.PersonId, house.Id)).Translate(), c.Respect.ToString("0")), 6f, true);
+            FamilyKit.EndCard(card, cy, ref y);
+        }
 
+        /// <summary>The crest, shown, with one button that opens the editor. Branching a new House is its own card.</summary>
+        private void DrawIdentityCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
+        {
+            var card = FamilyKit.BeginCard(col, ref y, "l.identity", "WFL_Manage_Crest".Translate());
+            var cv = card.View;
+            float cy = 0f;
             bool may = MayManage(registry, house);
-            FamilyKit.SectionHeader(cv, ref cy, "WFL_Manage_Crest".Translate());
-            FamilyCrest.Draw(new Rect(0f, cy + 4f, 64f, 76f), house);
-            var a = new Rect(76f, cy + 4f, 150f, 30f); var b = new Rect(232f, cy + 4f, 150f, 30f);
-            if (FamilyKit.Action(a, "WFL_Crest_Primary".Translate(), may, WhyNot(registry, house))) house.CrestPrimary = (CrestStyle.Index(house.CrestPrimary, house.Id, CrestStyle.Colors) + 1) % CrestStyle.Colors;
-            if (FamilyKit.Action(b, "WFL_Crest_Secondary".Translate(), may, WhyNot(registry, house))) house.CrestSecondary = (CrestStyle.Index(house.CrestSecondary, 7, CrestStyle.Colors) + 1) % CrestStyle.Colors;
-            a.y = b.y = cy + 40f;
-            if (FamilyKit.Action(a, ("WFL_Crest_Mark_" + CrestStyle.Index(house.CrestMark, house.Id / CrestStyle.Colors, CrestStyle.Marks)).Translate(), may, WhyNot(registry, house))) house.CrestMark = (CrestStyle.Index(house.CrestMark, house.Id / CrestStyle.Colors, CrestStyle.Marks) + 1) % CrestStyle.Marks;
-            if (FamilyKit.Action(b, ("WFL_Crest_Pattern_" + CrestStyle.Index(house.CrestPattern, 0, CrestStyle.Patterns)).Translate(), may, WhyNot(registry, house))) house.CrestPattern = (CrestStyle.Index(house.CrestPattern, 0, CrestStyle.Patterns) + 1) % CrestStyle.Patterns;
-            cy += 90f;
+            FamilyCrest.Draw(new Rect(0f, cy + 2f, 64f, 76f), house);
+            Widgets.Label(new Rect(76f, cy + 4f, cv.width - 76f, 22f), view.Name);
+            if (FamilyKit.Action(new Rect(76f, cy + 34f, 140f, 30f), "WFL_Crest_Edit".Translate(), may, WhyNot(registry, house), "WFL_Crest_EditTip".Translate())) Find.WindowStack.Add(new Window_CrestEditor(house));
+            cy += 86f;
+            FamilyKit.EndCard(card, cy, ref y);
+        }
+
+        private void DrawBranchCard(Rect col, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
+        {
+            var card = FamilyKit.BeginCard(col, ref y, "l.branch", "WFL_FW_Card_Branch".Translate());
+            var cv = card.View;
+            float cy = 0f;
+            bool may = MayManage(registry, house);
+            cy += FamilyKit.Label(cv, cy, "WFL_FW_BranchExplain".Translate(), 0f, true);
             float half = Mathf.Min(220f, (cv.width - 8f) / 2f);
             branchName = Widgets.TextField(new Rect(0f, cy, half, 28f), branchName);
             if (FamilyKit.Action(new Rect(half + 8f, cy, half, 28f), "WFL_House_Branch".Translate(), may, WhyNot(registry, house), "WFL_FW_BranchTip".Translate()))
