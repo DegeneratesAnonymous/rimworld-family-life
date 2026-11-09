@@ -25,7 +25,7 @@
   <WFL_FW_TabBadgeTip>{0} matters here need attention.</WFL_FW_TabBadgeTip>
 
   <!-- Summary cards -->
-  <WFL_FW_Card_Chapter>CURRENT CHAPTER</WFL_FW_Card_Chapter>
+  <WFL_FW_Card_Chapter>Current chapter</WFL_FW_Card_Chapter>
   <WFL_FW_ChapterTip>What the family is mostly living through right now, put together from what the records show. It is a summary of real events and situations, never an invention.</WFL_FW_ChapterTip>
   <WFL_FW_ChapterThreads>What is behind it:</WFL_FW_ChapterThreads>
   <WFL_FW_OpenThread>Open details</WFL_FW_OpenThread>
@@ -41,7 +41,7 @@
 
   <WFL_FW_Ch_UnknownTitle>Not yet known</WFL_FW_Ch_UnknownTitle>
   <WFL_FW_Ch_Unknown>What this House is going through is unknown to {0}. Only what {0} took part in is shown.</WFL_FW_Ch_Unknown>
-  <WFL_FW_Ch_QuietTitle>A QUIET PERIOD</WFL_FW_Ch_QuietTitle>
+  <WFL_FW_Ch_QuietTitle>A quiet period</WFL_FW_Ch_QuietTitle>
   <WFL_FW_Ch_Quiet>House {0} is enjoying a quiet period. Nothing is pressing, and the household goes about its days.</WFL_FW_Ch_Quiet>
   <WFL_FW_Ch_Is_Fractured>House {0} is fractured.</WFL_FW_Ch_Is_Fractured>
   <WFL_FW_Ch_Is_Strained>House {0} is strained.</WFL_FW_Ch_Is_Strained>
@@ -430,22 +430,22 @@
   <WFL_FW_PersonThread>Part of the current story:</WFL_FW_PersonThread>
 
   <!-- A House as someone outside it knows it -->
-  <WFL_FW_Ch_Dealings_Uneasy_Title>UNEASY DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Uneasy_Title>
-  <WFL_FW_Ch_Dealings_Warm_Title>WARM DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Warm_Title>
-  <WFL_FW_Ch_Dealings_Mixed_Title>MIXED DEALINGS WITH HOUSE {0}</WFL_FW_Ch_Dealings_Mixed_Title>
+  <WFL_FW_Ch_Dealings_Uneasy_Title>Uneasy dealings with House {0}</WFL_FW_Ch_Dealings_Uneasy_Title>
+  <WFL_FW_Ch_Dealings_Warm_Title>Warm dealings with House {0}</WFL_FW_Ch_Dealings_Warm_Title>
+  <WFL_FW_Ch_Dealings_Mixed_Title>Mixed dealings with House {0}</WFL_FW_Ch_Dealings_Mixed_Title>
   <WFL_FW_Ch_Dealings_Uneasy>{0}'s relationship with House {1} has become strained.</WFL_FW_Ch_Dealings_Uneasy>
   <WFL_FW_Ch_Dealings_Warm>{0} has been getting on well with House {1}.</WFL_FW_Ch_Dealings_Warm>
   <WFL_FW_Ch_Dealings_Mixed>{0}'s dealings with House {1} have gone both well and badly.</WFL_FW_Ch_Dealings_Mixed>
   <WFL_FW_Ch_DealingsPrivate>This is only what has happened between them. House {0}'s own affairs are its business.</WFL_FW_Ch_DealingsPrivate>
-  <WFL_FW_Ch_RepTitle>KNOWN BY REPUTATION</WFL_FW_Ch_RepTitle>
+  <WFL_FW_Ch_RepTitle>Known by reputation</WFL_FW_Ch_RepTitle>
   <WFL_FW_Ch_Rep>{0} knows {1} as the publicly recognized Head of House {2}, but knows little about the House's private affairs.</WFL_FW_Ch_Rep>
-  <WFL_FW_Ch_LittleTitle>LITTLE IS KNOWN</WFL_FW_Ch_LittleTitle>
+  <WFL_FW_Ch_LittleTitle>Little is known</WFL_FW_Ch_LittleTitle>
   <WFL_FW_Ch_Little>{0} has had no meaningful contact with House {1}.</WFL_FW_Ch_Little>
   <WFL_FW_Th_Dealings_Line>Dealings with House {0}</WFL_FW_Th_Dealings_Line>
   <WFL_FW_Th_Dealings_Why>These come from moments {0} shared with its people.</WFL_FW_Th_Dealings_Why>
   <WFL_FW_Th_Dealings_Path1>More time together, or an apology, can change how things stand</WFL_FW_Th_Dealings_Path1>
   <WFL_FW_State_Known>Known firsthand</WFL_FW_State_Known>
-  <WFL_FW_PrivateHouseTitle>PRIVATE HOUSE AFFAIRS</WFL_FW_PrivateHouseTitle>
+  <WFL_FW_PrivateHouseTitle>Private House affairs</WFL_FW_PrivateHouseTitle>
   <WFL_FW_PrivateHouse>{0} does not know House {1}'s current ambition, private succession discussions or internal policies.</WFL_FW_PrivateHouse>
   <WFL_FW_PrivateRelTitle>{0} does not know House {1}'s private relationships</WFL_FW_PrivateRelTitle>
   <WFL_FW_PrivateRelBody>The relationships below are limited to {0}'s own experiences and publicly known family ties.</WFL_FW_PrivateRelBody>
@@ -509,10 +509,10 @@
   <WFL_FW_HouseholdBrief>{0} residents · {1} beds · {2} bedrooms</WFL_FW_HouseholdBrief>
   <WFL_FW_HouseholdDetail>Household detail</WFL_FW_HouseholdDetail>
   <WFL_FW_HouseholdOpenTip>Open {0}'s details.</WFL_FW_HouseholdOpenTip>
-  <WFL_FW_PrivateHomeTitle>PRIVATE HOUSEHOLD AFFAIRS</WFL_FW_PrivateHomeTitle>
+  <WFL_FW_PrivateHomeTitle>Private household affairs</WFL_FW_PrivateHomeTitle>
   <WFL_FW_PrivateHome>{0} has not seen inside House {1}'s homes. Its beds, rooms and supplies are its own.</WFL_FW_PrivateHome>
   <!-- Evidence, capabilities, suggestions, relations, units -->
-  <WFL_FW_ChapterWhy>WHY {0} SEES IT THIS WAY</WFL_FW_ChapterWhy>
+  <WFL_FW_ChapterWhy>Why {0} sees it this way</WFL_FW_ChapterWhy>
   <WFL_FW_Evid_Bad>{1} with {0} went badly.</WFL_FW_Evid_Bad>
   <WFL_FW_Evid_Good>{1} with {0} went well.</WFL_FW_Evid_Good>
   <WFL_FW_Evid_Neutral>{1} with {0} changed nothing.</WFL_FW_Evid_Neutral>
