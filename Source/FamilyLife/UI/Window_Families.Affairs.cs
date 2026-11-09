@@ -37,10 +37,11 @@ namespace FamilyLife
                 int otherId = tie.LineageA == house.Id ? tie.LineageB : tie.LineageA;
                 var other = registry.GetLineage(otherId);
                 if (other == null) continue;
-                Widgets.Label(new Rect(0f, cy, cv.width, 22f), ("WFL_FW_HouseN".Translate(registry.LineageDisplayName(other)).ToString()).ToUpperInvariant());
+                float cardTop = cy;
+                Widgets.Label(new Rect(8f, cy, cv.width - 8f, 22f), ("WFL_FW_HouseN".Translate(registry.LineageDisplayName(other)).ToString()).ToUpperInvariant());
                 cy += 22f;
-                cy += FamilyKit.Label(cv, cy, "WFL_FW_KnownRelationship".Translate(("WFL_FW_Tie_" + tie.State).Translate()), 6f, true);
-                if (view.Insider) cy += FamilyKit.Label(cv, cy, "WFL_FW_TieNumbers".Translate(Mathf.RoundToInt(tie.Goodwill), Mathf.RoundToInt(tie.Grievance)), 6f, true);
+                cy += FamilyKit.Label(cv, cy, ("WFL_FW_Tie_" + tie.State).Translate().ToString().CapitalizeFirst(), 14f, false);
+                if (view.Insider) { cy += FamilyKit.Label(cv, cy, "WFL_FW_Goodwill".Translate(Mathf.RoundToInt(tie.Goodwill)), 14f, true); cy += FamilyKit.Label(cv, cy, "WFL_FW_Grievance".Translate(Mathf.RoundToInt(tie.Grievance)), 14f, true); }
                 else
                 {
                     var event0 = Knowledge.HistoryWith(registry, viewer, house).FirstOrDefault();
@@ -50,6 +51,7 @@ namespace FamilyLife
                     && (a.State == MarriageAllianceState.Negotiating || a.State == MarriageAllianceState.Supported || a.State == MarriageAllianceState.Opposed || a.State == MarriageAllianceState.Consented));
                 cy += FamilyKit.Label(cv, cy, (talks ? "WFL_FW_NegotiationActive" : "WFL_FW_NoNegotiation").Translate(), 6f, true);
                 cy += 4f;
+                Widgets.DrawBoxSolid(new Rect(0f, cardTop, 3f, cy - cardTop - 2f), tie.State == FamilyTieState.Feuding || tie.State == FamilyTieState.Strained ? FamilyKit.Tension : tie.State == FamilyTieState.Allied || tie.State == FamilyTieState.Friendly ? FamilyKit.Closeness : FamilyKit.Unknown);
             }
             FamilyKit.EndCard(card, cy, ref y);
         }

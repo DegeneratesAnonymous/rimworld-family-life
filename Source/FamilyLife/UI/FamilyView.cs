@@ -56,7 +56,7 @@ namespace FamilyLife
             v.HouseholdCount = r.HouseholdsOfLineage(lineageId).Count;
             v.Alerts = FamilyAlerts.Build(r, v.House, v.Viewer, now);
             v.Roles = RoleCards.For(r, v.House, v.Viewer);
-            v.Narr = StoryModel.Build(r, v.House, v.Viewer, now);
+            v.Narr = StoryModel.Build(r, v.House, v.Viewer, now, (id, cap) => SkillLevel(component, id, cap));
             v.Counts = v.Narr.Counts;
             v.Chapter = Window_Families.MakeChapter(r, v.Narr.Chapter);
             foreach (var t in v.Narr.Threads) v.Threads.Add(Window_Families.MakeThread(r, t));
@@ -65,7 +65,35 @@ namespace FamilyLife
             return v;
         }
 
-        public string NameOfPerspective(FamilyRegistry r) => Perspective == null ? "" : Perspective.Name;
+        /// <summary>A person's level in the skill behind a House capability, or -1 when they cannot do that work. Read once per view build, never while drawing.</summary>
+        private static int SkillLevel(FamilyComponent component, int personId, HouseCapability cap)
+        {
+            try
+            {
+                var pawn = component.TryGetPawn(personId);
+                if (pawn?.skills == null) return -1;
+                SkillDef[] defs;
+                switch (cap)
+                {
+                    case HouseCapability.Cooking: defs = new[] { SkillDefOf.Cooking }; break;
+                    case HouseCapability.Medical: defs = new[] { SkillDefOf.Medicine }; break;
+                    case HouseCapability.Growing: defs = new[] { SkillDefOf.Plants }; break;
+                    case HouseCapability.Construction: defs = new[] { SkillDefOf.Construction }; break;
+                    case HouseCapability.Crafting: defs = new[] { SkillDefOf.Crafting }; break;
+                    case HouseCapability.Intellectual: defs = new[] { SkillDefOf.Intellectual }; break;
+                    case HouseCapability.Social: case HouseCapability.Childcare: defs = new[] { SkillDefOf.Social }; break;
+                    case HouseCapability.Animals: defs = new[] { SkillDefOf.Animals }; break;
+                    case HouseCapability.Combat: defs = new[] { SkillDefOf.Shooting, SkillDefOf.Melee }; break;
+                    default: return -1;
+                }
+                int best = -1;
+                foreach (var def in defs) { var s = pawn.skills.GetSkill(def); if (s != null && !s.TotallyDisabled) best = System.Math.Max(best, s.Level); }
+                return best;
+            }
+            catch (System.Exception) { return -1; }
+        }
+
+        public string NameOfPerspective(FamilyRegistry r) => Perspective == null ? "" : HouseholdNames.Short(Perspective);
     }
 
     /// <summary>One person as the People tab and the detail panel describe them. Built from the registry and, when the pawn is loaded, the pawn.</summary>

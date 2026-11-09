@@ -14,6 +14,7 @@ namespace FamilyLife
         public PersonRecord Person;
         public string Link = "", Bed = "", Room = "", Area = "", Problem = "";
         public bool NoBed;
+        public int BedThing, BedSlots; public BedKind BedKind;
     }
 
     internal sealed class HomeSupply
@@ -75,7 +76,8 @@ namespace FamilyLife
                         var bed = pawn.ownership?.OwnedBed;
                         if (bed != null)
                         {
-                            row.Bed = bed.LabelShortCap;
+                            row.Bed = bed.LabelShortCap; row.BedThing = bed.thingIDNumber; row.BedSlots = bed.SleepingSlotsCount;
+                            row.BedKind = bed.Medical ? BedKind.Medical : bed.def.defName.IndexOf("Crib", StringComparison.OrdinalIgnoreCase) >= 0 ? BedKind.Crib : bed.def.defName.IndexOf("Bedroll", StringComparison.OrdinalIgnoreCase) >= 0 || bed.def.defName.IndexOf("Sleeping", StringComparison.OrdinalIgnoreCase) >= 0 ? BedKind.Bedroll : BedKind.Bed;
                             try { var room = bed.GetRoom(); row.Room = room == null || room.PsychologicallyOutdoors ? "WFL_FW_Outdoors".Translate().ToString() : (room.Role?.label ?? "").CapitalizeFirst(); }
                             catch (Exception) { }
                             m.WithBed++;
@@ -85,7 +87,7 @@ namespace FamilyLife
                         else if (!pawn.Dead && pawn.ageTracker.CurLifeStage.developmentalStage != DevelopmentalStage.Newborn)
                         {
                             row.NoBed = true; row.Problem = "WFL_FW_Problem_NoBed".Translate().ToString();
-                            bedless.Add(p.Name);
+                            bedless.Add(HouseholdNames.Short(p));
                         }
                     }
                     rows.Add(row);
@@ -143,13 +145,13 @@ namespace FamilyLife
         private static string LinkText(FamilyRegistry r, PersonRecord p, Household household)
         {
             var partner = p.PartnerIds().Select(id => household.ResidentIds.Contains(id) ? r.GetPerson(id) : null).FirstOrDefault(x => x != null);
-            if (partner != null) return "WFL_FW_PartnerOfN".Translate(partner.Name).ToString();
+            if (partner != null) return "WFL_FW_PartnerOfN".Translate(HouseholdNames.Short(partner)).ToString();
             if (p.Juvenile)
             {
-                var guardians = p.ParentIds.Where(id => household.ResidentIds.Contains(id)).Select(id => r.GetPerson(id)?.Name).Where(n => n != null).ToList();
-                if (guardians.Count > 0) return "WFL_FW_ChildOfN".Translate(string.Join(" & ", guardians)).ToString();
+                var guardians = p.ParentIds.Where(id => household.ResidentIds.Contains(id)).Select(id => r.GetPerson(id)).Where(n => n != null).Select(HouseholdNames.Short).ToList();
+                if (guardians.Count > 0) return "WFL_FW_ChildOfN".Translate(string.Join(" and ", guardians)).ToString();
                 var other = household.ResidentIds.Where(id => id != p.Id).Select(id => r.GetPerson(id)).FirstOrDefault(x => x != null && !x.Juvenile);
-                if (other != null) return "WFL_FW_GuardianN".Translate(other.Name).ToString();
+                if (other != null) return "WFL_FW_GuardianN".Translate(HouseholdNames.Short(other)).ToString();
             }
             return "";
         }
@@ -209,11 +211,11 @@ namespace FamilyLife
             float cy = 0f;
             for (int i = 0; i < pair.Value.Count && i < 8; i++) DrawPortrait(new Rect(i * 32f, cy, 28f, 34f), pair.Value[i].Person, component);
             cy += 40f;
-            int beds = pair.Value.Count(r => r.Bed.Length > 0);
+            var sleep = SleepCounts.Of(pair.Value.Where(r => r.BedThing != 0).Select(r => new BedObject { ThingId = r.BedThing, Slots = r.BedSlots, Kind = r.BedKind, OwnerId = r.Person.Id }));
             int rooms = pair.Value.Where(r => r.Room.Length > 0).Select(r => r.Room).Distinct().Count();
             float? cohesion = household == null ? null : registry.HouseholdCohesion(household);
             string stable = cohesion.HasValue ? ("WFL_Tier_" + BondTuning.CohesionTier(cohesion.Value)).Translate().ToString() : "";
-            cy += FamilyKit.Label(cv, cy, "WFL_FW_HouseholdBrief".Translate(pair.Value.Count, beds, rooms).ToString() + (stable.Length > 0 ? " · " + stable : ""), 0f, true);
+            cy += FamilyKit.Label(cv, cy, FamilyText.Count("Resident", pair.Value.Count) + " · " + FamilyText.Count("Bed", sleep.Beds) + " · " + FamilyText.Count("SleepingSpot", sleep.SleepingSpots) + " · " + FamilyText.Count("Bedroom", rooms) + (stable.Length > 0 ? " · " + stable : ""), 0f, true);
             var problem = pair.Value.FirstOrDefault(r => r.Problem.Length > 0);
             if (problem != null) cy += FamilyKit.Label(cv, cy, problem.Problem, 0f, false);
             var area = new Rect(0f, 0f, cv.width, cy);
@@ -257,7 +259,7 @@ namespace FamilyLife
                     Text.Font = GameFont.Small;
                     bool may = actor == 0 || actor == row.Person.Id || registry.CanManageHouse(actor, house.Id);
                     var more = new Rect(cv.width - actionW, r.y + 4f, actionW, 26f);
-                    if (FamilyKit.Action(more, "...", may, "WFL_FW_WhyNotMove".Translate(FamilyUi.NameOf(registry, actor), row.Person.Name), "WFL_FW_RowMenuTip".Translate(row.Person.Name)))
+                    if (FamilyKit.Action(more, "...", may, "WFL_FW_WhyNotMove".Translate(FamilyUi.NameOf(registry, actor), HouseholdNames.Short(row.Person)), "WFL_FW_RowMenuTip".Translate(row.Person.Name)))
                         OpenRowMenu(component, registry, row.Person);
                     cy += 40f;
                 }
@@ -275,9 +277,9 @@ namespace FamilyLife
                 var h = household;
                 options.Add(new FloatMenuOption("WFL_MoveTo".Translate(FamilyUi.NameList(registry, h.ResidentIds)).ToString().Insert(0, person.Name + ": "), () => component.MovePerson(person.Id, h.Id)));
             }
-            options.Add(new FloatMenuOption(person.Name + ": " + "WFL_MoveToNew".Translate(), () => component.MovePerson(person.Id, 0)));
-            if (person.InColony) options.Add(new FloatMenuOption("WFL_FW_FindNamed".Translate(person.Name), () => FamilyUi.Jump(person.Id)));
-            options.Add(new FloatMenuOption("WFL_FW_RelationshipsOf".Translate(person.Name), () => { State.SelectedPerson = person.Id; State.SelectedRelation = 0; State.Navigate(FamilyTab.Relationships); }));
+            options.Add(new FloatMenuOption(HouseholdNames.Short(person) + ": " + "WFL_MoveToNew".Translate(), () => component.MovePerson(person.Id, 0)));
+            if (person.InColony) options.Add(new FloatMenuOption("WFL_FW_FindNamed".Translate(HouseholdNames.Short(person)), () => FamilyUi.Jump(person.Id)));
+            options.Add(new FloatMenuOption("WFL_FW_RelationshipsOf".Translate(HouseholdNames.Short(person)), () => { State.SelectedPerson = person.Id; State.SelectedRelation = 0; State.Navigate(FamilyTab.Relationships); }));
             Find.WindowStack.Add(new FloatMenu(options));
         }
 

@@ -209,6 +209,7 @@ namespace FamilyLife.Domain
         public string Tier;
         public float Cohesion = -1f;
         public AlertKind? FirstAlert;
+        public List<AlertKind> AlertKinds = new List<AlertKind>();
     }
 
     public static class FamilySummaries
@@ -224,6 +225,7 @@ namespace FamilyLife.Domain
             var alerts = FamilyAlerts.Build(r, house, viewer, now);
             s.Alerts = alerts.Count; s.Urgent = alerts.Any(a => a.Urgent);
             if (alerts.Count > 0) s.FirstAlert = alerts[0].Kind;
+            s.AlertKinds = alerts.Select(a => a.Kind).ToList();
             return s;
         }
 

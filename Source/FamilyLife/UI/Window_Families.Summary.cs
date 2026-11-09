@@ -115,7 +115,7 @@ namespace FamilyLife
 
         /// <summary>"3 House members, 4 household residents in 1 household": the three different counts, always named.</summary>
         internal static string CountsText(HouseCounts c) =>
-            "WFL_FW_CountsLine".Translate(c.HouseMembers, c.Residents, c.Households).ToString();
+            FamilyText.Count("HouseMember", c.HouseMembers) + " · " + FamilyText.Count("HouseholdResident", c.Residents) + " · " + FamilyText.Count("Household", c.Households);
 
         internal static string CountsExplanation(HouseCounts c)
         {
@@ -209,7 +209,7 @@ namespace FamilyLife
                 FamilyKit.EmptyState(cv, ref cy, view.Insider ? "WFL_FW_NothingStory".Translate() : "WFL_FW_NotKnownTo".Translate(view.NameOfPerspective(registry)));
             else if (!view.Insider)
                 cy += FamilyKit.Label(cv, cy, "WFL_FW_StoryOutsider".Translate(), 0f, true);
-            foreach (var c in view.Highlights.Take(2)) { cy += FamilyKit.Label(cv, cy, "- " + c.OneLine); }
+            if (view.Chapter == null || view.Chapter.Evidence.Length == 0) foreach (var c in view.Highlights.Take(2)) { cy += FamilyKit.Label(cv, cy, "- " + c.OneLine); }
             if (view.Highlights.Count > 0) cy += 2f;
             if (FamilyKit.Action(new Rect(0f, cy + 2f, 170f, 24f), "WFL_FW_ViewFullStory".Translate(), true)) State.Navigate(FamilyTab.Story, (int)StorySub.Timeline);
             cy += 30f;

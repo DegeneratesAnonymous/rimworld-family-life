@@ -25,16 +25,23 @@ namespace FamilyLife
                 DrawCommunityInfluenceCard(pub, ref y, registry);
                 return;
             }
-            var col = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f);
-            DrawAmbitionCard(col, ref y, component, registry, house);
-            DrawDiplomacyCard(col, ref y, component, registry, house);
-            DrawCommunityInfluenceCard(col, ref y, registry);
-            DrawAlliancesCard(col, ref y, component, registry, house);
-            DrawInstitutionsCard(col, ref y, component, registry, house);
-            DrawAssociatesCard(col, ref y, component, registry, house);
-            DrawIdentityCard(col, ref y, component, registry, house);
-            DrawBranchCard(col, ref y, component, registry, house);
-            DrawEstatesCard(col, ref y, component, registry, house);
+            // Wide windows use two columns of cards, each no wider than a card should be; narrow ones stack them.
+            int cols = HouseAffairsLayout.Columns(v.width);
+            float cw = HouseAffairsLayout.ColumnWidth(v.width, cols);
+            var left = new Rect(0f, 0f, cw, 0f);
+            var right = new Rect(cols == 2 ? cw + WindowLayout.Gap : 0f, 0f, cw, 0f);
+            float yl = y, yr = y;
+            ref float second = ref (cols == 2 ? ref yr : ref yl);
+            DrawCommunityInfluenceCard(left, ref yl, registry);
+            DrawAssociatesCard(left, ref yl, component, registry, house);
+            DrawIdentityCard(left, ref yl, component, registry, house);
+            DrawBranchCard(left, ref yl, component, registry, house);
+            DrawAmbitionCard(right, ref second, component, registry, house);
+            DrawDiplomacyCard(right, ref second, component, registry, house);
+            DrawAlliancesCard(right, ref second, component, registry, house);
+            DrawInstitutionsCard(right, ref second, component, registry, house);
+            DrawEstatesCard(right, ref second, component, registry, house);
+            y = Mathf.Max(yl, yr);
         }
 
         // ------------------------------------------------------------------ offices
@@ -186,8 +193,8 @@ namespace FamilyLife
             foreach (var p in registry.MembersOf(house.Id).Where(p => p.InColony && !p.Juvenile && p.Id != head).OrderBy(p => p.Name).Take(12))
             {
                 int heir = p.Id;
-                options.Add(new FloatMenuOption("WFL_Estate_NameAndTell".Translate(p.Name), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, told, Activities.Now)));
-                options.Add(new FloatMenuOption("WFL_Estate_NameSecretly".Translate(p.Name), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, null, Activities.Now)));
+                options.Add(new FloatMenuOption("WFL_Estate_NameAndTell".Translate(HouseholdNames.Short(p)), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, told, Activities.Now)));
+                options.Add(new FloatMenuOption("WFL_Estate_NameSecretly".Translate(HouseholdNames.Short(p)), () => HouseAuthority.DeclareHeir(registry, component.PerspectivePawnId, house.Id, heir, null, Activities.Now)));
             }
             if (options.Count == 0) options.Add(new FloatMenuOption("WFL_Estate_NoKin".Translate(), null));
             Find.WindowStack.Add(new FloatMenu(options));

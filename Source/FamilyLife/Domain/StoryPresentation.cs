@@ -262,7 +262,11 @@ namespace FamilyLife.Domain
         /// <summary>1 (crisis) to 8 (ordinary life): the order in which situations lead the Current Chapter.</summary>
         public int Priority;
         public int Severity;
-        public Narrative Title, Summary, Line, Why, Recent, State;
+        public Narrative Title, Summary, Line, Why, Recent, State, Detail;
+        /// <summary>More reasons that belong to the same situation, merged in from other sources.</summary>
+        public List<Narrative> Facts = new List<Narrative>();
+        /// <summary>Threads about the same underlying situation share a key and are shown once.</summary>
+        public string MergeKey = "";
         public List<Narrative> Paths = new List<Narrative>();
         public List<Narrative> Actions = new List<Narrative>();
         public List<int> People = new List<int>();
@@ -276,6 +280,8 @@ namespace FamilyLife.Domain
         public Narrative Title;
         public List<Narrative> Body = new List<Narrative>();
         public List<Narrative> Supporting = new List<Narrative>();
+        /// <summary>Why the chapter reads as it does: one short line per thing that happened to the viewer.</summary>
+        public List<Narrative> Evidence = new List<Narrative>();
         public StoryThread Lead;
         public bool Quiet, Unknown;
     }
@@ -289,17 +295,18 @@ namespace FamilyLife.Domain
         public HouseCounts Counts;
         public Acquaintance Acquaintance;
 
-        public static StoryModel Build(FamilyRegistry r, Lineage house, int viewer, int now)
+        public static StoryModel Build(FamilyRegistry r, Lineage house, int viewer, int now, SkillProbe probe = null)
         {
             var m = new StoryModel();
             if (r == null || house == null) { m.Chapter.Unknown = true; m.Chapter.Title = new Narrative("WFL_FW_Ch_UnknownTitle"); return m; }
             m.Counts = HouseCountsOf.Of(r, house);
             bool insider = FamilyWindowFacts.IsInsider(r, house.Id, viewer);
             m.Acquaintance = Knowledge.AcquaintanceWith(r, viewer, house);
-            if (!insider) { OutsiderStory.Fill(m, r, house, viewer, now); return m; }
+            if (!insider) { OutsiderStory.Fill(m, r, house, viewer, now, probe); return m; }
             m.Recent = StoryTimeline.Recent(r, house, viewer, now, 0);
             m.Highlights = StoryConsolidation.Highlights(m.Recent, 3);
-            m.Threads = StoryThreads.Build(r, house, viewer, now, m.Recent);
+            m.Threads = ThreadMerge.Merge(StoryThreads.Build(r, house, viewer, now, m.Recent));
+            ActionAdvice.Apply(r, house, viewer, m.Threads, probe, Knowledge.HistoryWith(r, viewer, house));
             m.Chapter = StoryChapters.Build(r, house, viewer, m.Threads, m.Highlights);
             return m;
         }
@@ -449,27 +456,14 @@ namespace FamilyLife.Domain
                     Summary = new Narrative("WFL_FW_Amb_" + k + "_Sum", houseName),
                     Line = new Narrative("WFL_FW_Amb_" + k + "_Line"),
                     State = new Narrative("WFL_FW_State_Ambition", amb.Urgency >= 70f ? "WFL_FW_Urgency_High" : amb.Urgency >= 40f ? "WFL_FW_Urgency_Medium" : "WFL_FW_Urgency_Low"),
-                    Why = new Narrative("WFL_FW_Why_" + amb.PrimaryReason, D(s.Score(amb.PrimaryReason))),
+                    Why = new Narrative("WFL_FW_Why_" + amb.PrimaryReason), Detail = new Narrative("WFL_FW_Detail_Score", "WFL_FW_Need_" + amb.PrimaryReason, D(s.Score(amb.PrimaryReason))),
+                    MergeKey = amb.Primary == HouseAmbitionKind.FillSkillGap && s.WeakestCapability != HouseCapability.None ? "capability:" + s.WeakestCapability : "",
                     Tab = FamilyTab.HouseAffairs
                 };
                 th.Paths.Add(new Narrative("WFL_FW_Amb_" + k + "_Path1")); th.Paths.Add(new Narrative("WFL_FW_Amb_" + k + "_Path2"));
                 th.Actions.Add(new Narrative("WFL_FW_Amb_" + k + "_Act1")); th.Actions.Add(new Narrative("WFL_FW_Amb_" + k + "_Act2"));
                 list.Add(th);
             }
-
-            // ---- 4: a recent turning point
-            var turning = recent?.FirstOrDefault(b => !b.IsRoutineSummary && b.Importance >= StoryImportance.Major && now - b.Tick <= RecentTurningWindow);
-            if (turning != null)
-                list.Add(new StoryThread
-                {
-                    Id = "turning:" + (turning.Entry?.Tick ?? 0), Kind = ThreadKind.Turning, Priority = 4, Severity = 0,
-                    Title = new Narrative("WFL_FW_Th_Turning_Title"),
-                    Summary = new Narrative("WFL_FW_Th_Turning_Sum"),
-                    Line = new Narrative("WFL_FW_Th_Turning_Line"),
-                    State = new Narrative("WFL_FW_State_Recent"),
-                    Why = new Narrative("WFL_FW_Th_Turning_Why"),
-                    Tab = FamilyTab.Story, Sub = (int)StorySub.Timeline
-                });
 
             // ---- 5: promises, negotiations, petitions
             int due = r.Commitments.Count(c => c.IsOpen && c.DueTick - now <= FamilyAlerts.PromiseWindow
@@ -531,9 +525,13 @@ namespace FamilyLife.Domain
                 if (s.Capability < FamilyAlerts.CapabilityLowAt && s.WeakestCapability != HouseCapability.None)
                 {
                     var t = Pressure("capability", ThreadKind.Capability, "Capability", 0, FamilyTab.HouseAffairs, 0, D(s.Capability));
-                    t.Summary = new Narrative("WFL_FW_Th_Capability_Sum", "WFL_Capability_" + s.WeakestCapability);
-                    t.Line = new Narrative("WFL_FW_Th_Capability_Line", "WFL_Capability_" + s.WeakestCapability);
-                    t.Why = new Narrative("WFL_FW_Th_Capability_Why", "WFL_Capability_" + s.WeakestCapability, D(s.Capability));
+                    string capName = s.WeakestCapability.ToString();
+                    t.Id = "capability_gap:" + capName.ToLowerInvariant(); t.MergeKey = "capability:" + capName;
+                    t.Title = new Narrative("WFL_FW_CapTitle_" + capName, houseName);
+                    t.Summary = new Narrative("WFL_FW_CapSum_" + capName, houseName);
+                    t.Line = new Narrative("WFL_FW_CapLine_" + capName);
+                    t.Why = new Narrative("WFL_FW_CapWhy", "WFL_Capability_" + capName);
+                    t.Detail = new Narrative("WFL_FW_Detail_Score", "WFL_Capability_" + capName, D(s.Capability));
                     list.Add(t);
                 }
             }
@@ -655,12 +653,13 @@ namespace FamilyLife.Domain
         public const float WarmAt = 60f, FondAt = 35f, TrustHigh = 60f, TrustLow = 30f, TensionAt = 50f, StrangersBelow = 25f;
 
         /// <param name="aIsYou">The first person is the one being played, so the lines can say "you".</param>
-        public static RelationshipNarrative Of(RelRow row, string a, string b, bool aIsYou)
+        public static RelationshipNarrative Of(RelRow row, string a, string b, bool aIsYou, string word = null)
         {
             var n = new RelationshipNarrative();
             string you = aIsYou ? "_You" : "";
             bool tense = row.Tension >= TensionAt;
-            string tone = tense ? "Tense" : row.Attachment >= WarmAt ? "Warm" : row.Attachment >= FondAt ? "Fond" : row.Familiarity < StrangersBelow ? "New" : "Cool";
+            if (word == "Strained" || word == "Uneasy") tense = true;
+            string tone = tense ? "Tense" : word == "Warm" || word == "Trusting" ? "Warm" : word == "Uncertain" ? "Cool" : row.Attachment >= WarmAt ? "Warm" : row.Attachment >= FondAt ? "Fond" : row.Familiarity < StrangersBelow ? "New" : "Cool";
             n.Tone = new Narrative("WFL_FW_RS_Tone_" + tone + you, a, b);
             if (row.Trust >= TrustHigh) n.Trust = new Narrative("WFL_FW_RS_Trust_High");
             else if (row.Trust <= TrustLow) n.Trust = new Narrative("WFL_FW_RS_Trust_Low");
@@ -681,7 +680,7 @@ namespace FamilyLife.Domain
     /// </summary>
     public static class OutsiderStory
     {
-        public static void Fill(StoryModel m, FamilyRegistry r, Lineage house, int viewer, int now)
+        public static void Fill(StoryModel m, FamilyRegistry r, Lineage house, int viewer, int now, SkillProbe probe = null)
         {
             string houseName = r.LineageDisplayName(house);
             string me = StoryModel.PerspectiveName(r, viewer);
@@ -693,14 +692,12 @@ namespace FamilyLife.Domain
 
             if (beats.Count > 0)
             {
-                int good = history.Count(e => StoryConsolidation.Outcome(e) > 0), bad = history.Count(e => StoryConsolidation.Outcome(e) < 0);
-                string tone = bad > good ? "Uneasy" : good > bad ? "Warm" : "Mixed";
+                string tone = RelationshipWords.ToneOf(history, viewer);
+                int bad = history.Count(e => StoryValence.Of(e, viewer).OnViewer < 0), good = history.Count(e => StoryValence.Of(e, viewer).OnViewer > 0);
                 m.Chapter.Title = new Narrative("WFL_FW_Ch_Dealings_" + tone + "_Title", houseName);
                 m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Dealings_" + tone, me, houseName));
-                foreach (var b in m.Highlights.Where(x => x.Entry != null && x.Entry.Kind == TimelineKind.Moment).Take(2).Reverse())
-                    m.Chapter.Body.Add(MomentLine(r, b));
                 m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_DealingsPrivate", houseName));
-                foreach (var b in m.Highlights.Take(3)) m.Chapter.Supporting.Add(MomentLine(r, b));
+                foreach (var e in history.Take(4).Reverse()) m.Chapter.Evidence.Add(Evidence(r, e, viewer));
                 m.Threads.Add(new StoryThread
                 {
                     Id = "dealings:" + house.Id, Kind = ThreadKind.Dealings, Priority = 4, Severity = bad > good ? 1 : 0,
@@ -741,7 +738,20 @@ namespace FamilyLife.Domain
                     Paths = { new Narrative("WFL_FW_Th_Promise_Path1"), new Narrative("WFL_FW_Th_Promise_Path2") }, Actions = { new Narrative("WFL_FW_Act_KeepPromise") },
                     People = { promise.FromId, promise.ToId }, Tab = FamilyTab.Story, Sub = (int)StorySub.Current
                 });
+            ActionAdvice.Apply(r, house, viewer, m.Threads, probe, history);
             m.Threads = m.Threads.OrderBy(t => t.Priority).ToList();
+        }
+
+        /// <summary>One short line about what a moment was for the viewer: it went badly, changed nothing, went well, or someone stood against them.</summary>
+        public static Narrative Evidence(FamilyRegistry r, EventRecord e, int viewer)
+        {
+            var v = StoryValence.Of(e, viewer);
+            string title = "WFL_Ev_" + e.EventId.Replace('-', '_') + "_Title";
+            string other = HouseholdNames.Short(r.GetPerson(e.A == viewer ? e.B : e.A));
+            var def = EventCatalog.Get(e.EventId);
+            if (viewer == e.Third && def != null && (def.Effects & EventEffect.Confronts) != 0)
+                return new Narrative("WFL_FW_Evid_Against", HouseholdNames.Short(r.GetPerson(e.A)), HouseholdNames.Short(r.GetPerson(e.B)), title);
+            return new Narrative(v.OnViewer < 0 ? "WFL_FW_Evid_Bad" : v.OnViewer > 0 ? "WFL_FW_Evid_Good" : "WFL_FW_Evid_Neutral", other, title);
         }
 
         public static Narrative MomentLine(FamilyRegistry r, StoryBeat b)
@@ -765,5 +775,35 @@ namespace FamilyLife.Domain
 
         public static bool Visible(FamilyRegistry r, Lineage house, int viewer, TimelineEntry t) =>
             FamilyWindowFacts.IsInsider(r, house.Id, viewer) || t.Kind != TimelineKind.Chronicle || PublicKind(t.Chronicle.Kind);
+    }
+}
+
+namespace FamilyLife.Domain
+{
+    public static class ThreadMerge
+    {
+        /// <summary>Two sources describing one situation (a capability gap and an ambition to fill it) become one thread that carries both reasons.</summary>
+        public static List<StoryThread> Merge(List<StoryThread> threads)
+        {
+            var result = new List<StoryThread>();
+            foreach (var group in threads.GroupBy(t => string.IsNullOrEmpty(t.MergeKey) ? t.Id : t.MergeKey))
+            {
+                var all = group.ToList();
+                if (all.Count == 1) { result.Add(all[0]); continue; }
+                var primary = all.FirstOrDefault(t => t.Kind == ThreadKind.Capability) ?? all.OrderBy(t => t.Priority).First();
+                foreach (var other in all.Where(t => t != primary))
+                {
+                    primary.Priority = Math.Min(primary.Priority, other.Priority);
+                    primary.Severity = Math.Max(primary.Severity, other.Severity);
+                    if (other.Kind == ThreadKind.Ambition) primary.Facts.Add(new Narrative("WFL_FW_Fact_AmbitionGap"));
+                    foreach (var p in other.Paths) if (!primary.Paths.Any(x => x.Key == p.Key)) primary.Paths.Add(p);
+                    foreach (var a in other.Actions) primary.Actions.Add(a);
+                    foreach (var f in other.Facts) primary.Facts.Add(f);
+                    foreach (var pid in other.People) if (!primary.People.Contains(pid)) primary.People.Add(pid);
+                }
+                result.Add(primary);
+            }
+            return result.OrderBy(t => t.Priority).ThenByDescending(t => t.Severity).ThenBy(t => t.Id, StringComparer.Ordinal).ToList();
+        }
     }
 }

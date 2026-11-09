@@ -216,10 +216,21 @@ namespace FamilyLife
                 Text.Font = GameFont.Tiny;
                 GUI.color = FamilyKit.Dim;
                 string second = s.FirstAlert.HasValue ? ("WFL_FW_AlertShort_" + s.FirstAlert.Value).Translate().ToString() : s.Tier != null ? ("WFL_Tier_" + s.Tier).Translate().ToString().CapitalizeFirst() : "";
-                Widgets.Label(new Rect(row.x + 38f, row.y + 23f, row.width - 44f, 18f), ("WFL_FW_Counts_SideLine".Translate(s.Members, s.Residents).ToString() + (second.Length > 0 ? " - " + second : "")).Truncate(row.width - 44f));
+                Widgets.Label(new Rect(row.x + 38f, row.y + 23f, row.width - 44f, 18f), ((FamilyText.Count("HouseMember", s.Members) + " · " + FamilyText.Count("Resident", s.Residents)) + (second.Length > 0 ? " - " + second : "")).Truncate(row.width - 44f));
                 GUI.color = Color.white;
                 Text.Font = GameFont.Small;
-                if (s.Alerts > 0) Widgets.DrawBoxSolid(new Rect(row.xMax - 14f, row.y + 6f, 8f, 8f), s.Urgent ? FamilyKit.Urgent : FamilyKit.Warn);
+                if (s.Alerts > 0)
+                {
+                    // A numbered badge, with the matters themselves in its tooltip. Clicking it opens that House's Summary.
+                    var badge = new Rect(row.xMax - 24f, row.y + 4f, 18f, 16f);
+                    Widgets.DrawBoxSolid(badge, s.Urgent ? FamilyKit.Urgent : FamilyKit.Warn);
+                    Text.Font = GameFont.Tiny; Text.Anchor = TextAnchor.MiddleCenter; GUI.color = Color.black;
+                    Widgets.Label(badge, s.Alerts.ToString());
+                    GUI.color = Color.white; Text.Anchor = TextAnchor.UpperLeft; Text.Font = GameFont.Small;
+                    var kinds = s.AlertKinds;
+                    TooltipHandler.TipRegion(badge, new TipSignal(() => FamilyText.Count("Matter", kinds.Count) + "\n" + string.Join("\n", kinds.Select(k => "- " + ("WFL_FW_AlertHead_" + k).Translate())), 7300000 + s.LineageId));
+                    if (Widgets.ButtonInvisible(badge)) { State.Select(s.LineageId); State.Navigate(FamilyTab.Summary); }
+                }
                 TooltipHandler.TipRegion(row, "WFL_FW_FamilyRowTip".Translate(s.Name, s.Members, s.Households, s.Tier != null ? ("WFL_Tier_" + s.Tier).Translate().ToString() : "WFL_FW_NotAssessed".Translate().ToString(), s.Alerts));
                 if (Widgets.ButtonInvisible(row) && !selected) { State.Select(s.LineageId); scrolls.Remove(ScrollKey()); }
                 ry += rowH;
@@ -237,8 +248,8 @@ namespace FamilyLife
             GUI.color = FamilyKit.Dim;
             Widgets.Label(new Rect(x, y, kw, 22f), k);
             GUI.color = Color.white;
-            Widgets.Label(new Rect(x + kw, y, vw + 2f, 22f), value);
-            return kw + vw + 14f;
+            Widgets.Label(new Rect(x + kw + 4f, y, vw + 2f, 22f), value);
+            return kw + vw + 18f;
         }
 
         private static Color TierColor(string tier)
@@ -273,8 +284,9 @@ namespace FamilyLife
             float fx = x, fy = rect.y + 38f, max = 170f;
             fx += Fact(fx, fy, "WFL_FW_HouseHead".Translate(), view.Head != 0 ? FamilyUi.NameOf(registry, view.Head) : "WFL_FW_NoHead".Translate().ToString(), max);
             if (view.Steward != 0) fx += Fact(fx, fy, "WFL_FW_Steward".Translate(), FamilyUi.NameOf(registry, view.Steward), max);
-            fx += Fact(fx, fy, "WFL_FW_HouseMembersLabel".Translate(), view.Counts.HouseMembers.ToString(), 60f);
-            fx += Fact(fx, fy, "WFL_FW_ResidentsLabel".Translate(), "WFL_FW_ResidentsValue".Translate(view.Counts.Residents, view.Counts.Households).ToString(), 150f);
+            string countsLine = CountsText(view.Counts);
+            Widgets.Label(new Rect(fx, fy, Mathf.Min(Text.CalcSize(countsLine).x + 8f, 420f), 22f), countsLine);
+            fx += Mathf.Min(Text.CalcSize(countsLine).x + 8f, 420f);
             string countsTip = "WFL_FW_CountsTip".Translate().ToString();
             if (view.Counts.Differ || view.Counts.ResidentsFromOtherHouses > 0) countsTip += System.Environment.NewLine + System.Environment.NewLine + CountsExplanation(view.Counts);
             TooltipHandler.TipRegion(new Rect(x, fy, fx - x, 22f), countsTip);

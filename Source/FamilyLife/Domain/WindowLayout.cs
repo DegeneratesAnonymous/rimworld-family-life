@@ -63,3 +63,14 @@ namespace FamilyLife.Domain
             ReferenceEquals(builtRegistry, currentRegistry) && builtLineage == lineage && builtRevision == revision && builtViewer == viewer && now - builtTick < maxAge && now >= builtTick;
     }
 }
+
+namespace FamilyLife.Domain
+{
+    /// <summary>House Affairs lays its cards in two columns on a wide window and stacks them on a narrow one. No column is wider than prose should be.</summary>
+    public static class HouseAffairsLayout
+    {
+        public const float TwoColumnsFrom = 980f, ColumnMax = 560f;
+        public static int Columns(float width) => width >= TwoColumnsFrom ? 2 : 1;
+        public static float ColumnWidth(float width, int columns) => System.Math.Min(ColumnMax, columns == 2 ? (width - WindowLayout.Gap) / 2f : width);
+    }
+}

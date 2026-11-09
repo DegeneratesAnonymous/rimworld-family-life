@@ -46,7 +46,7 @@ namespace FamilyLife
                 if (Widgets.ButtonInvisible(pick))
                     Find.WindowStack.Add(new FloatMenu(people.Select(p => { var id = p.Id; return new FloatMenuOption(p.FullName, () => { State.SelectedPerson = id; State.SelectedRelation = 0; }); }).ToList()));
             }
-            else TooltipHandler.TipRegion(pick, "WFL_FW_RelOwnTip".Translate(subject.Name));
+            else TooltipHandler.TipRegion(pick, "WFL_FW_RelOwnTip".Translate(HouseholdNames.Short(subject)));
 
             // Search, then filters, then sorting.
             var search = new Rect(pick.xMax + 8f, y + 8f, Mathf.Min(200f, v.width - pick.width - 16f), 24f);
@@ -192,7 +192,7 @@ namespace FamilyLife
             var other = registry.GetPerson(row.OtherId);
             if (other == null) { State.SelectedRelation = 0; return; }
             var bond = registry.BondsFrom(subject.Id).FirstOrDefault(b => b.To == row.OtherId);
-            var card = FamilyKit.BeginCard(col, ref y, "rel", subject.Name + " & " + other.Name);
+            var card = FamilyKit.BeginCard(col, ref y, "rel", HouseholdNames.Short(subject) + " & " + HouseholdNames.Short(other));
             var cv = card.View;
             float cy = 0f;
             DrawPortrait(new Rect(0f, cy, 34f, 42f), subject, component);
@@ -204,7 +204,7 @@ namespace FamilyLife
             cy += 50f;
 
             // The story of it: what the four meters add up to, in a few lines.
-            var tale = RelationshipStory.Of(row, FamilyUi.NameOf(registry, subject.Id), FamilyUi.NameOf(registry, other.Id), component.PerspectivePawnId == subject.Id);
+            var tale = RelationshipStory.Of(row, FamilyUi.NameOf(registry, subject.Id), FamilyUi.NameOf(registry, other.Id), component.PerspectivePawnId == subject.Id, view.Insider ? null : RelationshipWords.With(registry, subject.Id, other.Id, row, visitorHistory));
             var prose = new Rect(0f, 0f, cv.width, 0f);
             foreach (var n in tale.All)
             {
@@ -267,7 +267,7 @@ namespace FamilyLife
             if (rift != null || incidents.Count > 0)
             {
                 FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_Rel_Grievances".Translate());
-                if (rift != null) cy += FamilyKit.Label(cv, cy, "WFL_RiftLine".Translate(other.Name, ("WFL_RiftCause_" + rift.Cause).Translate(), FamilyUi.Date(rift.StartTick)), 4f);
+                if (rift != null) cy += FamilyKit.Label(cv, cy, "WFL_RiftLine".Translate(HouseholdNames.Short(other), ("WFL_RiftCause_" + rift.Cause).Translate(), FamilyUi.Date(rift.StartTick)), 4f);
                 foreach (var i in incidents) cy += FamilyKit.Label(cv, cy, FamilyText.Date(i.Tick) + " - " + FamilyText.IncidentBody(registry, i, viewer), 4f);
             }
             var promises = registry.Commitments.Where(c => c.IsOpen && ((c.FromId == subject.Id && c.ToId == other.Id) || (c.FromId == other.Id && c.ToId == subject.Id)) && (viewer == 0 || c.FromId == viewer || c.ToId == viewer)).Take(3).ToList();
@@ -294,12 +294,12 @@ namespace FamilyLife
             string why = actingId == 0 ? "WFL_FW_Why_Overview".Translate().ToString()
                 : actingId == other.Id ? "WFL_FW_Why_Self".Translate().ToString()
                 : actor == null || !actor.Spawned || actor.Dead || actor.Downed ? "WFL_FW_Why_ActorBusy".Translate(FamilyUi.NameOf(registry, actingId)).ToString()
-                : target == null || !target.Spawned || target.Map != actor.Map ? "WFL_FW_Why_NotNear".Translate(other.Name).ToString()
+                : target == null || !target.Spawned || target.Map != actor.Map ? "WFL_FW_Why_NotNear".Translate(HouseholdNames.Short(other)).ToString()
                 : !PerspectiveShiftBridge.CanActAs(actor) ? "WFL_FW_Why_NotAvatar".Translate().ToString() : null;
             bool can = why == null;
             float x = 0f;
             float bw = Mathf.Min(170f, (cv.width - 8f) / 2f);
-            if (FamilyKit.Action(new Rect(x, cy, bw, 26f), "WFL_FW_Act_Time".Translate(other.Name).ToString().Truncate(bw - 8f), can, why, "WFL_FW_Act_TimeTip".Translate()))
+            if (FamilyKit.Action(new Rect(x, cy, bw, 26f), "WFL_FW_Act_Time".Translate(HouseholdNames.Short(other)).ToString().Truncate(bw - 8f), can, why, "WFL_FW_Act_TimeTip".Translate()))
                 ReportHouseAction(SocialMoments.TryPlayerMoment(actor, target));
             x += bw + 6f;
             if (rift != null)
@@ -313,7 +313,7 @@ namespace FamilyLife
             {
                 int incident = i.Id;
                 bool known = can && i.KnownBy.Contains(actingId);
-                if (FamilyKit.Action(new Rect(0f, cy, cv.width, 26f), "WFL_Act_DiscussIncident".Translate(other.Name), known, can ? "WFL_FW_Why_NotKnown".Translate(FamilyUi.NameOf(registry, actingId)).ToString() : why))
+                if (FamilyKit.Action(new Rect(0f, cy, cv.width, 26f), "WFL_Act_DiscussIncident".Translate(HouseholdNames.Short(other)), known, can ? "WFL_FW_Why_NotKnown".Translate(FamilyUi.NameOf(registry, actingId)).ToString() : why))
                     ReportHouseAction(HouseInteractions.StartIncidentRepair(actor, target, incident));
                 cy += 30f;
             }

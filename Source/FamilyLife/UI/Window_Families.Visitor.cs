@@ -14,6 +14,7 @@ namespace FamilyLife
     {
         private List<RelRow> visitorRows;
         private HashSet<int> visitorStoried;
+        private List<EventRecord> visitorHistory = new List<EventRecord>();
         private int visitorRevision = -1, visitorViewer = -1, visitorHouse;
 
         private void DrawVisitorRelationships(Rect v, ref float y, FamilyComponent component, FamilyRegistry registry, Lineage house)
@@ -32,7 +33,8 @@ namespace FamilyLife
             {
                 visitorRows = RelationshipView.Build(registry, acting, house.Id, RelFilter.Everyone, RelSort.Closest, null).Where(r => view.Relevant.Contains(r.OtherId)).ToList();
                 visitorStoried = new HashSet<int>();
-                foreach (var e in Knowledge.HistoryWith(registry, acting, house)) visitorStoried.Add(e.A == acting ? e.B : e.A);
+                visitorHistory = Knowledge.HistoryWith(registry, acting, house);
+                foreach (var e in visitorHistory) { visitorStoried.Add(e.A == acting ? e.B : e.A); if (e.Third != 0 && e.Third != acting) visitorStoried.Add(e.Third); }
                 visitorRevision = component.Revision; visitorViewer = acting; visitorHouse = house.Id;
             }
             FamilyKit.SectionHeader(v, ref y, "WFL_FW_RelYours".Translate());
@@ -55,7 +57,7 @@ namespace FamilyLife
                 Text.Font = GameFont.Tiny; GUI.color = FamilyKit.Dim;
                 Widgets.Label(new Rect(r.x + 40f, r.y + 21f, listW * 0.4f, 16f), ("WFL_BondKind_" + row.Kind).Translate().ToString());
                 GUI.color = Color.white;
-                string word = ("WFL_FW_Feeling_" + Knowledge.Describe(row)).Translate().ToString().CapitalizeFirst();
+                string word = ("WFL_FW_Feeling_" + RelationshipWords.With(registry, acting, row.OtherId, row, visitorHistory)).Translate().ToString().CapitalizeFirst();
                 Widgets.Label(new Rect(r.x + 40f + listW * 0.4f, r.y + 12f, listW * 0.4f - 30f, 18f), word);
                 Text.Font = GameFont.Small;
                 if (visitorStoried.Contains(row.OtherId)) { var dot = new Rect(r.xMax - 18f, r.y + 14f, 10f, 10f); Widgets.DrawBoxSolid(dot, FamilyKit.Gold); TooltipHandler.TipRegion(dot, "WFL_FW_StoryIndicatorTip".Translate()); }
@@ -72,7 +74,7 @@ namespace FamilyLife
             foreach (var tie in ties.Take(12))
             {
                 var kind = registry.KindOf(registry.GetPerson(tie.Key), registry.GetPerson(tie.Value));
-                y += FamilyKit.Label(pub, y, "WFL_FW_PublicTie".Translate(FamilyUi.NameOf(registry, tie.Key), FamilyUi.NameOf(registry, tie.Value), kind.HasValue ? ("WFL_BondKind_" + kind.Value).Translate().ToString() : ""), 6f);
+                y += FamilyKit.Label(pub, y, FamilyText.Say(RelationPhrase.Of(registry, tie.Key, tie.Value)), 6f);
             }
         }
     }

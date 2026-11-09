@@ -22,6 +22,9 @@ namespace FamilyLife
             return dates[tick] = FamilyUi.Date(tick);
         }
 
+        /// <summary>"1 bed" or "3 beds": the noun agrees with the number, by its own translation, not by adding an s.</summary>
+        public static string Count(string unit, int n) => ("WFL_FW_Unit_" + unit + (n == 1 ? "_1" : "_N")).Translate(n).ToString();
+
         /// <summary>A story line in the player's language. Names that are no longer known read as "someone"; a key, a date or a tradition passed as an argument is resolved here.</summary>
         public static string Say(Narrative n)
         {

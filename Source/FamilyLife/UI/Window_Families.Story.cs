@@ -12,14 +12,15 @@ namespace FamilyLife
     internal sealed class ThreadCard
     {
         public StoryThread T;
-        public string Title = "", Summary = "", Line = "", State = "", Why = "", Recent = "";
+        public string Title = "", Summary = "", Line = "", State = "", Why = "", Recent = "", Detail = "";
+        public string[] Facts = new string[0];
         public string[] Paths = new string[0], Actions = new string[0];
     }
 
     internal sealed class ChapterCard
     {
         public string Title = "";
-        public string[] Paragraphs = new string[0], Supporting = new string[0];
+        public string[] Paragraphs = new string[0], Supporting = new string[0], Evidence = new string[0];
         public bool Quiet, Unknown;
         public StoryThread Lead;
     }
@@ -67,13 +68,13 @@ namespace FamilyLife
 
         internal static ChapterCard MakeChapter(FamilyRegistry r, StoryChapter c) => new ChapterCard
         {
-            Title = FamilyText.Say(c.Title), Paragraphs = FamilyText.SayAll(c.Body), Supporting = FamilyText.SayAll(c.Supporting), Quiet = c.Quiet, Unknown = c.Unknown, Lead = c.Lead
+            Title = FamilyText.Say(c.Title), Paragraphs = FamilyText.SayAll(c.Body), Supporting = FamilyText.SayAll(c.Supporting), Evidence = FamilyText.SayAll(c.Evidence), Quiet = c.Quiet, Unknown = c.Unknown, Lead = c.Lead
         };
 
         internal static ThreadCard MakeThread(FamilyRegistry r, StoryThread t) => new ThreadCard
         {
             T = t, Title = FamilyText.Say(t.Title), Summary = FamilyText.Say(t.Summary), Line = FamilyText.Say(t.Line), State = FamilyText.Say(t.State),
-            Why = FamilyText.Say(t.Why), Recent = FamilyText.Say(t.Recent), Paths = FamilyText.SayAll(t.Paths), Actions = FamilyText.SayAll(t.Actions)
+            Why = FamilyText.Say(t.Why), Recent = FamilyText.Say(t.Recent), Detail = FamilyText.Say(t.Detail), Facts = FamilyText.SayAll(t.Facts), Paths = FamilyText.SayAll(t.Paths), Actions = FamilyText.SayAll(t.Actions)
         };
 
         private static string FeelBucket(int v) => v >= 60 ? "Glad" : v >= 20 ? "Warm" : v <= -60 ? "Hurt" : v <= -20 ? "Uneasy" : null;
@@ -147,7 +148,7 @@ namespace FamilyLife
                     if (t.Chronicle.B != 0 && r.GetPerson(t.Chronicle.B) != null && t.Chronicle.Kind != FamilyEventKind.LineageFounded && t.Chronicle.Kind != FamilyEventKind.SocialBranch) card.People.Add(t.Chronicle.B);
                     break;
             }
-            if (t.Kind == TimelineKind.Moment) card.Outcome = System.Math.Sign(b.Parts.Sum(p => StoryConsolidation.Outcome(p)));
+            if (t.Kind == TimelineKind.Moment) card.Outcome = StoryValence.ForBeat(b.Parts, viewer);
             else if (t.Kind == TimelineKind.Ceremony) card.Outcome = t.Ceremony.Outcome >= 0.5f ? 1 : t.Ceremony.Outcome <= -0.5f ? -1 : 0;
             else if (t.Kind == TimelineKind.Incident) card.Outcome = t.Incident.Resolved ? 0 : -1;
             else if (t.Kind == TimelineKind.Plot) card.Outcome = -1;
@@ -222,6 +223,12 @@ namespace FamilyLife
             float prose = WindowLayout.ProseWidth(cv.width);
             var prv = new Rect(0f, 0f, prose, 0f);
             foreach (var p in ch.Paragraphs) cy += FamilyKit.Label(prv, cy, p) + 2f;
+            if (ch.Evidence.Length > 0)
+            {
+                cy += 4f;
+                cy += FamilyKit.Label(cv, cy, "WFL_FW_ChapterWhy".Translate(view.NameOfPerspective(registry).ToUpperInvariant()), 0f, true);
+                foreach (var s in ch.Evidence) cy += FamilyKit.Label(prv, cy, "- " + s, 6f);
+            }
             if (ch.Supporting.Length > 0)
             {
                 cy += 4f;
@@ -237,7 +244,7 @@ namespace FamilyLife
         private void DrawThreadCard(Rect col, ref float y, ThreadCard c, FamilyComponent component, FamilyRegistry registry, bool full)
         {
             var t = c.T;
-            var card = FamilyKit.BeginCard(col, ref y, (full ? "tf." : "tc.") + t.Id, c.Title, null, t.Severity >= 2);
+            var card = FamilyKit.BeginCard(col, ref y, (full ? "tf." : "tc.") + t.Id, c.Title, c.Detail.Length > 0 ? c.Detail : null, t.Severity >= 2);
             var cv = card.View;
             float cy = 0f;
             cy += FamilyKit.Label(cv, cy, c.Summary);
@@ -250,7 +257,7 @@ namespace FamilyLife
             cy += DrawPeopleStrip(0f, cy, t.People, component, registry);
             if (full)
             {
-                if (c.Why.Length > 0) { cy += 2f; cy += FamilyKit.Label(cv, cy, "WFL_FW_ThreadWhy".Translate(), 0f, true); cy += FamilyKit.Label(cv, cy, c.Why, 6f); }
+                if (c.Why.Length > 0) { cy += 2f; cy += FamilyKit.Label(cv, cy, "WFL_FW_ThreadWhy".Translate(), 0f, true); cy += FamilyKit.Label(cv, cy, c.Why, 6f); foreach (var fact in c.Facts) cy += FamilyKit.Label(cv, cy, fact, 6f); }
                 if (c.Recent.Length > 0) { cy += 2f; cy += FamilyKit.Label(cv, cy, "WFL_FW_ThreadRecent".Translate(), 0f, true); cy += FamilyKit.Label(cv, cy, c.Recent, 6f); }
                 if (c.Paths.Length > 0)
                 {

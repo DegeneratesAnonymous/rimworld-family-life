@@ -27,7 +27,7 @@
   <!-- Summary cards -->
   <WFL_FW_Card_Chapter>CURRENT CHAPTER</WFL_FW_Card_Chapter>
   <WFL_FW_ChapterTip>What the family is mostly living through right now, put together from what the records show. It is a summary of real events and situations, never an invention.</WFL_FW_ChapterTip>
-  <WFL_FW_ChapterThreads>Supporting threads:</WFL_FW_ChapterThreads>
+  <WFL_FW_ChapterThreads>What is behind it:</WFL_FW_ChapterThreads>
   <WFL_FW_OpenThread>Open details</WFL_FW_OpenThread>
   <WFL_FW_Card_Threads>Story threads</WFL_FW_Card_Threads>
   <WFL_FW_NoOtherThreads>No other situation is shaping the family's days.</WFL_FW_NoOtherThreads>
@@ -156,15 +156,15 @@
 
   <!-- Threads from the House's ambition -->
   <WFL_FW_Why_None>The House has no pressing need.</WFL_FW_Why_None>
-  <WFL_FW_Why_Sustenance>Food and supplies score {0} of 100, below what the House considers enough.</WFL_FW_Why_Sustenance>
-  <WFL_FW_Why_LivingSpace>Living space scores {0} of 100: there is not enough room or bedding for everyone.</WFL_FW_Why_LivingSpace>
-  <WFL_FW_Why_Safety>Safety scores {0} of 100, so the House feels exposed.</WFL_FW_Why_Safety>
-  <WFL_FW_Why_Continuity>Continuity scores {0} of 100: the House's future leadership is not secure.</WFL_FW_Why_Continuity>
-  <WFL_FW_Why_Capability>Skills score {0} of 100: the House lacks people able to do some needed work.</WFL_FW_Why_Capability>
-  <WFL_FW_Why_Cohesion>Cohesion scores {0} of 100: relations inside the House are under strain.</WFL_FW_Why_Cohesion>
-  <WFL_FW_Why_Influence>The House's standing scores {0} of 100, lower than it would like, and few of its people hold recognized community posts.</WFL_FW_Why_Influence>
-  <WFL_FW_Why_Independence>Independence scores {0} of 100: the House leans on others.</WFL_FW_Why_Independence>
-  <WFL_FW_Why_Legacy>Legacy scores {0} of 100: the House has little yet that will outlast it.</WFL_FW_Why_Legacy>
+  <WFL_FW_Why_Sustenance>The household is short of food and supplies.</WFL_FW_Why_Sustenance>
+  <WFL_FW_Why_LivingSpace>There is not enough room or bedding for everyone.</WFL_FW_Why_LivingSpace>
+  <WFL_FW_Why_Safety>The House feels exposed.</WFL_FW_Why_Safety>
+  <WFL_FW_Why_Continuity>The House's future leadership is not secure.</WFL_FW_Why_Continuity>
+  <WFL_FW_Why_Capability>The House lacks people able to do some of the work it needs.</WFL_FW_Why_Capability>
+  <WFL_FW_Why_Cohesion>Relations inside the House are under strain.</WFL_FW_Why_Cohesion>
+  <WFL_FW_Why_Influence>The House has little standing, and few of its people hold recognized community posts.</WFL_FW_Why_Influence>
+  <WFL_FW_Why_Independence>The House leans on others.</WFL_FW_Why_Independence>
+  <WFL_FW_Why_Legacy>The House has little yet that will outlast it.</WFL_FW_Why_Legacy>
 
   <WFL_FW_Amb_SecureProvisions_Title>Enough to eat</WFL_FW_Amb_SecureProvisions_Title>
   <WFL_FW_Amb_SecureProvisions_Sum>House {0} wants its food and supplies to be secure.</WFL_FW_Amb_SecureProvisions_Sum>
@@ -277,21 +277,21 @@
   <WFL_FW_Th_Food_Title>Food reserves are low</WFL_FW_Th_Food_Title>
   <WFL_FW_Th_Food_Sum>The household is running short of food.</WFL_FW_Th_Food_Sum>
   <WFL_FW_Th_Food_Line>Food reserves below target</WFL_FW_Th_Food_Line>
-  <WFL_FW_Th_Food_Why>Food and supplies score {0} of 100, below what the House keeps in reserve.</WFL_FW_Th_Food_Why>
+  <WFL_FW_Th_Food_Why>There is less food in store than the House wants to keep.</WFL_FW_Th_Food_Why>
   <WFL_FW_Th_Food_Path1>Members cook, grow or buy more food</WFL_FW_Th_Food_Path1>
   <WFL_FW_Th_Food_Path2>Relatives or allies share what they can spare</WFL_FW_Th_Food_Path2>
   <WFL_FW_Th_Food_Act1>Prepare meals or stock the pantry</WFL_FW_Th_Food_Act1>
   <WFL_FW_Th_Housing_Title>Not enough room</WFL_FW_Th_Housing_Title>
   <WFL_FW_Th_Housing_Sum>Some of the household lack proper beds or space.</WFL_FW_Th_Housing_Sum>
   <WFL_FW_Th_Housing_Line>Living space is short</WFL_FW_Th_Housing_Line>
-  <WFL_FW_Th_Housing_Why>Living space scores {0} of 100.</WFL_FW_Th_Housing_Why>
+  <WFL_FW_Th_Housing_Why>Some residents have no proper bed.</WFL_FW_Th_Housing_Why>
   <WFL_FW_Th_Housing_Path1>New beds or rooms are built</WFL_FW_Th_Housing_Path1>
   <WFL_FW_Th_Housing_Path2>Households are rearranged</WFL_FW_Th_Housing_Path2>
   <WFL_FW_Th_Housing_Act1>Build or improve a bedroom</WFL_FW_Th_Housing_Act1>
   <WFL_FW_Th_Safety_Title>The family feels exposed</WFL_FW_Th_Safety_Title>
   <WFL_FW_Th_Safety_Sum>The House does not feel safe.</WFL_FW_Th_Safety_Sum>
   <WFL_FW_Th_Safety_Line>Safety is low</WFL_FW_Th_Safety_Line>
-  <WFL_FW_Th_Safety_Why>Safety scores {0} of 100.</WFL_FW_Th_Safety_Why>
+  <WFL_FW_Th_Safety_Why>The House judges its defences too weak.</WFL_FW_Th_Safety_Why>
   <WFL_FW_Th_Safety_Path1>Defences are strengthened</WFL_FW_Th_Safety_Path1>
   <WFL_FW_Th_Safety_Path2>Allies stand with the House</WFL_FW_Th_Safety_Path2>
   <WFL_FW_Th_Safety_Act1>Take up defence or guard work</WFL_FW_Th_Safety_Act1>
@@ -511,4 +511,82 @@
   <WFL_FW_HouseholdOpenTip>Open {0}'s details.</WFL_FW_HouseholdOpenTip>
   <WFL_FW_PrivateHomeTitle>PRIVATE HOUSEHOLD AFFAIRS</WFL_FW_PrivateHomeTitle>
   <WFL_FW_PrivateHome>{0} has not seen inside House {1}'s homes. Its beds, rooms and supplies are its own.</WFL_FW_PrivateHome>
+  <!-- Evidence, capabilities, suggestions, relations, units -->
+  <WFL_FW_ChapterWhy>WHY {0} SEES IT THIS WAY</WFL_FW_ChapterWhy>
+  <WFL_FW_Evid_Bad>{1} with {0} went badly.</WFL_FW_Evid_Bad>
+  <WFL_FW_Evid_Good>{1} with {0} went well.</WFL_FW_Evid_Good>
+  <WFL_FW_Evid_Neutral>{1} with {0} changed nothing.</WFL_FW_Evid_Neutral>
+  <WFL_FW_Evid_Against>{0} took {1}'s side against you.</WFL_FW_Evid_Against>
+  <WFL_FW_Detail_Score>Mechanical detail: {0} {1}/100</WFL_FW_Detail_Score>
+  <WFL_FW_CapWhy>The House has few people able to do {0} work well.</WFL_FW_CapWhy>
+  <WFL_FW_Fact_AmbitionGap>The House's current ambition is to fill this gap.</WFL_FW_Fact_AmbitionGap>
+  <WFL_FW_CapTitle_Medical>House {0} needs a capable healer</WFL_FW_CapTitle_Medical>
+  <WFL_FW_CapSum_Medical>No member of House {0} can treat the sick and injured reliably.</WFL_FW_CapSum_Medical>
+  <WFL_FW_CapLine_Medical>No one can treat the sick and injured reliably</WFL_FW_CapLine_Medical>
+  <WFL_FW_CapTitle_Cooking>House {0} needs a capable cook</WFL_FW_CapTitle_Cooking>
+  <WFL_FW_CapSum_Cooking>No member of House {0} can cook reliably.</WFL_FW_CapSum_Cooking>
+  <WFL_FW_CapLine_Cooking>No one can cook reliably</WFL_FW_CapLine_Cooking>
+  <WFL_FW_CapTitle_Growing>House {0} needs a capable farmer</WFL_FW_CapTitle_Growing>
+  <WFL_FW_CapSum_Growing>No member of House {0} can grow food reliably.</WFL_FW_CapSum_Growing>
+  <WFL_FW_CapLine_Growing>No one can grow food reliably</WFL_FW_CapLine_Growing>
+  <WFL_FW_CapTitle_Construction>House {0} needs a capable builder</WFL_FW_CapTitle_Construction>
+  <WFL_FW_CapSum_Construction>No member of House {0} can build reliably.</WFL_FW_CapSum_Construction>
+  <WFL_FW_CapLine_Construction>No one can build reliably</WFL_FW_CapLine_Construction>
+  <WFL_FW_CapTitle_Crafting>House {0} needs a capable crafter</WFL_FW_CapTitle_Crafting>
+  <WFL_FW_CapSum_Crafting>No member of House {0} can craft reliably.</WFL_FW_CapSum_Crafting>
+  <WFL_FW_CapLine_Crafting>No one can craft reliably</WFL_FW_CapLine_Crafting>
+  <WFL_FW_CapTitle_Intellectual>House {0} needs a capable researcher</WFL_FW_CapTitle_Intellectual>
+  <WFL_FW_CapSum_Intellectual>No member of House {0} can do research reliably.</WFL_FW_CapSum_Intellectual>
+  <WFL_FW_CapLine_Intellectual>No one can do research reliably</WFL_FW_CapLine_Intellectual>
+  <WFL_FW_CapTitle_Social>House {0} needs a capable diplomat</WFL_FW_CapTitle_Social>
+  <WFL_FW_CapSum_Social>No member of House {0} can handle dealings with others reliably.</WFL_FW_CapSum_Social>
+  <WFL_FW_CapLine_Social>No one can handle dealings with others reliably</WFL_FW_CapLine_Social>
+  <WFL_FW_CapTitle_Childcare>House {0} needs a capable caregiver</WFL_FW_CapTitle_Childcare>
+  <WFL_FW_CapSum_Childcare>No member of House {0} can look after children reliably.</WFL_FW_CapSum_Childcare>
+  <WFL_FW_CapLine_Childcare>No one can look after children reliably</WFL_FW_CapLine_Childcare>
+  <WFL_FW_CapTitle_Combat>House {0} needs a capable fighter</WFL_FW_CapTitle_Combat>
+  <WFL_FW_CapSum_Combat>No member of House {0} can fight reliably.</WFL_FW_CapSum_Combat>
+  <WFL_FW_CapLine_Combat>No one can fight reliably</WFL_FW_CapLine_Combat>
+  <WFL_FW_CapTitle_Animals>House {0} needs a capable handler</WFL_FW_CapTitle_Animals>
+  <WFL_FW_CapSum_Animals>No member of House {0} can tend animals reliably.</WFL_FW_CapSum_Animals>
+  <WFL_FW_CapLine_Animals>No one can tend animals reliably</WFL_FW_CapLine_Animals>
+  <WFL_FW_Act_TimeWith>Spend time with {0}</WFL_FW_Act_TimeWith>
+  <WFL_FW_Act_ApologizeTo>Apologize to {0}</WFL_FW_Act_ApologizeTo>
+  <WFL_FW_Act_AidTo>Offer aid to {0}</WFL_FW_Act_AidTo>
+  <WFL_FW_Act_MentorNamed>Mentor {0}</WFL_FW_Act_MentorNamed>
+  <WFL_FW_Act_Teach>Teach {0} {1}</WFL_FW_Act_Teach>
+  <WFL_FW_Act_Learn>Learn {0} from {1}</WFL_FW_Act_Learn>
+  <WFL_FW_Act_Befriend>Befriend {0}, who is skilled at {1}</WFL_FW_Act_Befriend>
+  <WFL_FW_RelP_ParentOf>{0} is {1}'s parent</WFL_FW_RelP_ParentOf>
+  <WFL_FW_RelP_Partners>{0} and {1} are partners</WFL_FW_RelP_Partners>
+  <WFL_FW_RelP_Former>{0} and {1} are former partners</WFL_FW_RelP_Former>
+  <WFL_FW_RelP_Siblings>{0} and {1} are siblings</WFL_FW_RelP_Siblings>
+  <WFL_FW_RelP_Known>{0} and {1} are known to each other</WFL_FW_RelP_Known>
+  <WFL_FW_Unit_HouseMember_1>{0} House member</WFL_FW_Unit_HouseMember_1>
+  <WFL_FW_Unit_HouseMember_N>{0} House members</WFL_FW_Unit_HouseMember_N>
+  <WFL_FW_Unit_HouseholdResident_1>{0} household resident</WFL_FW_Unit_HouseholdResident_1>
+  <WFL_FW_Unit_HouseholdResident_N>{0} household residents</WFL_FW_Unit_HouseholdResident_N>
+  <WFL_FW_Unit_Household_1>{0} household</WFL_FW_Unit_Household_1>
+  <WFL_FW_Unit_Household_N>{0} households</WFL_FW_Unit_Household_N>
+  <WFL_FW_Unit_Resident_1>{0} resident</WFL_FW_Unit_Resident_1>
+  <WFL_FW_Unit_Resident_N>{0} residents</WFL_FW_Unit_Resident_N>
+  <WFL_FW_Unit_Bed_1>{0} bed</WFL_FW_Unit_Bed_1>
+  <WFL_FW_Unit_Bed_N>{0} beds</WFL_FW_Unit_Bed_N>
+  <WFL_FW_Unit_SleepingSpot_1>{0} sleeping spot</WFL_FW_Unit_SleepingSpot_1>
+  <WFL_FW_Unit_SleepingSpot_N>{0} sleeping spots</WFL_FW_Unit_SleepingSpot_N>
+  <WFL_FW_Unit_Bedroom_1>{0} bedroom</WFL_FW_Unit_Bedroom_1>
+  <WFL_FW_Unit_Bedroom_N>{0} bedrooms</WFL_FW_Unit_Bedroom_N>
+  <WFL_FW_Unit_Associate_1>{0} associate</WFL_FW_Unit_Associate_1>
+  <WFL_FW_Unit_Associate_N>{0} associates</WFL_FW_Unit_Associate_N>
+  <WFL_FW_TreeCohesion>Household cohesion: {0} - {1}</WFL_FW_TreeCohesion>
+  <WFL_FW_Goodwill>Goodwill: {0}</WFL_FW_Goodwill>
+  <WFL_FW_Grievance>Grievance: {0}</WFL_FW_Grievance>
+  <WFL_FW_AlertBadgeTip>{0}</WFL_FW_AlertBadgeTip>
+  <WFL_FW_Group_Members_1>House member ({0})</WFL_FW_Group_Members_1>
+  <WFL_FW_Group_Residents_1>Resident non-member ({0})</WFL_FW_Group_Residents_1>
+  <WFL_FW_Group_Elsewhere_1>Relative elsewhere ({0})</WFL_FW_Group_Elsewhere_1>
+  <WFL_FW_Group_Associates_1>Associate ({0})</WFL_FW_Group_Associates_1>
+  <WFL_FW_Unit_Matter_1>{0} matter needs attention</WFL_FW_Unit_Matter_1>
+  <WFL_FW_Unit_Matter_N>{0} matters need attention</WFL_FW_Unit_Matter_N>
+  <WFL_FW_TreeStripNote>The coloured strip on a card shows which household that person lives in. Hover a household to see who lives there.</WFL_FW_TreeStripNote>
 </LanguageData>

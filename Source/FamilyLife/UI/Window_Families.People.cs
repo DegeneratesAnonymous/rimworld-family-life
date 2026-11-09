@@ -53,10 +53,10 @@ namespace FamilyLife
             int pick = FamilyKit.ChipRow(new Rect(0f, 0f, 300f, 0f), ref y, labels, (int)State.PeopleView, null, 26f);
             if (pick >= 0) State.PeopleView = (PeopleView)pick;
             float controlsY = y - 32f;
-            float cx = viewRect.width - 4f;
+            float cx = viewRect.width - 30f;                       // leave room for the help button in the corner
             if (State.PeopleView == PeopleView.Tree)
             {
-                cx -= 70f; if (FamilyKit.Action(new Rect(cx, controlsY, 66f, 26f), "WFL_FW_Recenter".Translate(), true, null, "WFL_FW_RecenterTip".Translate())) { treeZoom = 1f; treeRecenter = true; }
+                cx -= 90f; if (FamilyKit.Action(new Rect(cx, controlsY, 86f, 26f), "WFL_FW_Recenter".Translate(), true, null, "WFL_FW_RecenterTip".Translate())) { treeZoom = 1f; treeRecenter = true; }
                 cx -= 32f; if (FamilyKit.Action(new Rect(cx, controlsY, 28f, 26f), "+", treeZoom < 1.6f, null, "WFL_FW_ZoomIn".Translate())) treeZoom = Mathf.Min(1.6f, treeZoom + 0.2f);
                 cx -= 32f; if (FamilyKit.Action(new Rect(cx, controlsY, 28f, 26f), "-", treeZoom > 0.6f, null, "WFL_FW_ZoomOut".Translate())) treeZoom = Mathf.Max(0.6f, treeZoom - 0.2f);
             }
@@ -113,7 +113,7 @@ namespace FamilyLife
         {
             var rows = model.Rows.Where(r => r.Category == category).ToList();
             if (rows.Count == 0) return;
-            FamilyKit.SectionHeader(v, ref y, headerKey.Translate(rows.Count));
+            FamilyKit.SectionHeader(v, ref y, (headerKey + (rows.Count == 1 ? "_1" : "")).Translate(rows.Count));
             const float minW = 290f, maxW = 360f;
             int cols = Mathf.Max(1, Mathf.FloorToInt((v.width + WindowLayout.Gap) / (minW + WindowLayout.Gap)));
             float w = Mathf.Min(maxW, (v.width - WindowLayout.Gap * (cols - 1)) / cols);
@@ -261,7 +261,7 @@ namespace FamilyLife
                     if (agency.Goal != PersonalGoal.None) detail.Add("WFL_Agency_Goal".Translate(("WFL_Goal_" + agency.Goal).Translate(), Mathf.RoundToInt(agency.Progress * 100), agency.Active ? "WFL_Agency_Active".Translate() : agency.Progress >= 1 ? "WFL_Agency_Achieved".Translate() : "WFL_Agency_Abandoned".Translate()).ToString());
                 }
                 var top = cy;
-                cy += FamilyKit.Label(v, cy, "WFL_Agency_Belonging".Translate(p.Name, belonging.TrustedConnections, belonging.StrainedConnections));
+                cy += FamilyKit.Label(v, cy, "WFL_Agency_Belonging".Translate(HouseholdNames.Short(p), belonging.TrustedConnections, belonging.StrainedConnections));
                 TooltipHandler.TipRegion(new Rect(0f, top, v.width, cy - top), string.Join("\n", detail));
             }
             else if (p.InColony && viewer != 0 && viewer != p.Id)
@@ -479,7 +479,7 @@ namespace FamilyLife
             if (dim) GUI.color = new Color(0.65f, 0.65f, 0.65f);
             Text.Anchor = TextAnchor.UpperLeft;
             Text.Font = z < 0.85f ? GameFont.Tiny : GameFont.Small;
-            Widgets.Label(new Rect(textX, rect.y + 3f, textW, 22f * z), person.Name.Truncate(textW));
+            Widgets.Label(new Rect(textX, rect.y + 3f, textW, 22f * z), HouseholdNames.Short(person).Truncate(textW));
             GUI.color = Color.white;
 
             var info = TreeInfo(registry, person, lineage, shown);
@@ -566,17 +566,19 @@ namespace FamilyLife
             Key(new Color(0.8f, 0.35f, 0.3f), "WFL_FW_Legend_Former".Translate(), "WFL_TreeLinkFormer".Translate(), true);
             Key(new Color(0.6f, 0.75f, 0.9f), "WFL_FW_Legend_Step".Translate(), "WFL_FW_Legend_StepTip".Translate());
             y += 24f;
+            GUI.color = FamilyKit.Dim; Text.Font = GameFont.Tiny; Widgets.Label(new Rect(0f, y, v.width, 18f), "WFL_FW_TreeStripNote".Translate()); GUI.color = Color.white; Text.Font = GameFont.Small; y += 20f;
             foreach (var id in householdIds)
             {
                 var household = registry.GetHousehold(id);
                 if (household == null) continue;
                 var swatch = new Rect(10f, y + 4f, 12f, 12f);
                 Widgets.DrawBoxSolid(swatch, HouseholdColor(id));
-                string text = FamilyUi.NameList(registry, household.ResidentIds);
+                string hhName = view.HouseholdLabels.TryGetValue(id, out var lab) ? lab : "WFL_FW_HH_Plain".Translate().ToString();
                 float? cohesion = registry.HouseholdCohesion(household);
-                if (cohesion.HasValue)
-                    text += " - " + ("WFL_Tier_" + BondTuning.CohesionTier(cohesion.Value)).Translate() + " (" + Mathf.RoundToInt(cohesion.Value) + ")";
+                string text = hhName + (cohesion.HasValue ? " - " + "WFL_FW_TreeCohesion".Translate(("WFL_Tier_" + BondTuning.CohesionTier(cohesion.Value)).Translate().ToString().CapitalizeFirst(), Mathf.RoundToInt(cohesion.Value)).ToString() : "");
+                var lineTop = y;
                 Line(v, ref y, text, 28f);
+                TooltipHandler.TipRegion(new Rect(0f, lineTop, v.width, y - lineTop), FamilyUi.NameList(registry, household.ResidentIds));
                 var leftOut = registry.LeftOutIn(household);
                 if (leftOut.Count > 0) Line(v, ref y, "WFL_LeftOut".Translate(FamilyUi.NameList(registry, leftOut)), 28f, true);
             }
