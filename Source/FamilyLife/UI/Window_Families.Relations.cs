@@ -204,7 +204,7 @@ namespace FamilyLife
             cy += 50f;
 
             // The story of it: what the four meters add up to, in a few lines.
-            var tale = RelationshipStory.Of(row, FamilyUi.NameOf(registry, subject.Id), FamilyUi.NameOf(registry, other.Id), component.PerspectivePawnId == subject.Id, view.Insider ? null : RelationshipWords.With(registry, subject.Id, other.Id, row, visitorHistory));
+            var tale = RelationshipStory.Of(row, FamilyUi.NameOf(registry, subject.Id), FamilyUi.NameOf(registry, other.Id), component.PerspectivePawnId == subject.Id && Narrative.IsPlayed(subject.Id), view.Insider ? null : RelationshipWords.With(registry, subject.Id, other.Id, row, visitorHistory));
             var prose = new Rect(0f, 0f, cv.width, 0f);
             foreach (var n in tale.All)
             {

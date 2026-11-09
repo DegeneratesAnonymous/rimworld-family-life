@@ -133,6 +133,7 @@ namespace FamilyLife
                 }
             }
             PerspectiveShiftBridge.Install(harmony);
+            FamilyLife.Domain.Narrative.PlayedHook = id => PerspectiveShiftBridge.AvatarId == id;
             LongEventHandler.ExecuteWhenFinished(FamilyTabs.RegisterOnHumanlikes);
             Log.Message("[Wil's Family Life] Loaded (" + applied.Count + " hooks" + (failed.Count > 0 ? ", " + failed.Count + " skipped" : "") + ").");
         }

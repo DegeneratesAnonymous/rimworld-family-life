@@ -117,7 +117,7 @@ namespace FamilyLife
                         string initiator = FamilyUi.NameOf(r, b.Initiator);
                         string others = FamilyUi.NameList(r, b.Others);
                         card.Type = b.Teaching ? "WFL_FW_Group_Lessons".Translate(initiator).ToString() : FamilyText.MomentTitle(e);
-                        card.Body = (viewer != 0 && viewer == b.Initiator ? "WFL_FW_Group_Body_You" : "WFL_FW_Group_Body").Translate(initiator, others, b.Parts.Count).ToString();
+                        card.Body = (Narrative.IsPlayed(viewer) && viewer == b.Initiator ? "WFL_FW_Group_Body_You" : "WFL_FW_Group_Body").Translate(initiator, others, b.Parts.Count).ToString();
                         card.Consequence = GroupAftermath(r, b);
                         foreach (var part in b.Parts.OrderBy(p => p.Tick))
                             card.Details.Add(FamilyText.Date(part.Tick) + " - " + FamilyUi.NameOf(r, part.A) + " / " + FamilyUi.NameOf(r, part.B) + ": " + FamilyText.TierWords(part.Tier));

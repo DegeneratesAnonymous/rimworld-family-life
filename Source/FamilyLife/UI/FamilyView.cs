@@ -159,7 +159,7 @@ namespace FamilyLife
                     var kind = r.KindOf(anchor, person);
                     row.Relation = kind.HasValue ? ("WFL_FW_Rel_" + kind.Value).Translate(anchor.Name).ToString() : "";
                 }
-                else if (anchor != null) row.Relation = anchor == view.Perspective ? "WFL_FW_You".Translate().ToString() : "WFL_FW_HouseHead".Translate().ToString();
+                else if (anchor != null) row.Relation = anchor == view.Perspective && Narrative.IsPlayed(anchor.Id) ? "WFL_FW_You".Translate().ToString() : "WFL_FW_HouseHead".Translate().ToString();
                 row.Age = AgeText(person, row.Pawn);
                 if (person.InColony && person.HouseholdId != 0) row.Household = view.HouseholdLabels.TryGetValue(person.HouseholdId, out var hhName) ? hhName : "WFL_FW_HH_Plain".Translate().ToString();
                 row.Status = StatusText(person, row.Pawn);

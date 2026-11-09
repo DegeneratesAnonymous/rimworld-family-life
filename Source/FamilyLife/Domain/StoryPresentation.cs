@@ -23,7 +23,14 @@ namespace FamilyLife.Domain
 
         /// <summary>The key to use when the person being played is the one the line is about, so the wording can say "you".</summary>
         public static Narrative About(int viewer, int subject, string key, params string[] args) =>
-            new Narrative(viewer != 0 && viewer == subject ? key + "_You" : key, args);
+            new Narrative(IsPlayed(viewer) && viewer == subject ? key + "_You" : key, args);
+
+        /// <summary>
+        /// Whether the player has actually taken control of this person. Looking at someone's view of the family is not playing them: the story only says "you" for a
+        /// person being played, and uses the name otherwise. The game layer supplies the answer; with no hook nobody is being played.
+        /// </summary>
+        public static Func<int, bool> PlayedHook;
+        public static bool IsPlayed(int pawnId) => pawnId != 0 && PlayedHook != null && PlayedHook(pawnId);
     }
 
     // ------------------------------------------------------------------ how much a thing matters

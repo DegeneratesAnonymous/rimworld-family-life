@@ -298,7 +298,21 @@ namespace FamilyLife.Tests
             var r = Jessops();
             var house = House(r);
             r.EventLog.Add(Lesson(1, 3, 9000));
+            // Viewing as Strick without controlling him: the story names him.
+            var before = Narrative.PlayedHook;
+            try
+            {
+                Narrative.PlayedHook = null;
+                var viewedOnly = StoryModel.Build(r, house, 1, 10000).Threads.First(t => t.Kind == ThreadKind.Teaching);
+                Assert.DoesNotContain("_You", viewedOnly.Summary.Key);
+                Assert.Equal("Strick", viewedOnly.Summary.Args[0]);
+                Narrative.PlayedHook = id => id == 3;                                  // someone else is played
+                Assert.DoesNotContain("_You", StoryModel.Build(r, house, 1, 10000).Threads.First(t => t.Kind == ThreadKind.Teaching).Summary.Key);
+                Narrative.PlayedHook = id => id == 1;                                  // the player took control of Strick
+            }
+            catch { Narrative.PlayedHook = before; throw; }
             var asStrick = StoryModel.Build(r, house, 1, 10000).Threads.First(t => t.Kind == ThreadKind.Teaching);
+            Narrative.PlayedHook = before;
             Assert.EndsWith("_You", asStrick.Summary.Key);
             var overview = StoryModel.Build(r, house, 0, 10000).Threads.First(t => t.Kind == ThreadKind.Teaching);
             Assert.DoesNotContain("_You", overview.Summary.Key);
