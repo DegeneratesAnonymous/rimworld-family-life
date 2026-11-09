@@ -224,11 +224,18 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Terms, "terms"); Scribe_Values.Look(ref QualityCount, "qualityCount"); Scribe_Values.Look(ref QualitySum, "qualitySum"); Scribe_Values.Look(ref LastGrade, "lastGrade");
             Scribe_Values.Look(ref NextRoundTick, "nextRound"); Scribe_Values.Look(ref RoundStartTick, "roundStart");
             Scribe_Values.Look(ref NextSessionTick, "nextSession"); Scribe_Values.Look(ref SessionStartTick, "sessionStart");
+            Scribe_Values.Look(ref PendingKind, "pendingKind"); Scribe_Values.Look(ref PendingTick, "pendingTick"); Scribe_Values.Look(ref LastIllnessTick, "lastIllness");
+            Scribe_Values.Look(ref LastTestingYear, "lastTestingYear"); Scribe_Values.Look(ref IllnessRound, "illnessRound");
+            Scribe_Values.Look(ref TestingStartTick, "testingStart"); Scribe_Values.Look(ref TestingSlot, "testingSlot");
+            Scribe_Collections.Look(ref TestIds, "testIds", LookMode.Value); Scribe_Collections.Look(ref TestPass, "testPass", LookMode.Value); Scribe_Collections.Look(ref TestTry, "testTry", LookMode.Value);
             Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
             Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Examined, "examined", LookMode.Value); Scribe_Collections.Look(ref SessionQueue, "sessionQueue", LookMode.Value);
             if (Tokens == null) Tokens = new List<int>();
             if (Examined == null) Examined = new List<int>();
             if (SessionQueue == null) SessionQueue = new List<int>();
+            if (TestIds == null) TestIds = new List<int>();
+            if (TestPass == null) TestPass = new List<int>();
+            if (TestTry == null) TestTry = new List<int>();
         }
     }
 

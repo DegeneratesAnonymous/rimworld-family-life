@@ -165,11 +165,7 @@ namespace FamilyLife
             if (s == null || s.healthChecks)
             {
                 int perYear = Math.Max(1, Math.Min(4, s?.checkupsPerYear ?? 2));
-                if (r.BeginCheckupRound(now, 60 * Day / perYear))
-                {
-                    CheckupQueue.Reset();          // everyone is on the doctor's list again
-                    Messages.Message("WFL_Checkup_Round".Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
-                }
+                OfficeEvents.Healer(c, r, office, holder, now);          // a round, or one for an outbreak, is offered to the player; it begins by itself if they leave it
                 if (r.CheckupOpen(now)) SkipRecentlyChecked(c, r, office, now);
                 if (r.CheckupOpen(now))
                 {
@@ -181,12 +177,13 @@ namespace FamilyLife
                     {
                         bool clinic = ClinicVisits.Spot(holder, out _, out _);
                         // anyone still to be seen who can be asked to come to the clinic now (or, with no clinic, anyone at all)
-                        int toCome = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && !CheckupQueue.Waiting(id, now) && (!clinic || !CheckupQueue.OnTheSpot(id)));
+                        var order = OfficeEvents.Priority(c, office);          // in an outbreak the sick come first
+                        int toCome = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && !CheckupQueue.Waiting(id, now) && (!clinic || !CheckupQueue.OnTheSpot(id)), order);
                         if (clinic && toCome != 0) ClinicVisits.TryOpen(holder);
                         else
                         {
                             // Nobody can be brought to the clinic: the next person who could not be brought is seen where they are, as soon as they are free.
-                            int where = clinic ? r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && CheckupQueue.OnTheSpot(id) && !CheckupQueue.Waiting(id, now)) : toCome;
+                            int where = clinic ? r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && CheckupQueue.OnTheSpot(id) && !CheckupQueue.Waiting(id, now), order) : toCome;
                             var patient = where == 0 ? null : Spawned(c, where);
                             if (patient != null && !NeedsAttention(holder) && !GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) { if (clinic) CheckupQueue.Failed(where, now); else SkipFor(where, now, 6000); }
                         }
@@ -371,16 +368,22 @@ namespace FamilyLife
                 if (existing != null) patient.health.RemoveHediff(existing);
                 if (WFL_HediffDefOf.WFL_CheckedUp != null)
                 {
-                    patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
-                    // The doctor looks after their own house better: the effect lasts twice as long for kin.
-                    var comp = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp)?.TryGetComp<HediffComp_Disappears>();
+                    // The doctor's check: Medicine and Social, the talk, and the day. The quality sets how strong the benefit is and how long it lasts.
+                    int med = doctor.skills?.GetSkill(SkillDefOf.Medicine) is SkillRecord ms && !ms.TotallyDisabled ? ms.Level : 0;
+                    int soc = doctor.skills?.GetSkill(SkillDefOf.Social) is SkillRecord ss && !ss.TotallyDisabled ? ss.Level : 0;
+                    var level = CheckupQuality.Level(CheckupQuality.Score(med, soc, talkQuality, Rand.RangeInclusive(1, 20)));
+                    var made = patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
+                    if (made != null) made.Severity = CheckupQuality.Severity(level);
+                    var comp = made?.TryGetComp<HediffComp_Disappears>();
                     if (comp != null)
                     {
-                        if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer)) comp.ticksToDisappear *= 2;
-                        comp.ticksToDisappear = (int)(comp.ticksToDisappear * GuidedExchanges.CheckupDurationFactor(talkQuality));          // how the talk went changes how long the benefit lasts
+                        float duration = CheckupQuality.DurationFactor(level);
+                        if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer)) duration *= 2f;          // the doctor looks after their own house better
+                        comp.ticksToDisappear = (int)(comp.ticksToDisappear * duration);
                     }
-                    int feel = GuidedExchanges.Impression(talkQuality);
-                    if (feel > 0) Activities.GainMemory(patient, "WFL_ReassuringCheckup", doctor); else if (feel < 0) Activities.GainMemory(patient, "WFL_DismissiveCheckup", doctor);
+                    if (level == ResultQuality.Poor) Activities.GainMemory(patient, "WFL_DismissiveCheckup", doctor);
+                    else if (level >= ResultQuality.Good) Activities.GainMemory(patient, "WFL_ReassuringCheckup", doctor);
+                    MoteMaker.ThrowText(patient.DrawPos, patient.Map, "WFL_Checkup_Result".Translate(("WFL_Quality_" + level).Translate()), level == ResultQuality.Poor ? new UnityEngine.Color(1f, .78f, .62f) : level == ResultQuality.Excellent ? new UnityEngine.Color(.72f, 1f, .72f) : UnityEngine.Color.white);
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
@@ -415,6 +418,7 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Teacher, anyone && (s == null || s.holdClasses), now);
             if (s != null && !s.holdClasses) return;
 
+            OfficeEvents.Teacher(c, r, office, holder, now);          // the annual testing of the children, offered in Aprimay; classes go on whatever else is happening
             if (ClassSessions.Running(holder)) return;
             bool classroom = ClassroomKnown(holder, now);          // a lectern, a blackboard or a desk in a room: the class is held there, to everyone at once
             if (now >= office.NextSessionTick && office.SessionQueue.Count == 0)

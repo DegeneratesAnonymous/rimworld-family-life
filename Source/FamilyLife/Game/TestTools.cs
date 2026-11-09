@@ -180,6 +180,25 @@ namespace FamilyLife
             Messages.Message("Started the check-up round if it could start.\n" + string.Join("\n", lines), MessageTypeDefOf.TaskCompletion, false);
         }
 
+        [DebugAction(Cat, "Offer the check-up, outbreak and testing letters now", allowedGameStates = AllowedGameStates.Playing)]
+        private static void OfferEventsNow()
+        {
+            var r = Comp?.Registry; if (r == null) return;
+            foreach (var o in r.Offices) o.PendingKind = 0;
+            OfficeEvents.Offer(PendingEvent.Checkups);
+            Messages.Message("Sent the check-up letter. Use 'Start annual testing now' for the testing, or press the button on a lectern.", MessageTypeDefOf.TaskCompletion, false);
+        }
+
+        [DebugAction(Cat, "Start annual testing now (two days)", allowedGameStates = AllowedGameStates.Playing)]
+        private static void TestingNow()
+        {
+            var r = Comp?.Registry; if (r == null) return;
+            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.TestingStartTick = 0; }
+            OfficeDriver.ForceUntil = Now + 6000;
+            bool ok = OfficeEvents.Begin(PendingEvent.Testing);
+            Messages.Message(ok ? "The testing has begun: each child sits a check every free hour for two days." : "The testing could not begin.", MessageTypeDefOf.TaskCompletion, false);
+        }
+
         [DebugAction(Cat, "Call the yearly assembly now", allowedGameStates = AllowedGameStates.Playing)]
         private static void AssemblyNow()
         {

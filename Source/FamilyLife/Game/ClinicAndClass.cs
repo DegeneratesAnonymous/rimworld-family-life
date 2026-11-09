@@ -439,6 +439,9 @@ namespace FamilyLife
             Gizmo extra = null;
             try { extra = HoldClass.For(__instance); } catch (Exception e) { Log.Warning("[Wil's Family Life] Hold class button skipped: " + e.Message); }
             if (extra != null) yield return extra;
+            List<Gizmo> more = null;
+            try { more = OfficeEvents.Gizmos(__instance).ToList(); } catch (Exception e) { Log.Warning("[Wil's Family Life] Event buttons skipped: " + e.Message); }
+            if (more != null) foreach (var g in more) yield return g;
         }
     }
 
@@ -548,7 +551,7 @@ namespace FamilyLife
         internal static void CallNext(FamilyComponent c, ClinicSession s, Pawn doctor, int now)
         {
             var r = c.Registry;
-            int id = r.NextCheckupPatient(now, x => OfficeDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && !CheckupQueue.Waiting(x, now) && !CheckupQueue.OnTheSpot(x));
+            int id = r.NextCheckupPatient(now, x => OfficeDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && !CheckupQueue.Waiting(x, now) && !CheckupQueue.OnTheSpot(x), OfficeEvents.Priority(c, r.OfficeFor(OfficeKind.Healer)));
             var patient = id == 0 ? null : c.TryGetPawn(id);
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
             s.Idle = 0;

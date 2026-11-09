@@ -29,6 +29,11 @@ namespace FamilyLife.Domain
         public int UnmetSinceTick, NextVoteTick, LastHolderId, BarredId, BarredUntil, EndedTick, Terms, QualityCount;
         public int NextRoundTick, RoundStartTick;          // the doctor's check-ups
         public int NextSessionTick, SessionStartTick;      // the teacher's classes and the hall keeper's meals
+        public int PendingKind, PendingTick;               // an event offered to the player and not yet answered (PendingEvent)
+        public int LastIllnessTick, LastTestingYear;       // when a round was last called for an outbreak; the year the children were last tested
+        public bool IllnessRound;                          // the current round was called for an outbreak: the sick are seen first
+        public int TestingStartTick, TestingSlot;          // the annual testing under way, and the hour it has reached
+        public List<int> TestIds = new List<int>(), TestPass = new List<int>(), TestTry = new List<int>();          // each child tested, and how many hourly checks they passed and sat
         public float QualitySum, LastGrade;
         public bool CounterReady;
         public OfficeKind Kind;
@@ -275,6 +280,7 @@ namespace FamilyLife.Domain
             office.EndReason = OfficeEnd.None; office.EndedTick = 0; office.Backers = backers; office.Opponents = opponents; office.Terms++;
             office.NextRoundTick = now + ActivityTuning.TicksPerDay; office.RoundStartTick = 0; office.Examined.Clear();
             office.NextSessionTick = now; office.SessionStartTick = 0; office.SessionQueue.Clear();
+            office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
             AdvanceRecognition(winner, .25f, now);
         }
@@ -294,6 +300,7 @@ namespace FamilyLife.Domain
         {
             office.LastHolderId = office.HolderId; office.HolderId = 0; office.HolderFamily = 0; office.EndReason = why; office.EndedTick = now;
             office.UnmetSinceTick = 0; office.CounterReady = false; office.RoundStartTick = 0; office.SessionStartTick = 0; office.SessionQueue.Clear();
+            office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
             if (why == OfficeEnd.Neglected) { office.BarredId = office.LastHolderId; office.BarredUntil = now + AssemblyYearTicks / 2; }
         }
 
@@ -601,12 +608,12 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>The next person still to be seen this round, chosen from those the game says are free to go. The doctor is not their own patient.</summary>
-        public int NextCheckupPatient(int now, Func<int, bool> available)
+        public int NextCheckupPatient(int now, Func<int, bool> available, Func<int, int> priority = null)
         {
             var office = OfficeFor(OfficeKind.Healer);
             if (office == null || !CheckupOpen(now)) return 0;
             return Persons.Where(p => p.InColony && p.Id != office.HolderId && !office.Examined.Contains(p.Id) && (available == null || available(p.Id)))
-                .OrderBy(p => FamilyOf(p.Id) != office.HolderFamily).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // the doctor's own house is seen first
+                .OrderBy(p => priority == null ? 0 : priority(p.Id)).ThenBy(p => FamilyOf(p.Id) != office.HolderFamily).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // the doctor's own house is seen first
         }
 
         /// <summary>The doctor has really seen this person. Counted once per round; a round ends when everyone present has been seen.</summary>

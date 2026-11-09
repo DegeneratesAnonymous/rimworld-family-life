@@ -243,6 +243,38 @@
   <WFL_S_CheckupsPerYear>{0} round(s) of check-ups per year</WFL_S_CheckupsPerYear>
   <WFL_S_CheckupsPerYearTip>A year here is 60 days; two rounds a year is one about every 30 days.</WFL_S_CheckupsPerYearTip>
   <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
+  <WFL_Event_Begin>Begin</WFL_Event_Begin>
+  <WFL_Event_Pass>Pass for now</WFL_Event_Pass>
+  <WFL_Event_Checkups_Title>Check-ups due</WFL_Event_Checkups_Title>
+  <WFL_Event_Checkups_Text>It is time for the colony's check-ups. {0} would see everyone in turn, one at a time, and a good check-up leaves people healthier for a while. Begin them, or pass this time?\n\nIf you leave this, the check-ups begin by themselves in three days.</WFL_Event_Checkups_Text>
+  <WFL_Event_Illness_Title>Sickness in the colony</WFL_Event_Illness_Title>
+  <WFL_Event_Illness_Text>A good many people are ill at once. {0} would call a round of check-ups now and see the sick first. Begin it, or pass?\n\nIf you leave this, the round begins by itself in three days.</WFL_Event_Illness_Text>
+  <WFL_Event_Testing_Title>Annual testing</WFL_Event_Testing_Title>
+  <WFL_Event_Testing_Text>It is the season for the children's annual testing. For two days each child will sit a check every hour they are awake and free, and what they earn depends on how well they do. {0} would oversee it. Begin the testing, or pass this year?\n\nIf you leave this, the testing begins by itself in three days.</WFL_Event_Testing_Text>
+  <WFL_Event_NoPost_Doctor>Nobody holds the post of doctor on this map.</WFL_Event_NoPost_Doctor>
+  <WFL_Event_NoPost_Teacher>Nobody holds the post of teacher on this map.</WFL_Event_NoPost_Teacher>
+  <WFL_Event_NoPupils>There are no children to test.</WFL_Event_NoPupils>
+  <WFL_Event_BeginCheckups>Begin check-ups</WFL_Event_BeginCheckups>
+  <WFL_Event_BeginIllness>Check-ups for the sick</WFL_Event_BeginIllness>
+  <WFL_Event_BeginCheckupsDesc>Have the colony's doctor begin a round of check-ups now, seeing everyone in turn in the medical room. In an outbreak the sick are seen first.</WFL_Event_BeginCheckupsDesc>
+  <WFL_Event_BeginTesting>Begin annual testing</WFL_Event_BeginTesting>
+  <WFL_Event_BeginTestingDesc>Begin the children's two days of testing now. Each child sits a check every hour they are free, and is rewarded with experience according to how well they do.</WFL_Event_BeginTestingDesc>
+  <WFL_Checkup_Illness>{0} has begun a round of check-ups for the sick.</WFL_Checkup_Illness>
+  <WFL_Checkup_Result>Check-up: {0}</WFL_Checkup_Result>
+  <WFL_Quality_Poor>poor</WFL_Quality_Poor>
+  <WFL_Quality_Fair>fair</WFL_Quality_Fair>
+  <WFL_Quality_Good>good</WFL_Quality_Good>
+  <WFL_Quality_Excellent>excellent</WFL_Quality_Excellent>
+  <WFL_Testing_Begins>{0} begins the annual testing of {1} children. It lasts two days.</WFL_Testing_Begins>
+  <WFL_Testing_Line>{0}: {1} ({2} of {3} checks passed). Learned: {4}.</WFL_Testing_Line>
+  <WFL_Testing_ResultTitle>Testing results</WFL_Testing_ResultTitle>
+  <WFL_Testing_ResultText>The annual testing overseen by {0} is over.\n\n{1}</WFL_Testing_ResultText>
+  <WFL_TestPass_0>Got it.</WFL_TestPass_0>
+  <WFL_TestPass_1>That one was easy.</WFL_TestPass_1>
+  <WFL_TestPass_2>I know this.</WFL_TestPass_2>
+  <WFL_TestFail_0>Hm, that was hard.</WFL_TestFail_0>
+  <WFL_TestFail_1>I'm not sure...</WFL_TestFail_1>
+  <WFL_TestFail_2>Oh, no.</WFL_TestFail_2>
   <WFL_HoldClass_Label>Hold class</WFL_HoldClass_Label>
   <WFL_HoldClass_Desc>Have the colony's teacher hold a class here now. The colony's children come and sit in this room, and the teacher speaks for four hours. Anyone who needs to eat, sleep or go to the toilet leaves and misses what is left.</WFL_HoldClass_Desc>
   <WFL_HoldClass_NoTeacher>Nobody holds the post of teacher on this map, so there is nobody to hold a class.</WFL_HoldClass_NoTeacher>

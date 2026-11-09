@@ -34,4 +34,5 @@
   <JobDef><defName>WFL_ClassStudent</defName><driverClass>FamilyLife.JobDriver_ClassStudent</driverClass><reportString>attending class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ClinicDoctor</defName><driverClass>FamilyLife.JobDriver_ClinicDoctor</driverClass><reportString>seeing patients in the clinic.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ClinicPatient</defName><driverClass>FamilyLife.JobDriver_ClinicPatient</driverClass><reportString>having a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_TestStudent</defName><driverClass>FamilyLife.JobDriver_TestStudent</driverClass><reportString>sitting a test.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>
