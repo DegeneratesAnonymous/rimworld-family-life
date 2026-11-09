@@ -170,7 +170,7 @@ namespace FamilyLife
                 {
                     needed = true;
                     if (ClinicVisits.Running(holder)) { }
-                    else if (Due("checkup", now, 1500) && !ClinicVisits.TryOpen(holder))
+                    else if ((Due("checkup", now, 1500) || Forced && Due("checkupT", now, 200)) && !ClinicVisits.TryOpen(holder))
                     {
                         int patientId = r.NextCheckupPatient(now, id => !Skipped(id, now) && PatientAvailable(c, holder, id));
                         var patient = patientId == 0 ? null : Spawned(c, patientId);
@@ -186,6 +186,60 @@ namespace FamilyLife
         internal static bool Ready(Pawn p) => p != null && (Activities.IsFree(p) || (Activities.Now < ForceUntil && p.Spawned && !p.Dead && !p.Downed && !p.Drafted && !p.InMentalState && !p.IsPrisoner && p.RaceProps.Humanlike && !p.DevelopmentalStage.Baby()));
 
         internal static bool Forced => Activities.Now < ForceUntil;
+
+        /// <summary>Written to the log during a developer test only, so a flow that does not start says why.</summary>
+        internal static void Trace(string text) { if (Forced) Log.Message("[Wil's Family Life] test: " + text); }
+
+        /// <summary>What stands between the doctor and a clinic, and the teacher and a class, in plain lines. Used by the developer menu.</summary>
+        internal static List<string> Diagnose(FamilyComponent c, int now)
+        {
+            var lines = new List<string>();
+            var r = c.Registry;
+            var healer = r.OfficeFor(OfficeKind.Healer); var teacher = r.OfficeFor(OfficeKind.Teacher);
+            var settings = FamilyLifeMod.Settings;
+            if (healer == null || !healer.Held) lines.Add("Doctor: nobody holds the post. Run 'Choose the colony's posts now' first.");
+            else
+            {
+                var d = Spawned(c, healer.HolderId);
+                if (d == null) lines.Add("Doctor: the holder is not on the map.");
+                else
+                {
+                    lines.Add("Doctor: " + d.LabelShort + (settings != null && !settings.healthChecks ? " (check-ups are switched off in the mod settings)" : ""));
+                    lines.Add("  round open: " + r.CheckupOpen(now) + (ClinicVisits.Running(d) ? ", clinic already running" : ""));
+                    if (ClinicVisits.Spot(d, out var bed, out var cell)) lines.Add("  clinic: " + bed.LabelCap + " at " + bed.Position + ", the doctor waits at " + cell);
+                    else lines.Add("  clinic: no free medical bed in an enclosed room the doctor can reach (visits will be one to one instead)");
+                    int able = r.Persons.Count(p => p.InColony && p.Id != healer.HolderId && PatientAvailable(c, d, p.Id));
+                    lines.Add("  patients able to come now: " + able);
+                }
+            }
+            if (teacher == null || !teacher.Held) lines.Add("Teacher: nobody holds the post. Run 'Choose the colony's posts now' first.");
+            else
+            {
+                var t = Spawned(c, teacher.HolderId);
+                if (t == null) lines.Add("Teacher: the holder is not on the map.");
+                else
+                {
+                    lines.Add("Teacher: " + t.LabelShort + (settings != null && !settings.holdClasses ? " (classes are switched off in the mod settings)" : ""));
+                    if (ClassRooms.TeachingSpot(t, out var cellT, out var room, out var front)) lines.Add("  classroom: " + front.LabelCap + " at " + front.Position + ", the teacher stands at " + cellT + ", room of " + room.CellCount + " cells");
+                    else lines.Add("  classroom: no lectern, blackboard or desk in an enclosed room the teacher can reach (lessons will be one to one instead)");
+                    bool adults = settings != null && settings.adultStudents;
+                    var kids = r.Persons.Where(p => p.InColony && p.Id != teacher.HolderId && (p.Juvenile || adults)).ToList();
+                    int able = kids.Count(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == t.Map && FreeFor(c, p.Id) && Ready(pawn));
+                    lines.Add("  children in the colony: " + kids.Count + ", able to come now: " + able + ", waiting in the class list: " + teacher.SessionQueue.Count + (ClassSessions.Running(t) ? ", class already running" : ""));
+                }
+            }
+            return lines;
+        }
+
+        /// <summary>Runs the posts' work now, rather than at the next check.</summary>
+        internal static void WorkNow(FamilyComponent c, int now)
+        {
+            foreach (var office in c.Registry.Offices.Where(o => o.Held).ToList())
+            {
+                try { Work(c, c.Registry, office, now); }
+                catch (Exception ex) { Log.Warning("[Wil's Family Life] test: post '" + office.Kind + "' failed: " + ex); }
+            }
+        }
         /// <summary>Not drafted, hurt or in a break; and, outside a developer test, not being played or selected.</summary>
         internal static bool FreeFor(FamilyComponent c, int id)
         {
@@ -306,7 +360,7 @@ namespace FamilyLife
             }
             if (classroom)
             {
-                if (office.SessionQueue.Count > 0 && Due("classroom", now, 600)) { r.NextStudent(now); if (office.SessionQueue.Count > 0) ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now); }
+                if (office.SessionQueue.Count > 0 && (Due("classroom", now, 600) || Forced && Due("classroomT", now, 200))) { r.NextStudent(now); if (office.SessionQueue.Count > 0) ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now); }
                 return;
             }
             int next = r.NextStudent(now);

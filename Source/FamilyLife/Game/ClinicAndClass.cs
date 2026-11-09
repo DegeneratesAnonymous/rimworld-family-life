@@ -174,12 +174,13 @@ namespace FamilyLife
         internal static bool TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now)
         {
             if (teacher == null || Running(teacher) || roster.Count == 0) return false;
-            if (!ClassRooms.TeachingSpot(teacher, out var cell, out var room, out var front)) return false;
+            if (!ClassRooms.TeachingSpot(teacher, out var cell, out var room, out var front)) { OfficeDriver.Trace("class: no classroom furniture in an enclosed room for " + teacher.LabelShort); return false; }
             if (!OfficeDriver.Ready(teacher) || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher)) return true;       // there is a classroom: try again when the teacher is free
             var pupils = roster.Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned).ToList();
             var book = ClassRooms.BestBook(teacher, pupils);
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Room = room, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0 };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count);
+            OfficeDriver.Trace("class: " + teacher.LabelShort + " goes to " + cell + " in front of " + (front?.LabelCap ?? "the board") + ", " + s.Seats.Count + " seats, book: " + (book?.LabelNoCount ?? "none") + ", " + roster.Count + " children on the list");
             byTeacher[teacher.thingIDNumber] = s;
             var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassTeacher, front != null ? (LocalTargetInfo)front : (LocalTargetInfo)cell, cell);
             if (book != null) job.targetC = book;
@@ -200,6 +201,7 @@ namespace FamilyLife
                 if (!kid.CanReach(seat, PathEndMode.OnCell, Danger.None)) continue;
                 var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassStudent, teacher, seat);
                 kid.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+                OfficeDriver.Trace("class: " + kid.LabelShort + " is called to " + seat + (kid.CurJobDef == WFL_StoryDefOf.WFL_ClassStudent ? "" : " but could not take the job"));
                 s.Called.Add(id);
                 if (!s.Attended.ContainsKey(id)) s.Attended[id] = 0;
             }
@@ -383,8 +385,9 @@ namespace FamilyLife
         internal static bool TryOpen(Pawn doctor)
         {
             if (doctor == null || Running(doctor)) return true;
-            if (!Spot(doctor, out var bed, out var cell)) return false;
+            if (!Spot(doctor, out var bed, out var cell)) { OfficeDriver.Trace("clinic: no medical bed in an enclosed room for " + doctor.LabelShort); return false; }
             if (!OfficeDriver.Ready(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(doctor)) return true;       // there is a clinic: wait for the doctor
+            OfficeDriver.Trace("clinic: " + doctor.LabelShort + " goes to " + cell + " beside " + bed.LabelCap);
             byDoctor[doctor.thingIDNumber] = new ClinicSession { DoctorId = doctor.thingIDNumber, Bed = bed, DoctorCell = cell };
             doctor.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicDoctor, bed, cell), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
@@ -404,7 +407,9 @@ namespace FamilyLife
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None) || !patient.CanReserve(s.Bed, s.Bed.SleepingSlotsCount, 0)) { OfficeDriver.SkipPatient(id, now); return; }
             s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Idle = 0; s.Quality = 0f; s.Exchanges = 0;
+            OfficeDriver.Trace("clinic: " + patient.LabelShort + " is called in");
             patient.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+            if (patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient) OfficeDriver.Trace("clinic: " + patient.LabelShort + " could not take the job (reservation or reach)");
         }
     }
 
