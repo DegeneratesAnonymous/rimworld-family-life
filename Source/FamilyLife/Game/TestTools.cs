@@ -142,6 +142,7 @@ namespace FamilyLife
         {
             var r = Comp?.Registry; if (r == null) return;
             foreach (var o in r.Offices.Where(x => x.Held)) { o.NextSessionTick = 0; o.NextRoundTick = 0; o.SessionQueue.Clear(); }
+            OfficeDriver.ForceUntil = Now + 6000;          // for the next two hours a test is not held up by who is busy or on a work schedule
             Messages.Message("Classes, check-ups and hall meals will start at the next check (within a game hour).", MessageTypeDefOf.TaskCompletion, false);
         }
 

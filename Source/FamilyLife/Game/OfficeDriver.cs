@@ -169,7 +169,8 @@ namespace FamilyLife
                 if (r.CheckupOpen(now))
                 {
                     needed = true;
-                    if (Due("checkup", now, 1500))
+                    if (ClinicVisits.Running(holder)) { }
+                    else if (Due("checkup", now, 1500) && !ClinicVisits.TryOpen(holder))
                     {
                         int patientId = r.NextCheckupPatient(now, id => !Skipped(id, now) && PatientAvailable(c, holder, id));
                         var patient = patientId == 0 ? null : Spawned(c, patientId);
@@ -180,10 +181,26 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Healer, needed, now);
         }
 
+        /// <summary>Set by the developer menu so a test is not held up by who happens to be busy: people only need to be undrafted and not in a mental break.</summary>
+        internal static int ForceUntil;
+        internal static bool Ready(Pawn p) => p != null && (Activities.IsFree(p) || (Activities.Now < ForceUntil && p.Spawned && !p.Dead && !p.Downed && !p.Drafted && !p.InMentalState && !p.IsPrisoner && p.RaceProps.Humanlike && !p.DevelopmentalStage.Baby()));
+
+        internal static bool Forced => Activities.Now < ForceUntil;
+        /// <summary>Not drafted, hurt or in a break; and, outside a developer test, not being played or selected.</summary>
+        internal static bool FreeFor(FamilyComponent c, int id)
+        {
+            var p = c.TryGetPawn(id);
+            if (Forced && p != null) return !p.Drafted && !p.Downed && !p.InMentalState && !p.IsPrisoner;
+            return Governance.Free(c, id);
+        }
+
+        internal static bool CanBeSeen(FamilyComponent c, Pawn doctor, int id) => !Skipped(id, Activities.Now) && PatientAvailable(c, doctor, id);
+        internal static void SkipPatient(int id, int now) => SkipFor(id, now, 6000);
+
         private static bool PatientAvailable(FamilyComponent c, Pawn doctor, int id)
         {
             var p = Spawned(c, id);
-            return p != null && p.Map == doctor.Map && Governance.Free(c, id) && Activities.IsFree(p) && p.RaceProps.Humanlike;
+            return p != null && p.Map == doctor.Map && FreeFor(c, id) && Ready(p) && p.RaceProps.Humanlike;
         }
 
         /// <summary>A cell beside a medical bed in an enclosed room, so the examination happens in the medical room when there is one.</summary>
@@ -273,14 +290,21 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Teacher, anyone && (s == null || s.holdClasses), now);
             if (s != null && !s.holdClasses) return;
 
+            if (ClassSessions.Running(holder)) return;
+            bool classroom = ClassroomKnown(holder, now);          // a lectern, a blackboard or a desk in a room: the class is held there, to everyone at once
             if (now >= office.NextSessionTick && office.SessionQueue.Count == 0)
             {
                 var students = r.Persons.Where(p => p.InColony && p.Id != holderId && (p.Juvenile || adults))
-                    .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == holder.Map && Governance.Free(c, p.Id) && LearnableSkill(holder, pawn) != null)
+                    .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == holder.Map && FreeFor(c, p.Id) && (classroom || LearnableSkill(holder, pawn) != null))
                     .Select(p => p.Id).Take(24).ToList();
                 int every = Math.Max(1, Math.Min(10, s?.classEveryDays ?? 3)) * Day;
                 if (r.BeginClass(now, every, students))
                     Messages.Message("WFL_Class_Begins".Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
+            }
+            if (classroom)
+            {
+                if (office.SessionQueue.Count > 0 && Due("classroom", now, 600)) { r.NextStudent(now); if (office.SessionQueue.Count > 0) ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now); }
+                return;
             }
             int next = r.NextStudent(now);
             if (next == 0) return;
@@ -289,21 +313,29 @@ namespace FamilyLife
             if (Due("lesson", now, 600) && !GovernanceMeetings.Start(holder, student, WFL_StoryDefOf.WFL_OfficeLesson, 0)) r.SessionDefer(OfficeKind.Teacher, next);
         }
 
+        private static int classroomChecked = -100000; private static bool classroomResult;
+        private static bool ClassroomKnown(Pawn teacher, int now)
+        {
+            if (now - classroomChecked < 600 && now >= classroomChecked) return classroomResult;
+            classroomChecked = now;
+            return classroomResult = ClassRooms.TeachingSpot(teacher, out _, out _, out _);
+        }
+
         /// <summary>A lesson lasts two game hours; a check-up a few seconds at triple speed.</summary>
         internal const int LessonTicks = 5000, CheckupTicks = 900;
 
         /// <summary>A lesson from the colony's teacher: a real conversation that ends with the student learning something the teacher is better at.</summary>
-        internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now)
+        internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now, int ticks = LessonTicks)
         {
             var office = r.OfficeFor(OfficeKind.Teacher);
             if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
-            var skill = LearnableSkill(teacher, student);
+            var skill = LearnableSkill(teacher, student) ?? Activities.BestSkillOf(teacher, student)?.def;
             float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 450f : 700f;          // a lesson now lasts hours, not seconds
             if (r.KinOfHolder(student.thingIDNumber, OfficeKind.Teacher)) xp *= 1.5f;          // the teacher's own house learns more from them
             if (skill != null) student.skills.Learn(skill, xp, true);
             Served(r, OfficeKind.Teacher, teacher, student, now);
             r.ClassDone(student.thingIDNumber);
-            r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, LessonTicks, now, BondCause.Teaching);
+            r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, ticks, now, BondCause.Teaching);
             int gap = skill == null ? 0 : teacher.skills.GetSkill(skill).Level - student.skills.GetSkill(skill).Level;
             r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, Math.Min(1f, .4f + gap / 10f));
         }
