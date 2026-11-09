@@ -699,12 +699,17 @@ namespace FamilyLife.Domain
 
             if (beats.Count > 0)
             {
-                string tone = RelationshipWords.ToneOf(history, viewer);
+                // The chapter is about how things stand lately, so the tone comes from the latest dealings and the reasons shown are the ones that explain it.
+                var recent = history.Take(6).ToList();
+                string tone = RelationshipWords.ToneOf(recent, viewer);
+                int toneSign = tone == "Uneasy" ? -1 : tone == "Warm" ? 1 : 0;
                 int bad = history.Count(e => StoryValence.Of(e, viewer).OnViewer < 0), good = history.Count(e => StoryValence.Of(e, viewer).OnViewer > 0);
                 m.Chapter.Title = new Narrative("WFL_FW_Ch_Dealings_" + tone + "_Title", houseName);
                 m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_Dealings_" + tone, me, houseName));
                 m.Chapter.Body.Add(new Narrative("WFL_FW_Ch_DealingsPrivate", houseName));
-                foreach (var e in history.Take(4).Reverse()) m.Chapter.Evidence.Add(Evidence(r, e, viewer));
+                var reasons = recent.Where(e => toneSign == 0 || Math.Sign(StoryValence.Of(e, viewer).OnViewer) == toneSign).Take(4).ToList();
+                if (reasons.Count == 0) reasons = recent.Take(4).ToList();
+                foreach (var e in reasons.AsEnumerable().Reverse()) m.Chapter.Evidence.Add(Evidence(r, e, viewer));
                 m.Threads.Add(new StoryThread
                 {
                     Id = "dealings:" + house.Id, Kind = ThreadKind.Dealings, Priority = 4, Severity = bad > good ? 1 : 0,
@@ -757,7 +762,7 @@ namespace FamilyLife.Domain
             string other = HouseholdNames.Short(r.GetPerson(e.A == viewer ? e.B : e.A));
             var def = EventCatalog.Get(e.EventId);
             if (viewer == e.Third && def != null && (def.Effects & EventEffect.Confronts) != 0)
-                return new Narrative("WFL_FW_Evid_Against", HouseholdNames.Short(r.GetPerson(e.A)), HouseholdNames.Short(r.GetPerson(e.B)), title);
+                return new Narrative(Narrative.IsPlayed(viewer) ? "WFL_FW_Evid_Against_You" : "WFL_FW_Evid_Against", HouseholdNames.Short(r.GetPerson(e.A)), HouseholdNames.Short(r.GetPerson(e.B)), title, StoryModel.PerspectiveName(r, viewer));
             return new Narrative(v.OnViewer < 0 ? "WFL_FW_Evid_Bad" : v.OnViewer > 0 ? "WFL_FW_Evid_Good" : "WFL_FW_Evid_Neutral", other, title);
         }
 

@@ -38,7 +38,7 @@ namespace FamilyLife.Tests
             var m = StoryModel.Build(r, house, Strick, 10000);
             Assert.Equal(Acquaintance.Acquainted, m.Acquaintance);
             Assert.StartsWith("WFL_FW_Ch_Dealings_", m.Chapter.Title.Key);
-            Assert.Equal(2, m.Chapter.Evidence.Count);      // the events are the evidence, not repeated prose
+            Assert.Single(m.Chapter.Evidence);      // the events that explain the tone are the evidence, not repeated prose
             Assert.Contains(m.Chapter.Body, b => b.Key == "WFL_FW_Ch_DealingsPrivate");
             Assert.Contains(m.Threads, t => t.Kind == ThreadKind.Dealings);
         }

@@ -79,9 +79,10 @@ namespace FamilyLife.Tests
             var m = StoryModel.Build(r, house, Strick, 10000);
             Assert.Equal("WFL_FW_Ch_Dealings_Uneasy_Title", m.Chapter.Title.Key);
             Assert.DoesNotContain(m.Chapter.Body, b => b.Key.Contains("_Warm"));
-            Assert.Equal(3, m.Chapter.Evidence.Count);
+            // The reasons shown are the ones that explain the tone: the neutral moment is not offered as a reason for unease.
+            Assert.Equal(2, m.Chapter.Evidence.Count);
             Assert.Contains(m.Chapter.Evidence, n => n.Key == "WFL_FW_Evid_Against");
-            Assert.Contains(m.Chapter.Evidence, n => n.Key == "WFL_FW_Evid_Neutral");
+            Assert.DoesNotContain(m.Chapter.Evidence, n => n.Key == "WFL_FW_Evid_Neutral");
             Assert.Contains(m.Chapter.Evidence, n => n.Key == "WFL_FW_Evid_Bad");
         }
 

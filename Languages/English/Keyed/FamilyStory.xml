@@ -516,7 +516,8 @@
   <WFL_FW_Evid_Bad>{1} with {0} went badly.</WFL_FW_Evid_Bad>
   <WFL_FW_Evid_Good>{1} with {0} went well.</WFL_FW_Evid_Good>
   <WFL_FW_Evid_Neutral>{1} with {0} changed nothing.</WFL_FW_Evid_Neutral>
-  <WFL_FW_Evid_Against>{0} took {1}'s side against you.</WFL_FW_Evid_Against>
+  <WFL_FW_Evid_Against>{0} took {1}'s side against {3}.</WFL_FW_Evid_Against>
+  <WFL_FW_Evid_Against_You>{0} took {1}'s side against you.</WFL_FW_Evid_Against_You>
   <WFL_FW_Detail_Score>Mechanical detail: {0} {1}/100</WFL_FW_Detail_Score>
   <WFL_FW_CapWhy>The House has few people able to do {0} work well.</WFL_FW_CapWhy>
   <WFL_FW_Fact_AmbitionGap>The House's current ambition is to fill this gap.</WFL_FW_Fact_AmbitionGap>

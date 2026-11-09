@@ -227,13 +227,13 @@ namespace FamilyLife
             {
                 cy += 4f;
                 cy += FamilyKit.Label(cv, cy, "WFL_FW_ChapterWhy".Translate(view.NameOfPerspective(registry).ToUpperInvariant()), 0f, true);
-                foreach (var s in ch.Evidence) cy += FamilyKit.Label(prv, cy, "- " + s, 6f);
+                foreach (var s in ch.Evidence) cy += FamilyKit.Label(prv, cy, "• " + s, 6f) + 2f;
             }
             if (ch.Supporting.Length > 0)
             {
                 cy += 4f;
                 cy += FamilyKit.Label(cv, cy, "WFL_FW_ChapterThreads".Translate(), 0f, true);
-                foreach (var s in ch.Supporting) cy += FamilyKit.Label(cv, cy, "- " + s, 6f);
+                foreach (var s in ch.Supporting) cy += FamilyKit.Label(cv, cy, "• " + s, 6f) + 2f;
             }
             if (ch.Lead != null && FamilyKit.Action(new Rect(0f, cy + 4f, 170f, 24f), "WFL_FW_OpenThread".Translate(), true)) State.Navigate(ch.Lead.Tab, ch.Lead.Sub);
             if (ch.Lead != null) cy += 32f;
