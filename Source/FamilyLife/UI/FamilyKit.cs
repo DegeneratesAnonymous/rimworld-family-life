@@ -186,13 +186,54 @@ namespace FamilyLife
             return Widgets.ButtonInvisible(row);
         }
 
+        /// <summary>
+        /// A matter needing attention: a short heading, what is wrong and by how much, and what could be done about it. The whole row is a link.
+        /// Returns true when clicked.
+        /// </summary>
+        public static bool InfoRow(Rect view, ref float y, string head, string detail, string hint, int severity, string tip = null)
+        {
+            const float pad = 8f;
+            float inner = view.width - 2f * pad - 14f;
+            Text.Font = GameFont.Small;
+            float detailH = string.IsNullOrEmpty(detail) ? 0f : Text.CalcHeight(detail, inner);
+            Text.Font = GameFont.Tiny;
+            float hintH = string.IsNullOrEmpty(hint) ? 0f : Text.CalcHeight(hint, inner);
+            Text.Font = GameFont.Small;
+            float h = pad + 18f + detailH + (hintH > 0f ? hintH + 2f : 0f) + pad;
+            var row = new Rect(0f, y, view.width, h);
+            Widgets.DrawBoxSolid(row, new Color(0.14f, 0.14f, 0.15f));
+            Widgets.DrawBoxSolid(new Rect(row.x, row.y, 3f, row.height), SeverityColor(severity));
+            Widgets.DrawHighlightIfMouseover(row);
+            float cy = y + pad;
+            Text.Font = GameFont.Tiny;
+            GUI.color = SeverityColor(severity) == Dim ? new Color(0.8f, 0.8f, 0.8f) : SeverityColor(severity);
+            Widgets.Label(new Rect(pad + 4f, cy, inner, 18f), head.ToUpperInvariant());
+            GUI.color = Dim;
+            Text.Anchor = TextAnchor.UpperRight;
+            Widgets.Label(new Rect(row.xMax - 22f, cy, 16f, 18f), ">");
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
+            Text.Font = GameFont.Small;
+            cy += 18f;
+            if (detailH > 0f) { Widgets.Label(new Rect(pad + 4f, cy, inner, detailH), detail); cy += detailH; }
+            if (hintH > 0f)
+            {
+                Text.Font = GameFont.Tiny; GUI.color = Dim;
+                Widgets.Label(new Rect(pad + 4f, cy + 2f, inner, hintH), hint);
+                GUI.color = Color.white; Text.Font = GameFont.Small;
+            }
+            if (!string.IsNullOrEmpty(tip)) TooltipHandler.TipRegion(row, tip);
+            y += h + 4f;
+            return Widgets.ButtonInvisible(row);
+        }
+
         // ------------------------------------------------------------------ tabs
 
         /// <summary>A strip of tabs. The selected one is brighter and underlined in gold. Returns the index clicked, or -1.</summary>
-        public static int TabStrip(Rect strip, IList<string> labels, int selected, IList<string> tips = null, IList<bool> flagged = null)
+        public static int TabStrip(Rect strip, IList<string> labels, int selected, IList<string> tips = null, IList<int> counts = null, IList<bool> urgent = null)
         {
             int clicked = -1;
-            float w = strip.width / labels.Count;
+            float w = WindowLayout.TabWidth(strip.width, labels.Count);       // fixed width, left-aligned: tabs are not stretched across the window
             for (int i = 0; i < labels.Count; i++)
             {
                 var r = new Rect(strip.x + i * w, strip.y, w - 2f, strip.height);
@@ -205,8 +246,19 @@ namespace FamilyLife
                 Widgets.Label(r, labels[i]);
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
-                if (flagged != null && i < flagged.Count && flagged[i]) Widgets.DrawBoxSolid(new Rect(r.xMax - 12f, r.y + 5f, 7f, 7f), Warn);
-                if (tips != null && i < tips.Count && !string.IsNullOrEmpty(tips[i])) TooltipHandler.TipRegion(r, tips[i]);
+                string tip = tips != null && i < tips.Count ? tips[i] : null;
+                if (counts != null && i < counts.Count && counts[i] > 0)
+                {
+                    // A labelled count, not an unexplained square: "2" in a rounded badge, with a sentence in the tooltip.
+                    bool hot = urgent != null && i < urgent.Count && urgent[i];
+                    var badge = new Rect(r.xMax - 22f, r.y + 5f, 18f, 16f);
+                    Widgets.DrawBoxSolid(badge, hot ? Urgent : Warn);
+                    Text.Font = GameFont.Tiny; Text.Anchor = TextAnchor.MiddleCenter; GUI.color = Color.black;
+                    Widgets.Label(badge, counts[i].ToString());
+                    GUI.color = Color.white; Text.Anchor = TextAnchor.UpperLeft; Text.Font = GameFont.Small;
+                    tip = (string.IsNullOrEmpty(tip) ? "" : tip + "\n\n") + "WFL_FW_TabBadgeTip".Translate(counts[i]);
+                }
+                if (!string.IsNullOrEmpty(tip)) TooltipHandler.TipRegion(r, tip);
                 if (Widgets.ButtonInvisible(r) && !on) clicked = i;
             }
             return clicked;

@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- The words of the Families window's storytelling layer. Every line is a template: names, numbers and other keys arrive as {0}, {1}, ... -->
+  <!-- A key ending in _You is used when the person being played is the one the line is about. -->
+
+  <WFL_FW_Someone>someone</WFL_FW_Someone>
+  <WFL_FW_KinState>{0}</WFL_FW_KinState>
+
+  <!-- House, household, family: three different things -->
+  <WFL_FW_CountsLabel>Counts</WFL_FW_CountsLabel>
+  <WFL_FW_CountsLine>{0} House members · {1} household residents in {2} households</WFL_FW_CountsLine>
+  <WFL_FW_HouseMembersLabel>House members</WFL_FW_HouseMembersLabel>
+  <WFL_FW_ResidentsLabel>Household residents</WFL_FW_ResidentsLabel>
+  <WFL_FW_ResidentsValue>{0} in {1} households</WFL_FW_ResidentsValue>
+  <WFL_FW_CountsTip>Family is kinship by blood, adoption or choice. The House is who belongs to it, leads it and carries its name and standing. A household is the people who share a home. They overlap but are not the same: a spouse can live in this home and still belong to another House.</WFL_FW_CountsTip>
+  <WFL_FW_CountsOthers>{0} of the people living in its households belong to other Houses.</WFL_FW_CountsOthers>
+  <WFL_FW_CountsElsewhere>{0} House members live in other households or away.</WFL_FW_CountsElsewhere>
+  <WFL_FW_Card_Households>Households</WFL_FW_Card_Households>
+  <WFL_FW_HouseholdSummary>{0}: {1} residents</WFL_FW_HouseholdSummary>
+  <WFL_FW_HouseholdOthers>{0} from other Houses</WFL_FW_HouseholdOthers>
+  <WFL_FW_HH_Plain>A household</WFL_FW_HH_Plain>
+  <WFL_FW_HH_Name>{0} Household</WFL_FW_HH_Name>
+  <WFL_FW_HH_Pair>{0} and {1}'s Household</WFL_FW_HH_Pair>
+  <WFL_FW_HH_Of>{0}'s Household</WFL_FW_HH_Of>
+  <WFL_FW_TabBadgeTip>{0} matters here need attention.</WFL_FW_TabBadgeTip>
+
+  <!-- Summary cards -->
+  <WFL_FW_Card_Chapter>CURRENT CHAPTER</WFL_FW_Card_Chapter>
+  <WFL_FW_ChapterTip>What the family is mostly living through right now, put together from what the records show. It is a summary of real events and situations, never an invention.</WFL_FW_ChapterTip>
+  <WFL_FW_ChapterThreads>Supporting threads:</WFL_FW_ChapterThreads>
+  <WFL_FW_OpenThread>Open details</WFL_FW_OpenThread>
+  <WFL_FW_Card_Threads>Story threads</WFL_FW_Card_Threads>
+  <WFL_FW_NoOtherThreads>No other situation is shaping the family's days.</WFL_FW_NoOtherThreads>
+  <WFL_FW_ActiveThreads>Active story threads</WFL_FW_ActiveThreads>
+  <WFL_FW_ThreadWhy>Why:</WFL_FW_ThreadWhy>
+  <WFL_FW_ThreadRecent>Recent development:</WFL_FW_ThreadRecent>
+  <WFL_FW_ThreadPaths>Possible paths (nothing here is certain):</WFL_FW_ThreadPaths>
+  <WFL_FW_ThreadActions>What {0} can do:</WFL_FW_ThreadActions>
+  <WFL_FW_ThreadActionsAny>What the family's members can do:</WFL_FW_ThreadActionsAny>
+  <WFL_FW_FoodDetail>{0} of {1} desired days available</WFL_FW_FoodDetail>
+
+  <WFL_FW_Ch_UnknownTitle>NOT KNOWN TO YOU</WFL_FW_Ch_UnknownTitle>
+  <WFL_FW_Ch_Unknown>What this House is going through is unknown to {0}. Only what {0} took part in is shown.</WFL_FW_Ch_Unknown>
+  <WFL_FW_Ch_QuietTitle>A QUIET PERIOD</WFL_FW_Ch_QuietTitle>
+  <WFL_FW_Ch_Quiet>House {0} is enjoying a quiet period. Nothing is pressing, and the household goes about its days.</WFL_FW_Ch_Quiet>
+  <WFL_FW_Ch_Is_Fractured>House {0} is fractured.</WFL_FW_Ch_Is_Fractured>
+  <WFL_FW_Ch_Is_Strained>House {0} is strained.</WFL_FW_Ch_Is_Strained>
+  <WFL_FW_Ch_Is_Steady>House {0} is steady.</WFL_FW_Ch_Is_Steady>
+  <WFL_FW_Ch_Is_Close>House {0} is close.</WFL_FW_Ch_Is_Close>
+  <WFL_FW_Ch_Is_TightKnit>House {0} is tight-knit.</WFL_FW_Ch_Is_TightKnit>
+  <WFL_FW_Clause_Teaching>{0} has recently been teaching {1}.</WFL_FW_Clause_Teaching>
+  <WFL_FW_Clause_Teaching_You>You have recently been teaching {1}.</WFL_FW_Clause_Teaching_You>
+  <WFL_FW_Clause_Moment>Lately, {0} and {1} shared a moment: {2}.</WFL_FW_Clause_Moment>
+
+  <!-- Attention rows -->
+  <WFL_FW_AlertHead_NoHead>No House head</WFL_FW_AlertHead_NoHead>
+  <WFL_FW_AlertHead_NoSteward>No steward</WFL_FW_AlertHead_NoSteward>
+  <WFL_FW_AlertHead_FoodLow>Food reserves low</WFL_FW_AlertHead_FoodLow>
+  <WFL_FW_AlertHead_HousingProblem>Housing is cramped</WFL_FW_AlertHead_HousingProblem>
+  <WFL_FW_AlertHead_SafetyLow>Safety is low</WFL_FW_AlertHead_SafetyLow>
+  <WFL_FW_AlertHead_CapabilityGap>Skills missing</WFL_FW_AlertHead_CapabilityGap>
+  <WFL_FW_AlertHead_PromiseDue>Promises coming due</WFL_FW_AlertHead_PromiseDue>
+  <WFL_FW_AlertHead_OpenRift>A rift between relatives</WFL_FW_AlertHead_OpenRift>
+  <WFL_FW_AlertHead_Grievance>Grievances unsettled</WFL_FW_AlertHead_Grievance>
+  <WFL_FW_AlertHead_CeremonyPrep>An occasion to prepare</WFL_FW_AlertHead_CeremonyPrep>
+  <WFL_FW_AlertHead_Petition>Requests awaiting an answer</WFL_FW_AlertHead_Petition>
+  <WFL_FW_AlertHead_Negotiation>A match under discussion</WFL_FW_AlertHead_Negotiation>
+  <WFL_FW_AlertHint_NoHead>The House can choose a head, or succession will settle it.</WFL_FW_AlertHint_NoHead>
+  <WFL_FW_AlertHint_NoSteward>A steward can keep the House's stores and duties in order.</WFL_FW_AlertHint_NoSteward>
+  <WFL_FW_AlertHint_FoodLow>Household members may seek aid, trade or additional food.</WFL_FW_AlertHint_FoodLow>
+  <WFL_FW_AlertHint_HousingProblem>Beds, rooms or a new household could ease it.</WFL_FW_AlertHint_HousingProblem>
+  <WFL_FW_AlertHint_SafetyLow>Defence, allies or a safer home would help.</WFL_FW_AlertHint_SafetyLow>
+  <WFL_FW_AlertHint_CapabilityGap>Teaching a relative, or welcoming someone skilled, could fill it.</WFL_FW_AlertHint_CapabilityGap>
+  <WFL_FW_AlertHint_PromiseDue>Whoever made the promise can keep it, or explain.</WFL_FW_AlertHint_PromiseDue>
+  <WFL_FW_AlertHint_OpenRift>Time together, an apology or aid may begin to mend it.</WFL_FW_AlertHint_OpenRift>
+  <WFL_FW_AlertHint_Grievance>Aid, restitution or an apology can settle what is owed.</WFL_FW_AlertHint_Grievance>
+  <WFL_FW_AlertHint_CeremonyPrep>Invitations, a place and a time can be arranged.</WFL_FW_AlertHint_CeremonyPrep>
+  <WFL_FW_AlertHint_Petition>The House head can hear them.</WFL_FW_AlertHint_Petition>
+  <WFL_FW_AlertHint_Negotiation>Those involved can talk it through, support it or oppose it.</WFL_FW_AlertHint_Negotiation>
+
+  <!-- Actions the acting pawn can take through the game's own systems (suggestions, not buttons) -->
+  <WFL_FW_Act_Apologize>Apologize, or make amends</WFL_FW_Act_Apologize>
+  <WFL_FW_Act_TimeTogether>Spend time together</WFL_FW_Act_TimeTogether>
+  <WFL_FW_Act_Aid>Offer aid</WFL_FW_Act_Aid>
+  <WFL_FW_Act_Attend>Attend the occasion</WFL_FW_Act_Attend>
+  <WFL_FW_Act_Prepare>Help prepare it</WFL_FW_Act_Prepare>
+  <WFL_FW_Act_Welcome>Welcome the visitors</WFL_FW_Act_Welcome>
+  <WFL_FW_Act_KeepPromise>Keep the promise, or explain why not</WFL_FW_Act_KeepPromise>
+  <WFL_FW_Act_TalkHead>Talk to the House head</WFL_FW_Act_TalkHead>
+  <WFL_FW_Act_Mentor>Continue mentoring family members</WFL_FW_Act_Mentor>
+
+  <!-- States -->
+  <WFL_FW_State_Serious>Serious</WFL_FW_State_Serious>
+  <WFL_FW_State_Open>Open</WFL_FW_State_Open>
+  <WFL_FW_State_Feuding>Feuding</WFL_FW_State_Feuding>
+  <WFL_FW_State_Strained>Strained</WFL_FW_State_Strained>
+  <WFL_FW_State_Unresolved>Unresolved</WFL_FW_State_Unresolved>
+  <WFL_FW_State_Preparing>Being prepared</WFL_FW_State_Preparing>
+  <WFL_FW_State_Ambition>Urgency: {0}</WFL_FW_State_Ambition>
+  <WFL_FW_Urgency_High>high</WFL_FW_Urgency_High>
+  <WFL_FW_Urgency_Medium>moderate</WFL_FW_Urgency_Medium>
+  <WFL_FW_Urgency_Low>low</WFL_FW_Urgency_Low>
+  <WFL_FW_State_Recent>Recent</WFL_FW_State_Recent>
+  <WFL_FW_State_Due>Coming due</WFL_FW_State_Due>
+  <WFL_FW_State_Negotiating>Under discussion</WFL_FW_State_Negotiating>
+  <WFL_FW_State_Awaiting>Awaiting an answer</WFL_FW_State_Awaiting>
+  <WFL_FW_State_Low>Low</WFL_FW_State_Low>
+  <WFL_FW_State_Ongoing>Ongoing</WFL_FW_State_Ongoing>
+
+  <!-- Threads from conflict -->
+  <WFL_FW_Th_Rift_Title>A rift between {0} and {1}</WFL_FW_Th_Rift_Title>
+  <WFL_FW_Th_Rift_Sum>{0} and {1} are on bad terms, and neither has found a way to mend it yet.</WFL_FW_Th_Rift_Sum>
+  <WFL_FW_Th_Rift_Sum_You>You and the other person are on bad terms, and neither of you has found a way to mend it yet.</WFL_FW_Th_Rift_Sum_You>
+  <WFL_FW_Th_Rift_Line>{0} and {1} are at odds</WFL_FW_Th_Rift_Line>
+  <WFL_FW_Th_Rift_Why>It began on {0} and has not been settled.</WFL_FW_Th_Rift_Why>
+  <WFL_FW_Th_Rift_Path1>A shared meal, a story or an apology can ease it</WFL_FW_Th_Rift_Path1>
+  <WFL_FW_Th_Rift_Path2>A family occasion can bring them together</WFL_FW_Th_Rift_Path2>
+  <WFL_FW_Th_Feud_Title>A feud with House {0}</WFL_FW_Th_Feud_Title>
+  <WFL_FW_Th_Feud_Sum>{0} and House {1} are openly at odds.</WFL_FW_Th_Feud_Sum>
+  <WFL_FW_Th_Feud_Line>Feud with House {0}</WFL_FW_Th_Feud_Line>
+  <WFL_FW_Th_Strain_Title>Strained ties with House {0}</WFL_FW_Th_Strain_Title>
+  <WFL_FW_Th_Strain_Sum>{0} and House {1} have grown distant, with old wrongs between them.</WFL_FW_Th_Strain_Sum>
+  <WFL_FW_Th_Tie_Why>Grievance between the Houses stands at {0}, against goodwill of {1}.</WFL_FW_Th_Tie_Why>
+  <WFL_FW_Th_Tie_Path1>Aid freely given can build goodwill</WFL_FW_Th_Tie_Path1>
+  <WFL_FW_Th_Tie_Path2>Restitution for a wrong can settle a grievance</WFL_FW_Th_Tie_Path2>
+  <WFL_FW_Th_Incident_Title>A wrong not yet answered</WFL_FW_Th_Incident_Title>
+  <WFL_FW_Th_Incident_Sum>{0} wronged {1}, and it has not been settled.</WFL_FW_Th_Incident_Sum>
+  <WFL_FW_Th_Incident_Line>A wrong is still unanswered</WFL_FW_Th_Incident_Line>
+  <WFL_FW_Th_Incident_Why>It was recorded as an incident against the House and is still open.</WFL_FW_Th_Incident_Why>
+  <WFL_FW_Th_Incident_Path1>The House can forgive it</WFL_FW_Th_Incident_Path1>
+  <WFL_FW_Th_Incident_Path2>Restitution can settle it</WFL_FW_Th_Incident_Path2>
+  <WFL_FW_Th_Plot_Title>Whispers of revenge</WFL_FW_Th_Plot_Title>
+  <WFL_FW_Th_Plot_Sum>{0} has been working against {1}.</WFL_FW_Th_Plot_Sum>
+  <WFL_FW_Th_Plot_Line>A plot is in motion</WFL_FW_Th_Plot_Line>
+  <WFL_FW_Th_Plot_Why>A grievance was never answered.</WFL_FW_Th_Plot_Why>
+  <WFL_FW_Th_Plot_Path1>Making amends before it ripens may stop it</WFL_FW_Th_Plot_Path1>
+
+  <!-- Threads from occasions and visits -->
+  <WFL_FW_Th_Ceremony_Title>A {0} is being prepared</WFL_FW_Th_Ceremony_Title>
+  <WFL_FW_Th_Ceremony_Sum>The family is getting ready for a {0}.</WFL_FW_Th_Ceremony_Sum>
+  <WFL_FW_Th_Ceremony_Line>Preparing a {0}</WFL_FW_Th_Ceremony_Line>
+  <WFL_FW_Th_Ceremony_Why>Something in the family's life called for a {0}.</WFL_FW_Th_Ceremony_Why>
+  <WFL_FW_Th_Ceremony_Path1>It may be held once a time and place are settled</WFL_FW_Th_Ceremony_Path1>
+  <WFL_FW_Th_Ceremony_Path2>How well it goes depends on who comes and how it is arranged</WFL_FW_Th_Ceremony_Path2>
+  <WFL_FW_Th_Visit_Title>Relatives are visiting</WFL_FW_Th_Visit_Title>
+  <WFL_FW_Th_Visit_Sum>{0} relatives are coming to, or staying with, the family.</WFL_FW_Th_Visit_Sum>
+  <WFL_FW_Th_Visit_Line>{0} relatives visiting</WFL_FW_Th_Visit_Line>
+  <WFL_FW_Th_Visit_Why>Kin asked to be with the family.</WFL_FW_Th_Visit_Why>
+  <WFL_FW_Th_Visit_Path1>A good stay can deepen old bonds</WFL_FW_Th_Visit_Path1>
+  <WFL_FW_Th_Visit_Path2>Trouble on the road may call for help</WFL_FW_Th_Visit_Path2>
+  <WFL_FW_Th_Camp_Title>A camping trip</WFL_FW_Th_Camp_Title>
+  <WFL_FW_Th_Camp_Sum>The family is thinking of getting away together for a while.</WFL_FW_Th_Camp_Sum>
+  <WFL_FW_Th_Camp_Line>A family camping trip</WFL_FW_Th_Camp_Line>
+  <WFL_FW_Th_Camp_Why>The trip is being considered for: {0}.</WFL_FW_Th_Camp_Why>
+  <WFL_FW_Th_Camp_Path1>Time away together can bring people closer</WFL_FW_Th_Camp_Path1>
+
+  <!-- Threads from the House's ambition -->
+  <WFL_FW_Why_None>The House has no pressing need.</WFL_FW_Why_None>
+  <WFL_FW_Why_Sustenance>Food and supplies score {0} of 100, below what the House considers enough.</WFL_FW_Why_Sustenance>
+  <WFL_FW_Why_LivingSpace>Living space scores {0} of 100: there is not enough room or bedding for everyone.</WFL_FW_Why_LivingSpace>
+  <WFL_FW_Why_Safety>Safety scores {0} of 100, so the House feels exposed.</WFL_FW_Why_Safety>
+  <WFL_FW_Why_Continuity>Continuity scores {0} of 100: the House's future leadership is not secure.</WFL_FW_Why_Continuity>
+  <WFL_FW_Why_Capability>Skills score {0} of 100: the House lacks people able to do some needed work.</WFL_FW_Why_Capability>
+  <WFL_FW_Why_Cohesion>Cohesion scores {0} of 100: relations inside the House are under strain.</WFL_FW_Why_Cohesion>
+  <WFL_FW_Why_Influence>The House's standing scores {0} of 100, lower than it would like, and few of its people hold recognized community posts.</WFL_FW_Why_Influence>
+  <WFL_FW_Why_Independence>Independence scores {0} of 100: the House leans on others.</WFL_FW_Why_Independence>
+  <WFL_FW_Why_Legacy>Legacy scores {0} of 100: the House has little yet that will outlast it.</WFL_FW_Why_Legacy>
+
+  <WFL_FW_Amb_SecureProvisions_Title>Enough to eat</WFL_FW_Amb_SecureProvisions_Title>
+  <WFL_FW_Amb_SecureProvisions_Sum>House {0} wants its food and supplies to be secure.</WFL_FW_Amb_SecureProvisions_Sum>
+  <WFL_FW_Amb_SecureProvisions_Line>Secure the food reserves</WFL_FW_Amb_SecureProvisions_Line>
+  <WFL_FW_Amb_SecureProvisions_Path1>Members grow, hunt or buy more food</WFL_FW_Amb_SecureProvisions_Path1>
+  <WFL_FW_Amb_SecureProvisions_Path2>Relatives share or trade what they have</WFL_FW_Amb_SecureProvisions_Path2>
+  <WFL_FW_Amb_SecureProvisions_Act1>Gather or cook food for the household</WFL_FW_Amb_SecureProvisions_Act1>
+  <WFL_FW_Amb_SecureProvisions_Act2>Ask a relative for aid</WFL_FW_Amb_SecureProvisions_Act2>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Title>A home of their own</WFL_FW_Amb_EstablishFamilyQuarters_Title>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Sum>House {0} wants proper quarters for its people.</WFL_FW_Amb_EstablishFamilyQuarters_Sum>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Line>Establish family quarters</WFL_FW_Amb_EstablishFamilyQuarters_Line>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Path1>New beds and rooms are built</WFL_FW_Amb_EstablishFamilyQuarters_Path1>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Path2>Households are rearranged to fit the space</WFL_FW_Amb_EstablishFamilyQuarters_Path2>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Act1>Build or furnish a room</WFL_FW_Amb_EstablishFamilyQuarters_Act1>
+  <WFL_FW_Amb_EstablishFamilyQuarters_Act2>Improve the household's beds</WFL_FW_Amb_EstablishFamilyQuarters_Act2>
+  <WFL_FW_Amb_ImproveSafety_Title>Safer days</WFL_FW_Amb_ImproveSafety_Title>
+  <WFL_FW_Amb_ImproveSafety_Sum>House {0} wants to feel safe.</WFL_FW_Amb_ImproveSafety_Sum>
+  <WFL_FW_Amb_ImproveSafety_Line>Improve the family's safety</WFL_FW_Amb_ImproveSafety_Line>
+  <WFL_FW_Amb_ImproveSafety_Path1>Stronger defences are built</WFL_FW_Amb_ImproveSafety_Path1>
+  <WFL_FW_Amb_ImproveSafety_Path2>A protector takes up the duty</WFL_FW_Amb_ImproveSafety_Path2>
+  <WFL_FW_Amb_ImproveSafety_Act1>Take up guard or defence work</WFL_FW_Amb_ImproveSafety_Act1>
+  <WFL_FW_Amb_ImproveSafety_Act2>Strengthen the home</WFL_FW_Amb_ImproveSafety_Act2>
+  <WFL_FW_Amb_SeekProtection_Title>A strong friend</WFL_FW_Amb_SeekProtection_Title>
+  <WFL_FW_Amb_SeekProtection_Sum>House {0} is looking for an ally who can offer protection.</WFL_FW_Amb_SeekProtection_Sum>
+  <WFL_FW_Amb_SeekProtection_Line>Seek a protective alliance</WFL_FW_Amb_SeekProtection_Line>
+  <WFL_FW_Amb_SeekProtection_Path1>Goodwill with a stronger House grows through aid</WFL_FW_Amb_SeekProtection_Path1>
+  <WFL_FW_Amb_SeekProtection_Path2>A marriage between Houses binds them</WFL_FW_Amb_SeekProtection_Path2>
+  <WFL_FW_Amb_SeekProtection_Act1>Build friendships with the other House</WFL_FW_Amb_SeekProtection_Act1>
+  <WFL_FW_Amb_SeekProtection_Act2>Offer aid to its members</WFL_FW_Amb_SeekProtection_Act2>
+  <WFL_FW_Amb_SecureSuccession_Title>Who comes next</WFL_FW_Amb_SecureSuccession_Title>
+  <WFL_FW_Amb_SecureSuccession_Sum>House {0} wants its future leadership settled.</WFL_FW_Amb_SecureSuccession_Sum>
+  <WFL_FW_Amb_SecureSuccession_Line>Secure the succession</WFL_FW_Amb_SecureSuccession_Line>
+  <WFL_FW_Amb_SecureSuccession_Path1>A capable heir is named</WFL_FW_Amb_SecureSuccession_Path1>
+  <WFL_FW_Amb_SecureSuccession_Path2>Young members are prepared for responsibility</WFL_FW_Amb_SecureSuccession_Path2>
+  <WFL_FW_Amb_SecureSuccession_Act1>Talk to the House head about an heir</WFL_FW_Amb_SecureSuccession_Act1>
+  <WFL_FW_Amb_SecureSuccession_Act2>Mentor a young relative</WFL_FW_Amb_SecureSuccession_Act2>
+  <WFL_FW_Amb_FillSkillGap_Title>A missing skill</WFL_FW_Amb_FillSkillGap_Title>
+  <WFL_FW_Amb_FillSkillGap_Sum>House {0} lacks people able to do some needed work.</WFL_FW_Amb_FillSkillGap_Sum>
+  <WFL_FW_Amb_FillSkillGap_Line>Fill a skill gap</WFL_FW_Amb_FillSkillGap_Line>
+  <WFL_FW_Amb_FillSkillGap_Path1>A relative learns the skill from someone who has it</WFL_FW_Amb_FillSkillGap_Path1>
+  <WFL_FW_Amb_FillSkillGap_Path2>Someone skilled joins the family</WFL_FW_Amb_FillSkillGap_Path2>
+  <WFL_FW_Amb_FillSkillGap_Act1>Teach or learn the skill</WFL_FW_Amb_FillSkillGap_Act1>
+  <WFL_FW_Amb_FillSkillGap_Act2>Befriend a skilled colonist</WFL_FW_Amb_FillSkillGap_Act2>
+  <WFL_FW_Amb_TrainNextGeneration_Title>Raising the young</WFL_FW_Amb_TrainNextGeneration_Title>
+  <WFL_FW_Amb_TrainNextGeneration_Sum>House {0} wants its children taught what they will need.</WFL_FW_Amb_TrainNextGeneration_Sum>
+  <WFL_FW_Amb_TrainNextGeneration_Line>Train the next generation</WFL_FW_Amb_TrainNextGeneration_Line>
+  <WFL_FW_Amb_TrainNextGeneration_Path1>Parents and elders teach the children</WFL_FW_Amb_TrainNextGeneration_Path1>
+  <WFL_FW_Amb_TrainNextGeneration_Path2>A teacher is appointed in the colony</WFL_FW_Amb_TrainNextGeneration_Path2>
+  <WFL_FW_Amb_TrainNextGeneration_Act1>Teach a child something useful</WFL_FW_Amb_TrainNextGeneration_Act1>
+  <WFL_FW_Amb_TrainNextGeneration_Act2>Tell a child a story</WFL_FW_Amb_TrainNextGeneration_Act2>
+  <WFL_FW_Amb_RestoreCohesion_Title>Mending the family</WFL_FW_Amb_RestoreCohesion_Title>
+  <WFL_FW_Amb_RestoreCohesion_Sum>House {0} wants its people to be closer again.</WFL_FW_Amb_RestoreCohesion_Sum>
+  <WFL_FW_Amb_RestoreCohesion_Line>Restore family cohesion</WFL_FW_Amb_RestoreCohesion_Line>
+  <WFL_FW_Amb_RestoreCohesion_Path1>Rifts are eased by time together</WFL_FW_Amb_RestoreCohesion_Path1>
+  <WFL_FW_Amb_RestoreCohesion_Path2>A shared occasion lifts the mood</WFL_FW_Amb_RestoreCohesion_Path2>
+  <WFL_FW_Amb_RestoreCohesion_Act1>Spend time with a relative you have drifted from</WFL_FW_Amb_RestoreCohesion_Act1>
+  <WFL_FW_Amb_RestoreCohesion_Act2>Apologize where you wronged someone</WFL_FW_Amb_RestoreCohesion_Act2>
+  <WFL_FW_Amb_ExpandLegacy_Title>Something to leave behind</WFL_FW_Amb_ExpandLegacy_Title>
+  <WFL_FW_Amb_ExpandLegacy_Sum>House {0} wants to build something that will outlast it.</WFL_FW_Amb_ExpandLegacy_Sum>
+  <WFL_FW_Amb_ExpandLegacy_Line>Expand the family legacy</WFL_FW_Amb_ExpandLegacy_Line>
+  <WFL_FW_Amb_ExpandLegacy_Path1>Traditions are kept and heirlooms passed on</WFL_FW_Amb_ExpandLegacy_Path1>
+  <WFL_FW_Amb_ExpandLegacy_Path2>Memorable occasions become part of its history</WFL_FW_Amb_ExpandLegacy_Path2>
+  <WFL_FW_Amb_ExpandLegacy_Act1>Take part in a family tradition</WFL_FW_Amb_ExpandLegacy_Act1>
+  <WFL_FW_Amb_ExpandLegacy_Act2>Choose who inherits a treasured item</WFL_FW_Amb_ExpandLegacy_Act2>
+  <WFL_FW_Amb_PreserveIndependence_Title>Standing on its own</WFL_FW_Amb_PreserveIndependence_Title>
+  <WFL_FW_Amb_PreserveIndependence_Sum>House {0} wants to remain self-reliant.</WFL_FW_Amb_PreserveIndependence_Sum>
+  <WFL_FW_Amb_PreserveIndependence_Line>Preserve independence</WFL_FW_Amb_PreserveIndependence_Line>
+  <WFL_FW_Amb_PreserveIndependence_Path1>The House meets its own needs</WFL_FW_Amb_PreserveIndependence_Path1>
+  <WFL_FW_Amb_PreserveIndependence_Path2>It keeps its debts and favours few</WFL_FW_Amb_PreserveIndependence_Path2>
+  <WFL_FW_Amb_PreserveIndependence_Act1>Provide for the household yourself</WFL_FW_Amb_PreserveIndependence_Act1>
+  <WFL_FW_Amb_PreserveIndependence_Act2>Settle what the House owes</WFL_FW_Amb_PreserveIndependence_Act2>
+  <WFL_FW_Amb_IncreaseInfluence_Title>A place in the colony</WFL_FW_Amb_IncreaseInfluence_Title>
+  <WFL_FW_Amb_IncreaseInfluence_Sum>House {0} wants greater influence in colony affairs.</WFL_FW_Amb_IncreaseInfluence_Sum>
+  <WFL_FW_Amb_IncreaseInfluence_Line>Increase the family's influence</WFL_FW_Amb_IncreaseInfluence_Line>
+  <WFL_FW_Amb_IncreaseInfluence_Path1>A member earns a community office</WFL_FW_Amb_IncreaseInfluence_Path1>
+  <WFL_FW_Amb_IncreaseInfluence_Path2>The family supports an ally, or contributes to a public occasion</WFL_FW_Amb_IncreaseInfluence_Path2>
+  <WFL_FW_Amb_IncreaseInfluence_Act1>Build relationships with influential colonists</WFL_FW_Amb_IncreaseInfluence_Act1>
+  <WFL_FW_Amb_IncreaseInfluence_Act2>Support an eligible relative for a community post</WFL_FW_Amb_IncreaseInfluence_Act2>
+  <WFL_FW_Amb_Contentment_Title>Content with things as they are</WFL_FW_Amb_Contentment_Title>
+  <WFL_FW_Amb_Contentment_Sum>House {0} has no pressing wish. Life is good enough.</WFL_FW_Amb_Contentment_Sum>
+  <WFL_FW_Amb_Contentment_Line>The House is content</WFL_FW_Amb_Contentment_Line>
+  <WFL_FW_Amb_Contentment_Path1>Ordinary family life carries on</WFL_FW_Amb_Contentment_Path1>
+  <WFL_FW_Amb_Contentment_Path2>New wishes appear when circumstances change</WFL_FW_Amb_Contentment_Path2>
+  <WFL_FW_Amb_Contentment_Act1>Spend time with family</WFL_FW_Amb_Contentment_Act1>
+  <WFL_FW_Amb_Contentment_Act2>Share a meal or a story</WFL_FW_Amb_Contentment_Act2>
+
+  <!-- Other threads -->
+  <WFL_FW_Th_Turning_Title>A turning point</WFL_FW_Th_Turning_Title>
+  <WFL_FW_Th_Turning_Sum>Something significant has happened in the family's life.</WFL_FW_Th_Turning_Sum>
+  <WFL_FW_Th_Turning_Line>A recent turning point</WFL_FW_Th_Turning_Line>
+  <WFL_FW_Th_Turning_Why>See the Timeline for what happened.</WFL_FW_Th_Turning_Why>
+  <WFL_FW_Th_Promise_Title>Promises to keep</WFL_FW_Th_Promise_Title>
+  <WFL_FW_Th_Promise_Sum>{0} made a promise to {1}, and {2} promises are coming due.</WFL_FW_Th_Promise_Sum>
+  <WFL_FW_Th_Promise_Line>A promise from {0} to {1}</WFL_FW_Th_Promise_Line>
+  <WFL_FW_Th_Promise_Why>{0} gave their word and it has not yet been honoured.</WFL_FW_Th_Promise_Why>
+  <WFL_FW_Th_Promise_Path1>Keeping it deepens trust</WFL_FW_Th_Promise_Path1>
+  <WFL_FW_Th_Promise_Path2>Breaking it can open a rift</WFL_FW_Th_Promise_Path2>
+  <WFL_FW_Th_Match_Title>A possible marriage</WFL_FW_Th_Match_Title>
+  <WFL_FW_Th_Match_Sum>A match between {0} and {1} is being discussed.</WFL_FW_Th_Match_Sum>
+  <WFL_FW_Th_Match_Line>A match for {0} and {1}</WFL_FW_Th_Match_Line>
+  <WFL_FW_Th_Match_Why>Two Houses are weighing what such a union would mean.</WFL_FW_Th_Match_Why>
+  <WFL_FW_Th_Match_Path1>Both sides may come to agree</WFL_FW_Th_Match_Path1>
+  <WFL_FW_Th_Match_Path2>An objection may end it</WFL_FW_Th_Match_Path2>
+  <WFL_FW_Th_Petition_Title>Requests to the House</WFL_FW_Th_Petition_Title>
+  <WFL_FW_Th_Petition_Sum>{0} requests are waiting for the House head.</WFL_FW_Th_Petition_Sum>
+  <WFL_FW_Th_Petition_Line>{0} requests awaiting an answer</WFL_FW_Th_Petition_Line>
+  <WFL_FW_Th_Petition_Why>People have asked to join, marry in or be recognized.</WFL_FW_Th_Petition_Why>
+  <WFL_FW_Th_Petition_Path1>The head can accept or refuse each one</WFL_FW_Th_Petition_Path1>
+
+  <WFL_FW_Th_Food_Title>Food reserves are low</WFL_FW_Th_Food_Title>
+  <WFL_FW_Th_Food_Sum>The household is running short of food.</WFL_FW_Th_Food_Sum>
+  <WFL_FW_Th_Food_Line>Food reserves below target</WFL_FW_Th_Food_Line>
+  <WFL_FW_Th_Food_Why>Food and supplies score {0} of 100, below what the House keeps in reserve.</WFL_FW_Th_Food_Why>
+  <WFL_FW_Th_Food_Path1>Members cook, grow or buy more food</WFL_FW_Th_Food_Path1>
+  <WFL_FW_Th_Food_Path2>Relatives or allies share what they can spare</WFL_FW_Th_Food_Path2>
+  <WFL_FW_Th_Food_Act1>Prepare meals or stock the pantry</WFL_FW_Th_Food_Act1>
+  <WFL_FW_Th_Housing_Title>Not enough room</WFL_FW_Th_Housing_Title>
+  <WFL_FW_Th_Housing_Sum>Some of the household lack proper beds or space.</WFL_FW_Th_Housing_Sum>
+  <WFL_FW_Th_Housing_Line>Living space is short</WFL_FW_Th_Housing_Line>
+  <WFL_FW_Th_Housing_Why>Living space scores {0} of 100.</WFL_FW_Th_Housing_Why>
+  <WFL_FW_Th_Housing_Path1>New beds or rooms are built</WFL_FW_Th_Housing_Path1>
+  <WFL_FW_Th_Housing_Path2>Households are rearranged</WFL_FW_Th_Housing_Path2>
+  <WFL_FW_Th_Housing_Act1>Build or improve a bedroom</WFL_FW_Th_Housing_Act1>
+  <WFL_FW_Th_Safety_Title>The family feels exposed</WFL_FW_Th_Safety_Title>
+  <WFL_FW_Th_Safety_Sum>The House does not feel safe.</WFL_FW_Th_Safety_Sum>
+  <WFL_FW_Th_Safety_Line>Safety is low</WFL_FW_Th_Safety_Line>
+  <WFL_FW_Th_Safety_Why>Safety scores {0} of 100.</WFL_FW_Th_Safety_Why>
+  <WFL_FW_Th_Safety_Path1>Defences are strengthened</WFL_FW_Th_Safety_Path1>
+  <WFL_FW_Th_Safety_Path2>Allies stand with the House</WFL_FW_Th_Safety_Path2>
+  <WFL_FW_Th_Safety_Act1>Take up defence or guard work</WFL_FW_Th_Safety_Act1>
+  <WFL_FW_Th_Capability_Title>A skill the House lacks</WFL_FW_Th_Capability_Title>
+  <WFL_FW_Th_Capability_Sum>The House has no one strong in {0} work.</WFL_FW_Th_Capability_Sum>
+  <WFL_FW_Th_Capability_Line>Missing {0} capability</WFL_FW_Th_Capability_Line>
+  <WFL_FW_Th_Capability_Why>The House's {0} capability is weak, and its overall skills score {1} of 100.</WFL_FW_Th_Capability_Why>
+  <WFL_FW_Th_Capability_Path1>A relative learns it by being taught</WFL_FW_Th_Capability_Path1>
+  <WFL_FW_Th_Capability_Path2>A skilled colonist is befriended or joins</WFL_FW_Th_Capability_Path2>
+  <WFL_FW_Th_Capability_Act1>Teach or learn the skill</WFL_FW_Th_Capability_Act1>
+
+  <WFL_FW_Th_Teaching_Title>{0}'s lessons</WFL_FW_Th_Teaching_Title>
+  <WFL_FW_Th_Teaching_Sum>{0} has been teaching {1}.</WFL_FW_Th_Teaching_Sum>
+  <WFL_FW_Th_Teaching_Sum_You>You have been teaching {1}.</WFL_FW_Th_Teaching_Sum_You>
+  <WFL_FW_Th_Teaching_Line>{0} is teaching {1}</WFL_FW_Th_Teaching_Line>
+  <WFL_FW_Th_Teaching_Line_You>You are teaching {1}</WFL_FW_Th_Teaching_Line_You>
+  <WFL_FW_Th_Teaching_Why>Teaching passes skill and trust to the young.</WFL_FW_Th_Teaching_Why>
+  <WFL_FW_Th_Teaching_Recent>{0} spent time teaching {1}.</WFL_FW_Th_Teaching_Recent>
+  <WFL_FW_Th_Teaching_Path1>Those taught may grow closer to the teacher</WFL_FW_Th_Teaching_Path1>
+  <WFL_FW_Th_Teaching_Path2>The skill they learn can help the House</WFL_FW_Th_Teaching_Path2>
+  <WFL_FW_Th_Tradition_Title>A family tradition</WFL_FW_Th_Tradition_Title>
+  <WFL_FW_Th_Tradition_Sum>House {0} keeps a tradition: {1}.</WFL_FW_Th_Tradition_Sum>
+  <WFL_FW_Th_Tradition_Line>Tradition: {0}</WFL_FW_Th_Tradition_Line>
+  <WFL_FW_Th_Tradition_Why>It has been held {0} times.</WFL_FW_Th_Tradition_Why>
+  <WFL_FW_Th_Tradition_Path1>It will be held again when the family is ready</WFL_FW_Th_Tradition_Path1>
+
+  <!-- Story tab -->
+  <WFL_FW_Imp_Routine>Everyday</WFL_FW_Imp_Routine>
+  <WFL_FW_Imp_Meaningful>Meaningful</WFL_FW_Imp_Meaningful>
+  <WFL_FW_Imp_Major>Major</WFL_FW_Imp_Major>
+  <WFL_FW_Imp_Defining>Defining</WFL_FW_Imp_Defining>
+  <WFL_FW_RoutineSummary>{0} everyday matters are not listed.</WFL_FW_RoutineSummary>
+  <WFL_FW_Group_Lessons>{0}'s lessons</WFL_FW_Group_Lessons>
+  <WFL_FW_Group_Body>{0} shared this with {1}, {2} times in all.</WFL_FW_Group_Body>
+  <WFL_FW_Group_Body_You>You shared this with {1}, {2} times in all.</WFL_FW_Group_Body_You>
+  <WFL_FW_FeelGroup_Glad>{0} came away glowing.</WFL_FW_FeelGroup_Glad>
+  <WFL_FW_FeelGroup_Warm>{0} felt warmer for it.</WFL_FW_FeelGroup_Warm>
+  <WFL_FW_FeelGroup_Hurt>{0} was hurt by it.</WFL_FW_FeelGroup_Hurt>
+  <WFL_FW_FeelGroup_Uneasy>{0} was left uneasy.</WFL_FW_FeelGroup_Uneasy>
+  <WFL_FW_After_PromiseKeptGroup>{0} kept a promise.</WFL_FW_After_PromiseKeptGroup>
+  <WFL_FW_ShowDetails>Details ({0})</WFL_FW_ShowDetails>
+  <WFL_FW_HideDetails>Hide details</WFL_FW_HideDetails>
+  <WFL_FW_OpenRelationship>See their relationship</WFL_FW_OpenRelationship>
+  <WFL_FW_OpenRelationshipTip>Open how these two feel about each other.</WFL_FW_OpenRelationshipTip>
+  <WFL_FW_OpenPerson>See them</WFL_FW_OpenPerson>
+  <WFL_FW_Cause_Meal>Over a shared meal.</WFL_FW_Cause_Meal>
+  <WFL_FW_Cause_Picnic>On a picnic.</WFL_FW_Cause_Picnic>
+  <WFL_FW_Cause_Celebration>During a celebration.</WFL_FW_Cause_Celebration>
+  <WFL_FW_Cause_Storytelling>While stories were being told.</WFL_FW_Cause_Storytelling>
+  <WFL_FW_Cause_GameNight>On a game night.</WFL_FW_Cause_GameNight>
+  <WFL_FW_Cause_Playdate>While the children played.</WFL_FW_Cause_Playdate>
+  <WFL_FW_Cause_NatureWalk>On a walk in the open.</WFL_FW_Cause_NatureWalk>
+  <WFL_FW_Cause_Competition>During a friendly contest.</WFL_FW_Cause_Competition>
+  <WFL_FW_Cause_Learning>While learning together.</WFL_FW_Cause_Learning>
+  <WFL_FW_Cause_SupportVisit>During a visit of support.</WFL_FW_Cause_SupportVisit>
+  <WFL_FW_Cause_CommunityAid>While helping the community.</WFL_FW_Cause_CommunityAid>
+  <WFL_FW_Cause_Reconciliation>At a reconciliation.</WFL_FW_Cause_Reconciliation>
+  <WFL_FW_NothingPlannedTitle>Nothing major is currently planned</WFL_FW_NothingPlannedTitle>
+  <WFL_FW_NothingPlanned>House {0} has no ceremonies, promises or expected visitors. Its members are continuing their ordinary lives.</WFL_FW_NothingPlanned>
+  <WFL_FW_NothingPlannedAims>House {0} has no ceremonies, promises or expected visitors. Its members are continuing their ordinary lives while working toward: {1}.</WFL_FW_NothingPlannedAims>
+  <WFL_FW_ContextHeader>What is going on instead:</WFL_FW_ContextHeader>
+  <WFL_FW_ContextAmbition>Current ambition: {0}</WFL_FW_ContextAmbition>
+  <WFL_FW_ContextRecent>Most recent development: {1} ({0})</WFL_FW_ContextRecent>
+  <WFL_FW_ContextTradition>Tradition: {0}, held {1} times</WFL_FW_ContextTradition>
+  <WFL_FW_ContextCauses>Occasions follow from births, weddings, comings of age, deaths, reconciliations and relatives' visits, or from a tradition coming round.</WFL_FW_ContextCauses>
+  <WFL_FW_FilterEveryone>Everyone</WFL_FW_FilterEveryone>
+  <WFL_FW_FilterPerson>Only {0}</WFL_FW_FilterPerson>
+  <WFL_FW_FilterPersonTip>Show only the moments one person took part in.</WFL_FW_FilterPersonTip>
+  <WFL_FW_ShowRoutine>Everyday matters</WFL_FW_ShowRoutine>
+  <WFL_FW_ShowRoutineTip>Also list small, routine changes instead of folding them into one line.</WFL_FW_ShowRoutineTip>
+</LanguageData>

@@ -35,7 +35,8 @@ namespace FamilyLife
         private int lastSelectedPawn;
         private bool collapseHandled;
         private string[] tabLabels, tabTips;
-        private bool[] tabFlags = new bool[6];
+        private int[] tabCounts = new int[6];
+        private bool[] tabUrgent = new bool[6];
         private float summaryBudget;
         private string branchName = "";
 
@@ -117,7 +118,7 @@ namespace FamilyLife
             }
             if (view.House == null) return;
 
-            float sideW = State.SidebarCollapsed ? SidebarCollapsedWidth : SidebarWidth;
+            float sideW = State.SidebarCollapsed ? SidebarCollapsedWidth : WindowLayout.SidebarWidth(inRect.width);
             DrawSidebar(new Rect(0f, 0f, sideW, inRect.height), component, registry, lineages, now);
             var main = new Rect(sideW + 8f, 0f, inRect.width - sideW - 8f, inRect.height);
             DrawMain(main, component, registry);
@@ -272,8 +273,11 @@ namespace FamilyLife
             float fx = x, fy = rect.y + 38f, max = 170f;
             fx += Fact(fx, fy, "WFL_FW_HouseHead".Translate(), view.Head != 0 ? FamilyUi.NameOf(registry, view.Head) : "WFL_FW_NoHead".Translate().ToString(), max);
             if (view.Steward != 0) fx += Fact(fx, fy, "WFL_FW_Steward".Translate(), FamilyUi.NameOf(registry, view.Steward), max);
-            fx += Fact(fx, fy, "WFL_FW_Members".Translate(), view.Colony.Count.ToString(), 60f);
-            Fact(fx, fy, "WFL_FW_Households".Translate(), view.HouseholdCount.ToString(), 60f);
+            fx += Fact(fx, fy, "WFL_FW_HouseMembersLabel".Translate(), view.Counts.HouseMembers.ToString(), 60f);
+            fx += Fact(fx, fy, "WFL_FW_ResidentsLabel".Translate(), "WFL_FW_ResidentsValue".Translate(view.Counts.Residents, view.Counts.Households).ToString(), 150f);
+            string countsTip = "WFL_FW_CountsTip".Translate().ToString();
+            if (view.Counts.Differ || view.Counts.ResidentsFromOtherHouses > 0) countsTip += System.Environment.NewLine + System.Environment.NewLine + CountsExplanation(view.Counts);
+            TooltipHandler.TipRegion(new Rect(x, fy, fx - x, 22f), countsTip);
 
             // Third line: how the family is doing, what it wants, what needs attention.
             float bx = x, by = rect.y + 62f;
@@ -299,7 +303,7 @@ namespace FamilyLife
             var ambRect = new Rect(bx, by, w, 20f);
             FamilyKit.Badge(ambRect, ambText, FamilyKit.Gold);
             TooltipHandler.TipRegion(ambRect, "WFL_FW_AmbitionTip".Translate());
-            if (Widgets.ButtonInvisible(ambRect)) State.Navigate(FamilyTab.Leadership);
+            if (Widgets.ButtonInvisible(ambRect)) State.Navigate(FamilyTab.HouseAffairs);
             bx += w + 6f;
             if (view.Alerts.Count > 0)
             {
@@ -369,9 +373,9 @@ namespace FamilyLife
             DrawHeader(new Rect(main.x, main.y, main.width, HeaderHeight), component, registry);
             float y = main.y + HeaderHeight + 4f;
 
-            for (int i = 0; i < 6; i++) tabFlags[i] = false;
-            foreach (var a in view.Alerts) if (a.Severity >= 1) tabFlags[(int)a.Tab] = true;
-            int clicked = FamilyKit.TabStrip(new Rect(main.x, y, main.width, FamilyKit.TabH), tabLabels, (int)State.Tab, tabTips, tabFlags);
+            for (int i = 0; i < 6; i++) { tabCounts[i] = 0; tabUrgent[i] = false; }
+            foreach (var a in view.Alerts) if (a.Severity >= 1) { tabCounts[(int)a.Tab]++; if (a.Urgent) tabUrgent[(int)a.Tab] = true; }
+            int clicked = FamilyKit.TabStrip(new Rect(main.x, y, main.width, FamilyKit.TabH), tabLabels, (int)State.Tab, tabTips, tabCounts, tabUrgent);
             if (clicked >= 0) State.Navigate((FamilyTab)clicked, 0);
             y += FamilyKit.TabH + 4f;
 
@@ -395,9 +399,9 @@ namespace FamilyLife
                 case FamilyTab.Summary: DrawSummary(viewRect, ref cy, component, registry); break;
                 case FamilyTab.People: DrawPeople(viewRect, ref cy, component, registry); break;
                 case FamilyTab.Relationships: DrawRelationships(viewRect, ref cy, component, registry); break;
-                case FamilyTab.Events: DrawEvents(viewRect, ref cy, component, registry); break;
+                case FamilyTab.Story: DrawStory(viewRect, ref cy, component, registry); break;
                 case FamilyTab.Home: DrawHome(viewRect, ref cy, component, registry); break;
-                case FamilyTab.Leadership: DrawLeadership(viewRect, ref cy, component, registry); break;
+                case FamilyTab.HouseAffairs: DrawLeadership(viewRect, ref cy, component, registry); break;
             }
             bodyHeight = cy + 10f;
             Widgets.EndScrollView();
@@ -409,9 +413,9 @@ namespace FamilyLife
         {
             string[] labels;
             int selected;
-            if (State.Tab == FamilyTab.Events)
+            if (State.Tab == FamilyTab.Story)
             {
-                labels = new[] { "WFL_FW_Ev_Upcoming".Translate().ToString(), "WFL_FW_Ev_Recent".Translate().ToString(), "WFL_FW_Ev_Chronicle".Translate().ToString() };
+                labels = new[] { "WFL_FW_Ev_Current".Translate().ToString(), "WFL_FW_Ev_Timeline".Translate().ToString(), "WFL_FW_Ev_Chronicle".Translate().ToString() };
                 selected = State.EventsSub;
             }
             else
@@ -433,7 +437,7 @@ namespace FamilyLife
                 Widgets.Label(r, labels[i]);
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
-                if (Widgets.ButtonInvisible(r) && !on) { if (State.Tab == FamilyTab.Events) State.EventsSub = i; else State.HomeSub = i; }
+                if (Widgets.ButtonInvisible(r) && !on) { if (State.Tab == FamilyTab.Story) State.EventsSub = i; else State.HomeSub = i; }
                 x += w + 4f;
             }
         }
@@ -447,9 +451,9 @@ namespace FamilyLife
                 case FamilyTab.Summary: keys = new[] { "WFL_FW_Help_Summary", "WFL_CohesionHelp" }; break;
                 case FamilyTab.People: keys = new[] { "WFL_House_Ancestry", "WFL_TreeLegend", "WFL_TreeLegendLinks" }; break;
                 case FamilyTab.Relationships: keys = new[] { "WFL_RelHelp" }; break;
-                case FamilyTab.Events: keys = new[] { "WFL_Moments_TieNote", "WFL_TraditionsHelp" }; break;
+                case FamilyTab.Story: keys = new[] { "WFL_Moments_TieNote", "WFL_TraditionsHelp" }; break;
                 case FamilyTab.Home: keys = new[] { "WFL_HouseholdsHelp", "WFL_ZoneHelp" }; break;
-                case FamilyTab.Leadership: keys = new[] { "WFL_Manage_Help", "WFL_Associates_Help" }; break;
+                case FamilyTab.HouseAffairs: keys = new[] { "WFL_Manage_Help", "WFL_Associates_Help" }; break;
                 default: return null;
             }
             return string.Join("\n\n", keys.Select(k => k.Translate().ToString()));

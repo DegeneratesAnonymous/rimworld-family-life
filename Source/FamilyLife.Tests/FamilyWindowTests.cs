@@ -41,7 +41,7 @@ namespace FamilyLife.Tests
         [Fact]
         public void There_are_six_tabs_in_the_requested_order()
         {
-            Assert.Equal(new[] { "Summary", "People", "Relationships", "Events", "Home", "Leadership" }, Enum.GetNames(typeof(FamilyTab)));
+            Assert.Equal(new[] { "Summary", "People", "Relationships", "Story", "Home", "HouseAffairs" }, Enum.GetNames(typeof(FamilyTab)));
         }
 
         [Fact]
@@ -64,15 +64,15 @@ namespace FamilyLife.Tests
             Assert.Equal(FamilyTab.Summary, FamilyWindowLayout.FromLegacyTab("Overview").Tab);
             Assert.Equal(FamilyTab.Relationships, FamilyWindowLayout.FromLegacyTab("Relationships").Tab);
             var moments = FamilyWindowLayout.FromLegacyTab("Moments");
-            Assert.Equal(FamilyTab.Events, moments.Tab); Assert.Equal((int)EventsSub.Recent, moments.Sub);
+            Assert.Equal(FamilyTab.Story, moments.Tab); Assert.Equal((int)StorySub.Timeline, moments.Sub);
             var trad = FamilyWindowLayout.FromLegacyTab("Traditions");
-            Assert.Equal(FamilyTab.Events, trad.Tab); Assert.Equal((int)EventsSub.Upcoming, trad.Sub);
+            Assert.Equal(FamilyTab.Story, trad.Tab); Assert.Equal((int)StorySub.Current, trad.Sub);
             var hist = FamilyWindowLayout.FromLegacyTab("History");
-            Assert.Equal(FamilyTab.Events, hist.Tab); Assert.Equal((int)EventsSub.Chronicle, hist.Sub);
+            Assert.Equal(FamilyTab.Story, hist.Tab); Assert.Equal((int)StorySub.Chronicle, hist.Sub);
             Assert.Equal(FamilyTab.Home, FamilyWindowLayout.FromLegacyTab("Households").Tab);
             var zone = FamilyWindowLayout.FromLegacyTab("Zone");
             Assert.Equal(FamilyTab.Home, zone.Tab); Assert.Equal((int)HomeSub.Area, zone.Sub);
-            Assert.Equal(FamilyTab.Leadership, FamilyWindowLayout.FromLegacyTab("Manage").Tab);
+            Assert.Equal(FamilyTab.HouseAffairs, FamilyWindowLayout.FromLegacyTab("Manage").Tab);
             Assert.Equal(FamilyTab.Summary, FamilyWindowLayout.FromLegacyTab("nothing").Tab);
         }
 
@@ -88,10 +88,10 @@ namespace FamilyLife.Tests
             Assert.Equal(7, state.LineageId);
             Assert.Equal(FamilyTab.Home, state.Tab);
             Assert.Equal((int)HomeSub.Supplies, state.Sub(FamilyTab.Home));
-            state.Navigate(FamilyTab.Events, 99);        // out of range clamps to the last sub-tab
-            Assert.Equal((int)EventsSub.Chronicle, state.EventsSub);
-            state.Navigate(FamilyTab.Events, -4);
-            Assert.Equal((int)EventsSub.Upcoming, state.EventsSub);
+            state.Navigate(FamilyTab.Story, 99);        // out of range clamps to the last sub-tab
+            Assert.Equal((int)StorySub.Chronicle, state.EventsSub);
+            state.Navigate(FamilyTab.Story, -4);
+            Assert.Equal((int)StorySub.Current, state.EventsSub);
         }
 
         [Fact]
@@ -200,7 +200,7 @@ namespace FamilyLife.Tests
             var r = Home(); var h = House(r);
             h.VacantHeadId = 1;
             var alert = FamilyAlerts.Build(r, h, 0, 5000).First(a => a.Kind == AlertKind.NoHead);
-            Assert.True(alert.Urgent); Assert.Equal(FamilyTab.Leadership, alert.Tab);
+            Assert.True(alert.Urgent); Assert.Equal(FamilyTab.HouseAffairs, alert.Tab);
         }
 
         // ---- the sidebar

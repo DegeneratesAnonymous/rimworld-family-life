@@ -8,8 +8,8 @@ namespace FamilyLife.Domain
     // filtered and sorted, what a supply reading means, and which offices a given observer may see. The window only draws the answers.
     // Nothing here is saved. Everything is worked out from the registry's existing records; no new simulation is created for the window.
 
-    public enum FamilyTab : byte { Summary, People, Relationships, Events, Home, Leadership }
-    public enum EventsSub : byte { Upcoming, Recent, Chronicle }
+    public enum FamilyTab : byte { Summary, People, Relationships, Story, Home, HouseAffairs }
+    public enum StorySub : byte { Current, Timeline, Chronicle }
     public enum HomeSub : byte { Households, Supplies, Area }
     public enum PeopleView : byte { Portraits, Tree }
 
@@ -21,27 +21,27 @@ namespace FamilyLife.Domain
         private static readonly Dictionary<string, Place> legacy = new Dictionary<string, Place>
         {
             // Overview
-            { "overview.founded", new Place(FamilyTab.Summary) }, { "overview.ambition", new Place(FamilyTab.Leadership) },
-            { "overview.tree", new Place(FamilyTab.People) }, { "overview.culture", new Place(FamilyTab.Events, (int)EventsSub.Chronicle) },
+            { "overview.founded", new Place(FamilyTab.Summary) }, { "overview.ambition", new Place(FamilyTab.HouseAffairs) },
+            { "overview.tree", new Place(FamilyTab.People) }, { "overview.culture", new Place(FamilyTab.Story, (int)StorySub.Chronicle) },
             // Relationships
             { "relationships", new Place(FamilyTab.Relationships) },
             // Moments
-            { "moments.ceremonies", new Place(FamilyTab.Events, (int)EventsSub.Upcoming) }, { "moments.prestige", new Place(FamilyTab.Leadership) },
+            { "moments.ceremonies", new Place(FamilyTab.Story, (int)StorySub.Current) }, { "moments.prestige", new Place(FamilyTab.HouseAffairs) },
             { "moments.agency", new Place(FamilyTab.People) }, { "moments.attention", new Place(FamilyTab.Relationships) },
-            { "moments.estates", new Place(FamilyTab.Leadership) }, { "moments.standing", new Place(FamilyTab.Leadership) },
-            { "moments.incidents", new Place(FamilyTab.Events, (int)EventsSub.Recent) }, { "moments.plots", new Place(FamilyTab.Events, (int)EventsSub.Recent) },
-            { "moments.supplies", new Place(FamilyTab.Events, (int)EventsSub.Recent) }, { "moments.promises", new Place(FamilyTab.Events, (int)EventsSub.Upcoming) },
-            { "moments.recent", new Place(FamilyTab.Events, (int)EventsSub.Recent) },
+            { "moments.estates", new Place(FamilyTab.HouseAffairs) }, { "moments.standing", new Place(FamilyTab.HouseAffairs) },
+            { "moments.incidents", new Place(FamilyTab.Story, (int)StorySub.Timeline) }, { "moments.plots", new Place(FamilyTab.Story, (int)StorySub.Timeline) },
+            { "moments.supplies", new Place(FamilyTab.Story, (int)StorySub.Timeline) }, { "moments.promises", new Place(FamilyTab.Story, (int)StorySub.Current) },
+            { "moments.recent", new Place(FamilyTab.Story, (int)StorySub.Timeline) },
             // Households
             { "households", new Place(FamilyTab.Home, (int)HomeSub.Households) },
             // House (Manage)
-            { "manage.petitions", new Place(FamilyTab.Leadership) }, { "manage.alliances", new Place(FamilyTab.Leadership) },
-            { "manage.stewardship", new Place(FamilyTab.Leadership) }, { "manage.governance", new Place(FamilyTab.Leadership) },
-            { "manage.associates", new Place(FamilyTab.Leadership) }, { "manage.crest", new Place(FamilyTab.Leadership) },
+            { "manage.petitions", new Place(FamilyTab.HouseAffairs) }, { "manage.alliances", new Place(FamilyTab.HouseAffairs) },
+            { "manage.stewardship", new Place(FamilyTab.HouseAffairs) }, { "manage.governance", new Place(FamilyTab.HouseAffairs) },
+            { "manage.associates", new Place(FamilyTab.HouseAffairs) }, { "manage.crest", new Place(FamilyTab.HouseAffairs) },
             // Zone
             { "zone.pantry", new Place(FamilyTab.Home, (int)HomeSub.Supplies) }, { "zone.area", new Place(FamilyTab.Home, (int)HomeSub.Area) },
             // Traditions, History
-            { "traditions", new Place(FamilyTab.Events, (int)EventsSub.Upcoming) }, { "history", new Place(FamilyTab.Events, (int)EventsSub.Chronicle) }
+            { "traditions", new Place(FamilyTab.Story, (int)StorySub.Current) }, { "history", new Place(FamilyTab.Story, (int)StorySub.Chronicle) }
         };
 
         public static IReadOnlyCollection<string> LegacySections => legacy.Keys;
@@ -53,17 +53,17 @@ namespace FamilyLife.Domain
             switch (oldTab)
             {
                 case "Relationships": return new Place(FamilyTab.Relationships);
-                case "Moments": return new Place(FamilyTab.Events, (int)EventsSub.Recent);
-                case "Traditions": return new Place(FamilyTab.Events, (int)EventsSub.Upcoming);
-                case "History": return new Place(FamilyTab.Events, (int)EventsSub.Chronicle);
+                case "Moments": return new Place(FamilyTab.Story, (int)StorySub.Timeline);
+                case "Traditions": return new Place(FamilyTab.Story, (int)StorySub.Current);
+                case "History": return new Place(FamilyTab.Story, (int)StorySub.Chronicle);
                 case "Households": return new Place(FamilyTab.Home, (int)HomeSub.Households);
                 case "Zone": return new Place(FamilyTab.Home, (int)HomeSub.Area);
-                case "Manage": return new Place(FamilyTab.Leadership);
+                case "Manage": return new Place(FamilyTab.HouseAffairs);
                 default: return new Place(FamilyTab.Summary);
             }
         }
 
-        public static int SubCount(FamilyTab tab) => tab == FamilyTab.Events ? 3 : tab == FamilyTab.Home ? 3 : 0;
+        public static int SubCount(FamilyTab tab) => tab == FamilyTab.Story ? 3 : tab == FamilyTab.Home ? 3 : 0;
     }
 
     /// <summary>What the window remembers between visits: the family, the tab, the sub-tab, the filters. Held for the session, never saved.</summary>
@@ -76,18 +76,20 @@ namespace FamilyLife.Domain
         public int SelectedPerson;           // the person whose detail panel is open (People), or whose relationships are shown (Relationships)
         public int SelectedRelation;         // the other person in an open relationship detail
         public int EventFilter;              // EventCategory mask; 0 = everything
+        public int StoryPerson;              // the Timeline shows only moments this person took part in; 0 = everyone
+        public bool ShowRoutine;             // the Timeline lists everyday matters too
         public RelFilter RelFilter = RelFilter.Family;
         public RelSort RelSort = RelSort.Closest;
         public FamilySort SidebarSort = FamilySort.Name;
         public bool SidebarCollapsed;
         public string Search = "", RelSearch = "";
 
-        public int Sub(FamilyTab tab) => tab == FamilyTab.Events ? EventsSub : tab == FamilyTab.Home ? HomeSub : 0;
+        public int Sub(FamilyTab tab) => tab == FamilyTab.Story ? EventsSub : tab == FamilyTab.Home ? HomeSub : 0;
 
         public void Navigate(FamilyTab tab, int sub = 0)
         {
             Tab = tab;
-            if (tab == FamilyTab.Events) EventsSub = Clamp(sub, 3);
+            if (tab == FamilyTab.Story) EventsSub = Clamp(sub, 3);
             else if (tab == FamilyTab.Home) HomeSub = Clamp(sub, 3);
         }
 
@@ -149,22 +151,22 @@ namespace FamilyLife.Domain
             if (colony.Count == 0) return list;
 
             if (r.HeadOf(id) == 0 || house.VacantHeadId != 0)
-                list.Add(new FamilyAlert { Kind = AlertKind.NoHead, Severity = 2, Tab = FamilyTab.Leadership });
+                list.Add(new FamilyAlert { Kind = AlertKind.NoHead, Severity = 2, Tab = FamilyTab.HouseAffairs });
             else if (!house.Stewards.Any(s => colonyIds.Contains(s)) && colony.Count(p => !p.Juvenile) >= 3)
-                list.Add(new FamilyAlert { Kind = AlertKind.NoSteward, Severity = 0, Tab = FamilyTab.Leadership });
+                list.Add(new FamilyAlert { Kind = AlertKind.NoSteward, Severity = 0, Tab = FamilyTab.HouseAffairs });
 
             var s = house.Situation;
             if (s != null && s.EvaluatedTick > 0)
             {
                 if (s.Sustenance < FoodLowAt) list.Add(new FamilyAlert { Kind = AlertKind.FoodLow, Severity = s.Sustenance < FoodCriticalAt ? 2 : 1, Tab = FamilyTab.Home, Sub = (int)HomeSub.Supplies });
                 if (s.LivingSpace < SpaceLowAt) list.Add(new FamilyAlert { Kind = AlertKind.HousingProblem, Severity = 1, Tab = FamilyTab.Home, Sub = (int)HomeSub.Households });
-                if (s.Safety < SafetyLowAt) list.Add(new FamilyAlert { Kind = AlertKind.SafetyLow, Severity = 1, Tab = FamilyTab.Leadership });
-                if (s.Capability < CapabilityLowAt && s.WeakestCapability != HouseCapability.None) list.Add(new FamilyAlert { Kind = AlertKind.CapabilityGap, Severity = 0, Tab = FamilyTab.Leadership });
+                if (s.Safety < SafetyLowAt) list.Add(new FamilyAlert { Kind = AlertKind.SafetyLow, Severity = 1, Tab = FamilyTab.HouseAffairs });
+                if (s.Capability < CapabilityLowAt && s.WeakestCapability != HouseCapability.None) list.Add(new FamilyAlert { Kind = AlertKind.CapabilityGap, Severity = 0, Tab = FamilyTab.HouseAffairs });
             }
 
             int due = r.Commitments.Count(c => c.IsOpen && c.DueTick - now <= PromiseWindow
                 && (colonyIds.Contains(c.FromId) || colonyIds.Contains(c.ToId)) && (viewer == 0 || c.FromId == viewer || c.ToId == viewer));
-            if (due > 0) list.Add(new FamilyAlert { Kind = AlertKind.PromiseDue, Severity = 1, Tab = FamilyTab.Events, Sub = (int)EventsSub.Upcoming, Count = due });
+            if (due > 0) list.Add(new FamilyAlert { Kind = AlertKind.PromiseDue, Severity = 1, Tab = FamilyTab.Story, Sub = (int)StorySub.Current, Count = due });
 
             foreach (var member in colony)
             {
@@ -175,18 +177,18 @@ namespace FamilyLife.Domain
 
             int open = r.Incidents.Count(i => !i.Resolved && i.VictimFamily == id && r.KnowsIncident(viewer, i));
             int strained = r.TiesOf(id).Count(t => t.State == FamilyTieState.Strained || t.State == FamilyTieState.Feuding);
-            if (open + strained > 0) list.Add(new FamilyAlert { Kind = AlertKind.Grievance, Severity = strained > 0 && open > 0 ? 2 : 1, Tab = FamilyTab.Events, Sub = (int)EventsSub.Recent, Count = open + strained });
+            if (open + strained > 0) list.Add(new FamilyAlert { Kind = AlertKind.Grievance, Severity = strained > 0 && open > 0 ? 2 : 1, Tab = FamilyTab.Story, Sub = (int)StorySub.Timeline, Count = open + strained });
 
             int prep = r.CeremonyPlans.Count(p => p.FamilyId == id && p.State == PlanState.Open && r.PlanVisibleTo(p, viewer));
-            if (prep > 0) list.Add(new FamilyAlert { Kind = AlertKind.CeremonyPrep, Severity = 1, Tab = FamilyTab.Events, Sub = (int)EventsSub.Upcoming, Count = prep });
+            if (prep > 0) list.Add(new FamilyAlert { Kind = AlertKind.CeremonyPrep, Severity = 1, Tab = FamilyTab.Story, Sub = (int)StorySub.Current, Count = prep });
 
             bool manages = viewer == 0 || r.CanManageHouse(viewer, id);
             int petitions = manages ? r.HousePetitions.Count(p => p.FamilyId == id && p.State == PetitionState.Proposed) : 0;
-            if (petitions > 0) list.Add(new FamilyAlert { Kind = AlertKind.Petition, Severity = 1, Tab = FamilyTab.Leadership, Count = petitions });
+            if (petitions > 0) list.Add(new FamilyAlert { Kind = AlertKind.Petition, Severity = 1, Tab = FamilyTab.HouseAffairs, Count = petitions });
 
             int talks = r.MarriageAlliances.Count(a => (a.FamilyA == id || a.FamilyB == id) && r.KnowsMarriageAlliance(viewer, a)
                 && (a.State == MarriageAllianceState.Negotiating || a.State == MarriageAllianceState.Supported || a.State == MarriageAllianceState.Opposed || a.State == MarriageAllianceState.Consented));
-            if (talks > 0) list.Add(new FamilyAlert { Kind = AlertKind.Negotiation, Severity = 0, Tab = FamilyTab.Leadership, Count = talks });
+            if (talks > 0) list.Add(new FamilyAlert { Kind = AlertKind.Negotiation, Severity = 0, Tab = FamilyTab.HouseAffairs, Count = talks });
 
             return list.OrderByDescending(a => a.Severity).ThenBy(a => (int)a.Kind).ToList();
         }

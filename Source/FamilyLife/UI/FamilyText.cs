@@ -22,6 +22,31 @@ namespace FamilyLife
             return dates[tick] = FamilyUi.Date(tick);
         }
 
+        /// <summary>A story line in the player's language. Names that are no longer known read as "someone"; a key, a date or a tradition passed as an argument is resolved here.</summary>
+        public static string Say(Narrative n)
+        {
+            if (n.Empty) return "";
+            var args = new NamedArgument[n.Args.Length];
+            for (int i = 0; i < args.Length; i++) args[i] = ResolveArg(n.Args[i]);
+            return n.Key.Translate(args).ToString();
+        }
+
+        private static string ResolveArg(string a)
+        {
+            if (string.IsNullOrEmpty(a)) return "WFL_FW_Someone".Translate().ToString();
+            if (a.StartsWith("WFL_")) return a.Translate().ToString();
+            if (a.StartsWith("@d:") && int.TryParse(a.Substring(3), out int tick)) return Date(tick);
+            if (a.StartsWith("@t:")) return FamilyUi.TraditionNameById(a.Substring(3));
+            return a;
+        }
+
+        public static string[] SayAll(List<Narrative> lines)
+        {
+            var result = new string[lines.Count];
+            for (int i = 0; i < result.Length; i++) result[i] = Say(lines[i]);
+            return result;
+        }
+
         public static string AlertText(FamilyRegistry r, FamilyAlert a)
         {
             string key = "WFL_FW_Alert_" + a.Kind;

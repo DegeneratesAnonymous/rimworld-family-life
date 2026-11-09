@@ -26,7 +26,12 @@ namespace FamilyLife
         public HashSet<int> Relevant = new HashSet<int>();
         public List<FamilyAlert> Alerts = new List<FamilyAlert>();
         public List<RoleCardData> Roles = new List<RoleCardData>();
-        public List<EventRecord> Story = new List<EventRecord>();
+        public StoryModel Narr = new StoryModel();
+        public ChapterCard Chapter;
+        public List<ThreadCard> Threads = new List<ThreadCard>();
+        public List<BeatCard> Highlights = new List<BeatCard>();
+        public HouseCounts Counts;
+        public Dictionary<int, string> HouseholdLabels = new Dictionary<int, string>();
         public int Head, Steward, HouseholdCount;
         public PersonRecord Perspective;
 
@@ -51,7 +56,12 @@ namespace FamilyLife
             v.HouseholdCount = r.HouseholdsOfLineage(lineageId).Count;
             v.Alerts = FamilyAlerts.Build(r, v.House, v.Viewer, now);
             v.Roles = RoleCards.For(r, v.House, v.Viewer);
-            v.Story = FamilyWindowFacts.TopStory(r, v.Relevant, v.Viewer, 3);
+            v.Narr = StoryModel.Build(r, v.House, v.Viewer, now);
+            v.Counts = v.Narr.Counts;
+            v.Chapter = Window_Families.MakeChapter(r, v.Narr.Chapter);
+            foreach (var t in v.Narr.Threads) v.Threads.Add(Window_Families.MakeThread(r, t));
+            foreach (var b in v.Narr.Highlights) { var card = Window_Families.MakeBeat(r, b, v.Viewer); if (card != null) v.Highlights.Add(card); }
+            foreach (var h in r.HouseholdsOfLineage(lineageId)) v.HouseholdLabels[h.Id] = FamilyText.Say(HouseholdNames.NameOf(r, h));
             return v;
         }
 
@@ -96,7 +106,7 @@ namespace FamilyLife
                 }
                 else if (anchor != null) row.Relation = anchor == view.Perspective ? "WFL_FW_You".Translate().ToString() : "WFL_FW_HouseHead".Translate().ToString();
                 row.Age = AgeText(person, row.Pawn);
-                if (person.InColony && person.HouseholdId != 0) row.Household = "WFL_FW_HouseholdN".Translate(person.HouseholdId).ToString();
+                if (person.InColony && person.HouseholdId != 0) row.Household = view.HouseholdLabels.TryGetValue(person.HouseholdId, out var hhName) ? hhName : "WFL_FW_HH_Plain".Translate().ToString();
                 row.Status = StatusText(person, row.Pawn);
                 row.Concern = ConcernText(r, person, row.Pawn, view.Viewer);
                 if (person.InColony) row.Roles = RoleDisplay.PublicRoles(r, person.Id, view.Viewer, options);

@@ -3,15 +3,15 @@
   <WFL_FW_Tab_Summary>Summary</WFL_FW_Tab_Summary>
   <WFL_FW_Tab_People>People</WFL_FW_Tab_People>
   <WFL_FW_Tab_Relationships>Relationships</WFL_FW_Tab_Relationships>
-  <WFL_FW_Tab_Events>Events</WFL_FW_Tab_Events>
+  <WFL_FW_Tab_Story>Story</WFL_FW_Tab_Story>
   <WFL_FW_Tab_Home>Home</WFL_FW_Tab_Home>
-  <WFL_FW_Tab_Leadership>Leadership</WFL_FW_Tab_Leadership>
+  <WFL_FW_Tab_HouseAffairs>House Affairs</WFL_FW_Tab_HouseAffairs>
   <WFL_FW_TabTip_Summary>How the family is doing, what needs attention, what is coming up and the latest of its story.</WFL_FW_TabTip_Summary>
   <WFL_FW_TabTip_People>Everyone in the family: a portrait list or the family tree.</WFL_FW_TabTip_People>
   <WFL_FW_TabTip_Relationships>How one person feels about each of the people they know.</WFL_FW_TabTip_Relationships>
-  <WFL_FW_TabTip_Events>What is planned, what has just happened and the family's permanent history.</WFL_FW_TabTip_Events>
+  <WFL_FW_TabTip_Story>What is planned, what has just happened and the family's permanent history.</WFL_FW_TabTip_Story>
   <WFL_FW_TabTip_Home>Households, beds, reserves and the family area.</WFL_FW_TabTip_Home>
-  <WFL_FW_TabTip_Leadership>The family's offices, ambition, alliances and institutions.</WFL_FW_TabTip_Leadership>
+  <WFL_FW_TabTip_HouseAffairs>The family's offices, ambition, alliances and institutions.</WFL_FW_TabTip_HouseAffairs>
   <WFL_FW_Families>Families</WFL_FW_Families>
   <WFL_FW_Search>Search...</WFL_FW_Search>
   <WFL_FW_SortBy>Sort: {0}</WFL_FW_SortBy>
@@ -22,7 +22,7 @@
   <WFL_FW_NoMatch>No family matches.</WFL_FW_NoMatch>
   <WFL_FW_SidebarHide>Hide the family list</WFL_FW_SidebarHide>
   <WFL_FW_SidebarShow>Show the family list</WFL_FW_SidebarShow>
-  <WFL_FW_MembersN>{0} members</WFL_FW_MembersN>
+  <WFL_FW_MembersN>{0} in the House</WFL_FW_MembersN>
   <WFL_FW_FamilyRowTip>House {0}&#10;{1} members in the colony, {2} households.&#10;Cohesion: {3}&#10;Things needing attention: {4}</WFL_FW_FamilyRowTip>
   <WFL_FW_NotAssessed>Not assessed yet</WFL_FW_NotAssessed>
   <WFL_FW_HouseHead>House Head</WFL_FW_HouseHead>
@@ -86,7 +86,7 @@
   <WFL_FW_ClickToOpen>Click to open {0}.</WFL_FW_ClickToOpen>
   <WFL_FW_Card_Status>Family status</WFL_FW_Card_Status>
   <WFL_FW_Card_Attention>Needs attention</WFL_FW_Card_Attention>
-  <WFL_FW_Card_Upcoming>Upcoming</WFL_FW_Card_Upcoming>
+  <WFL_FW_Card_Upcoming>Current</WFL_FW_Card_Upcoming>
   <WFL_FW_Card_Story>Recent family story</WFL_FW_Card_Story>
   <WFL_FW_Card_People>People</WFL_FW_Card_People>
   <WFL_FW_FoundedLabel>Founded</WFL_FW_FoundedLabel>
@@ -183,8 +183,8 @@
   <WFL_FW_Why_NotAvatar>Perspective Shift is controlling a different character.</WFL_FW_Why_NotAvatar>
   <WFL_FW_Why_TooSoon>They tried recently. Wait a while.</WFL_FW_Why_TooSoon>
   <WFL_FW_Why_NotKnown>{0} does not know of this wrong.</WFL_FW_Why_NotKnown>
-  <WFL_FW_Ev_Upcoming>Upcoming</WFL_FW_Ev_Upcoming>
-  <WFL_FW_Ev_Recent>Recent</WFL_FW_Ev_Recent>
+  <WFL_FW_Ev_Current>Current</WFL_FW_Ev_Current>
+  <WFL_FW_Ev_Timeline>Timeline</WFL_FW_Ev_Timeline>
   <WFL_FW_Ev_Chronicle>Chronicle</WFL_FW_Ev_Chronicle>
   <WFL_FW_UpKind_Ceremony>Occasion</WFL_FW_UpKind_Ceremony>
   <WFL_FW_UpKind_Tradition>Tradition</WFL_FW_UpKind_Tradition>
