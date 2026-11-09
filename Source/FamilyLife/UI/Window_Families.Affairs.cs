@@ -38,7 +38,7 @@ namespace FamilyLife
                 var other = registry.GetLineage(otherId);
                 if (other == null) continue;
                 float cardTop = cy;
-                Widgets.Label(new Rect(8f, cy, cv.width - 8f, 22f), ("WFL_FW_HouseN".Translate(registry.LineageDisplayName(other)).ToString()).ToUpperInvariant());
+                Widgets.Label(new Rect(8f, cy, cv.width - 8f, 22f), "WFL_FW_HouseN".Translate(registry.LineageDisplayName(other)).ToString());
                 cy += 22f;
                 cy += FamilyKit.Label(cv, cy, ("WFL_FW_Tie_" + tie.State).Translate().ToString().CapitalizeFirst(), 14f, false);
                 if (view.Insider) { cy += FamilyKit.Label(cv, cy, "WFL_FW_Goodwill".Translate(Mathf.RoundToInt(tie.Goodwill)), 14f, true); cy += FamilyKit.Label(cv, cy, "WFL_FW_Grievance".Translate(Mathf.RoundToInt(tie.Grievance)), 14f, true); }

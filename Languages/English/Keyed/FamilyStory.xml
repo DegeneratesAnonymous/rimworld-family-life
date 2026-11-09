@@ -39,7 +39,7 @@
   <WFL_FW_ThreadActionsAny>What the family's members can do:</WFL_FW_ThreadActionsAny>
   <WFL_FW_FoodDetail>{0} of {1} desired days available</WFL_FW_FoodDetail>
 
-  <WFL_FW_Ch_UnknownTitle>NOT KNOWN TO YOU</WFL_FW_Ch_UnknownTitle>
+  <WFL_FW_Ch_UnknownTitle>Not yet known</WFL_FW_Ch_UnknownTitle>
   <WFL_FW_Ch_Unknown>What this House is going through is unknown to {0}. Only what {0} took part in is shown.</WFL_FW_Ch_Unknown>
   <WFL_FW_Ch_QuietTitle>A QUIET PERIOD</WFL_FW_Ch_QuietTitle>
   <WFL_FW_Ch_Quiet>House {0} is enjoying a quiet period. Nothing is pressing, and the household goes about its days.</WFL_FW_Ch_Quiet>
@@ -110,7 +110,7 @@
   <!-- Threads from conflict -->
   <WFL_FW_Th_Rift_Title>A rift between {0} and {1}</WFL_FW_Th_Rift_Title>
   <WFL_FW_Th_Rift_Sum>{0} and {1} are on bad terms, and neither has found a way to mend it yet.</WFL_FW_Th_Rift_Sum>
-  <WFL_FW_Th_Rift_Sum_You>You and the other person are on bad terms, and neither of you has found a way to mend it yet.</WFL_FW_Th_Rift_Sum_You>
+  <WFL_FW_Th_Rift_Sum_You>You and {1} are on bad terms, and neither of you has found a way to mend it yet.</WFL_FW_Th_Rift_Sum_You>
   <WFL_FW_Th_Rift_Line>{0} and {1} are at odds</WFL_FW_Th_Rift_Line>
   <WFL_FW_Th_Rift_Why>It began on {0} and has not been settled.</WFL_FW_Th_Rift_Why>
   <WFL_FW_Th_Rift_Path1>A shared meal, a story or an apology can ease it</WFL_FW_Th_Rift_Path1>
@@ -220,8 +220,8 @@
   <WFL_FW_Amb_RestoreCohesion_Line>Restore family cohesion</WFL_FW_Amb_RestoreCohesion_Line>
   <WFL_FW_Amb_RestoreCohesion_Path1>Rifts are eased by time together</WFL_FW_Amb_RestoreCohesion_Path1>
   <WFL_FW_Amb_RestoreCohesion_Path2>A shared occasion lifts the mood</WFL_FW_Amb_RestoreCohesion_Path2>
-  <WFL_FW_Amb_RestoreCohesion_Act1>Spend time with a relative you have drifted from</WFL_FW_Amb_RestoreCohesion_Act1>
-  <WFL_FW_Amb_RestoreCohesion_Act2>Apologize where you wronged someone</WFL_FW_Amb_RestoreCohesion_Act2>
+  <WFL_FW_Amb_RestoreCohesion_Act1>Spend time with a relative who has drifted away</WFL_FW_Amb_RestoreCohesion_Act1>
+  <WFL_FW_Amb_RestoreCohesion_Act2>Apologize where someone was wronged</WFL_FW_Amb_RestoreCohesion_Act2>
   <WFL_FW_Amb_ExpandLegacy_Title>Something to leave behind</WFL_FW_Amb_ExpandLegacy_Title>
   <WFL_FW_Amb_ExpandLegacy_Sum>House {0} wants to build something that will outlast it.</WFL_FW_Amb_ExpandLegacy_Sum>
   <WFL_FW_Amb_ExpandLegacy_Line>Expand the family legacy</WFL_FW_Amb_ExpandLegacy_Line>
@@ -234,7 +234,7 @@
   <WFL_FW_Amb_PreserveIndependence_Line>Preserve independence</WFL_FW_Amb_PreserveIndependence_Line>
   <WFL_FW_Amb_PreserveIndependence_Path1>The House meets its own needs</WFL_FW_Amb_PreserveIndependence_Path1>
   <WFL_FW_Amb_PreserveIndependence_Path2>It keeps its debts and favours few</WFL_FW_Amb_PreserveIndependence_Path2>
-  <WFL_FW_Amb_PreserveIndependence_Act1>Provide for the household yourself</WFL_FW_Amb_PreserveIndependence_Act1>
+  <WFL_FW_Amb_PreserveIndependence_Act1>Provide for the household directly</WFL_FW_Amb_PreserveIndependence_Act1>
   <WFL_FW_Amb_PreserveIndependence_Act2>Settle what the House owes</WFL_FW_Amb_PreserveIndependence_Act2>
   <WFL_FW_Amb_IncreaseInfluence_Title>A place in the colony</WFL_FW_Amb_IncreaseInfluence_Title>
   <WFL_FW_Amb_IncreaseInfluence_Sum>House {0} wants greater influence in colony affairs.</WFL_FW_Amb_IncreaseInfluence_Sum>
@@ -442,17 +442,17 @@
   <WFL_FW_Ch_LittleTitle>LITTLE IS KNOWN</WFL_FW_Ch_LittleTitle>
   <WFL_FW_Ch_Little>{0} has had no meaningful contact with House {1}.</WFL_FW_Ch_Little>
   <WFL_FW_Th_Dealings_Line>Dealings with House {0}</WFL_FW_Th_Dealings_Line>
-  <WFL_FW_Th_Dealings_Why>These come from moments you shared with its people.</WFL_FW_Th_Dealings_Why>
+  <WFL_FW_Th_Dealings_Why>These come from moments {0} shared with its people.</WFL_FW_Th_Dealings_Why>
   <WFL_FW_Th_Dealings_Path1>More time together, or an apology, can change how things stand</WFL_FW_Th_Dealings_Path1>
-  <WFL_FW_State_Known>Known to you</WFL_FW_State_Known>
+  <WFL_FW_State_Known>Known firsthand</WFL_FW_State_Known>
   <WFL_FW_PrivateHouseTitle>PRIVATE HOUSE AFFAIRS</WFL_FW_PrivateHouseTitle>
   <WFL_FW_PrivateHouse>{0} does not know House {1}'s current ambition, private succession discussions or internal policies.</WFL_FW_PrivateHouse>
   <WFL_FW_PrivateRelTitle>{0} does not know House {1}'s private relationships</WFL_FW_PrivateRelTitle>
   <WFL_FW_PrivateRelBody>The relationships below are limited to {0}'s own experiences and publicly known family ties.</WFL_FW_PrivateRelBody>
-  <WFL_FW_RelYours>Your relationships with this House</WFL_FW_RelYours>
+  <WFL_FW_RelYours>{0}'s relationships with this House</WFL_FW_RelYours>
   <WFL_FW_RelKnown>Known relationships within the House</WFL_FW_RelKnown>
   <WFL_FW_RelNoKnown>No public family ties are known.</WFL_FW_RelNoKnown>
-  <WFL_FW_RelNoYours>You have no relationships with this House yet.</WFL_FW_RelNoYours>
+  <WFL_FW_RelNoYours>{0} has no relationships with this House yet.</WFL_FW_RelNoYours>
   <WFL_FW_PublicTie>{0} and {1}: {2}</WFL_FW_PublicTie>
   <WFL_FW_Feeling_Strained>strained</WFL_FW_Feeling_Strained>
   <WFL_FW_Feeling_Uneasy>uneasy</WFL_FW_Feeling_Uneasy>
@@ -460,17 +460,17 @@
   <WFL_FW_Feeling_Trusting>trusting</WFL_FW_Feeling_Trusting>
   <WFL_FW_Feeling_Unfamiliar>unfamiliar</WFL_FW_Feeling_Unfamiliar>
   <WFL_FW_Feeling_Uncertain>uncertain</WFL_FW_Feeling_Uncertain>
-  <WFL_FW_YourPart>Your part in their story</WFL_FW_YourPart>
+  <WFL_FW_YourPart>{0}'s part in their story</WFL_FW_YourPart>
 
   <!-- Who may do what -->
   <WFL_FW_Auth_NoHouse>There is no such House.</WFL_FW_Auth_NoHouse>
-  <WFL_FW_Auth_Outsider>You are not a member of House {0}, so you cannot act for it.</WFL_FW_Auth_Outsider>
+  <WFL_FW_Auth_Outsider>{1} is not a member of House {0} and cannot act for it.</WFL_FW_Auth_Outsider>
   <WFL_FW_Auth_Manage>Only the Head or a Steward of House {0} may do this.</WFL_FW_Auth_Manage>
   <WFL_FW_Auth_DeclareHeir>Only the Head of House {0} may publicly declare an heir.</WFL_FW_Auth_DeclareHeir>
   <WFL_FW_Auth_AppointSteward>Only the Head of House {0} may appoint or remove a Steward.</WFL_FW_Auth_AppointSteward>
   <WFL_FW_Auth_AppointOfficer>Only the Head of House {0} may appoint its officers.</WFL_FW_Auth_AppointOfficer>
   <WFL_FW_Auth_ChangeSuccessionCustom>Only the Head of House {0} may change its succession custom.</WFL_FW_Auth_ChangeSuccessionCustom>
-  <WFL_FW_ActNotAllowed>That is not yours to do for this House.</WFL_FW_ActNotAllowed>
+  <WFL_FW_ActNotAllowed>That is not something this person can do for this House.</WFL_FW_ActNotAllowed>
   <WFL_FW_Counts_SideLine>{0} House members · {1} residents</WFL_FW_Counts_SideLine>
   <WFL_FW_Group_Members>House members ({0})</WFL_FW_Group_Members>
   <WFL_FW_Group_Residents>Resident non-members ({0})</WFL_FW_Group_Residents>
@@ -504,7 +504,7 @@
   <WFL_FW_InfluenceNone>No one in House {0} holds a community office.</WFL_FW_InfluenceNone>
   <WFL_FW_InfluenceHeld>{0} is the colony's {1}.</WFL_FW_InfluenceHeld>
   <WFL_FW_InfluenceWanted>The House is seeking influence, so a community office would help it.</WFL_FW_InfluenceWanted>
-  <WFL_FW_StoryIndicatorTip>You have shared moments with this person.</WFL_FW_StoryIndicatorTip>
+  <WFL_FW_StoryIndicatorTip>{0} has shared moments with this person.</WFL_FW_StoryIndicatorTip>
   <WFL_FW_CardMember>Member of House {0}</WFL_FW_CardMember>
   <WFL_FW_HouseholdBrief>{0} residents · {1} beds · {2} bedrooms</WFL_FW_HouseholdBrief>
   <WFL_FW_HouseholdDetail>Household detail</WFL_FW_HouseholdDetail>

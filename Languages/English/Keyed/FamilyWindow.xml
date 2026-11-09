@@ -171,7 +171,7 @@
   <WFL_FW_Rel_Memories>Shared memories</WFL_FW_Rel_Memories>
   <WFL_FW_Rel_Grievances>Grievances</WFL_FW_Rel_Grievances>
   <WFL_FW_Rel_Promises>Promises</WFL_FW_Rel_Promises>
-  <WFL_FW_Rel_Actions>What you can do</WFL_FW_Rel_Actions>
+  <WFL_FW_Rel_Actions>What {0} can do</WFL_FW_Rel_Actions>
   <WFL_FW_Act_Time>Spend time with {0}</WFL_FW_Act_Time>
   <WFL_FW_Act_TimeTip>Have them seek this person out for a moment together.</WFL_FW_Act_TimeTip>
   <WFL_FW_Act_Peace>Make peace</WFL_FW_Act_Peace>
@@ -354,5 +354,5 @@
   <WFL_FW_After_PromiseKept>{0} kept a promise to {1}.</WFL_FW_After_PromiseKept>
   <WFL_FW_After_TieChanged>It shifted how their two families stand.</WFL_FW_After_TieChanged>
   <WFL_FW_After_Memory>The family will remember it.</WFL_FW_After_Memory>
-  <WFL_FW_StoryOutsider>Your part in their story</WFL_FW_StoryOutsider>
+  <WFL_FW_StoryOutsider>{0}'s part in their story</WFL_FW_StoryOutsider>
 </LanguageData>

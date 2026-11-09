@@ -37,13 +37,13 @@ namespace FamilyLife
                 foreach (var e in visitorHistory) { visitorStoried.Add(e.A == acting ? e.B : e.A); if (e.Third != 0 && e.Third != acting) visitorStoried.Add(e.Third); }
                 visitorRevision = component.Revision; visitorViewer = acting; visitorHouse = house.Id;
             }
-            FamilyKit.SectionHeader(v, ref y, "WFL_FW_RelYours".Translate());
+            FamilyKit.SectionHeader(v, ref y, "WFL_FW_RelYours".Translate(FamilyUi.NameOf(registry, acting)));
             RelRow? selected = State.SelectedRelation != 0 ? visitorRows.Cast<RelRow?>().FirstOrDefault(r => r.Value.OtherId == State.SelectedRelation) : null;
             bool side = selected.HasValue && WindowLayout.DrawerBeside(v.width);
             float listW = side ? Mathf.Min(WindowLayout.ListWidth(v.width, true), v.width - WindowLayout.DrawerWidth(v.width) - FamilyKit.Gap) : Mathf.Min(v.width, 620f);
             float listY = y, detailY = y;
             if (selected.HasValue && !side) { DrawRelationDetail(new Rect(0f, 0f, Mathf.Min(v.width, 620f), 0f), ref detailY, component, registry, subject, selected.Value); listY = detailY; }
-            if (visitorRows.Count == 0) { FamilyKit.EmptyState(new Rect(0f, 0f, listW, 0f), ref listY, "WFL_FW_RelNoYours".Translate()); }
+            if (visitorRows.Count == 0) { FamilyKit.EmptyState(new Rect(0f, 0f, listW, 0f), ref listY, "WFL_FW_RelNoYours".Translate(FamilyUi.NameOf(registry, acting))); }
             foreach (var row in visitorRows)
             {
                 var other = registry.GetPerson(row.OtherId);
@@ -60,7 +60,7 @@ namespace FamilyLife
                 string word = ("WFL_FW_Feeling_" + RelationshipWords.With(registry, acting, row.OtherId, row, visitorHistory)).Translate().ToString().CapitalizeFirst();
                 Widgets.Label(new Rect(r.x + 40f + listW * 0.4f, r.y + 12f, listW * 0.4f - 30f, 18f), word);
                 Text.Font = GameFont.Small;
-                if (visitorStoried.Contains(row.OtherId)) { var dot = new Rect(r.xMax - 18f, r.y + 14f, 10f, 10f); Widgets.DrawBoxSolid(dot, FamilyKit.Gold); TooltipHandler.TipRegion(dot, "WFL_FW_StoryIndicatorTip".Translate()); }
+                if (visitorStoried.Contains(row.OtherId)) { var dot = new Rect(r.xMax - 18f, r.y + 14f, 10f, 10f); Widgets.DrawBoxSolid(dot, FamilyKit.Gold); TooltipHandler.TipRegion(dot, "WFL_FW_StoryIndicatorTip".Translate(FamilyUi.NameOf(registry, acting))); }
                 if (Widgets.ButtonInvisible(r)) State.SelectedRelation = row.OtherId;
                 listY += 42f;
             }

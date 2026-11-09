@@ -226,7 +226,7 @@ namespace FamilyLife
             if (ch.Evidence.Length > 0)
             {
                 cy += 4f;
-                cy += FamilyKit.Label(cv, cy, "WFL_FW_ChapterWhy".Translate(view.NameOfPerspective(registry).ToUpperInvariant()), 0f, true);
+                cy += FamilyKit.Label(cv, cy, "WFL_FW_ChapterWhy".Translate(view.NameOfPerspective(registry)), 0f, true);
                 foreach (var s in ch.Evidence) cy += FamilyKit.Label(prv, cy, "• " + s, 6f) + 2f;
             }
             if (ch.Supporting.Length > 0)
@@ -407,7 +407,7 @@ namespace FamilyLife
                 }
                 if (view.Highlights.Count > 0)
                 {
-                    FamilyKit.SectionHeader(v, ref y, "WFL_FW_StoryOutsider".Translate());
+                    FamilyKit.SectionHeader(v, ref y, "WFL_FW_StoryOutsider".Translate(view.NameOfPerspective(registry)));
                     foreach (var c in view.Highlights) DrawBeatCard(v, ref y, c, component, registry, Mathf.Min(v.width, 620f));
                 }
                 if (view.Threads.Count == 0 && view.Highlights.Count == 0) { var pub = new Rect(0f, 0f, Mathf.Min(v.width, 720f), 0f); DrawChapterCard(pub, ref y, registry); }
@@ -461,7 +461,7 @@ namespace FamilyLife
             var cv = card.View;
             float cy = 0f;
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0f, cy, cv.width, 30f), "WFL_FW_NothingPlannedTitle".Translate().ToString().ToUpperInvariant());
+            Widgets.Label(new Rect(0f, cy, cv.width, 30f), "WFL_FW_NothingPlannedTitle".Translate().ToString());
             Text.Font = GameFont.Small;
             cy += 34f;
             var amb = house.Ambition;

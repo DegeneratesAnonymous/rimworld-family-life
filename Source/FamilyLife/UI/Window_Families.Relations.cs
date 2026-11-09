@@ -278,7 +278,7 @@ namespace FamilyLife
             }
 
             // What the acting pawn can do.
-            FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_Rel_Actions".Translate());
+            FamilyKit.SectionHeader(cv, ref cy, "WFL_FW_Rel_Actions".Translate(FamilyUi.NameOf(registry, component.PerspectivePawnId)));
             DrawRelationActions(cv, ref cy, component, registry, other, rift, incidents);
             cy += 4f;
             if (FamilyKit.Action(new Rect(0f, cy, 80f, 24f), "WFL_FW_Close".Translate(), true)) State.SelectedRelation = 0;

@@ -143,7 +143,7 @@ namespace FamilyLife.Domain
             string name = r.LineageDisplayName(house);
             var person = r.GetPerson(actor);
             if (person == null || !person.InColony || !r.BelongsToFamily(person, houseId))
-                return new AuthResult { Why = new Narrative("WFL_FW_Auth_Outsider", name), Hidden = true };
+                return new AuthResult { Why = new Narrative("WFL_FW_Auth_Outsider", name, HouseholdNames.Short(person)), Hidden = true };
             if (HeadOnly(act))
                 return r.HeadOf(houseId) == actor ? AuthResult.Yes : new AuthResult { Why = new Narrative("WFL_FW_Auth_" + act, name) };
             return r.CanManageHouse(actor, houseId) ? AuthResult.Yes : new AuthResult { Why = new Narrative("WFL_FW_Auth_Manage", name) };

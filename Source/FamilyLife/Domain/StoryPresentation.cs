@@ -349,7 +349,7 @@ namespace FamilyLife.Domain
                 {
                     Id = "rift:" + rift.Id, Kind = ThreadKind.Rift, Priority = bad ? 1 : 5, Severity = bad ? 2 : 1,
                     Title = new Narrative("WFL_FW_Th_Rift_Title", N(r, rift.A), N(r, rift.B)),
-                    Summary = Narrative.About(viewer, member.Id, "WFL_FW_Th_Rift_Sum", N(r, rift.A), N(r, rift.B)),
+                    Summary = Narrative.About(viewer, member.Id, "WFL_FW_Th_Rift_Sum", N(r, member.Id), N(r, rift.A == member.Id ? rift.B : rift.A)),
                     Line = new Narrative("WFL_FW_Th_Rift_Line", N(r, rift.A), N(r, rift.B)),
                     State = new Narrative(bad ? "WFL_FW_State_Serious" : "WFL_FW_State_Open"),
                     Why = new Narrative("WFL_FW_Th_Rift_Why", "@d:" + rift.StartTick),
@@ -717,7 +717,7 @@ namespace FamilyLife.Domain
                     Summary = new Narrative("WFL_FW_Ch_Dealings_" + tone, me, houseName),
                     Line = new Narrative("WFL_FW_Th_Dealings_Line", houseName),
                     State = new Narrative("WFL_FW_State_Known"),
-                    Why = new Narrative("WFL_FW_Th_Dealings_Why"),
+                    Why = new Narrative("WFL_FW_Th_Dealings_Why", me),
                     Paths = { new Narrative("WFL_FW_Th_Dealings_Path1") }, Actions = { new Narrative("WFL_FW_Act_TimeTogether"), new Narrative("WFL_FW_Act_Apologize") },
                     People = history.Select(e => e.A == viewer ? e.B : e.A).Where(id => id != viewer).Distinct().Take(4).ToList(),
                     Tab = FamilyTab.Story, Sub = (int)StorySub.Timeline

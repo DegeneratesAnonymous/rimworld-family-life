@@ -103,7 +103,7 @@ namespace FamilyLife
             Text.Font = GameFont.Small;
             GUI.color = new Color(0.82f, 0.82f, 0.82f);
             var r = new Rect(0f, y, view.width, 22f);
-            Widgets.Label(r, text.ToUpperInvariant());
+            Widgets.Label(r, text);
             GUI.color = Color.white;
             if (!string.IsNullOrEmpty(tip)) TooltipHandler.TipRegion(r, tip);
             y += 22f;
@@ -207,7 +207,7 @@ namespace FamilyLife
             float cy = y + pad;
             Text.Font = GameFont.Tiny;
             GUI.color = SeverityColor(severity) == Dim ? new Color(0.8f, 0.8f, 0.8f) : SeverityColor(severity);
-            Widgets.Label(new Rect(pad + 4f, cy, inner, 18f), head.ToUpperInvariant());
+            Widgets.Label(new Rect(pad + 4f, cy, inner, 18f), head);
             GUI.color = Dim;
             Text.Anchor = TextAnchor.UpperRight;
             Widgets.Label(new Rect(row.xMax - 22f, cy, 16f, 18f), ">");
