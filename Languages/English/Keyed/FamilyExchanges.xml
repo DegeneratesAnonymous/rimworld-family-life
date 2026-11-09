@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Talk during a check-up or a class: what the leader says and how the other person answers, for each topic and how it went. -->
+  <WFL_Ex_Advice_Poor_Lead_0>Just... rest more, I suppose.</WFL_Ex_Advice_Poor_Lead_0>
+  <WFL_Ex_Advice_Poor_Lead_1>Drink more water, or something.</WFL_Ex_Advice_Poor_Lead_1>
+  <WFL_Ex_Advice_Poor_Reply_0>That's not very helpful.</WFL_Ex_Advice_Poor_Reply_0>
+  <WFL_Ex_Advice_Poor_Reply_1>Right. Thanks, I guess.</WFL_Ex_Advice_Poor_Reply_1>
+  <WFL_Ex_Advice_Flat_Lead_0>Get enough sleep and eat properly.</WFL_Ex_Advice_Flat_Lead_0>
+  <WFL_Ex_Advice_Flat_Lead_1>Keep an eye on that, and rest when you can.</WFL_Ex_Advice_Flat_Lead_1>
+  <WFL_Ex_Advice_Flat_Reply_0>I'll try.</WFL_Ex_Advice_Flat_Reply_0>
+  <WFL_Ex_Advice_Flat_Reply_1>Noted.</WFL_Ex_Advice_Flat_Reply_1>
+  <WFL_Ex_Advice_Good_Lead_0>Sleep, water and proper meals make more difference than people think.</WFL_Ex_Advice_Good_Lead_0>
+  <WFL_Ex_Advice_Good_Lead_1>That ache will ease if you stretch each morning.</WFL_Ex_Advice_Good_Lead_1>
+  <WFL_Ex_Advice_Good_Reply_0>That makes sense, thank you.</WFL_Ex_Advice_Good_Reply_0>
+  <WFL_Ex_Advice_Good_Reply_1>I'll do exactly that.</WFL_Ex_Advice_Good_Reply_1>
+  <WFL_Ex_Advice_Great_Lead_0>Here's what I'd do, step by step. You'll feel it within days.</WFL_Ex_Advice_Great_Lead_0>
+  <WFL_Ex_Advice_Great_Lead_1>Let me show you what actually works for this.</WFL_Ex_Advice_Great_Lead_1>
+  <WFL_Ex_Advice_Great_Reply_0>That's the clearest advice I've had.</WFL_Ex_Advice_Great_Reply_0>
+  <WFL_Ex_Advice_Great_Reply_1>I can't wait to try it.</WFL_Ex_Advice_Great_Reply_1>
+  <WFL_Ex_Reassure_Poor_Lead_0>Oh, it's probably nothing. Probably.</WFL_Ex_Reassure_Poor_Lead_0>
+  <WFL_Ex_Reassure_Poor_Lead_1>I wouldn't worry... much.</WFL_Ex_Reassure_Poor_Lead_1>
+  <WFL_Ex_Reassure_Poor_Reply_0>Now I'm worried.</WFL_Ex_Reassure_Poor_Reply_0>
+  <WFL_Ex_Reassure_Poor_Reply_1>That's not comforting.</WFL_Ex_Reassure_Poor_Reply_1>
+  <WFL_Ex_Reassure_Flat_Lead_0>There's nothing to be alarmed about.</WFL_Ex_Reassure_Flat_Lead_0>
+  <WFL_Ex_Reassure_Flat_Lead_1>It's quite common.</WFL_Ex_Reassure_Flat_Lead_1>
+  <WFL_Ex_Reassure_Flat_Reply_0>If you say so.</WFL_Ex_Reassure_Flat_Reply_0>
+  <WFL_Ex_Reassure_Flat_Reply_1>I suppose.</WFL_Ex_Reassure_Flat_Reply_1>
+  <WFL_Ex_Reassure_Good_Lead_0>You're sound. Whatever troubles you, we'll take it one step at a time.</WFL_Ex_Reassure_Good_Lead_0>
+  <WFL_Ex_Reassure_Good_Lead_1>You're doing better than you think.</WFL_Ex_Reassure_Good_Lead_1>
+  <WFL_Ex_Reassure_Good_Reply_0>That's a relief.</WFL_Ex_Reassure_Good_Reply_0>
+  <WFL_Ex_Reassure_Good_Reply_1>Thank you, I needed to hear it.</WFL_Ex_Reassure_Good_Reply_1>
+  <WFL_Ex_Reassure_Great_Lead_0>I've seen far worse, and people came through. You will too.</WFL_Ex_Reassure_Great_Lead_0>
+  <WFL_Ex_Reassure_Great_Lead_1>You're in good hands. Truly.</WFL_Ex_Reassure_Great_Lead_1>
+  <WFL_Ex_Reassure_Great_Reply_0>I feel better already.</WFL_Ex_Reassure_Great_Reply_0>
+  <WFL_Ex_Reassure_Great_Reply_1>I was so afraid, and now I'm not.</WFL_Ex_Reassure_Great_Reply_1>
+  <WFL_Ex_Habits_Poor_Lead_0>You really ought to look after yourself better.</WFL_Ex_Habits_Poor_Lead_0>
+  <WFL_Ex_Habits_Poor_Lead_1>Honestly, how do you cope?</WFL_Ex_Habits_Poor_Lead_1>
+  <WFL_Ex_Habits_Poor_Reply_0>Don't lecture me.</WFL_Ex_Habits_Poor_Reply_0>
+  <WFL_Ex_Habits_Poor_Reply_1>I know, I know.</WFL_Ex_Habits_Poor_Reply_1>
+  <WFL_Ex_Habits_Flat_Lead_0>Try to look after yourself a little more.</WFL_Ex_Habits_Flat_Lead_0>
+  <WFL_Ex_Habits_Flat_Lead_1>A bit of care goes a long way.</WFL_Ex_Habits_Flat_Lead_1>
+  <WFL_Ex_Habits_Flat_Reply_0>Hm.</WFL_Ex_Habits_Flat_Reply_0>
+  <WFL_Ex_Habits_Flat_Reply_1>Maybe.</WFL_Ex_Habits_Flat_Reply_1>
+  <WFL_Ex_Habits_Good_Lead_0>Small habits add up. Would you try an early night this week?</WFL_Ex_Habits_Good_Lead_0>
+  <WFL_Ex_Habits_Good_Lead_1>Look after yourself, and the colony benefits too.</WFL_Ex_Habits_Good_Lead_1>
+  <WFL_Ex_Habits_Good_Reply_0>Alright, I will.</WFL_Ex_Habits_Good_Reply_0>
+  <WFL_Ex_Habits_Good_Reply_1>That's fair.</WFL_Ex_Habits_Good_Reply_1>
+  <WFL_Ex_Habits_Great_Lead_0>Every day you take care of yourself makes the colony stronger. I believe you can do it.</WFL_Ex_Habits_Great_Lead_0>
+  <WFL_Ex_Habits_Great_Lead_1>Let's make a plan together, and I'll check on you.</WFL_Ex_Habits_Great_Lead_1>
+  <WFL_Ex_Habits_Great_Reply_0>You've convinced me.</WFL_Ex_Habits_Great_Reply_0>
+  <WFL_Ex_Habits_Great_Reply_1>I'll start today.</WFL_Ex_Habits_Great_Reply_1>
+  <WFL_Ex_CatchUp_Poor_Lead_0>So... the weather.</WFL_Ex_CatchUp_Poor_Lead_0>
+  <WFL_Ex_CatchUp_Poor_Lead_1>How is everyone?</WFL_Ex_CatchUp_Poor_Lead_1>
+  <WFL_Ex_CatchUp_Poor_Reply_0>...</WFL_Ex_CatchUp_Poor_Reply_0>
+  <WFL_Ex_CatchUp_Poor_Reply_1>Mm.</WFL_Ex_CatchUp_Poor_Reply_1>
+  <WFL_Ex_CatchUp_Flat_Lead_0>How has the colony treated you?</WFL_Ex_CatchUp_Flat_Lead_0>
+  <WFL_Ex_CatchUp_Flat_Lead_1>Anything new?</WFL_Ex_CatchUp_Flat_Lead_1>
+  <WFL_Ex_CatchUp_Flat_Reply_0>Can't complain.</WFL_Ex_CatchUp_Flat_Reply_0>
+  <WFL_Ex_CatchUp_Flat_Reply_1>Same as ever.</WFL_Ex_CatchUp_Flat_Reply_1>
+  <WFL_Ex_CatchUp_Good_Lead_0>I hear you've been busy. How are you holding up?</WFL_Ex_CatchUp_Good_Lead_0>
+  <WFL_Ex_CatchUp_Good_Lead_1>You've been missed around the infirmary.</WFL_Ex_CatchUp_Good_Lead_1>
+  <WFL_Ex_CatchUp_Good_Reply_0>Better for talking about it.</WFL_Ex_CatchUp_Good_Reply_0>
+  <WFL_Ex_CatchUp_Good_Reply_1>It's good to be asked.</WFL_Ex_CatchUp_Good_Reply_1>
+  <WFL_Ex_CatchUp_Great_Lead_0>Tell me how you've really been. I've got time.</WFL_Ex_CatchUp_Great_Lead_0>
+  <WFL_Ex_CatchUp_Great_Lead_1>Sit a moment, and tell me everything.</WFL_Ex_CatchUp_Great_Lead_1>
+  <WFL_Ex_CatchUp_Great_Reply_0>I didn't realise how much I needed that.</WFL_Ex_CatchUp_Great_Reply_0>
+  <WFL_Ex_CatchUp_Great_Reply_1>Thank you for listening.</WFL_Ex_CatchUp_Great_Reply_1>
+  <WFL_Ex_Question_Poor_Lead_0>Not now. We'll come to it.</WFL_Ex_Question_Poor_Lead_0>
+  <WFL_Ex_Question_Poor_Lead_1>We don't have time for that.</WFL_Ex_Question_Poor_Lead_1>
+  <WFL_Ex_Question_Poor_Reply_0>But I wanted to know...</WFL_Ex_Question_Poor_Reply_0>
+  <WFL_Ex_Question_Poor_Reply_1>Oh.</WFL_Ex_Question_Poor_Reply_1>
+  <WFL_Ex_Question_Flat_Lead_0>Short answer: yes.</WFL_Ex_Question_Flat_Lead_0>
+  <WFL_Ex_Question_Flat_Lead_1>That's in the notes.</WFL_Ex_Question_Flat_Lead_1>
+  <WFL_Ex_Question_Flat_Reply_0>Oh. Okay.</WFL_Ex_Question_Flat_Reply_0>
+  <WFL_Ex_Question_Flat_Reply_1>Right.</WFL_Ex_Question_Flat_Reply_1>
+  <WFL_Ex_Question_Good_Lead_0>Good question. Here's why.</WFL_Ex_Question_Good_Lead_0>
+  <WFL_Ex_Question_Good_Lead_1>Yes, and the reason is simple.</WFL_Ex_Question_Good_Lead_1>
+  <WFL_Ex_Question_Good_Reply_0>Ohh, I see.</WFL_Ex_Question_Good_Reply_0>
+  <WFL_Ex_Question_Good_Reply_1>That makes sense!</WFL_Ex_Question_Good_Reply_1>
+  <WFL_Ex_Question_Great_Lead_0>Excellent question. Let's work through it together.</WFL_Ex_Question_Great_Lead_0>
+  <WFL_Ex_Question_Great_Lead_1>Now that's the right thing to ask!</WFL_Ex_Question_Great_Lead_1>
+  <WFL_Ex_Question_Great_Reply_0>I get it now!</WFL_Ex_Question_Great_Reply_0>
+  <WFL_Ex_Question_Great_Reply_1>I never thought of it like that.</WFL_Ex_Question_Great_Reply_1>
+  <WFL_Ex_Explain_Poor_Lead_0>It's... well, you just do it.</WFL_Ex_Explain_Poor_Lead_0>
+  <WFL_Ex_Explain_Poor_Lead_1>It works because it works.</WFL_Ex_Explain_Poor_Lead_1>
+  <WFL_Ex_Explain_Poor_Reply_0>I'm lost.</WFL_Ex_Explain_Poor_Reply_0>
+  <WFL_Ex_Explain_Poor_Reply_1>Huh?</WFL_Ex_Explain_Poor_Reply_1>
+  <WFL_Ex_Explain_Flat_Lead_0>That's how it works.</WFL_Ex_Explain_Flat_Lead_0>
+  <WFL_Ex_Explain_Flat_Lead_1>Follow the steps.</WFL_Ex_Explain_Flat_Lead_1>
+  <WFL_Ex_Explain_Flat_Reply_0>I think so.</WFL_Ex_Explain_Flat_Reply_0>
+  <WFL_Ex_Explain_Flat_Reply_1>Okay.</WFL_Ex_Explain_Flat_Reply_1>
+  <WFL_Ex_Explain_Good_Lead_0>Picture it like this.</WFL_Ex_Explain_Good_Lead_0>
+  <WFL_Ex_Explain_Good_Lead_1>Think of it as a chain; each link holds the next.</WFL_Ex_Explain_Good_Lead_1>
+  <WFL_Ex_Explain_Good_Reply_0>That clears it up.</WFL_Ex_Explain_Good_Reply_0>
+  <WFL_Ex_Explain_Good_Reply_1>I understand.</WFL_Ex_Explain_Good_Reply_1>
+  <WFL_Ex_Explain_Great_Lead_0>Watch how each piece fits.</WFL_Ex_Explain_Great_Lead_0>
+  <WFL_Ex_Explain_Great_Lead_1>See? It all falls into place.</WFL_Ex_Explain_Great_Lead_1>
+  <WFL_Ex_Explain_Great_Reply_0>That's brilliant.</WFL_Ex_Explain_Great_Reply_0>
+  <WFL_Ex_Explain_Great_Reply_1>I could explain it to someone else now!</WFL_Ex_Explain_Great_Reply_1>
+  <WFL_Ex_Quiz_Poor_Lead_0>Come on, you must remember.</WFL_Ex_Quiz_Poor_Lead_0>
+  <WFL_Ex_Quiz_Poor_Lead_1>We went over this yesterday.</WFL_Ex_Quiz_Poor_Lead_1>
+  <WFL_Ex_Quiz_Poor_Reply_0>I forgot.</WFL_Ex_Quiz_Poor_Reply_0>
+  <WFL_Ex_Quiz_Poor_Reply_1>Sorry...</WFL_Ex_Quiz_Poor_Reply_1>
+  <WFL_Ex_Quiz_Flat_Lead_0>Tell me what we covered.</WFL_Ex_Quiz_Flat_Lead_0>
+  <WFL_Ex_Quiz_Flat_Lead_1>Who remembers?</WFL_Ex_Quiz_Flat_Lead_1>
+  <WFL_Ex_Quiz_Flat_Reply_0>Um... most of it.</WFL_Ex_Quiz_Flat_Reply_0>
+  <WFL_Ex_Quiz_Flat_Reply_1>I think I know.</WFL_Ex_Quiz_Flat_Reply_1>
+  <WFL_Ex_Quiz_Good_Lead_0>Right. And what comes next?</WFL_Ex_Quiz_Good_Lead_0>
+  <WFL_Ex_Quiz_Good_Lead_1>Good. Now, why?</WFL_Ex_Quiz_Good_Lead_1>
+  <WFL_Ex_Quiz_Good_Reply_0>I know this one!</WFL_Ex_Quiz_Good_Reply_0>
+  <WFL_Ex_Quiz_Good_Reply_1>It's the second step.</WFL_Ex_Quiz_Good_Reply_1>
+  <WFL_Ex_Quiz_Great_Lead_0>Perfect, and you reasoned it out yourself.</WFL_Ex_Quiz_Great_Lead_0>
+  <WFL_Ex_Quiz_Great_Lead_1>Exactly right! Well done.</WFL_Ex_Quiz_Great_Lead_1>
+  <WFL_Ex_Quiz_Great_Reply_0>I did it!</WFL_Ex_Quiz_Great_Reply_0>
+  <WFL_Ex_Quiz_Great_Reply_1>I really did!</WFL_Ex_Quiz_Great_Reply_1>
+  <WFL_Ex_Story_Poor_Lead_0>Where was I? Never mind.</WFL_Ex_Story_Poor_Lead_0>
+  <WFL_Ex_Story_Poor_Lead_1>It was a long time ago.</WFL_Ex_Story_Poor_Lead_1>
+  <WFL_Ex_Story_Poor_Reply_0>Huh?</WFL_Ex_Story_Poor_Reply_0>
+  <WFL_Ex_Story_Poor_Reply_1>I lost track.</WFL_Ex_Story_Poor_Reply_1>
+  <WFL_Ex_Story_Flat_Lead_0>I once saw something like this.</WFL_Ex_Story_Flat_Lead_0>
+  <WFL_Ex_Story_Flat_Lead_1>It reminds me of something.</WFL_Ex_Story_Flat_Lead_1>
+  <WFL_Ex_Story_Flat_Reply_0>Interesting.</WFL_Ex_Story_Flat_Reply_0>
+  <WFL_Ex_Story_Flat_Reply_1>Hm.</WFL_Ex_Story_Flat_Reply_1>
+  <WFL_Ex_Story_Good_Lead_0>I once saw this go badly wrong. Here's what I learned.</WFL_Ex_Story_Good_Lead_0>
+  <WFL_Ex_Story_Good_Lead_1>A friend of mine learned this the hard way.</WFL_Ex_Story_Good_Lead_1>
+  <WFL_Ex_Story_Good_Reply_0>Wow.</WFL_Ex_Story_Good_Reply_0>
+  <WFL_Ex_Story_Good_Reply_1>I won't forget that.</WFL_Ex_Story_Good_Reply_1>
+  <WFL_Ex_Story_Great_Lead_0>Let me tell you about the time it really mattered...</WFL_Ex_Story_Great_Lead_0>
+  <WFL_Ex_Story_Great_Lead_1>Listen closely, this is the part that stays with you.</WFL_Ex_Story_Great_Lead_1>
+  <WFL_Ex_Story_Great_Reply_0>I'll never forget that.</WFL_Ex_Story_Great_Reply_0>
+  <WFL_Ex_Story_Great_Reply_1>Tell us more!</WFL_Ex_Story_Great_Reply_1>
+  <WFL_Ex_Focus_Poor_Lead_0>Be quiet!</WFL_Ex_Focus_Poor_Lead_0>
+  <WFL_Ex_Focus_Poor_Lead_1>Settle down!</WFL_Ex_Focus_Poor_Lead_1>
+  <WFL_Ex_Focus_Poor_Reply_0>Sorry...</WFL_Ex_Focus_Poor_Reply_0>
+  <WFL_Ex_Focus_Poor_Reply_1>Sorry.</WFL_Ex_Focus_Poor_Reply_1>
+  <WFL_Ex_Focus_Flat_Lead_0>Eyes up, please.</WFL_Ex_Focus_Flat_Lead_0>
+  <WFL_Ex_Focus_Flat_Lead_1>Let's keep going.</WFL_Ex_Focus_Flat_Lead_1>
+  <WFL_Ex_Focus_Flat_Reply_0>Yes.</WFL_Ex_Focus_Flat_Reply_0>
+  <WFL_Ex_Focus_Flat_Reply_1>Okay.</WFL_Ex_Focus_Flat_Reply_1>
+  <WFL_Ex_Focus_Good_Lead_0>Let's all settle and take a breath.</WFL_Ex_Focus_Good_Lead_0>
+  <WFL_Ex_Focus_Good_Lead_1>Good. Back to it.</WFL_Ex_Focus_Good_Lead_1>
+  <WFL_Ex_Focus_Good_Reply_0>Okay.</WFL_Ex_Focus_Good_Reply_0>
+  <WFL_Ex_Focus_Good_Reply_1>Alright.</WFL_Ex_Focus_Good_Reply_1>
+  <WFL_Ex_Focus_Great_Lead_0>You're all doing wonderfully. Keep going.</WFL_Ex_Focus_Great_Lead_0>
+  <WFL_Ex_Focus_Great_Lead_1>I like how well you're all listening.</WFL_Ex_Focus_Great_Lead_1>
+  <WFL_Ex_Focus_Great_Reply_0>I'm trying my best!</WFL_Ex_Focus_Great_Reply_0>
+  <WFL_Ex_Focus_Great_Reply_1>This is fun!</WFL_Ex_Focus_Great_Reply_1>
+</LanguageData>

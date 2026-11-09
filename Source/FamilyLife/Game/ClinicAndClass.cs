@@ -15,6 +15,36 @@ namespace FamilyLife
     // Both are ordinary jobs, so drafting, selecting, an emergency or a mental break ends them the same way it ends anything else. Nothing here is saved: a session
     // that was running when the game was loaded simply does not continue, and the office starts a new one when it is next due.
 
+    /// <summary>
+    /// One exchange between a doctor or teacher and the person they are talking to: a social contest (the leader's Social plus their second skill against the other
+    /// person's Social), a line each said aloud, and what it did to how they feel about each other.
+    /// </summary>
+    internal static class Conversations
+    {
+        private static int Level(Pawn p, SkillDef def) { var s = p?.skills?.GetSkill(def); return s == null || s.TotallyDisabled ? 0 : s.Level; }
+
+        internal static float Run(Pawn leader, Pawn other, SkillDef second, ExchangeTopic topic, int seed)
+        {
+            var c = FamilyComponent.Current; var r = c?.Registry;
+            int score = GuidedExchanges.LeaderScore(Level(leader, SkillDefOf.Social), Level(leader, second));
+            var tier = GuidedExchanges.Resolve(score, Level(other, SkillDefOf.Social), Rand.RangeInclusive(1, 20), Rand.RangeInclusive(1, 20));
+            var e = GuidedExchanges.Effect(topic, tier);
+            int now = Activities.Now;
+            if (r != null)
+            {
+                r.ChangeBond(other.thingIDNumber, leader.thingIDNumber, new BondChange(e.Attachment, e.Trust, e.Tension, e.Familiarity), now);
+                r.ChangeBond(leader.thingIDNumber, other.thingIDNumber, new BondChange(.2f, .2f, 0f, .5f), now);
+            }
+            float xp = 6f + 10f * Math.Max(0, GuidedExchanges.TierValue(tier));
+            leader.skills?.Learn(SkillDefOf.Social, xp, false);
+            var tint = tier == EventTier.Poor ? new Color(1f, .72f, .6f) : tier == EventTier.Great ? new Color(.72f, 1f, .72f) : Color.white;
+            string stem = "WFL_Ex_" + topic + "_" + tier;
+            MoteMaker.ThrowText(leader.DrawPos, leader.Map, Phrasing.Say(stem + "_Lead", seed), tint);
+            MoteMaker.ThrowText(other.DrawPos + new Vector3(0f, 0f, -.35f), other.Map, Phrasing.Say(stem + "_Reply", seed + 7), tint);
+            return e.Quality;
+        }
+    }
+
     internal static class ClassRooms
     {
         private static readonly string[] BoardWords = { "blackboard", "chalkboard", "whiteboard", "teachingboard" };
@@ -126,6 +156,8 @@ namespace FamilyLife
         public readonly HashSet<int> Called = new HashSet<int>();
         public bool Teaching, Finished;
         public List<int> Roster = new List<int>();
+        public readonly Dictionary<int, float> Rapport = new Dictionary<int, float>();          // how each pupil got on with the teacher, from the exchanges
+        public int Exchanges;
     }
 
     internal static class ClassSessions
@@ -183,6 +215,7 @@ namespace FamilyLife
             int now = Activities.Now;
             int learned = 0;
             var pupils = new List<Pawn>();
+            var factors = new Dictionary<Pawn, float>();
             if (finishedNormally || s.Teaching)
             {
                 var book = s.BookId == 0 ? null : FindBook(teacher, s.BookId);
@@ -190,14 +223,31 @@ namespace FamilyLife
                 {
                     var kid = c.TryGetPawn(kv.Key);
                     if (kid == null || kid.Dead || kv.Value < ClassTicks / 2) { r.ClassDone(kv.Key); continue; }
-                    OfficeDriver.CompleteLesson(r, teacher, kid, now, kv.Value);
-                    pupils.Add(kid); learned++;
+                    float rapport = s.Rapport.TryGetValue(kv.Key, out var q) ? q : 0f;
+                    float factor = GuidedExchanges.LessonFactor(rapport);
+                    OfficeDriver.CompleteLesson(r, teacher, kid, now, kv.Value, factor);
+                    int feel = GuidedExchanges.Impression(rapport);
+                    if (feel > 0) Activities.GainMemory(kid, "WFL_InspiringLesson", teacher); else if (feel < 0) Activities.GainMemory(kid, "WFL_BoringLesson", teacher);
+                    pupils.Add(kid); learned++; factors[kid] = factor;
                 }
-                if (book != null && pupils.Count > 0) GiveBookXp(book, pupils.Concat(new[] { teacher }));
+                if (book != null && pupils.Count > 0) GiveBookXp(book, pupils, factors, teacher);
                 if (learned > 0)
                     Messages.Message((book != null ? "WFL_Class_EndedBook" : "WFL_Class_Ended").Translate(teacher.LabelShort, learned, book?.LabelNoCount ?? ""), teacher, MessageTypeDefOf.PositiveEvent, false);
             }
             foreach (int id in s.Roster) r.ClassDone(id);
+        }
+
+        /// <summary>The teacher says something to one pupil who is in the room: a question, an explanation, a quiz, a story, a word to settle them. Roughly one every hour of the class.</summary>
+        internal static void Exchange(ClassSession s, Pawn teacher, int elapsed)
+        {
+            var c = FamilyComponent.Current; if (c == null) return;
+            var present = s.Attended.Keys.Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && p.CurJobDef == WFL_StoryDefOf.WFL_ClassStudent).ToList();
+            if (present.Count == 0) return;
+            var pupil = present[Rand.Range(0, present.Count)];
+            var topic = GuidedExchanges.PickTopic(GuidedExchanges.ClassTopics, s.Exchanges++, teacher.thingIDNumber);
+            float q = Conversations.Run(teacher, pupil, SkillDefOf.Intellectual, topic, teacher.thingIDNumber + elapsed);
+            s.Rapport[pupil.thingIDNumber] = (s.Rapport.TryGetValue(pupil.thingIDNumber, out var old) ? old : 0f) + q;
+            foreach (var other in present) if (other != pupil) s.Rapport[other.thingIDNumber] = (s.Rapport.TryGetValue(other.thingIDNumber, out var o2) ? o2 : 0f) + q * .25f;          // the rest of the room is carried along, less
         }
 
         private static Thing FindBook(Pawn teacher, int id)
@@ -207,16 +257,16 @@ namespace FamilyLife
         }
 
         /// <summary>Everyone who sat through the class reads the book together, and gets what reading it gives.</summary>
-        private static void GiveBookXp(Thing book, IEnumerable<Pawn> readers)
+        private static void GiveBookXp(Thing book, IEnumerable<Pawn> pupils, Dictionary<Pawn, float> factors, Pawn teacher)
         {
             var comp = (book as ThingWithComps)?.GetComp<CompBook>();
             if (comp == null) return;
-            foreach (var p in readers)
+            foreach (var p in pupils.Concat(new[] { teacher }))
                 foreach (var doer in comp.Doers.OfType<BookOutcomeDoerGainSkillExp>())
                     foreach (var pair in doer.Values)
                     {
                         var skill = p.skills?.GetSkill(pair.Key);
-                        if (skill != null && !skill.TotallyDisabled) skill.Learn(pair.Value, true);
+                        if (skill != null && !skill.TotallyDisabled) skill.Learn(pair.Value * (factors.TryGetValue(p, out var f) ? f : 1f), true);          // a pupil who got on well with the teacher takes in more
                     }
         }
     }
@@ -254,7 +304,7 @@ namespace FamilyLife
                 var s = ClassSessions.Of(pawn.thingIDNumber); if (s == null) return;
                 int elapsed = Activities.Now - s.StudyingTick;
                 if (pawn.Position != s.TeacherCell && pawn.pather != null && !pawn.pather.Moving) pawn.pather.StartPath(s.TeacherCell, PathEndMode.OnCell);
-                if (elapsed % 480 == 0 && elapsed > 0) MoteMaker.ThrowText(pawn.DrawPos, pawn.Map, Phrasing.Say("WFL_ClassTeacher", pawn.thingIDNumber + elapsed / 480), Color.white);
+                if (elapsed > 0 && elapsed % 1000 == 500) ClassSessions.Exchange(s, pawn, elapsed);
                 if (elapsed < 3000 && ++sinceCall >= 300) { sinceCall = 0; var c = FamilyComponent.Current; if (c != null) ClassSessions.CallStudents(c, s, pawn); }      // late arrivals are called in
                 if (elapsed > 3000 && s.Attended.Values.All(v => v == 0)) { EndJobWith(JobCondition.Incompletable); return; }          // nobody came
                 if (elapsed >= ClassSessions.ClassTicks) EndJobWith(JobCondition.Succeeded);
@@ -280,7 +330,6 @@ namespace FamilyLife
                 var s = ClassSessions.Of(Teacher.thingIDNumber); if (s == null) return;
                 if (pawn.Position.GetRoom(pawn.Map) == s.Room) s.Attended[pawn.thingIDNumber] = (s.Attended.TryGetValue(pawn.thingIDNumber, out int n) ? n : 0) + 1;
                 pawn.rotationTracker?.FaceCell(s.TeacherCell);
-                if (Teacher.Spawned && (Activities.Now + pawn.thingIDNumber) % 900 == 0 && Rand.Chance(.3f)) MoteMaker.ThrowText(pawn.DrawPos, pawn.Map, Phrasing.Say("WFL_ClassPupil", pawn.thingIDNumber + Activities.Now / 900), Color.white);
             };
             yield return sit;
         }
@@ -294,7 +343,8 @@ namespace FamilyLife
         public Building_Bed Bed;
         public IntVec3 DoctorCell;
         public bool PatientLying, Done;
-        public int Talked;
+        public int Talked, Exchanges;
+        public float Quality;
     }
 
     internal static class ClinicVisits
@@ -353,7 +403,7 @@ namespace FamilyLife
             var patient = id == 0 ? null : c.TryGetPawn(id);
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None) || !patient.CanReserve(s.Bed, s.Bed.SleepingSlotsCount, 0)) { OfficeDriver.SkipPatient(id, now); return; }
-            s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Idle = 0;
+            s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Idle = 0; s.Quality = 0f; s.Exchanges = 0;
             patient.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
         }
     }
@@ -396,11 +446,14 @@ namespace FamilyLife
                     return;
                 }
                 s.Talked++;
-                if (s.Talked % 300 == 1) MoteMaker.ThrowText(pawn.DrawPos, pawn.Map, Phrasing.Say("WFL_ClinicDoctor", pawn.thingIDNumber + s.Talked / 300 + s.PatientId), Color.white);
-                else if (s.Talked % 300 == 150 && patient != null) MoteMaker.ThrowText(patient.DrawPos, patient.Map, Phrasing.Say("WFL_ClinicPatient", s.PatientId + s.Talked / 300), Color.white);
+                if ((s.Talked == 150 || s.Talked == 700 || s.Talked == 1250) && patient != null && !patient.Dead)          // three things raised, spread through the visit
+                {
+                    var topic = GuidedExchanges.PickTopic(GuidedExchanges.ClinicTopics, s.Exchanges++, pawn.thingIDNumber + s.PatientId);
+                    s.Quality += Conversations.Run(pawn, patient, SkillDefOf.Medicine, topic, pawn.thingIDNumber + s.PatientId + s.Talked);
+                }
                 if (s.Talked >= ClinicVisits.TalkTicks)
                 {
-                    if (patient != null && !patient.Dead) OfficeDriver.CompleteCheckup(c.Registry, pawn, patient, now);
+                    if (patient != null && !patient.Dead) OfficeDriver.CompleteCheckup(c.Registry, pawn, patient, now, s.Quality);
                     ReleasePatient(s);
                 }
             };

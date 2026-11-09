@@ -239,7 +239,7 @@ namespace FamilyLife
         }
 
         /// <summary>An examination done in person: the doctor tends anything that needs it, and the patient gets a lasting boost to recovery and immunity.</summary>
-        internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now)
+        internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now, float talkQuality = 0f)
         {
             if (!r.RecordCheckup(doctor.thingIDNumber, patient.thingIDNumber, now)) return;
             try
@@ -251,11 +251,14 @@ namespace FamilyLife
                 {
                     patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
                     // The doctor looks after their own house better: the effect lasts twice as long for kin.
-                    if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer))
+                    var comp = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp)?.TryGetComp<HediffComp_Disappears>();
+                    if (comp != null)
                     {
-                        var comp = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp)?.TryGetComp<HediffComp_Disappears>();
-                        if (comp != null) comp.ticksToDisappear *= 2;
+                        if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer)) comp.ticksToDisappear *= 2;
+                        comp.ticksToDisappear = (int)(comp.ticksToDisappear * GuidedExchanges.CheckupDurationFactor(talkQuality));          // how the talk went changes how long the benefit lasts
                     }
+                    int feel = GuidedExchanges.Impression(talkQuality);
+                    if (feel > 0) Activities.GainMemory(patient, "WFL_ReassuringCheckup", doctor); else if (feel < 0) Activities.GainMemory(patient, "WFL_DismissiveCheckup", doctor);
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
@@ -325,13 +328,14 @@ namespace FamilyLife
         internal const int LessonTicks = 5000, CheckupTicks = 900;
 
         /// <summary>A lesson from the colony's teacher: a real conversation that ends with the student learning something the teacher is better at.</summary>
-        internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now, int ticks = LessonTicks)
+        internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now, int ticks = LessonTicks, float factor = 1f)
         {
             var office = r.OfficeFor(OfficeKind.Teacher);
             if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
             var skill = LearnableSkill(teacher, student) ?? Activities.BestSkillOf(teacher, student)?.def;
             float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 450f : 700f;          // a lesson now lasts hours, not seconds
             if (r.KinOfHolder(student.thingIDNumber, OfficeKind.Teacher)) xp *= 1.5f;          // the teacher's own house learns more from them
+            xp *= factor;          // how well the teacher got on with this pupil
             if (skill != null) student.skills.Learn(skill, xp, true);
             Served(r, OfficeKind.Teacher, teacher, student, now);
             r.ClassDone(student.thingIDNumber);

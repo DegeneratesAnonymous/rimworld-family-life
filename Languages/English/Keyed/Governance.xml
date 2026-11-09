@@ -245,19 +245,6 @@
   <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
   <WFL_Class_Ended>{0} finished the class: {1} pupils learned something.</WFL_Class_Ended>
   <WFL_Class_EndedBook>{0} finished the class, reading {2} with {1} pupils.</WFL_Class_EndedBook>
-  <WFL_ClassTeacher_0>Now, who can tell me why?</WFL_ClassTeacher_0>
-  <WFL_ClassTeacher_1>Let's go through it once more.</WFL_ClassTeacher_1>
-  <WFL_ClassTeacher_2>Pay attention, this part matters.</WFL_ClassTeacher_2>
-  <WFL_ClassTeacher_3>Take it one step at a time.</WFL_ClassTeacher_3>
-  <WFL_ClassPupil_0>Is it like this?</WFL_ClassPupil_0>
-  <WFL_ClassPupil_1>I think I understand.</WFL_ClassPupil_1>
-  <WFL_ClassPupil_2>Can you say that again?</WFL_ClassPupil_2>
-  <WFL_ClinicDoctor_0>Any pain? Take a breath for me.</WFL_ClinicDoctor_0>
-  <WFL_ClinicDoctor_1>Let me have a look at you.</WFL_ClinicDoctor_1>
-  <WFL_ClinicDoctor_2>How have you been feeling lately?</WFL_ClinicDoctor_2>
-  <WFL_ClinicPatient_0>Quite well, I think.</WFL_ClinicPatient_0>
-  <WFL_ClinicPatient_1>Just a bit tired.</WFL_ClinicPatient_1>
-  <WFL_ClinicPatient_2>Nothing to complain about.</WFL_ClinicPatient_2>
   <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>
   <WFL_Office_Until>until the next assembly, {0}</WFL_Office_Until>
   <WFL_Office_Appointed>named by the ideoligion</WFL_Office_Appointed>
