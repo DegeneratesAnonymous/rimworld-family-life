@@ -243,6 +243,13 @@
   <WFL_S_CheckupsPerYear>{0} round(s) of check-ups per year</WFL_S_CheckupsPerYear>
   <WFL_S_CheckupsPerYearTip>A year here is 60 days; two rounds a year is one about every 30 days.</WFL_S_CheckupsPerYearTip>
   <WFL_Checkup_Round>{0} has begun a round of check-ups.</WFL_Checkup_Round>
+  <WFL_HoldClass_Label>Hold class</WFL_HoldClass_Label>
+  <WFL_HoldClass_Desc>Have the colony's teacher hold a class here now. The colony's children come and sit in this room, and the teacher speaks for four hours. Anyone who needs to eat, sleep or go to the toilet leaves and misses what is left.</WFL_HoldClass_Desc>
+  <WFL_HoldClass_NoTeacher>Nobody holds the post of teacher on this map, so there is nobody to hold a class.</WFL_HoldClass_NoTeacher>
+  <WFL_HoldClass_Running>{0} is already holding a class.</WFL_HoldClass_Running>
+  <WFL_HoldClass_NoPupils>There are no children free to come to a class just now.</WFL_HoldClass_NoPupils>
+  <WFL_HoldClass_Cannot>{0} cannot get to the front of this room.</WFL_HoldClass_Cannot>
+  <WFL_HoldClass_Started>{0} begins a class for {1} children.</WFL_HoldClass_Started>
   <WFL_Class_Ended>{0} finished the class: {1} pupils learned something.</WFL_Class_Ended>
   <WFL_Class_EndedBook>{0} finished the class, reading {2} with {1} pupils.</WFL_Class_EndedBook>
   <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>

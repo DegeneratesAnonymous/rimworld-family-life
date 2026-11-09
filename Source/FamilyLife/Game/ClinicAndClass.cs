@@ -70,7 +70,7 @@ namespace FamilyLife
         private static readonly string[] Worship = { "altar", "ideogram", "pulpit", "reliquary", "animatree", "stele", "sarcophagus", "shrine", "relic" };
 
         /// <summary>A room that is for something else: a temple or church (which also has lecterns), a bedroom, a hospital, a kitchen.</summary>
-        private static bool IsOtherRoom(Room room)
+        internal static bool IsOtherRoom(Room room)
         {
             string role = (room.Role?.defName ?? "").ToLowerInvariant();
             if (NotAClassroom.Any(role.Contains)) return true;
@@ -125,6 +125,18 @@ namespace FamilyLife
                 }
             }
             return front != null;
+        }
+
+        internal static bool IsLectern(ThingDef def) => IsFor(def, 0);
+
+        /// <summary>The standing place for the teacher at this particular lectern.</summary>
+        internal static bool SpotAt(Building b, Pawn teacher, out IntVec3 cell, out Room room)
+        {
+            cell = IntVec3.Invalid; room = b?.GetRoom();
+            if (b == null || room == null || room.PsychologicallyOutdoors) return false;
+            foreach (var c in FreeNeighbours(b, b.Map, room))
+                if (UsableCell(c, b.Map, room, teacher)) { cell = c; return true; }
+            return false;
         }
 
         private static bool IsFor(ThingDef def, int pass)
@@ -188,7 +200,7 @@ namespace FamilyLife
         public List<IntVec3> Seats = new List<IntVec3>();
         public readonly Dictionary<int, int> Attended = new Dictionary<int, int>();
         public readonly HashSet<int> Called = new HashSet<int>();
-        public bool Teaching, Finished;
+        public bool Teaching, Finished, ByPlayer;
         public List<int> Roster = new List<int>();
         public readonly Dictionary<int, float> Rapport = new Dictionary<int, float>();          // how each pupil got on with the teacher, from the exchanges
         public int Exchanges;
@@ -205,14 +217,17 @@ namespace FamilyLife
         internal static bool Running(Pawn teacher) => teacher != null && byTeacher.ContainsKey(teacher.thingIDNumber);
 
         /// <summary>Starts a class: the teacher goes to the front of the classroom (fetching a book first if there is one) and calls the children when they arrive.</summary>
-        internal static bool TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now)
+        internal static bool TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false)
         {
             if (teacher == null || Running(teacher) || roster.Count == 0) return false;
-            if (!ClassRooms.TeachingSpot(teacher, out var cell, out var room, out var front)) { OfficeDriver.Trace("class: no classroom furniture in an enclosed room for " + teacher.LabelShort); return false; }
-            if (!OfficeDriver.Ready(teacher) || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher)) return true;       // there is a classroom: try again when the teacher is free
+            IntVec3 cell = IntVec3.Invalid; Room room = null; Thing front = lectern;
+            bool found = lectern != null ? ClassRooms.SpotAt(lectern, teacher, out cell, out room) : ClassRooms.TeachingSpot(teacher, out cell, out room, out front);
+            if (!found) { OfficeDriver.Trace("class: no classroom furniture in an enclosed room for " + teacher.LabelShort); return false; }
+            if (byPlayer) { if (!OfficeDriver.Available(teacher) || OfficeDriver.NeedsAttention(teacher)) return false; }
+            else if (!OfficeDriver.Ready(teacher) || OfficeDriver.NeedsAttention(teacher) || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher)) return true;       // there is a classroom: try again when the teacher is free
             var pupils = roster.Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned).ToList();
             var book = ClassRooms.BestBook(teacher, pupils);
-            var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Room = room, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0 };
+            var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Room = room, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0, ByPlayer = byPlayer };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count);
             foreach (var rc in room.Cells) s.RoomCells.Add(rc);
             OfficeDriver.Trace("class: " + teacher.LabelShort + " goes to " + cell + " in front of " + (front?.LabelCap ?? "the board") + ", " + s.Seats.Count + " seats, book: " + (book?.LabelNoCount ?? "none") + ", " + roster.Count + " children on the list");
@@ -232,7 +247,8 @@ namespace FamilyLife
                 var kid = c.TryGetPawn(id);
                 int seatIndex = i++;
                 if (kid == null || !kid.Spawned || kid.Map != teacher.Map || s.Attended.ContainsKey(id) && kid.CurJobDef == WFL_StoryDefOf.WFL_ClassStudent) continue;
-                if (!OfficeDriver.Ready(kid) || !OfficeDriver.FreeFor(c, id) || kid.CurJob?.playerForced == true && !OfficeDriver.Forced) continue;
+                bool able = s.ByPlayer ? OfficeDriver.Available(kid) : OfficeDriver.Ready(kid) && OfficeDriver.FreeFor(c, id) && !(kid.CurJob?.playerForced == true && !OfficeDriver.Forced);
+                if (!able || OfficeDriver.NeedsAttention(kid)) continue;
                 var seat = s.Seats.Count > 0 ? s.Seats[seatIndex % s.Seats.Count] : s.TeacherCell;
                 if (!kid.CanReach(seat, PathEndMode.OnCell, Danger.None)) continue;
                 var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassStudent, teacher, seat);
@@ -321,7 +337,7 @@ namespace FamilyLife
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || OfficeDriver.NeedsAttention(pawn) || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
             AddFinishAction(cond =>
             {
-                OfficeDriver.Trace("class: " + pawn.LabelShort + " (teacher) finished (" + cond + ")");
+                OfficeDriver.Trace("class: " + pawn.LabelShort + " (teacher) finished (" + cond + "), need: " + (OfficeDriver.NeedsReason(pawn) ?? "none") + ", session " + (ClassSessions.Of(pawn.thingIDNumber) != null));
                 if (pawn.carryTracker?.CarriedThing != null && pawn.Spawned) pawn.carryTracker.TryDropCarriedThing(pawn.Position, ThingPlaceMode.Near, out _);
                 ClassSessions.End(pawn, cond == JobCondition.Succeeded);
             });
@@ -362,7 +378,7 @@ namespace FamilyLife
         {
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || Teacher == null || Teacher.Dead || Teacher.Downed || ClassSessions.Of(Teacher.thingIDNumber) == null || ClassSessions.Of(Teacher.thingIDNumber).Finished ||
                 OfficeDriver.NeedsAttention(pawn));
-            AddFinishAction(cond => OfficeDriver.Trace("class: " + pawn.LabelShort + " (pupil) finished (" + cond + ")"));
+            AddFinishAction(cond => OfficeDriver.Trace("class: " + pawn.LabelShort + " (pupil) finished (" + cond + "), need: " + (OfficeDriver.NeedsReason(pawn) ?? "none")));
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var sit = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             sit.initAction = () => { pawn.pather?.StopDead(); };
@@ -373,6 +389,56 @@ namespace FamilyLife
                 pawn.rotationTracker?.FaceCell(s.TeacherCell);
             };
             yield return sit;
+        }
+    }
+
+    internal static class HoldClass
+    {
+        private static Texture2D icon;
+        private static Texture2D Icon => icon ?? (icon = ContentFinder<Texture2D>.Get("WilsFamilyLife/Roles/teacher", false) ?? BaseContent.BadTex);
+
+        /// <summary>The "Hold class" button for a lectern in a room that could be a classroom, or null.</summary>
+        internal static Gizmo For(Building b)
+        {
+            if (b == null || !b.Spawned || b.Faction != Faction.OfPlayer || !ClassRooms.IsLectern(b.def)) return null;
+            var room = b.GetRoom();
+            if (room == null || room.PsychologicallyOutdoors || ClassRooms.IsOtherRoom(room)) return null;
+            return new Command_Action
+            {
+                defaultLabel = "WFL_HoldClass_Label".Translate(),
+                defaultDesc = "WFL_HoldClass_Desc".Translate(),
+                icon = Icon,
+                action = () => Start(b)
+            };
+        }
+
+        private static void Start(Building lectern)
+        {
+            var c = FamilyComponent.Current; var r = c?.Registry; if (r == null) return;
+            int now = Activities.Now;
+            var office = r.OfficeFor(OfficeKind.Teacher);
+            var teacher = office != null && office.Held ? c.TryGetPawn(office.HolderId) : null;
+            if (teacher == null || !teacher.Spawned || teacher.Map != lectern.Map) { Messages.Message("WFL_HoldClass_NoTeacher".Translate(), MessageTypeDefOf.RejectInput, false); return; }
+            if (ClassSessions.Running(teacher)) { Messages.Message("WFL_HoldClass_Running".Translate(teacher.LabelShort), MessageTypeDefOf.RejectInput, false); return; }
+            bool adults = FamilyLifeMod.Settings != null && FamilyLifeMod.Settings.adultStudents;
+            var ids = r.Persons.Where(p => p.InColony && p.Id != office.HolderId && (p.Juvenile || adults))
+                .Where(p => c.TryGetPawn(p.Id) is Pawn k && k.Spawned && k.Map == lectern.Map && OfficeDriver.Available(k)).Select(p => p.Id).Take(24).ToList();
+            if (ids.Count == 0) { Messages.Message("WFL_HoldClass_NoPupils".Translate(), MessageTypeDefOf.RejectInput, false); return; }
+            office.SessionQueue = ids; office.SessionStartTick = now;          // they are the class: lessons are credited the same way as a class held on the usual round
+            if (!ClassSessions.TryBegin(c, teacher, ids, now, lectern, true)) { office.SessionQueue.Clear(); Messages.Message("WFL_HoldClass_Cannot".Translate(teacher.LabelShort), MessageTypeDefOf.RejectInput, false); return; }
+            Messages.Message("WFL_HoldClass_Started".Translate(teacher.LabelShort, ids.Count), teacher, MessageTypeDefOf.PositiveEvent, false);
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(Building), nameof(Building.GetGizmos))]
+    internal static class Patch_LecternHoldClass
+    {
+        private static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Building __instance)
+        {
+            foreach (var g in __result) yield return g;
+            Gizmo extra = null;
+            try { extra = HoldClass.For(__instance); } catch (Exception e) { Log.Warning("[Wil's Family Life] Hold class button skipped: " + e.Message); }
+            if (extra != null) yield return extra;
         }
     }
 
@@ -584,7 +650,7 @@ namespace FamilyLife
         {
             // The round is kept by the registry, so ending here for a meal, sleep, a visit to the toilet or a gathering only pauses it: the doctor takes it up again afterwards.
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || OfficeDriver.NeedsAttention(pawn) || ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks);
-            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + ")"); ClinicVisits.Close(pawn); });
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + "), need: " + (OfficeDriver.NeedsReason(pawn) ?? "none")); ClinicVisits.Close(pawn); });
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var wait = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             wait.initAction = () => pawn.pather?.StopDead();
@@ -609,7 +675,7 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
-            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " leaves the clinic (" + cond + ")"); if (pawn.jobs != null) pawn.jobs.posture = PawnPosture.Standing; });
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " leaves the clinic (" + cond + "), need: " + (OfficeDriver.NeedsReason(pawn) ?? "none")); if (pawn.jobs != null) pawn.jobs.posture = PawnPosture.Standing; });
             this.AddEndCondition(() =>
             {
                 var s = Doctor == null ? null : ClinicVisits.Of(Doctor.thingIDNumber);

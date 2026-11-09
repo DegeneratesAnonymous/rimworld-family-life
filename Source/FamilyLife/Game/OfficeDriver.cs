@@ -170,6 +170,7 @@ namespace FamilyLife
                     CheckupQueue.Reset();          // everyone is on the doctor's list again
                     Messages.Message("WFL_Checkup_Round".Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
                 }
+                if (r.CheckupOpen(now)) SkipRecentlyChecked(c, r, office, now);
                 if (r.CheckupOpen(now))
                 {
                     needed = true;
@@ -201,15 +202,37 @@ namespace FamilyLife
 
         internal static bool Forced => Activities.Now < ForceUntil;
 
+        /// <summary>Awake enough and able: not drafted, hurt, in a break or a prisoner. Used when the player asks for something, which does not wait for the pawn to be idle.</summary>
+        internal static bool Available(Pawn p) => p != null && p.Spawned && !p.Dead && !p.Downed && !p.Drafted && !p.InMentalState && !p.IsPrisoner && p.RaceProps.Humanlike && !p.DevelopmentalStage.Baby() && p.Awake();
+
+        /// <summary>A recent check-up is still doing them good, so they are not asked to come again yet.</summary>
+        internal static bool RecentCheckup(Pawn p) => p?.health?.hediffSet != null && WFL_HediffDefOf.WFL_CheckedUp != null && p.health.hediffSet.HasHediff(WFL_HediffDefOf.WFL_CheckedUp);
+
+        /// <summary>Takes anyone with a recent check-up off the doctor's list for this round, and closes the round if that leaves nobody.</summary>
+        internal static void SkipRecentlyChecked(FamilyComponent c, FamilyRegistry r, CommunityOffice office, int now)
+        {
+            if (office == null || !r.CheckupOpen(now)) return;
+            foreach (var person in r.Persons)
+            {
+                if (!person.InColony || person.Id == office.HolderId || office.Examined.Contains(person.Id)) continue;
+                var p = c.TryGetPawn(person.Id);
+                if (p != null && RecentCheckup(p)) office.Examined.Add(person.Id);
+            }
+            if (r.Persons.Where(x => x.InColony && x.Id != office.HolderId).All(x => office.Examined.Contains(x.Id))) office.RoundStartTick = 0;
+        }
+
         private static readonly string[] UrgentNeeds = { "Food", "Rest", "Bladder", "Hygiene" };
 
         /// <summary>
         /// Someone who should stop what they are doing: hungry, tired, in need of the toilet or a wash, or called away into a gathering. A check-up or a class stops for
         /// them and is taken up again afterwards, rather than holding them to it.
         /// </summary>
-        internal static bool NeedsAttention(Pawn p)
+        internal static bool NeedsAttention(Pawn p) => NeedsReason(p) != null;
+
+        /// <summary>Why this person should stop (a need, or an event they have been called to), or null.</summary>
+        internal static string NeedsReason(Pawn p)
         {
-            if (p == null || p.Dead) return false;
+            if (p == null || p.Dead) return null;
             try
             {
                 var needs = p.needs?.AllNeeds;
@@ -217,25 +240,27 @@ namespace FamilyLife
                     for (int i = 0; i < needs.Count; i++)
                     {
                         var n = needs[i];
-                        if (n?.def != null && UrgentNeeds.Contains(n.def.defName) && n.CurLevelPercentage < .15f) return true;
+                        if (n?.def != null && UrgentNeeds.Contains(n.def.defName) && n.CurLevelPercentage < .15f) return n.def.defName + " " + n.CurLevelPercentage.ToString("0.00");
                     }
-                if (p.GetLord() != null) return true;
+                var lord = p.GetLord();
+                if (lord?.LordJob is LordJob_VoluntarilyJoinable) return "called to an event";
             }
             catch (Exception) { }
-            return false;
+            return null;
         }
 
         /// <summary>Written to the log during a developer test only, so a flow that does not start says why.</summary>
         internal static void Trace(string text) { if (Forced) Log.Message("[Wil's Family Life] test: " + text); }
 
         /// <summary>What stands between the doctor and a clinic, and the teacher and a class, in plain lines. Used by the developer menu.</summary>
-        internal static List<string> Diagnose(FamilyComponent c, int now)
+        internal static List<string> Diagnose(FamilyComponent c, int now, OfficeKind? only = null)
         {
             var lines = new List<string>();
             var r = c.Registry;
             var healer = r.OfficeFor(OfficeKind.Healer); var teacher = r.OfficeFor(OfficeKind.Teacher);
             var settings = FamilyLifeMod.Settings;
-            if (healer == null || !healer.Held) lines.Add("Doctor: nobody holds the post. Run 'Choose the colony's posts now' first.");
+            if (only == OfficeKind.Teacher) { }
+            else if (healer == null || !healer.Held) lines.Add("Doctor: nobody holds the post. Run 'Choose the colony's posts now' first.");
             else
             {
                 var d = Spawned(c, healer.HolderId);
@@ -247,10 +272,12 @@ namespace FamilyLife
                     if (ClinicVisits.Spot(d, out var bed, out var cell)) lines.Add("  clinic: " + bed.LabelCap + " at " + bed.Position + ", the doctor waits at " + cell);
                     else lines.Add("  clinic: no free medical bed in an enclosed room the doctor can reach (visits will be one to one instead)");
                     int able = r.Persons.Count(p => p.InColony && p.Id != healer.HolderId && PatientAvailable(c, d, p.Id));
-                    lines.Add("  patients able to come now: " + able);
+                    if (NeedsReason(d) != null) lines.Add("  the doctor should stop for: " + NeedsReason(d));
+                    lines.Add("  patients able to come now: " + able + ", already seen this round: " + healer.Examined.Count);
                 }
             }
-            if (teacher == null || !teacher.Held) lines.Add("Teacher: nobody holds the post. Run 'Choose the colony's posts now' first.");
+            if (only == OfficeKind.Healer) { }
+            else if (teacher == null || !teacher.Held) lines.Add("Teacher: nobody holds the post. Run 'Choose the colony's posts now' first.");
             else
             {
                 var t = Spawned(c, teacher.HolderId);
@@ -263,6 +290,8 @@ namespace FamilyLife
                     bool adults = settings != null && settings.adultStudents;
                     var kids = r.Persons.Where(p => p.InColony && p.Id != teacher.HolderId && (p.Juvenile || adults)).ToList();
                     int able = kids.Count(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == t.Map && FreeFor(c, p.Id) && Ready(pawn));
+                    if (NeedsReason(t) != null) lines.Add("  the teacher should stop for: " + NeedsReason(t));
+                    foreach (var k in kids) if (Spawned(c, k.Id) is Pawn kp && NeedsReason(kp) != null) lines.Add("  " + kp.LabelShort + " should stop for: " + NeedsReason(kp));
                     lines.Add("  children in the colony: " + kids.Count + ", able to come now: " + able + ", waiting in the class list: " + teacher.SessionQueue.Count + (ClassSessions.Running(t) ? ", class already running" : ""));
                 }
             }
@@ -270,9 +299,9 @@ namespace FamilyLife
         }
 
         /// <summary>Runs the posts' work now, rather than at the next check.</summary>
-        internal static void WorkNow(FamilyComponent c, int now)
+        internal static void WorkNow(FamilyComponent c, int now, OfficeKind? only = null)
         {
-            foreach (var office in c.Registry.Offices.Where(o => o.Held).ToList())
+            foreach (var office in c.Registry.Offices.Where(o => o.Held && (only == null || o.Kind == only)).ToList())
             {
                 try { Work(c, c.Registry, office, now); }
                 catch (Exception ex) { Log.Warning("[Wil's Family Life] test: post '" + office.Kind + "' failed: " + ex); }
