@@ -80,7 +80,7 @@ namespace FamilyLife.Domain
         public const int AssemblyVotingTicks = ActivityTuning.TicksPerDay;
         public const int OfficeNeglectTicks = 15 * ActivityTuning.TicksPerDay;
         public const int MaxOfficeActsPerDay = 3;
-        public const int CheckupWindowTicks = 5 * ActivityTuning.TicksPerDay;
+        public const int CheckupWindowTicks = 14 * ActivityTuning.TicksPerDay;          // a round lasts until everyone has been seen; the doctor can be called away and come back
         public const int SessionWindowTicks = ActivityTuning.TicksPerDay;
         public const int ClassWindowTicks = SessionWindowTicks;
         public const int MaxSessionSize = 6;

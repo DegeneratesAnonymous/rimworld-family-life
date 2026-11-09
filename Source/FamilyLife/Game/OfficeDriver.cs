@@ -5,6 +5,7 @@ using FamilyLife.Domain;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace FamilyLife
 {
@@ -165,16 +166,29 @@ namespace FamilyLife
             {
                 int perYear = Math.Max(1, Math.Min(4, s?.checkupsPerYear ?? 2));
                 if (r.BeginCheckupRound(now, 60 * Day / perYear))
+                {
+                    CheckupQueue.Reset();          // everyone is on the doctor's list again
                     Messages.Message("WFL_Checkup_Round".Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
+                }
                 if (r.CheckupOpen(now))
                 {
                     needed = true;
+                    // The round is a list that lasts until everyone has been seen. The doctor works down it whenever they are free: a meal, sleep, the toilet or a gathering
+                    // pauses it, and it is taken up again afterwards.
                     if (ClinicVisits.Running(holder)) { }
-                    else if ((Due("checkup", now, 1500) || Forced && Due("checkupT", now, 200)) && !ClinicVisits.TryOpen(holder))
+                    else if (Due("checkup", now, 300) || Forced && Due("checkupT", now, 200))
                     {
-                        int patientId = r.NextCheckupPatient(now, id => !Skipped(id, now) && PatientAvailable(c, holder, id));
-                        var patient = patientId == 0 ? null : Spawned(c, patientId);
-                        if (patient != null && !GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) SkipFor(patientId, now, 6000);       // unreachable or busy: try the others first
+                        bool clinic = ClinicVisits.Spot(holder, out _, out _);
+                        // anyone still to be seen who can be asked to come to the clinic now (or, with no clinic, anyone at all)
+                        int toCome = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && !CheckupQueue.Waiting(id, now) && (!clinic || !CheckupQueue.OnTheSpot(id)));
+                        if (clinic && toCome != 0) ClinicVisits.TryOpen(holder);
+                        else
+                        {
+                            // Nobody can be brought to the clinic: the next person who could not be brought is seen where they are, as soon as they are free.
+                            int where = clinic ? r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && CheckupQueue.OnTheSpot(id) && !CheckupQueue.Waiting(id, now)) : toCome;
+                            var patient = where == 0 ? null : Spawned(c, where);
+                            if (patient != null && !NeedsAttention(holder) && !GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) { if (clinic) CheckupQueue.Failed(where, now); else SkipFor(where, now, 6000); }
+                        }
                     }
                 }
             }
@@ -186,6 +200,30 @@ namespace FamilyLife
         internal static bool Ready(Pawn p) => p != null && (Activities.IsFree(p) || (Activities.Now < ForceUntil && p.Spawned && !p.Dead && !p.Downed && !p.Drafted && !p.InMentalState && !p.IsPrisoner && p.RaceProps.Humanlike && !p.DevelopmentalStage.Baby()));
 
         internal static bool Forced => Activities.Now < ForceUntil;
+
+        private static readonly string[] UrgentNeeds = { "Food", "Rest", "Bladder", "Hygiene" };
+
+        /// <summary>
+        /// Someone who should stop what they are doing: hungry, tired, in need of the toilet or a wash, or called away into a gathering. A check-up or a class stops for
+        /// them and is taken up again afterwards, rather than holding them to it.
+        /// </summary>
+        internal static bool NeedsAttention(Pawn p)
+        {
+            if (p == null || p.Dead) return false;
+            try
+            {
+                var needs = p.needs?.AllNeeds;
+                if (needs != null)
+                    for (int i = 0; i < needs.Count; i++)
+                    {
+                        var n = needs[i];
+                        if (n?.def != null && UrgentNeeds.Contains(n.def.defName) && n.CurLevelPercentage < .15f) return true;
+                    }
+                if (p.GetLord() != null) return true;
+            }
+            catch (Exception) { }
+            return false;
+        }
 
         /// <summary>Written to the log during a developer test only, so a flow that does not start says why.</summary>
         internal static void Trace(string text) { if (Forced) Log.Message("[Wil's Family Life] test: " + text); }
@@ -296,6 +334,7 @@ namespace FamilyLife
         internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now, float talkQuality = 0f)
         {
             if (!r.RecordCheckup(doctor.thingIDNumber, patient.thingIDNumber, now)) return;
+            CheckupQueue.Seen(patient.thingIDNumber);
             try
             {
                 if (patient.health?.hediffSet != null && patient.health.HasHediffsNeedingTend()) TendUtility.DoTend(doctor, patient, null);

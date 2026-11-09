@@ -66,8 +66,39 @@ namespace FamilyLife
         private static bool UsableCell(IntVec3 c, Map map, Room room, Pawn who) =>
             c.InBounds(map) && c.Standable(map) && c.GetRoom(map) == room && !c.GetThingList(map).Any(t => t is Building_Bed) && who.CanReach(c, PathEndMode.OnCell, Danger.Some);
 
+        private static readonly string[] NotAClassroom = { "temple", "chapel", "church", "shrine", "bedroom", "barracks", "hospital", "prison", "laboratory", "kitchen", "throne", "tomb" };
+        private static readonly string[] Worship = { "altar", "ideogram", "pulpit", "reliquary", "animatree", "stele", "sarcophagus", "shrine", "relic" };
+
+        /// <summary>A room that is for something else: a temple or church (which also has lecterns), a bedroom, a hospital, a kitchen.</summary>
+        private static bool IsOtherRoom(Room room)
+        {
+            string role = (room.Role?.defName ?? "").ToLowerInvariant();
+            if (NotAClassroom.Any(role.Contains)) return true;
+            foreach (var t in room.ContainedAndAdjacentThings)
+            {
+                if (!(t is Building)) continue;
+                string n = ((t.def.defName ?? "") + " " + (t.def.label ?? "")).ToLowerInvariant();
+                if (Worship.Any(n.Contains)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>How much a room looks like a classroom: school furniture and places to sit, with the board or lectern itself counting for most.</summary>
+        private static int ClassroomScore(Room room)
+        {
+            int school = 0, seats = 0;
+            foreach (var t in room.ContainedAndAdjacentThings)
+            {
+                var b = t as Building; if (b == null) continue;
+                if (HallDriver.LooksLikeSchool(b.def)) school++;
+                if (b.def.building != null && b.def.building.isSittable) seats++;
+            }
+            return school * 6 + Math.Min(seats, 12);
+        }
+
         /// <summary>
-        /// Where the teacher stands: behind a lectern in an enclosed room if there is one; otherwise in front of a blackboard; otherwise in front of a desk.
+        /// Where the teacher stands: behind a lectern if there is one; otherwise in front of a blackboard; otherwise in front of a desk. Rooms for worship, sleep, healing or
+        /// cooking are never chosen (a church has a lectern too), and of the rest the one that looks most like a classroom wins.
         /// The cell, the room, and the thing the teacher faces.
         /// </summary>
         internal static bool TeachingSpot(Pawn teacher, out IntVec3 cell, out Room room, out Thing front)
@@ -75,23 +106,25 @@ namespace FamilyLife
             cell = IntVec3.Invalid; room = null; front = null;
             var map = teacher?.Map;
             if (map == null) return false;
+            int bestScore = int.MinValue;
             foreach (var pass in new[] { 0, 1, 2 })
             {
-                var candidates = map.listerBuildings.allBuildingsColonist.Where(b => b.Spawned && !b.Destroyed && !b.IsForbidden(teacher) && IsFor(b.def, pass))
-                    .OrderBy(b => b.Position.DistanceToSquared(teacher.Position)).Take(12);
-                foreach (var b in candidates)
+                int baseScore = pass == 0 ? 30 : pass == 1 ? 20 : 10;
+                foreach (var b in map.listerBuildings.allBuildingsColonist.Where(x => x.Spawned && !x.Destroyed && !x.IsForbidden(teacher) && IsFor(x.def, pass)).Take(60))
                 {
                     var r = b.GetRoom();
-                    if (r == null || r.PsychologicallyOutdoors) continue;
+                    if (r == null || r.PsychologicallyOutdoors || IsOtherRoom(r)) continue;
+                    int score = baseScore + ClassroomScore(r) * 2 - (int)Math.Min(20f, b.Position.DistanceTo(teacher.Position) / 6f);
+                    if (score <= bestScore) continue;
                     foreach (var c in FreeNeighbours(b, map, r))
                     {
                         if (!UsableCell(c, map, r, teacher)) continue;
-                        cell = c; room = r; front = b;
-                        return true;
+                        cell = c; room = r; front = b; bestScore = score;
+                        break;
                     }
                 }
             }
-            return false;
+            return front != null;
         }
 
         private static bool IsFor(ThingDef def, int pass)
@@ -285,7 +318,7 @@ namespace FamilyLife
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOn(() => pawn.Drafted || pawn.InMentalState || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
+            this.FailOn(() => pawn.Drafted || pawn.InMentalState || OfficeDriver.NeedsAttention(pawn) || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
             AddFinishAction(cond =>
             {
                 OfficeDriver.Trace("class: " + pawn.LabelShort + " (teacher) finished (" + cond + ")");
@@ -328,7 +361,7 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || Teacher == null || Teacher.Dead || Teacher.Downed || ClassSessions.Of(Teacher.thingIDNumber) == null || ClassSessions.Of(Teacher.thingIDNumber).Finished ||
-                (pawn.needs?.food != null && pawn.needs.food.CurLevelPercentage < .12f) || (pawn.needs?.rest != null && pawn.needs.rest.CurLevelPercentage < .1f));
+                OfficeDriver.NeedsAttention(pawn));
             AddFinishAction(cond => OfficeDriver.Trace("class: " + pawn.LabelShort + " (pupil) finished (" + cond + ")"));
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var sit = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
@@ -345,23 +378,50 @@ namespace FamilyLife
 
     // ------------------------------------------------------------------ the clinic
 
+    internal enum ClinicPhase : byte { Waiting, Arriving, Fetching, Escorting, Examining }
+
     internal sealed class ClinicSession
     {
-        public int DoctorId, PatientId, PhaseTick, Idle;
+        public int DoctorId, PatientId, PhaseTick, Idle, NextWander;
         public Building_Bed Bed;
         public IntVec3 DoctorCell;
         public bool PatientLying, Done;
+        public ClinicPhase Phase;
         public int Talked, Exchanges;
         public float Quality;
     }
 
+    /// <summary>
+    /// The doctor's list for the round, beyond who has been seen (that is in the registry and is saved): who is being given time to come, and who could not be
+    /// brought to the clinic and is to be seen where they are the next time they can be. Not saved; after a load the doctor simply starts down the list again.
+    /// </summary>
+    internal static class CheckupQueue
+    {
+        private sealed class Entry { public int Fails, RetryAt; public bool OnTheSpot; }
+        private static readonly Dictionary<int, Entry> entries = new Dictionary<int, Entry>();
+
+        internal static void Reset() => entries.Clear();
+        internal static bool Waiting(int id, int now) => entries.TryGetValue(id, out var e) && now < e.RetryAt;
+        internal static bool OnTheSpot(int id) => entries.TryGetValue(id, out var e) && e.OnTheSpot;
+        internal static void Seen(int id) => entries.Remove(id);
+
+        /// <summary>This person did not come or could not be reached. The first time they are given another go at the clinic later; after that they are seen where they are.</summary>
+        internal static void Failed(int id, int now)
+        {
+            if (!entries.TryGetValue(id, out var e)) entries[id] = e = new Entry();
+            e.Fails++;
+            if (e.Fails >= 2) e.OnTheSpot = true;
+            e.RetryAt = now + (e.OnTheSpot ? 600 : 1500);
+        }
+    }
+
     internal static class ClinicVisits
     {
-        /// <summary>The conversation between doctor and patient, in game ticks (about twenty-five seconds at normal speed).</summary>
-        internal const int TalkTicks = 1500, ArriveTicks = 2400;
+        /// <summary>The conversation between doctor and patient, in game ticks (about twenty-five seconds at normal speed). A patient is given a game hour to arrive before the doctor goes to find them.</summary>
+        internal const int TalkTicks = 1500, ArriveTicks = 2500, FetchTicks = 4000, EscortTicks = 3000;
         private static readonly Dictionary<int, ClinicSession> byDoctor = new Dictionary<int, ClinicSession>();
 
-        internal static void Reset() => byDoctor.Clear();
+        internal static void Reset() { byDoctor.Clear(); CheckupQueue.Reset(); }
         internal static ClinicSession Of(int doctorId) => byDoctor.TryGetValue(doctorId, out var s) ? s : null;
         internal static ClinicSession ForPatient(int patientId) => byDoctor.Values.FirstOrDefault(s => s.PatientId == patientId && !s.Done);
         internal static bool Running(Pawn doctor) => doctor != null && byDoctor.ContainsKey(doctor.thingIDNumber);
@@ -392,7 +452,7 @@ namespace FamilyLife
         {
             if (doctor == null || Running(doctor)) return true;
             if (!Spot(doctor, out var bed, out var cell)) { OfficeDriver.Trace("clinic: no medical bed in an enclosed room for " + doctor.LabelShort); return false; }
-            if (!OfficeDriver.Ready(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(doctor)) return true;       // there is a clinic: wait for the doctor
+            if (!OfficeDriver.Ready(doctor) || OfficeDriver.NeedsAttention(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(doctor)) return true;       // there is a clinic: wait until the doctor is free and has seen to themselves
             OfficeDriver.Trace("clinic: " + doctor.LabelShort + " goes to " + cell + " beside " + bed.LabelCap);
             byDoctor[doctor.thingIDNumber] = new ClinicSession { DoctorId = doctor.thingIDNumber, Bed = bed, DoctorCell = cell };
             var open = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicDoctor, bed, cell);
@@ -407,19 +467,112 @@ namespace FamilyLife
             s.Done = true; byDoctor.Remove(doctor.thingIDNumber);
         }
 
+        /// <summary>The patient is sent to the bed. False if they could not take the job.</summary>
+        internal static bool Send(Pawn patient, ClinicSession s, Pawn doctor)
+        {
+            var visit = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor, s.Bed.GetSleepingSlotPos(0));
+            visit.playerForced = true;          // not interrupted by the usual choosing of something else to do; it still ends if they are drafted, hurt, hungry or break
+            patient.jobs.StartJob(visit, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+            return patient.CurJobDef == WFL_StoryDefOf.WFL_ClinicPatient;
+        }
+
+        internal static void Release(ClinicSession s) { s.PatientId = 0; s.Phase = ClinicPhase.Waiting; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; s.NextWander = 0; }
+
+        /// <summary>The doctor takes the next person on the list who is able to come and has not just been tried.</summary>
         internal static void CallNext(FamilyComponent c, ClinicSession s, Pawn doctor, int now)
         {
             var r = c.Registry;
-            int id = r.NextCheckupPatient(now, x => OfficeDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null);
+            int id = r.NextCheckupPatient(now, x => OfficeDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && !CheckupQueue.Waiting(x, now) && !CheckupQueue.OnTheSpot(x));
             var patient = id == 0 ? null : c.TryGetPawn(id);
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
-            if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None) || !patient.CanReserve(s.Bed, s.Bed.SleepingSlotsCount, 0)) { OfficeDriver.SkipPatient(id, now); return; }
-            s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Idle = 0; s.Quality = 0f; s.Exchanges = 0;
+            s.Idle = 0;
+            if (OfficeDriver.NeedsAttention(patient) || !patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None)) { CheckupQueue.Failed(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " cannot come just now"); return; }
+            s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Quality = 0f; s.Exchanges = 0; s.Phase = ClinicPhase.Arriving;
             OfficeDriver.Trace("clinic: " + patient.LabelShort + " is called in");
-            var visit = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor, s.Bed.GetSleepingSlotPos(0));
-            visit.playerForced = true;          // not interrupted by the usual choosing of something else to do; it still ends if they are drafted, hurt or break
-            patient.jobs.StartJob(visit, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
-            if (patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient) OfficeDriver.Trace("clinic: " + patient.LabelShort + " could not take the job (reservation or reach)");
+            if (!Send(patient, s, doctor)) { OfficeDriver.Trace("clinic: " + patient.LabelShort + " could not take the job"); CheckupQueue.Failed(id, now); Release(s); }
+        }
+
+        private static IntVec3 WanderCell(Pawn doctor, ClinicSession s)
+        {
+            var room = s.Bed.GetRoom(); var map = s.Bed.Map;
+            if (room == null) return IntVec3.Invalid;
+            var options = GenRadial.RadialCellsAround(s.Bed.Position, 5f, true)
+                .Where(c => c.InBounds(map) && c != s.Bed.Position && c.Standable(map) && c.GetRoom(map) == room && !c.GetThingList(map).Any(t => t is Building_Bed) && doctor.CanReach(c, PathEndMode.OnCell, Danger.None)).ToList();
+            return options.Count == 0 ? IntVec3.Invalid : options[Rand.Range(0, options.Count)];
+        }
+
+        /// <summary>One tick of the doctor's clinic: waiting, calling, going to find someone who has not come, bringing them back, and the examination itself.</summary>
+        internal static void Tick(Pawn doctor, ClinicSession s, FamilyComponent c, Action<JobCondition> end)
+        {
+            int now = Activities.Now;
+            if (s.Bed == null || s.Bed.Destroyed) { end(JobCondition.Incompletable); return; }
+            if (s.Phase == ClinicPhase.Waiting)
+            {
+                if (!c.Registry.CheckupOpen(now)) { end(JobCondition.Succeeded); return; }
+                if (doctor.Position != s.DoctorCell && !doctor.pather.Moving) doctor.pather.StartPath(s.DoctorCell, PathEndMode.OnCell);
+                else if (!doctor.pather.Moving) doctor.rotationTracker?.FaceCell(s.Bed.Position);
+                if (doctor.IsHashIntervalTick(60)) CallNext(c, s, doctor, now);
+                if (s.Idle > 6) end(JobCondition.Succeeded);          // nobody on the list can come just now: the clinic closes and opens again later
+                return;
+            }
+            var patient = c.TryGetPawn(s.PatientId);
+            if (patient == null || patient.Dead || !patient.Spawned) { Release(s); return; }
+            s.PhaseTick++;
+            switch (s.Phase)
+            {
+                case ClinicPhase.Arriving:
+                    if (patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient && s.PhaseTick > 90) { CheckupQueue.Failed(s.PatientId, now); Release(s); return; }          // pulled away: try again later
+                    if (s.PatientLying) { s.Phase = ClinicPhase.Examining; s.Talked = 0; s.NextWander = 0; return; }
+                    if (s.PhaseTick > ArriveTicks)
+                    {
+                        OfficeDriver.Trace("clinic: " + patient.LabelShort + " has not come; " + doctor.LabelShort + " goes to find them");
+                        s.Phase = ClinicPhase.Fetching; s.PhaseTick = 0;
+                    }
+                    return;
+                case ClinicPhase.Fetching:
+                    if (!OfficeDriver.Ready(patient) || OfficeDriver.NeedsAttention(patient) || !doctor.CanReach(patient, PathEndMode.Touch, Danger.Some) || s.PhaseTick > FetchTicks)
+                    { CheckupQueue.Failed(s.PatientId, now); CheckupQueue.Failed(s.PatientId, now); Release(s); return; }          // cannot be brought: seen where they are, when they can be
+                    if (doctor.Position.DistanceTo(patient.Position) > 2.5f)
+                    {
+                        if (!doctor.pather.Moving || s.PhaseTick % 120 == 1) doctor.pather.StartPath(patient, PathEndMode.Touch);
+                        return;
+                    }
+                    MoteMaker.ThrowText(doctor.DrawPos, doctor.Map, Phrasing.Say("WFL_ClinicFetch", doctor.thingIDNumber + s.PatientId), Color.white);
+                    if (!Send(patient, s, doctor)) { CheckupQueue.Failed(s.PatientId, now); Release(s); return; }
+                    s.Phase = ClinicPhase.Escorting; s.PhaseTick = 0;
+                    doctor.pather.StartPath(s.DoctorCell, PathEndMode.OnCell);
+                    return;
+                case ClinicPhase.Escorting:
+                    if (s.PatientLying) { s.Phase = ClinicPhase.Examining; s.Talked = 0; s.NextWander = 0; return; }
+                    if (!doctor.pather.Moving && doctor.Position != s.DoctorCell) doctor.pather.StartPath(s.DoctorCell, PathEndMode.OnCell);
+                    if (s.PhaseTick > EscortTicks || patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient && s.PhaseTick > 90) { CheckupQueue.Failed(s.PatientId, now); Release(s); }
+                    return;
+                default:          // Examining
+                    s.Talked++;
+                    // The doctor does not stand still: they move about the room as they examine, and look to the patient when they stop.
+                    if (!doctor.pather.Moving)
+                    {
+                        if (s.NextWander == 0) s.NextWander = s.Talked + 90;
+                        if (s.Talked >= s.NextWander)
+                        {
+                            var cell = WanderCell(doctor, s);
+                            if (cell.IsValid) doctor.pather.StartPath(cell, PathEndMode.OnCell);
+                            s.NextWander = s.Talked + Rand.RangeInclusive(200, 420);
+                        }
+                        else doctor.rotationTracker?.FaceCell(s.Bed.Position);
+                    }
+                    if ((s.Talked == 150 || s.Talked == 700 || s.Talked == 1250) && !patient.Dead)          // three things raised, spread through the visit
+                    {
+                        var topic = GuidedExchanges.PickTopic(GuidedExchanges.ClinicTopics, s.Exchanges++, doctor.thingIDNumber + s.PatientId);
+                        s.Quality += Conversations.Run(doctor, patient, SkillDefOf.Medicine, topic, doctor.thingIDNumber + s.PatientId + s.Talked);
+                    }
+                    if (s.Talked >= TalkTicks)
+                    {
+                        OfficeDriver.CompleteCheckup(c.Registry, doctor, patient, now, s.Quality);
+                        Release(s);
+                    }
+                    return;
+            }
         }
     }
 
@@ -429,7 +582,8 @@ namespace FamilyLife
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOn(() => pawn.Drafted || pawn.InMentalState || ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks);
+            // The round is kept by the registry, so ending here for a meal, sleep, a visit to the toilet or a gathering only pauses it: the doctor takes it up again afterwards.
+            this.FailOn(() => pawn.Drafted || pawn.InMentalState || OfficeDriver.NeedsAttention(pawn) || ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks);
             AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + ")"); ClinicVisits.Close(pawn); });
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var wait = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
@@ -438,45 +592,10 @@ namespace FamilyLife
             {
                 var s = ClinicVisits.Of(pawn.thingIDNumber); var c = FamilyComponent.Current;
                 if (s == null || c == null) return;
-                int now = Activities.Now;
-                if (s.Bed == null || s.Bed.Destroyed) { EndJobWith(JobCondition.Incompletable); return; }
-                if (pawn.Position != s.DoctorCell && !pawn.pather.Moving) pawn.pather.StartPath(s.DoctorCell, PathEndMode.OnCell);
-                pawn.rotationTracker?.FaceCell(s.Bed.Position);
-                if (s.PatientId == 0)
-                {
-                    if (!c.Registry.CheckupOpen(now)) { EndJobWith(JobCondition.Succeeded); return; }
-                    if (pawn.IsHashIntervalTick(60)) ClinicVisits.CallNext(c, s, pawn, now);
-                    if (s.Idle > 6) EndJobWith(JobCondition.Succeeded);                          // nobody left who can come: the clinic closes
-                    return;
-                }
-                var patient = c.TryGetPawn(s.PatientId);
-                if (patient == null || patient.Dead || patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient)
-                {
-                    if (s.PhaseTick > 60 || patient == null) { OfficeDriver.SkipPatient(s.PatientId, now); s.PatientId = 0; s.PhaseTick = 0; return; }
-                }
-                s.PhaseTick++;
-                if (!s.PatientLying)
-                {
-                    if (s.PhaseTick > ClinicVisits.ArriveTicks) { OfficeDriver.SkipPatient(s.PatientId, now); ReleasePatient(s); }          // did not make it to the bed
-                    return;
-                }
-                s.Talked++;
-                if ((s.Talked == 150 || s.Talked == 700 || s.Talked == 1250) && patient != null && !patient.Dead)          // three things raised, spread through the visit
-                {
-                    var topic = GuidedExchanges.PickTopic(GuidedExchanges.ClinicTopics, s.Exchanges++, pawn.thingIDNumber + s.PatientId);
-                    s.Quality += Conversations.Run(pawn, patient, SkillDefOf.Medicine, topic, pawn.thingIDNumber + s.PatientId + s.Talked);
-                }
-                if (s.Talked >= ClinicVisits.TalkTicks)
-                {
-                    if (patient != null && !patient.Dead) OfficeDriver.CompleteCheckup(c.Registry, pawn, patient, now, s.Quality);
-                    ReleasePatient(s);
-                }
+                ClinicVisits.Tick(pawn, s, c, cond => EndJobWith(cond));
             };
             yield return wait;
         }
-
-        /// <summary>The patient gets up and goes; the next can come in.</summary>
-        private static void ReleasePatient(ClinicSession s) { s.PatientId = 0; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; }
     }
 
     public class JobDriver_ClinicPatient : JobDriver
@@ -494,9 +613,9 @@ namespace FamilyLife
             this.AddEndCondition(() =>
             {
                 var s = Doctor == null ? null : ClinicVisits.Of(Doctor.thingIDNumber);
-                return s != null && s.PatientLying && s.PatientId != pawn.thingIDNumber ? JobCondition.Succeeded : JobCondition.Ongoing;          // the doctor has finished with this patient
+                return s == null || s.PatientId != pawn.thingIDNumber ? JobCondition.Succeeded : JobCondition.Ongoing;          // the doctor has finished with this patient, or let them go
             });
-            this.FailOn(() => pawn.Drafted || pawn.InMentalState || Doctor == null || Doctor.Dead || ClinicVisits.Of(Doctor.thingIDNumber) == null);
+            this.FailOn(() => pawn.Drafted || pawn.InMentalState || OfficeDriver.NeedsAttention(pawn) || Doctor == null || Doctor.Dead || ClinicVisits.Of(Doctor.thingIDNumber) == null);
             yield return Toils_Goto.GotoCell(TargetIndex.C, PathEndMode.OnCell);
             var lie = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             lie.initAction = () =>
