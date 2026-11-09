@@ -151,6 +151,7 @@ namespace FamilyLife
         public int TeacherId, StartTick, StudyingTick, BookId;
         public IntVec3 TeacherCell;
         public Room Room;
+        public HashSet<IntVec3> RoomCells = new HashSet<IntVec3>();
         public List<IntVec3> Seats = new List<IntVec3>();
         public readonly Dictionary<int, int> Attended = new Dictionary<int, int>();
         public readonly HashSet<int> Called = new HashSet<int>();
@@ -180,10 +181,12 @@ namespace FamilyLife
             var book = ClassRooms.BestBook(teacher, pupils);
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Room = room, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0 };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count);
+            foreach (var rc in room.Cells) s.RoomCells.Add(rc);
             OfficeDriver.Trace("class: " + teacher.LabelShort + " goes to " + cell + " in front of " + (front?.LabelCap ?? "the board") + ", " + s.Seats.Count + " seats, book: " + (book?.LabelNoCount ?? "none") + ", " + roster.Count + " children on the list");
             byTeacher[teacher.thingIDNumber] = s;
             var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassTeacher, front != null ? (LocalTargetInfo)front : (LocalTargetInfo)cell, cell);
             if (book != null) job.targetC = book;
+            job.playerForced = true;
             teacher.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
         }
@@ -200,6 +203,7 @@ namespace FamilyLife
                 var seat = s.Seats.Count > 0 ? s.Seats[seatIndex % s.Seats.Count] : s.TeacherCell;
                 if (!kid.CanReach(seat, PathEndMode.OnCell, Danger.None)) continue;
                 var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassStudent, teacher, seat);
+                job.playerForced = true;
                 kid.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
                 OfficeDriver.Trace("class: " + kid.LabelShort + " is called to " + seat + (kid.CurJobDef == WFL_StoryDefOf.WFL_ClassStudent ? "" : " but could not take the job"));
                 s.Called.Add(id);
@@ -284,6 +288,7 @@ namespace FamilyLife
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
             AddFinishAction(cond =>
             {
+                OfficeDriver.Trace("class: " + pawn.LabelShort + " (teacher) finished (" + cond + ")");
                 if (pawn.carryTracker?.CarriedThing != null && pawn.Spawned) pawn.carryTracker.TryDropCarriedThing(pawn.Position, ThingPlaceMode.Near, out _);
                 ClassSessions.End(pawn, cond == JobCondition.Succeeded);
             });
@@ -324,13 +329,14 @@ namespace FamilyLife
         {
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || Teacher == null || Teacher.Dead || Teacher.Downed || ClassSessions.Of(Teacher.thingIDNumber) == null || ClassSessions.Of(Teacher.thingIDNumber).Finished ||
                 (pawn.needs?.food != null && pawn.needs.food.CurLevelPercentage < .12f) || (pawn.needs?.rest != null && pawn.needs.rest.CurLevelPercentage < .1f));
+            AddFinishAction(cond => OfficeDriver.Trace("class: " + pawn.LabelShort + " (pupil) finished (" + cond + ")"));
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var sit = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             sit.initAction = () => { pawn.pather?.StopDead(); };
             sit.tickAction = () =>
             {
                 var s = ClassSessions.Of(Teacher.thingIDNumber); if (s == null) return;
-                if (pawn.Position.GetRoom(pawn.Map) == s.Room) s.Attended[pawn.thingIDNumber] = (s.Attended.TryGetValue(pawn.thingIDNumber, out int n) ? n : 0) + 1;
+                if (s.RoomCells.Contains(pawn.Position)) s.Attended[pawn.thingIDNumber] = (s.Attended.TryGetValue(pawn.thingIDNumber, out int n) ? n : 0) + 1;
                 pawn.rotationTracker?.FaceCell(s.TeacherCell);
             };
             yield return sit;
@@ -389,7 +395,9 @@ namespace FamilyLife
             if (!OfficeDriver.Ready(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(doctor)) return true;       // there is a clinic: wait for the doctor
             OfficeDriver.Trace("clinic: " + doctor.LabelShort + " goes to " + cell + " beside " + bed.LabelCap);
             byDoctor[doctor.thingIDNumber] = new ClinicSession { DoctorId = doctor.thingIDNumber, Bed = bed, DoctorCell = cell };
-            doctor.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicDoctor, bed, cell), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+            var open = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicDoctor, bed, cell);
+            open.playerForced = true;
+            doctor.jobs.StartJob(open, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
         }
 
@@ -408,7 +416,9 @@ namespace FamilyLife
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None) || !patient.CanReserve(s.Bed, s.Bed.SleepingSlotsCount, 0)) { OfficeDriver.SkipPatient(id, now); return; }
             s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Idle = 0; s.Quality = 0f; s.Exchanges = 0;
             OfficeDriver.Trace("clinic: " + patient.LabelShort + " is called in");
-            patient.jobs.StartJob(JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor), JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+            var visit = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClinicPatient, s.Bed, doctor, s.Bed.GetSleepingSlotPos(0));
+            visit.playerForced = true;          // not interrupted by the usual choosing of something else to do; it still ends if they are drafted, hurt or break
+            patient.jobs.StartJob(visit, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             if (patient.CurJobDef != WFL_StoryDefOf.WFL_ClinicPatient) OfficeDriver.Trace("clinic: " + patient.LabelShort + " could not take the job (reservation or reach)");
         }
     }
@@ -420,7 +430,7 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks);
-            AddFinishAction(cond => ClinicVisits.Close(pawn));
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + ")"); ClinicVisits.Close(pawn); });
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var wait = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             wait.initAction = () => pawn.pather?.StopDead();
@@ -471,24 +481,33 @@ namespace FamilyLife
 
     public class JobDriver_ClinicPatient : JobDriver
     {
+        private bool lying;
         private Building_Bed Bed => job.targetA.Thing as Building_Bed;
         private Pawn Doctor => job.targetB.Thing as Pawn;
-        public override bool TryMakePreToilReservations(bool errorOnFailed) => Bed != null && pawn.Reserve(Bed, job, Bed.SleepingSlotsCount, 0, null, errorOnFailed);
+        // The bed is not reserved: the game's own bed rules would refuse a healthy person a medical bed. The clinic sees one patient at a time.
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " leaves the clinic (" + cond + ")"); if (pawn.jobs != null) pawn.jobs.posture = PawnPosture.Standing; });
             this.AddEndCondition(() =>
             {
                 var s = Doctor == null ? null : ClinicVisits.Of(Doctor.thingIDNumber);
                 return s != null && s.PatientLying && s.PatientId != pawn.thingIDNumber ? JobCondition.Succeeded : JobCondition.Ongoing;          // the doctor has finished with this patient
             });
             this.FailOn(() => pawn.Drafted || pawn.InMentalState || Doctor == null || Doctor.Dead || ClinicVisits.Of(Doctor.thingIDNumber) == null);
-            yield return Toils_Bed.GotoBed(TargetIndex.A);
-            var arrived = new Toil { defaultCompleteMode = ToilCompleteMode.Instant };
-            arrived.initAction = () => { var s = ClinicVisits.Of(Doctor.thingIDNumber); if (s != null) { s.PatientLying = true; s.PhaseTick = 0; } };
-            yield return arrived;
-            yield return Toils_LayDown.LayDown(TargetIndex.A, true, false, false, false);
+            yield return Toils_Goto.GotoCell(TargetIndex.C, PathEndMode.OnCell);
+            var lie = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
+            lie.initAction = () =>
+            {
+                pawn.pather?.StopDead();
+                lying = true;
+                pawn.jobs.posture = PawnPosture.LayingInBed;          // on the bed, in the medical room
+                var s = ClinicVisits.Of(Doctor.thingIDNumber);
+                if (s != null) { s.PatientLying = true; s.PhaseTick = 0; }
+            };
+            yield return lie;
         }
     }
 }
