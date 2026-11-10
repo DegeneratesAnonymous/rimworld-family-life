@@ -167,7 +167,7 @@ namespace FamilyLife
         {
             var c = Comp; var r = c?.Registry; if (r == null) return;
             foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Healer)) { o.NextRoundTick = 0; o.RoundStartTick = 0; o.Examined.Clear(); }
-            CheckupQueue.Reset();
+            AppointmentBook.Reset();
             foreach (var p in Find.Maps.SelectMany(m => m.mapPawns.FreeColonistsSpawned))          // a test should not be skipped because someone was seen recently
             {
                 var h = p.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
@@ -185,8 +185,8 @@ namespace FamilyLife
         {
             var r = Comp?.Registry; if (r == null) return;
             foreach (var o in r.Offices) o.PendingKind = 0;
-            OfficeEvents.Offer(PendingEvent.Checkups);
-            Messages.Message("Sent the check-up letter. Use 'Start annual testing now' for the testing, or press the button on a lectern.", MessageTypeDefOf.TaskCompletion, false);
+            OfficeEvents.Plan(PendingEvent.Checkups);
+            Messages.Message("Sent the check-up notice. Use 'Start annual testing now' for the testing, or press the button on a lectern.", MessageTypeDefOf.TaskCompletion, false);
         }
 
         [DebugAction(Cat, "Start annual testing now (two days)", allowedGameStates = AllowedGameStates.Playing)]

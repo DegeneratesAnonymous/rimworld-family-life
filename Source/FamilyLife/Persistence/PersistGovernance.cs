@@ -236,6 +236,28 @@ namespace FamilyLife.Domain
             if (TestIds == null) TestIds = new List<int>();
             if (TestPass == null) TestPass = new List<int>();
             if (TestTry == null) TestTry = new List<int>();
+            // care and teaching (added later: every one defaults safely when an older save has none)
+            Scribe_Values.Look(ref RoundWindow, "roundWindow"); Scribe_Collections.Look(ref Missed, "missed", LookMode.Value);
+            Scribe_Collections.Look(ref Refused, "refused", LookMode.Value); Scribe_Collections.Look(ref RefusedTick, "refusedTick", LookMode.Value);
+            Scribe_Values.Look(ref RoutineDay, "routineDay"); Scribe_Values.Look(ref RoutineUsed, "routineUsed"); Scribe_Values.Look(ref LastVisitTick, "lastVisit");
+            Scribe_Values.Look(ref ContactDay, "contactDay"); Scribe_Collections.Look(ref ContactIds, "contactIds", LookMode.Value); Scribe_Collections.Look(ref ContactCounts, "contactCounts", LookMode.Value);
+            Scribe_Collections.Look(ref LessonLog, "lessonLog", LookMode.Value); Scribe_Collections.Look(ref BookUse, "bookUse", LookMode.Value); Scribe_Collections.Look(ref RecentSubjects, "recentSubjects", LookMode.Value);
+            Scribe_Collections.Look(ref TestScore, "testScore", LookMode.Value); Scribe_Collections.Look(ref TestExcused, "testExcused", LookMode.Value);
+            Scribe_Values.Look(ref KinQuality, "kinQuality"); Scribe_Values.Look(ref OtherQuality, "otherQuality"); Scribe_Values.Look(ref KinSeen, "kinSeen"); Scribe_Values.Look(ref OtherSeen, "otherSeen");
+            if (Missed == null) Missed = new List<int>();
+            if (Refused == null) Refused = new List<int>();
+            if (RefusedTick == null) RefusedTick = new List<int>();
+            if (ContactIds == null) ContactIds = new List<int>();
+            if (ContactCounts == null) ContactCounts = new List<int>();
+            if (LessonLog == null) LessonLog = new List<string>();
+            if (BookUse == null) BookUse = new List<string>();
+            if (RecentSubjects == null) RecentSubjects = new List<string>();
+            if (TestScore == null) TestScore = new List<int>();
+            if (TestExcused == null) TestExcused = new List<int>();
+            while (RefusedTick.Count < Refused.Count) RefusedTick.Add(0);
+            while (ContactCounts.Count < ContactIds.Count) ContactCounts.Add(1);
+            while (TestScore.Count < TestIds.Count) TestScore.Add(0);
+            while (TestExcused.Count < TestIds.Count) TestExcused.Add(0);
         }
     }
 

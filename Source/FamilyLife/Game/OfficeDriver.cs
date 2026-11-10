@@ -74,7 +74,7 @@ namespace FamilyLife
         /// <summary>The person served by one of their own house's post-holders feels it, and the holder earns the trust of anyone they serve.</summary>
         internal static void Served(FamilyRegistry r, OfficeKind kind, Pawn holder, Pawn served, int now)
         {
-            r.ThankPost(kind, holder.thingIDNumber, served.thingIDNumber, now);
+            // The relationship is changed in the exchanges themselves (FamilyRegistry.ProfessionalExchange, limited per pair per day); crediting it again here would count it twice.
             if (r.KinOfHolder(served.thingIDNumber, kind)) Activities.GainMemory(served, "WFL_ServedByKin", holder);
         }
 
@@ -164,33 +164,49 @@ namespace FamilyLife
             bool needed = holder.Map.mapPawns.FreeColonistsSpawned.Take(80).Any(p => HealthAIUtility.ShouldBeTendedNowByPlayer(p));
             if (s == null || s.healthChecks)
             {
-                int perYear = Math.Max(1, Math.Min(4, s?.checkupsPerYear ?? 2));
-                OfficeEvents.Healer(c, r, office, holder, now);          // a round, or one for an outbreak, is offered to the player; it begins by itself if they leave it
+                OfficeEvents.Healer(c, r, office, holder, now);          // a round is planned and begins by itself; an outbreak round begins at once
                 if (r.CheckupOpen(now)) SkipRecentlyChecked(c, r, office, now);
                 if (r.CheckupOpen(now))
                 {
                     needed = true;
-                    // The round is a list that lasts until everyone has been seen. The doctor works down it whenever they are free: a meal, sleep, the toilet or a gathering
-                    // pauses it, and it is taken up again afterwards.
-                    if (ClinicVisits.Running(holder)) { }
-                    else if (Due("checkup", now, 300) || Forced && Due("checkupT", now, 200))
-                    {
-                        bool clinic = ClinicVisits.Spot(holder, out _, out _);
-                        // anyone still to be seen who can be asked to come to the clinic now (or, with no clinic, anyone at all)
-                        var order = OfficeEvents.Priority(c, office);          // in an outbreak the sick come first
-                        int toCome = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && !CheckupQueue.Waiting(id, now) && (!clinic || !CheckupQueue.OnTheSpot(id)), order);
-                        if (clinic && toCome != 0) ClinicVisits.TryOpen(holder);
-                        else
-                        {
-                            // Nobody can be brought to the clinic: the next person who could not be brought is seen where they are, as soon as they are free.
-                            int where = clinic ? r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && CheckupQueue.OnTheSpot(id) && !CheckupQueue.Waiting(id, now), order) : toCome;
-                            var patient = where == 0 ? null : Spawned(c, where);
-                            if (patient != null && !NeedsAttention(holder) && !GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) { if (clinic) CheckupQueue.Failed(where, now); else SkipFor(where, now, 6000); }
-                        }
-                    }
+                    // Work comes in this order: emergency treatment, ongoing care, an outbreak assessment, then routine check-ups. Anything that needs tending stops the
+                    // routine work here (the clinic job also ends by itself), and the doctor's own work priorities take over until it is done.
+                    if (CareDemand.DoctorShouldTend(holder, now)) { }
+                    else if (ClinicVisits.Running(holder)) { }
+                    else if (Due("checkup", now, 300) || Forced && Due("checkupT", now, 200)) RoutineRound(c, r, office, holder, now);
                 }
             }
             r.NoteOfficeNeed(OfficeKind.Healer, needed, now);
+        }
+
+        /// <summary>
+        /// Starts the next routine visit, if the day's hours and budget allow. Someone who cannot come is visited where they are; otherwise the doctor opens the clinic and asks
+        /// people in one at a time. Nobody who declined, is busy or is waiting out a gap is asked.
+        /// </summary>
+        private static void RoutineRound(FamilyComponent c, FamilyRegistry r, CommunityOffice office, Pawn holder, int now)
+        {
+            if (!ClinicVisits.Allowed(r, office, holder, now)) return;
+            var order = OfficeEvents.Priority(c, office);          // in an outbreak the sick come first
+            // someone who cannot travel is visited, if they are willing
+            int bedside = r.NextCheckupPatient(now, id => AppointmentBook.Bedside(id) && !AppointmentBook.Waiting(id, now) && !AppointmentBook.Deferred(id) && !r.HasRefused(id, now) && Spawned(c, id) != null && OfficeEvents.SickFirst(c, r, office, id), order);
+            if (bedside != 0) { VisitInPlace(c, r, holder, bedside, now); return; }
+            bool clinic = ClinicVisits.Spot(holder, out _, out _);
+            int toAsk = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && ClinicVisits.Askable(r, id, now) && OfficeEvents.SickFirst(c, r, office, id), order);
+            if (toAsk == 0) return;
+            if (clinic) { ClinicVisits.TryOpen(holder); return; }
+            VisitInPlace(c, r, holder, toAsk, now);          // no medical room: the doctor goes to them
+        }
+
+        /// <summary>A visit where the patient is. They are asked first; someone who declines is left alone, and someone busy is asked again later.</summary>
+        private static void VisitInPlace(FamilyComponent c, FamilyRegistry r, Pawn holder, int patientId, int now)
+        {
+            var patient = Spawned(c, patientId); if (patient == null) return;
+            var will = CareRules.Assess(c, holder, patient, now);
+            if (will == Willingness.Refuses) { r.NoteRefusal(patientId, now); return; }
+            if (will == Willingness.Busy) { AppointmentBook.Busy(patientId, now); return; }
+            // 'Unable' here means unwell: the visit is exactly what they need, so it goes ahead
+            if (CareDemand.StopReason(holder, now) != null) return;
+            if (!GovernanceMeetings.Start(holder, patient, WFL_StoryDefOf.WFL_Checkup, 0)) AppointmentBook.Busy(patientId, now);
         }
 
         /// <summary>Set by the developer menu so a test is not held up by who happens to be busy: people only need to be undrafted and not in a mental break.</summary>
@@ -270,6 +286,7 @@ namespace FamilyLife
                     else lines.Add("  clinic: no free medical bed in an enclosed room the doctor can reach (visits will be one to one instead)");
                     int able = r.Persons.Count(p => p.InColony && p.Id != healer.HolderId && PatientAvailable(c, d, p.Id));
                     if (NeedsReason(d) != null) lines.Add("  the doctor should stop for: " + NeedsReason(d));
+                    lines.Add("  medical need on the map: " + CareDemand.MedicalNeed(d.Map, now) + (CareDemand.DoctorShouldTend(d, now) ? " (routine visits wait)" : "") + "; visits today " + r.RoutineVisitsToday(now) + " of " + CheckupWorkload.VisitsPerDay(healer.IllnessRound) + "; declined this round: " + healer.Refused.Count + ", missed last round: " + healer.Missed.Count);
                     lines.Add("  patients able to come now: " + able + ", already seen this round: " + healer.Examined.Count);
                 }
             }
@@ -282,7 +299,7 @@ namespace FamilyLife
                 else
                 {
                     lines.Add("Teacher: " + t.LabelShort + (settings != null && !settings.holdClasses ? " (classes are switched off in the mod settings)" : ""));
-                    if (ClassRooms.TeachingSpot(t, out var cellT, out var room, out var front)) lines.Add("  classroom: " + front.LabelCap + " at " + front.Position + ", the teacher stands at " + cellT + ", room of " + room.CellCount + " cells");
+                    if (ClassRooms.TeachingSpot(t, out var cellT, out var room, out var front)) lines.Add("  place to teach: " + (front != null ? front.LabelCap + " at " + front.Position : room == null ? "open ground" : "a room with seats") + ", the teacher stands at " + cellT + (room != null ? ", room of " + room.CellCount + " cells" : ""));
                     else lines.Add("  classroom: no lectern, blackboard or desk in an enclosed room the teacher can reach (lessons will be one to one instead)");
                     bool adults = settings != null && settings.adultStudents;
                     var kids = r.Persons.Where(p => p.InColony && p.Id != teacher.HolderId && (p.Juvenile || adults)).ToList();
@@ -356,41 +373,50 @@ namespace FamilyLife
             return false;
         }
 
-        /// <summary>An examination done in person: the doctor tends anything that needs it, and the patient gets a lasting boost to recovery and immunity.</summary>
-        internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now, float talkQuality = 0f)
+        /// <summary>
+        /// An examination done in person. The benefit is modest and bounded: a recent-check-up condition whose stage follows the quality, which never stacks, never lets a later poor
+        /// visit reduce or refresh a better one, and lasts about twenty days. A conversation does not tend, cure or immunise anyone; if the patient needs tending, tending comes first
+        /// and this waits. A visit cut short (<paramref name="partial"/>) is a Fair one at most with half the time.
+        /// </summary>
+        internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now, float talkSum = 0f, bool partial = false, Building_Bed bed = null, bool inClinic = false)
         {
             if (!r.RecordCheckup(doctor.thingIDNumber, patient.thingIDNumber, now)) return;
-            CheckupQueue.Seen(patient.thingIDNumber);
+            AppointmentBook.Seen(patient.thingIDNumber);
+            r.NoteVisit(now);
+            ResultQuality level = ResultQuality.Fair;
             try
             {
-                if (patient.health?.hediffSet != null && patient.health.HasHediffsNeedingTend()) TendUtility.DoTend(doctor, patient, null);
-                var existing = patient.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
-                if (existing != null) patient.health.RemoveHediff(existing);
-                if (WFL_HediffDefOf.WFL_CheckedUp != null)
+                if (!inClinic)          // a visit where the patient is: one word with them, in a room with less to work with
+                    talkSum += Conversations.Run(doctor, patient, OfficeKind.Healer, SkillDefOf.Medicine, ExchangeTopic.Reassure, doctor.thingIDNumber + patient.thingIDNumber + now, CareRules.Modifiers(doctor, bed, false)).Quality;
+                float mods = CareRules.Modifiers(doctor, bed, inClinic);
+                level = CheckupQuality.Cap(CheckupQuality.Level(CheckupQuality.Score(CareRules.Level(doctor, SkillDefOf.Medicine), CareRules.Level(doctor, SkillDefOf.Social), mods, talkSum, Rand.RangeInclusive(-2, 2))), partial);
+                if (WFL_HediffDefOf.WFL_CheckedUp != null && patient.health?.hediffSet != null)
                 {
-                    // The doctor's check: Medicine and Social, the talk, and the day. The quality sets how strong the benefit is and how long it lasts.
-                    int med = doctor.skills?.GetSkill(SkillDefOf.Medicine) is SkillRecord ms && !ms.TotallyDisabled ? ms.Level : 0;
-                    int soc = doctor.skills?.GetSkill(SkillDefOf.Social) is SkillRecord ss && !ss.TotallyDisabled ? ss.Level : 0;
-                    var level = CheckupQuality.Level(CheckupQuality.Score(med, soc, talkQuality, Rand.RangeInclusive(1, 20)));
-                    var made = patient.health?.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
-                    if (made != null) made.Severity = CheckupQuality.Severity(level);
-                    var comp = made?.TryGetComp<HediffComp_Disappears>();
-                    if (comp != null)
+                    var existing = patient.health.hediffSet.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
+                    var existingComp = existing?.TryGetComp<HediffComp_Disappears>();
+                    int baseTicks = 1200000;          // twenty days; the definition's own length
+                    int ticks = (int)(baseTicks * CheckupQuality.DurationFactor(level) * (partial ? CheckupQuality.PartialDuration : 1f));
+                    var update = CheckupQuality.Merge(existing != null, existing?.Severity ?? 0f, existingComp?.ticksToDisappear ?? 0, level, ticks);
+                    if (update.Apply)
                     {
-                        float duration = CheckupQuality.DurationFactor(level);
-                        if (r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer)) duration *= 2f;          // the doctor looks after their own house better
-                        comp.ticksToDisappear = (int)(comp.ticksToDisappear * duration);
+                        var made = existing ?? patient.health.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
+                        if (made != null)
+                        {
+                            made.Severity = update.Severity;
+                            var comp = made.TryGetComp<HediffComp_Disappears>();
+                            if (comp != null) comp.ticksToDisappear = update.Remaining;
+                        }
                     }
-                    if (level == ResultQuality.Poor) Activities.GainMemory(patient, "WFL_DismissiveCheckup", doctor);
-                    else if (level >= ResultQuality.Good) Activities.GainMemory(patient, "WFL_ReassuringCheckup", doctor);
-                    MoteMaker.ThrowText(patient.DrawPos, patient.Map, "WFL_Checkup_Result".Translate(("WFL_Quality_" + level).Translate()), level == ResultQuality.Poor ? new UnityEngine.Color(1f, .78f, .62f) : level == ResultQuality.Excellent ? new UnityEngine.Color(.72f, 1f, .72f) : UnityEngine.Color.white);
                 }
+                if (talkSum <= -1f) Activities.GainMemory(patient, "WFL_DismissiveCheckup", doctor);
+                else if (talkSum >= 1f) Activities.GainMemory(patient, "WFL_ReassuringCheckup", doctor);
+                if (OfficeCareView.MayKnowResult(patient, doctor))
+                    MoteMaker.ThrowText(patient.DrawPos, patient.Map, "WFL_Checkup_Result".Translate(("WFL_Quality_" + level).Translate()), level == ResultQuality.Poor ? new UnityEngine.Color(1f, .78f, .62f) : level == ResultQuality.Excellent ? new UnityEngine.Color(.72f, 1f, .72f) : UnityEngine.Color.white);
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
-            r.RecordTogether(doctor.thingIDNumber, patient.thingIDNumber, 1200, now, BondCause.Care);
+            r.NoteCareQuality(patient.thingIDNumber, level);
             Served(r, OfficeKind.Healer, doctor, patient, now);
-            bool inRoom = patient.Position.GetRoom(patient.Map)?.ContainedBeds?.Any(b => b.Medical) == true;
-            r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, GovernanceMeetings.NextToken(), now, .4f + .4f * SkillFor(doctor, OfficeKind.Healer) + (inRoom ? .2f : 0f));
+            r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, GovernanceMeetings.NextToken(), now, .35f + .15f * SkillFor(doctor, OfficeKind.Healer) + .1f * (int)level);
         }
 
         // ------------------------------------------------------------------ the teacher
@@ -432,7 +458,15 @@ namespace FamilyLife
             }
             if (classroom)
             {
-                if (office.SessionQueue.Count > 0 && (Due("classroom", now, 600) || Forced && Due("classroomT", now, 200))) { r.NextStudent(now); if (office.SessionQueue.Count > 0) ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now); }
+                if (office.SessionQueue.Count > 0 && ClassSessions.MayTry(holder, now) && (Due("classroom", now, 600) || Forced && Due("classroomT", now, 200)))
+                {
+                    r.NextStudent(now);
+                    if (office.SessionQueue.Count > 0)
+                    {
+                        var began = ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now);
+                        if (began == BeginResult.Cannot) { office.SessionQueue.Clear(); office.NextSessionTick = Math.Max(office.NextSessionTick, now + Day / 2); }          // nothing to teach or nowhere to teach it: not tried again for half a day
+                    }
+                }
                 return;
             }
             int next = r.NextStudent(now);
@@ -453,21 +487,21 @@ namespace FamilyLife
         /// <summary>A lesson lasts two game hours; a check-up a few seconds at triple speed.</summary>
         internal const int LessonTicks = 5000, CheckupTicks = 900;
 
-        /// <summary>A lesson from the colony's teacher: a real conversation that ends with the student learning something the teacher is better at.</summary>
+        /// <summary>
+        /// A one-to-one lesson (when there is no classroom or the child cannot join a class): the same single path as a class gives experience, with the time actually spent.
+        /// </summary>
         internal static void CompleteLesson(FamilyRegistry r, Pawn teacher, Pawn student, int now, int ticks = LessonTicks, float factor = 1f)
         {
             var office = r.OfficeFor(OfficeKind.Teacher);
             if (office == null || office.HolderId != teacher.thingIDNumber || !office.SessionQueue.Contains(student.thingIDNumber)) return;
-            var skill = LearnableSkill(teacher, student) ?? Activities.BestSkillOf(teacher, student)?.def;
-            float xp = student.ageTracker.AgeBiologicalYears >= 18 ? 450f : 700f;          // a lesson now lasts hours, not seconds
-            if (r.KinOfHolder(student.thingIDNumber, OfficeKind.Teacher)) xp *= 1.5f;          // the teacher's own house learns more from them
-            xp *= factor;          // how well the teacher got on with this pupil
-            if (skill != null) student.skills.Learn(skill, xp, true);
-            Served(r, OfficeKind.Teacher, teacher, student, now);
+            var skill = LearnableSkill(teacher, student);
+            if (skill != null)
+            {
+                float delivery = LessonMath.Delivery(CareRules.Level(teacher, skill), CareRules.Level(teacher, SkillDefOf.Social), 0f, 0f, CareRules.Fatigue(teacher));
+                var talk = Conversations.Run(teacher, student, OfficeKind.Teacher, skill, ExchangeTopic.Explain, teacher.thingIDNumber + student.thingIDNumber + now);          // the one word in a one-to-one lesson
+                LessonGrant.Apply(FamilyComponent.Current, r, teacher, student, skill, Math.Min(1f, ticks / (float)ClassSchedule.InstructionTicks), ticks, ticks, delivery, talk.Quality, 1, null, now);
+            }
             r.ClassDone(student.thingIDNumber);
-            r.RecordTogether(teacher.thingIDNumber, student.thingIDNumber, ticks, now, BondCause.Teaching);
-            int gap = skill == null ? 0 : teacher.skills.GetSkill(skill).Level - student.skills.GetSkill(skill).Level;
-            r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, Math.Min(1f, .4f + gap / 10f));
         }
     }
 }

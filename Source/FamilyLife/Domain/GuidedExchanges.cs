@@ -45,7 +45,7 @@ namespace FamilyLife.Domain
 
         public static int TierValue(EventTier t) => t == EventTier.Poor ? -1 : t == EventTier.Flat ? 0 : t == EventTier.Good ? 1 : 2;
 
-        private static float Weight(ExchangeTopic t)
+        public static float Weight(ExchangeTopic t)
         {
             switch (t)
             {

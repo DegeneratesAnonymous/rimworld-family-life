@@ -89,7 +89,7 @@ namespace FamilyLife.Domain
         public const int SessionWindowTicks = ActivityTuning.TicksPerDay;
         public const int ClassWindowTicks = SessionWindowTicks;
         public const int MaxSessionSize = 6;
-        public const int MaxClassSize = MaxSessionSize;
+        public const int MaxClassSize = 24;          // a class is the colony's children; the hall keeper's meals stay at MaxSessionSize
         public const float MinOfficeSkill = .3f;
         public const float SupportFloor = .35f;
         public List<CommunityOffice> Offices = new List<CommunityOffice>();
@@ -281,6 +281,10 @@ namespace FamilyLife.Domain
             office.NextRoundTick = now + ActivityTuning.TicksPerDay; office.RoundStartTick = 0; office.Examined.Clear();
             office.NextSessionTick = now; office.SessionStartTick = 0; office.SessionQueue.Clear();
             office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
+            office.TestScore = new List<int>(); office.TestExcused = new List<int>();
+            // a new holder starts their own record of rounds, refusals and how people were treated (what the children have studied belongs to the children and stays)
+            office.RoundWindow = 0; office.Missed = new List<int>(); office.Refused = new List<int>(); office.RefusedTick = new List<int>(); office.KinQuality = office.OtherQuality = 0f; office.KinSeen = office.OtherSeen = 0;
+            office.RoutineDay = office.RoutineUsed = office.LastVisitTick = 0; office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
             AdvanceRecognition(winner, .25f, now);
         }
@@ -301,6 +305,9 @@ namespace FamilyLife.Domain
             office.LastHolderId = office.HolderId; office.HolderId = 0; office.HolderFamily = 0; office.EndReason = why; office.EndedTick = now;
             office.UnmetSinceTick = 0; office.CounterReady = false; office.RoundStartTick = 0; office.SessionStartTick = 0; office.SessionQueue.Clear();
             office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
+            office.TestScore = new List<int>(); office.TestExcused = new List<int>();
+            office.RoundWindow = 0; office.Missed = new List<int>(); office.Refused = new List<int>(); office.RefusedTick = new List<int>(); office.KinQuality = office.OtherQuality = 0f; office.KinSeen = office.OtherSeen = 0;
+            office.RoutineDay = office.RoutineUsed = office.LastVisitTick = 0; office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();
             if (why == OfficeEnd.Neglected) { office.BarredId = office.LastHolderId; office.BarredUntil = now + AssemblyYearTicks / 2; }
         }
 
@@ -597,14 +604,21 @@ namespace FamilyLife.Domain
         {
             var office = OfficeFor(OfficeKind.Healer);
             if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextRoundTick || CheckupOpen(now)) return false;
+            // Anyone the last round did not reach (and who did not decline) is first this time; nobody is marked as having failed for not being reached.
+            var prior = office.Examined;
+            office.Missed = RoundStartPeople(office).Where(id => !prior.Contains(id) && !office.Refused.Contains(id)).Take(96).ToList();
             office.RoundStartTick = now; office.Examined.Clear(); office.NextRoundTick = now + intervalTicks;
+            office.RoundWindow = CheckupWorkload.WindowDays(Persons.Count(p => p.InColony && p.Id != office.HolderId), office.IllnessRound) * ActivityTuning.TicksPerDay;
+            office.Refused.Clear(); office.RefusedTick.Clear();
             return true;
         }
+
+        private IEnumerable<int> RoundStartPeople(CommunityOffice office) => Persons.Where(p => p.InColony && p.Id != office.HolderId).Select(p => p.Id);
 
         public bool CheckupOpen(int now)
         {
             var office = OfficeFor(OfficeKind.Healer);
-            return office != null && office.Held && office.RoundStartTick != 0 && now - office.RoundStartTick < CheckupWindowTicks;
+            return office != null && office.Held && office.RoundStartTick != 0 && now - office.RoundStartTick < (office.RoundWindow > 0 ? office.RoundWindow : CheckupWindowTicks);
         }
 
         /// <summary>The next person still to be seen this round, chosen from those the game says are free to go. The doctor is not their own patient.</summary>
@@ -613,7 +627,7 @@ namespace FamilyLife.Domain
             var office = OfficeFor(OfficeKind.Healer);
             if (office == null || !CheckupOpen(now)) return 0;
             return Persons.Where(p => p.InColony && p.Id != office.HolderId && !office.Examined.Contains(p.Id) && (available == null || available(p.Id)))
-                .OrderBy(p => priority == null ? 0 : priority(p.Id)).ThenBy(p => FamilyOf(p.Id) != office.HolderFamily).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // the doctor's own house is seen first
+                .OrderBy(p => priority == null ? 0 : priority(p.Id)).ThenBy(p => office.Missed.Contains(p.Id) ? 0 : 1).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // no house is seen first; those missed last time are
         }
 
         /// <summary>The doctor has really seen this person. Counted once per round; a round ends when everyone present has been seen.</summary>
@@ -621,7 +635,7 @@ namespace FamilyLife.Domain
         {
             var office = OfficeFor(OfficeKind.Healer);
             if (office == null || office.HolderId != doctor || !CheckupOpen(now) || patient == doctor || GetPerson(patient)?.InColony != true || office.Examined.Contains(patient)) return false;
-            office.Examined.Add(patient);
+            office.Examined.Add(patient); office.Missed.Remove(patient);
             if (Persons.Where(p => p.InColony && p.Id != doctor).All(p => office.Examined.Contains(p.Id))) office.RoundStartTick = 0;
             return true;
         }
@@ -632,11 +646,11 @@ namespace FamilyLife.Domain
         /// Opens a session (a class, a meal) when one is due and there is someone to see to. With nobody available nothing starts and the session
         /// is not used up, so it is simply held as soon as someone can come.
         /// </summary>
-        public bool BeginSession(OfficeKind kind, int now, int intervalTicks, IEnumerable<int> people)
+        public bool BeginSession(OfficeKind kind, int now, int intervalTicks, IEnumerable<int> people, int maxSize = MaxSessionSize)
         {
             var office = OfficeFor(kind);
             if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextSessionTick || office.SessionQueue.Count > 0) return false;
-            var chosen = (people ?? Enumerable.Empty<int>()).Distinct().Where(s => s != office.HolderId && GetPerson(s)?.InColony == true).OrderBy(s => FamilyOf(s) != office.HolderFamily).ThenBy(s => s).Take(MaxSessionSize).ToList();
+            var chosen = (people ?? Enumerable.Empty<int>()).Distinct().Where(s => s != office.HolderId && GetPerson(s)?.InColony == true).OrderBy(s => FamilyOf(s) != office.HolderFamily).ThenBy(s => s).Take(maxSize).ToList();
             if (chosen.Count == 0) return false;
             office.SessionQueue = chosen; office.SessionStartTick = now; office.NextSessionTick = now + intervalTicks;
             return true;
@@ -662,7 +676,7 @@ namespace FamilyLife.Domain
             q.Add(person);
         }
 
-        public bool BeginClass(int now, int intervalTicks, IEnumerable<int> students) => BeginSession(OfficeKind.Teacher, now, intervalTicks, students);
+        public bool BeginClass(int now, int intervalTicks, IEnumerable<int> students) => BeginSession(OfficeKind.Teacher, now, intervalTicks, students, MaxClassSize);
         public int NextStudent(int now) => NextInSession(OfficeKind.Teacher, now);
         public void ClassDone(int student) => SessionDone(OfficeKind.Teacher, student);
         public bool BeginHallMeal(int now, int intervalTicks, IEnumerable<int> diners) => BeginSession(OfficeKind.HallKeeper, now, intervalTicks, diners);

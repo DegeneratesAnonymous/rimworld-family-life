@@ -8,13 +8,15 @@ namespace FamilyLife.Tests
     public class OfficeEventTests
     {
         [Fact]
-        public void A_better_doctor_gives_a_better_checkup_and_a_good_talk_adds_to_it()
+        public void A_better_doctor_gives_a_better_checkup_and_a_good_talk_adds_a_little_to_it()
         {
-            var novice = CheckupQuality.Level(CheckupQuality.Score(2, 2, 0f, 10));
-            var expert = CheckupQuality.Level(CheckupQuality.Score(16, 10, 0f, 10));
+            var novice = CheckupQuality.Level(CheckupQuality.Score(3, 3, 0f, 0f, 0));
+            var expert = CheckupQuality.Level(CheckupQuality.Score(16, 10, 0f, 0f, 0));
             Assert.True(expert > novice);
             Assert.Equal(ResultQuality.Poor, novice);
-            Assert.True(CheckupQuality.Level(CheckupQuality.Score(8, 6, 3f, 10)) > CheckupQuality.Level(CheckupQuality.Score(8, 6, -3f, 10)));
+            Assert.True(CheckupQuality.Score(8, 6, 0f, 3f, 0) > CheckupQuality.Score(8, 6, 0f, -3f, 0));
+            // but the talk is bounded: it moves the result by two points at most between the best and worst
+            Assert.True(CheckupQuality.Score(8, 6, 0f, 100f, 0) - CheckupQuality.Score(8, 6, 0f, -100f, 0) <= 2.001f);
         }
 
         [Fact]
@@ -30,37 +32,8 @@ namespace FamilyLife.Tests
             var stages = new[] { 0f, .25f, .5f, .75f };
             for (int i = 0; i < levels.Length; i++)
                 Assert.Equal(i, stages.Count(st => CheckupQuality.Severity(levels[i]) >= st) - 1);
-        }
-
-        [Fact]
-        public void Testing_quality_follows_the_share_of_checks_passed_and_needs_enough_checks()
-        {
-            Assert.Equal(ResultQuality.Poor, TestingMath.Level(11, 11));          // too few sat to be judged
-            Assert.Equal(ResultQuality.Poor, TestingMath.Level(4, 20));
-            Assert.Equal(ResultQuality.Fair, TestingMath.Level(11, 20));
-            Assert.Equal(ResultQuality.Good, TestingMath.Level(15, 20));
-            Assert.Equal(ResultQuality.Excellent, TestingMath.Level(19, 20));
-        }
-
-        [Fact]
-        public void Rewards_rise_with_quality_in_both_the_number_of_skills_and_the_experience_each()
-        {
-            var levels = new[] { ResultQuality.Poor, ResultQuality.Fair, ResultQuality.Good, ResultQuality.Excellent };
-            for (int i = 1; i < levels.Length; i++)
-            {
-                Assert.True(TestingMath.SkillCount(levels[i]) > TestingMath.SkillCount(levels[i - 1]));
-                Assert.True(TestingMath.XpEach(levels[i]) > TestingMath.XpEach(levels[i - 1]));
-                Assert.True(TestingMath.TotalXp(levels[i]) > TestingMath.TotalXp(levels[i - 1]));
-            }
-        }
-
-        [Fact]
-        public void A_good_teacher_lowers_the_bar_and_a_sharper_child_clears_it_more_often()
-        {
-            Assert.True(TestingMath.Difficulty(24) < TestingMath.Difficulty(0));
-            Assert.Equal(TestingMath.BaseDifficulty - 4, TestingMath.Difficulty(100));          // never more than four off
-            int Passed(int intellect, int best) { int n = 0; for (int d = 1; d <= 20; d++) if (TestingMath.Passes(intellect, best, d, 16)) n++; return n; }
-            Assert.True(Passed(10, 12) > Passed(2, 4));
+            // modest: the longest benefit is no more than a quarter longer than an ordinary one
+            Assert.True(CheckupQuality.DurationFactor(ResultQuality.Excellent) <= 1.25f);
         }
 
         [Fact]
@@ -73,6 +46,34 @@ namespace FamilyLife.Tests
             int first = r.NextCheckupPatient(1500, null, id => id == 4 ? 0 : 1);
             Assert.Equal(4, first);
             Assert.Equal(2, r.NextCheckupPatient(1500, null));          // without an outbreak, in the usual order
+        }
+
+        [Fact]
+        public void The_assessment_is_a_few_daytime_sittings_over_two_days_not_an_hourly_summons()
+        {
+            Assert.InRange(TestingMath.Offsets.Length, 2, 4);
+            Assert.True(TestingMath.MaxSessions <= 4);
+            Assert.Equal(600, TestingMath.SitTicks);
+            // at most four sittings of ten game minutes: well under an hour of sitting, where it used to be more than eleven
+            Assert.True(TestingMath.MaxSessions * TestingMath.SitTicks <= 2500);
+            Assert.True(TestingMath.Daytime(12));
+            Assert.False(TestingMath.Daytime(3));          // never in the night
+            Assert.False(TestingMath.Daytime(22));
+            Assert.All(TestingMath.Offsets, off => Assert.True(off < TestingMath.DurationTicks));
+        }
+
+        [Fact]
+        public void The_make_up_sitting_comes_only_if_someone_needs_it_and_the_assessment_ends_by_itself()
+        {
+            Assert.True(TestingMath.Due(0, TestingMath.Offsets[0]));
+            Assert.False(TestingMath.Due(0, TestingMath.Offsets[0] - 1));
+            Assert.False(TestingMath.Due(1, TestingMath.Offsets[0] + 1));
+            Assert.True(TestingMath.MakeUpDue(3, TestingMath.DurationTicks - 12000, true));
+            Assert.False(TestingMath.MakeUpDue(3, TestingMath.DurationTicks - 12000, false));
+            Assert.True(TestingMath.Over(3, TestingMath.DurationTicks, false));
+            Assert.False(TestingMath.Over(3, TestingMath.DurationTicks, true));          // waits for the make-up
+            Assert.True(TestingMath.Over(3, TestingMath.DurationTicks + TestingMath.MakeUpTicks, true));
+            Assert.True(TestingMath.Over(4, 10, true));
         }
     }
 }

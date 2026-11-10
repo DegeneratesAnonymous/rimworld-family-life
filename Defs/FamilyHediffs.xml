@@ -3,7 +3,7 @@
   <HediffDef>
     <defName>WFL_CheckedUp</defName>
     <label>recent check-up</label>
-    <description>The colony's doctor has examined this person recently. Their body copes better with illness and mends faster, and how much better depends on how good the check-up was.</description>
+    <description>The colony's doctor has seen this person recently. A good check-up is reassuring and gives a modest, short-lived edge against illness; how much depends on how good it was. It does not treat anything, and later visits do not add to it.</description>
     <hediffClass>HediffWithComps</hediffClass>
     <initialSeverity>0.35</initialSeverity>
     <maxSeverity>1</maxSeverity>
@@ -19,27 +19,25 @@
     <stages>
       <li>
         <minSeverity>0</minSeverity>
-        <label>poor</label>
-        <naturalHealingFactor>1.05</naturalHealingFactor>
-        <statOffsets><ImmunityGainSpeed>0.08</ImmunityGainSpeed></statOffsets>
+        <label>brief</label>
       </li>
       <li>
         <minSeverity>0.25</minSeverity>
         <label>fair</label>
-        <naturalHealingFactor>1.15</naturalHealingFactor>
-        <statOffsets><ImmunityGainSpeed>0.2</ImmunityGainSpeed></statOffsets>
+        <naturalHealingFactor>1.03</naturalHealingFactor>
+        <statOffsets><ImmunityGainSpeed>0.03</ImmunityGainSpeed></statOffsets>
       </li>
       <li>
         <minSeverity>0.5</minSeverity>
         <label>good</label>
-        <naturalHealingFactor>1.25</naturalHealingFactor>
-        <statOffsets><ImmunityGainSpeed>0.3</ImmunityGainSpeed></statOffsets>
+        <naturalHealingFactor>1.05</naturalHealingFactor>
+        <statOffsets><ImmunityGainSpeed>0.06</ImmunityGainSpeed></statOffsets>
       </li>
       <li>
         <minSeverity>0.75</minSeverity>
         <label>excellent</label>
-        <naturalHealingFactor>1.4</naturalHealingFactor>
-        <statOffsets><ImmunityGainSpeed>0.45</ImmunityGainSpeed></statOffsets>
+        <naturalHealingFactor>1.08</naturalHealingFactor>
+        <statOffsets><ImmunityGainSpeed>0.09</ImmunityGainSpeed></statOffsets>
       </li>
     </stages>
   </HediffDef>

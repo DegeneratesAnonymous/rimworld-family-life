@@ -514,13 +514,14 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
-        public void The_holders_own_house_is_seen_first_and_taught_first()
+        public void The_holders_own_house_is_not_seen_first_but_is_still_known_as_kin()
         {
             var r = Colony();
             r.ElectOffices(2000, Skilled(20, OfficeKind.Healer));                                   // a doctor from the other house
             int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
             r.BeginCheckupRound(start, 30 * Day);
-            Assert.Equal(21, r.NextCheckupPatient(start + 5, id => true));                          // their own kin first, though others have lower ids
+            // Seeing one's own kin first was favouritism built into the order of the list. The order is now neutral (those missed last round first), so the lowest id comes first.
+            Assert.Equal(1, r.NextCheckupPatient(start + 5, id => true));
             Assert.True(r.KinOfHolder(21, OfficeKind.Healer));
             Assert.False(r.KinOfHolder(1, OfficeKind.Healer));
         }
