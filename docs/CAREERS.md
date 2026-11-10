@@ -60,14 +60,133 @@ Per profession: assigned / qualified / open to anyone / what is missing, with As
 ## Known limits
 Geneticist; the old Teacher/Healer office record still exists for compatibility and per-holder care state; Doctors' practice may feel slow because specialty experience comes only from specialty activities and real operations/tending; no progress UI outside the pawn tab; none of the in-game behavior has been observed.
 
-## Hands-on testing, in priority order (nothing here has been run)
-1. **Load an old save** (all three mods): no errors in the log; the `Modules:` line lists all; the old Teacher and Healer show as assigned in their pawn tabs; classes and check-ups continue; the Healer is still titled Healer.
-2. **Classes.** Two assigned Teachers and two classrooms: two classes at once with different pupils, nobody in two (`class:` trace lines). One room only: the second teacher waits ("room already in use"). A teacher with no classroom gives one-to-one lessons.
-3. **Assessment letter.** In Aprimay one letter names every teacher with assessments due. Test Begin; Put off a week (no restart for 7 days, then a new letter); Skip (nothing for the year); ignore it (begins after a day). A pupil taught by two Teachers is assessed once per subject. Kill a Teacher mid-assessment: another takes it. Save/reload mid-assessment.
-4. **Assistance.** A Teacher's class with a free Tutor: the Tutor walks in, is counted, and earns career points afterwards. With a qualified specialist for that subject: the specialist helps and the delivery bonus appears once; draft the Teacher mid-class: the specialist takes over. A Tutor never takes over.
-5. **Care basics.** Assign a Doctor: the "Nurses" message once; unassign: still Nurses; reload: still Nurses. Assign several workers in a hospital colony: more check-ups a day, no patient seen twice, emergencies still first. An unqualified Nurse's check-ups cap at Fair; their tending is unaffected.
-6. **Experience from vanilla work.** Perform an operation on a colonist and tend an animal with a candidate: the Professions section shows specialty experience rising; the operation's success is unchanged.
-7. **Specialties.** Counselor: a low-mood colonist is talked to (memory appears; a quarrel may be reconciled sometimes, not always). Surgeon follow-up on an implant carrier. Veterinarian examines a tamed animal. Midwife (Biotech): stays with a woman in labour and the mother gets the memory; without Biotech nothing happens.
-8. **Qualification flow.** Reach 100 experience with Medicine 6: the qualification message appears and nothing is assigned automatically; the progress bars and skill lines are correct.
-9. **Assembly.** No Teacher/Healer race; recognition lines appear; the postpone button moves the date by 30 days.
-10. **Save, reload and repeat** each of the above; look for the log warnings "listener was skipped", "could not attach", "could not be settled".
+## Runtime readiness (pre-validation review)
+
+Feature work is frozen. Nothing in this section has been observed in RimWorld.
+
+### Concrete risks found and fixed (commit `366d78f`)
+1. **New games kept voting for Teacher and Healer.** `ProfessionsAssigned` was only set when a save was loaded or saved, so a brand-new colony elected them until its first save. It is now set from the first tick (and again at `FinalizeInit`).
+2. **A stuck claim could block a care worker for hours.** `CompleteCheckup` returned early when the round had closed during a visit, before releasing the patient claim; the worker could not take another patient until the claim expired (about 2.4 game hours). The claim is now released first.
+3. **Experience for non-colonists.** The new operation/tend hooks credit whoever performs the work; a raider or a passing guest who tended someone would have gained a ledger entry. Only the colony's own people build a career now.
+4. **Long medical side jobs ignored colony emergencies.** The midwife's labour attendance (up to ~2 game hours) and the veterinarian's examination ended for the worker's own needs but not for "someone needs tending". Both now end when `CareDemand.DoctorShouldTend` says real medical work is waiting.
+5. **A class whose teacher never reached the class job would hold its pupils and room forever.** A sweep (`ClassSessions.EndStale`) now ends such sessions two game hours after they start.
+6. **Career and assignment data of people the family records never knew was never cleaned.** Both reconcilers existed but nothing called them; they now run once per loaded game and log what they did.
+
+### Reviewed, no change needed (reasons)
+- Harmony targets and parameter names: see below.
+- Class cleanup: the teacher job's finish action ends the session, closes the board, releases assistants and settles attendance once; load clears all sessions (`Reset`).
+- Assessment handoffs: ownership is a pure function of the shared lesson record and the current instructor list; an orphaned assessment is transferred; ledger and record are saved payloads.
+- Claims: `CareClaims` is atomic per call (single-threaded game), expires, and `ReleaseAll` runs on hand-over, reset and clinic close.
+- Stale pawn references: every use goes through `TryGetPawn` plus `Spawned/Dead` checks, or inside a job whose `FailOn` removes the job first.
+- DLC: Biotech conditions are looked up by name through `DefDatabase` and gated by `ModsConfig.BiotechActive`; without Biotech the midwife has no targets and nothing errors.
+- Assembly: only the Teacher and Healer kinds are excluded; other posts and the vote are untouched; the postpone button only moves `NextAssemblyTick`.
+
+### Remaining risks that only the game can settle
+- Whether the two Harmony postfixes attach and fire (below).
+- Whether a vanilla operation's iteration-complete call happens exactly once per operation and also for botched ones. The code treats it as "an operation was performed"; key = bill id + doer + tick, so a duplicate call on the same tick cannot double-award.
+- Surgery counts any vanilla surgery recipe (implants, amputations, harvesting). Repeated operations are subject to the repetition formula, nothing else.
+- The new jobs (`WFL_ClassAssist`, `WFL_VetExam`, `WFL_AttendBirth`, `WFL_SpecialistVisit`) are started with forced priority on idle pawns, like the existing class and clinic jobs; how they sit with each player's work priorities needs watching.
+- Two classes in one room is prevented by a per-room claim; two teachers will only run at once if the colony has two classrooms (or a classroom and open ground).
+- The `Defs` for the new jobs, letter and thoughts are version-neutral XML; a typo would only show as a red error at load.
+
+### Medical hooks
+Targets, verified against the 1.6.4871 and 1.7.4990-unstable reference assemblies by reading their metadata:
+
+| | 1.6.4871 | 1.7.4990-unstable |
+|---|---|---|
+| `RimWorld.Bill_Medical.Notify_IterationCompleted(Pawn billDoer, List<Thing> ingredients)` | present, public virtual, declared on `Bill_Medical` | same |
+| `RimWorld.Bill_Medical.GiverPawn` | present | same |
+| `RimWorld.TendUtility.DoTend(Pawn doctor, Pawn patient, Medicine medicine)` | present, public static | same |
+
+Our postfixes bind `__instance`, `billDoer`, `doctor`, `patient`; those parameter names match both versions (Harmony binds by name). They are postfixes only, wrapped in try/catch, owned by the framework assembly (the architecture test forbids module patches) and call only listeners of running modules. They attach with the framework's other hooks.
+
+**Not verified until seen in the game.** What to observe:
+1. In the log after load: `Loaded (N hooks ...)` with no `Skipped hook Patch_OperationCompleted` or `Skipped hook Patch_TendDone`. (If a patch were skipped, no experience would be credited and nothing else breaks.)
+2. Dev menu "Wil's Family Life, testing" -> "Careers: show status". Line `Hooks seen this session: operations 0, tends 0, ...`.
+3. Have a colonist tend an injured colonist: `tends` rises by one per tend. Have them operate (any surgery bill): `operations` rises by one when the operation completes; `operations credited` rises by one; the pawn's Professions section shows Surgeon experience (10 points, or 12 before rounding by the repetition formula). A tamed animal tended: `animal tends credited` rises and Veterinarian experience appears.
+4. Repeat the same operation on the same bill: each completed iteration is one credit, not two.
+5. A raider or guest tending someone: no ledger entry.
+Do not describe the hooks as working until step 3 has been seen.
+
+## Test packages
+Built from commit `366d78f`; the staged candidate (a66953b) is untouched (its installed DLL hashes differ from these).
+
+`C:\Users\colem\Downloads\rimworld-family-life-testpkg\careers-366d78f\`
+- `both\` - the three packages with both version folders (what the Workshop layout looks like)
+- `1.6-only\`, `1.7-only\` - the same with the other version's assemblies removed
+- `careers-366d78f-both.zip`, `-1.6-only.zip`, `-1.7-only.zip`
+- `SHA256SUMS.txt` - zip hashes and each assembly's hash
+
+The three packages share package ids with the installed ones (`SpacemanWil.WilsFamilyLife`, `.WilsEducation`, `.WilsCommunityCare`), so **they cannot be enabled together with the staged copies**. Two safe ways to test, neither performed by me:
+1. **Separate game copy (recommended).** Copy the RimWorld folder (or use a second Steam library install), put only these three folders (plus Harmony and, if wanted, other mods) in that copy's `Mods`, and start it with `-savedatafolder=C:\RW-careers-test` so saves and config are separate.
+2. **Swap in place.** Move the three installed folders (`WilsFamilyLife`, `WilsEducation`, `WilsCommunityCare`) to a backup folder outside `Mods`, copy the test folders in, test, then reverse. Back up your saves first; do not load the staged runtime-test save with these builds, since the staged candidate's own validation is separate.
+Mod list order: Harmony, Core/DLC, Wil's Community Framework, Wil's Educators, Wil's Community Care. Enable Development mode and, in Mod Settings, "Log family events to the dev log".
+
+## Diagnostics (all low-overhead; per-event, never per-tick)
+Always written: module registration, migration, qualifications, load reconcile, failures.
+- `careers: wils.education registered: 1 career(s), 14 role(s)` and `careers: wils.care registered: 1 career(s), 6 role(s)` - module registration.
+- `careers: loaded: N assignment(s); reconciled X career record(s) and Y assignment(s) ...` - once per loaded game; a failure reads `load reconcile failed, data left as it was`.
+- `careers: migrated legacy post (office:Teacher:<id>) ...` - legacy migration ran for that holder.
+- `careers: <name> qualified: wils.education.teaching` (or `...:Melee`, `wils.care.practice`) - a qualification was awarded.
+- `Loaded (N hooks ...)` and `Skipped hook Patch_...` - hook attachment (framework line).
+Written when "Log family events" is on:
+- `careers: <name> +N <career>[:specialty] (<kind>)` - experience awarded (kinds: `teach.class`, `teach.assist`, `teach.assist.tutor`, `teach.assessment`, `care.checkup`, `care.tend`, `care.surgery`, `care.tend.animal`, `care.specialty.<X>`, `care.birth`).
+- `careers: <name> assigned to / unassigned from <role>`; `careers: <Kind> working seat: a -> b`.
+- `careers: class: <teacher> begins a class (<subject>, N pupil(s), place ...)` / `finished a class ... (completed | ended early, N pupil(s) learned)` / `ending a stale class ...`.
+- `careers: assessment: <teacher> begins for N pupil(s)` / `finished; J judged, S subject record(s) spent`.
+- `careers: care: <worker> claimed <patient> for a visit | for the clinic` / `finished seeing <patient>` / `clinic claim on <id> released`.
+Dev menu "Careers: show status" prints roles, hook counters, and every colonist's assignments, qualifications and experience. "Show module status" (existing) lists module registration and any absent module.
+Existing developer actions still apply: "Start a class now", "Start annual testing now", "Start a check-up round now".
+
+## Progression estimates (from the actual awards; balance NOT changed)
+A game day is 60,000 ticks; a game year is 60 days. Points: class 10 per attending pupil x attendance share x delivery (0.4-1.2, typically ~0.8, so ~8); one-to-one lesson ~4; check-up 8 + quality (0-3); operation 12; counselling talk 10; vet exam 10; animal tend 4; human tend 2; birth attendance 15; class assistance 6. The first 8 awards of one kind per day are full; then -5% each, floor 50% (rarely reached outside a hospital/school day).
+
+| Step | Needs | Realistic activity | Estimate |
+|---|---|---|---|
+| Tutor -> Teacher | Social 4, 120 | a free tutor gives about 2-4 lessons a day (~4 points) plus 6 for each class they help (a class every 3 days per teacher) -> ~10-20 points/day | 6-12 days. Slower with no idle child or tutor. |
+| Teacher -> Subject Specialist | skill 12, Teacher, 400 general, 150 in that subject | 6 pupils x ~8 = ~48 points per class, one class per 3 days, subject rotating among the 3-4 the teacher can teach | general 400: ~25 days; 150 in one subject: ~10 classes of rotation = ~30 days, i.e. roughly half a year; ~1.5-2 years with only 2-3 pupils. The skill 12 requirement is usually the real limit. |
+| Healer/Nurse -> Doctor | Medicine 6, 100 | check-ups: ~one visit per colonist per round of 14-40 days shared by all workers (an 8-person colony ~0.5 visits/day for everyone, ~9 points each); tends: 2 points each, up to ~16/day while patients exist | quiet colony: 3-6 weeks for one worker; with injuries or several patients a day: 1-2 weeks |
+| Doctor -> Counselor | Social 8, 150 general, 60 counselling | a talk (10) for anyone with mood < 40% or an open quarrel, per person every 3 days | 6 talks: 1-3 weeks if people are unhappy, otherwise it may stall |
+| Doctor -> Surgeon | Medicine 10, 150 general, 60 surgery | 12 per completed operation | 5 operations; ordinary colonies do a handful a year (1-3 years), a hospital colony weeks |
+| Doctor -> Midwife (Biotech) | Medicine 8, 150 general, 60 | 15 per birth attended, ~10 per prenatal/postpartum visit (every 3 days per mother) | one pregnancy gives ~50; two births qualify. Rare in a small colony. |
+| Doctor -> Veterinarian | Medicine 6 + Animals 6, 150 general, 60 | 10 per exam (a given animal again after ~20 days), 4 per animal tend, 12 per animal operation | ~10 animals: about 2 weeks; 3 animals: about 6 weeks |
+
+### Balance concerns and proposals (none applied)
+1. A Teacher cannot choose to teach a subject, so subject experience before qualifying is slow and random. Proposal: let a Teacher with the skill practise focused classes, as Doctors practise specialties.
+2. Check-up experience scales with colony size and is nearly absent in tiny colonies. Proposal: slightly more points per check-up for small colonies, or count more tending.
+3. Surgeon experience is gated on how often a colony operates. Proposal: lower the specialty requirement or count surgical follow-up more.
+4. Counselor can stall in a happy colony. That is the intended behaviour; keep unless testing shows it is never reachable.
+5. Tutors earn slowly if there are no children who can learn something from them (the gap rule). Proposal: allow tutoring adults when the setting is on (already supported) and say so in the tab.
+6. The repetition formula almost never bites in ordinary play; consider shortening the full-allowance only if a hospital or school day shows runaway progress.
+
+## Hands-on validation plan (nothing here has been run)
+Conventions: "enable log events" = Mod Settings -> Wil's Community Framework -> "Log family events to the dev log". Use Development mode and the dev menu category "Wil's Family Life, testing". A test passes only if every Expected line is observed. "Reload" means save, quit to the main menu, load again.
+
+### Phase 0 - foundations (do all of these before anything else)
+**T0. Start-up and attachment.** Colony: none (main menu then any save). Actions: start the game with the three mods; open the dev log. Expected: `[Wil's Family Life] Loaded (N hooks...)` with no `Skipped hook`; `Modules: wils.framework, wils.familylife, wils.education, wils.care`; `careers: wils.education registered: 1 career(s), 14 role(s)`; `careers: wils.care registered: 1 career(s), 6 role(s)`; no red errors from the mods. Pass: all lines present. Reload: no.
+**T1. Brand-new tribal start (small colony).** Colony: new game, Tribal, 3 colonists plus (dev mode) spawn one child and a second adult. Actions: play one day. Expected: no Teacher/Healer chosen by a vote (no "assembly"/election letter; the Families window shows no Teacher/Healer holder unless you assigned one); open a colonist's Family tab: a "Professions" section lists Tutor, Teacher, Healer and Doctor roles with Assign buttons for Tutor and Healer only. Pass: no election; section present. Reload: yes - repeat the section check afterwards.
+**T2. Assign and unassign.** Actions: assign the adult as Tutor and the second adult as Healer in their Family tabs. Expected: log (events on) `assigned to wils.education.tutor` / `wils.care.healer`; status action "Careers: show status" lists both. Unassign and reassign. Pass: log lines and status agree; Teacher and Doctor show "needs ...". Reload: yes; assignments persist.
+**T3. Legacy migration.** Colony: an existing save from the staged candidate (copy it; never alter the original) with a Teacher and a Healer in place. Actions: load it with the test build. Expected: `careers: migrated legacy post (office:Teacher:<id>) ...` and `(office:Healer:<id>)`; both pawns show Teacher/Healer assigned and a legacy qualification; the Healer is still titled Healer; classes and check-ups carry on. Pass: both lines, both assignments, no errors, and a second reload prints no migration lines. Reload: yes (twice).
+**T4. Missing module.** Actions: disable Education only, load a save that has a Teacher. Expected: one letter naming the missing module; no errors; re-enable, reload: Education data intact (assignments, experience). Pass: data back after re-enabling. Reload: yes.
+
+### Phase 1 - Education
+**T5. One-to-one tutoring (tribal).** Colony: tribal, one Tutor-assigned adult with a skill 3+ levels above the child, one child; no classroom. Actions: wait. Expected: the Tutor goes to the child roughly every 2 game hours when both are idle; the child's skill gains XP; events log `+N wils.education.teaching (teach.tutor)`. A tutor who knows less than the child never tutors. Pass: lessons happen, XP rises, no lesson for a subject the tutor is not better at.
+**T6. One class (ordinary colony).** Colony: ordinary, a built classroom (lectern or blackboard in an enclosed room with desks), one qualified Teacher (use "Careers" status, or dev-edit Social/skills and award experience by holding classes), 4 children. Actions: "Start a class now". Expected: `class: <teacher> begins a class (<subject>, 4 pupils...)`; children go to seats; breaks between blocks; at the end `finished a class ... completed, N pupil(s) learned`; pupils gain skill XP; the Teacher gains experience lines. Pass: all of the above. Reload: yes, mid-class: the class simply does not continue and nobody is stuck (no pupil stays on the class job).
+**T7. Two classes at once.** Colony: two classrooms, two assigned Teachers, 6 children. Actions: "Start a class now". Expected: two `begins a class` lines with different places and disjoint pupils; no pupil in both; a third attempt in an occupied room waits. Pass: disjoint pupils. Reload: yes.
+**T8. Assistance.** Colony: T6 plus an idle Tutor and, if possible, a qualified subject specialist. Actions: start a class. Expected: the Tutor walks into the room and stands near the teacher; at the end events log `teach.assist.tutor` experience for the Tutor; with a specialist for the same subject, `teach.assist` and the class is settled with the bonus; drafting the Teacher mid-class lets a specialist (never a Tutor) take over (`takes over the class`). Pass: as listed.
+**T9. Assessment letter.** Colony: T6 after several classes, in Aprimay (or use "Start annual testing now"). Expected: one letter listing every teacher with Begin / Put off a week / Skip this period. Begin: `assessment: ... begins for N pupil(s)`, sittings in the daytime, a result letter, `finished; J judged`. Run it again on fresh data for Put off (no restart for 7 days, then a new letter) and Skip (nothing for the year). Ignore the letter for a game day: the assessments begin. Pass: every path behaves; no pupil assessed twice for a subject. Reload: yes, mid-assessment.
+**T10. Qualification flow.** Colony: a Tutor with Social 4. Actions: let them accrue 120 points. Expected: `careers: <name> qualified: wils.education.teaching` and an in-game message; the tab now shows Teacher "qualified, not assigned" (never auto-assigned); the progress bars and skill lines match. Pass: message once, no auto-assignment.
+
+### Phase 2 - Care
+**T11. Healer check-ups (tribal).** Colony: tribal with one Healer-assigned colonist and 3 others. Actions: "Start a check-up round now". Expected: visits one by one; each ends with `care: <worker> claimed ... for a visit` then `finished seeing ...`; the "recently checked up" condition appears; a patient who refuses is left alone. Pass: no patient seen twice in the round. Reload: yes.
+**T12. Doctor and Nurse naming.** Actions: qualify or use the legacy Healer, assign them as Doctor. Expected: message "now called Nurses", Healer-role holders are titled Nurse; unassign the Doctor: still Nurses; reload: still Nurses. Pass: all three.
+**T13. Several care workers (profession-heavy colony).** Colony: 12 colonists, 5 assigned as Healer/Nurse/Doctor, a medical room with 3 beds. Actions: "Start a check-up round now". Expected: visits happen in parallel; claims logged with different workers/patients; no patient claimed by two workers; more visits per day than T11; a colony emergency (injure someone) pulls workers off routine visits. Pass: no double claims; emergencies first. Also check capacity: injuring one worker's hands lowers only that worker's share.
+**T14. Experience from vanilla work.** Actions: see "Medical hooks" steps 3-5 above. Pass: counters move, no duplicates, no entry for a non-colonist.
+**T15. Specialties.** Colony: profession-heavy with a Doctor that has the skills. Counselor: a low-mood colonist is talked to (memory appears; a quarrel sometimes reconciles). Surgeon follow-up on an implant carrier. Veterinarian exams a tamed animal. Midwife (Biotech): stays with a woman in labour (mother gets the memory). Expected log: `care.specialty.<X>` experience. Pass: each activity happens on an eligible target only; nothing else changes. Without Biotech the midwife does nothing and no error appears.
+**T16. Assembly.** Colony: any, at the yearly assembly date. Expected: "Community Assembly" wording; no Teacher/Healer race; recognition lines for qualifications earned that year; the postpone button moves the date 30 days and affects no class or round. Pass: all of the above.
+
+### Phase 3 - soak
+**T17. Long run.** Ordinary colony, 10+ game days with classes, check-ups and some injuries, then reload twice. Expected: no growth of warnings; `careers: loaded: ...` each load; status action stable; no pawn stuck on a class/clinic/assist job; the dev log free of `listener was skipped`, `could not be settled`, `load reconcile failed`. Pass: clean log and no stuck pawns.
+
+### Reading a failure
+Look first at: `Skipped hook`, `listener was skipped`, `A specialty visit's effect was skipped`, `The class could not be settled`, `load reconcile failed`, `ending a stale class`. Report the exact line, what the pawns were doing, and whether a reload changes it.
