@@ -40,6 +40,24 @@ namespace FamilyLife
         internal static readonly CareClaims Claims = new CareClaims();
 
         /// <summary>
+        /// The benefit a visit gives: the recent-check-up condition at the quality's stage, never stacking and never reducing a better one (the same merge a routine check-up uses). Used by
+        /// specialty visits, which are not part of the round. Nothing is tended, cured or immunised.
+        /// </summary>
+        internal static void GiveBenefit(Pawn patient, ResultQuality level, bool partial = false)
+        {
+            if (WFL_HediffDefOf.WFL_CheckedUp == null || patient?.health?.hediffSet == null) return;
+            var existing = patient.health.hediffSet.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
+            var existingComp = existing?.TryGetComp<HediffComp_Disappears>();
+            int ticks = (int)(1200000 * CheckupQuality.DurationFactor(level) * (partial ? CheckupQuality.PartialDuration : 1f));
+            var update = CheckupQuality.Merge(existing != null, existing?.Severity ?? 0f, existingComp?.ticksToDisappear ?? 0, level, ticks);
+            if (!update.Apply) return;
+            var made = existing ?? patient.health.AddHediff(WFL_HediffDefOf.WFL_CheckedUp);
+            if (made == null) return;
+            made.Severity = update.Severity;
+            var comp = made.TryGetComp<HediffComp_Disappears>(); if (comp != null) comp.ticksToDisappear = update.Remaining;
+        }
+
+        /// <summary>
         /// The routine work of a care worker who is not the one in the old working seat: the same order of priority (real medical work first) and the same shared round and daily
         /// budget, claiming each patient so nobody is seen twice.
         /// </summary>

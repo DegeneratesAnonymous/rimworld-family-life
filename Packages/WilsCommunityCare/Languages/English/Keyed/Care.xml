@@ -15,4 +15,8 @@
   <wils.care.nurse_label>Nurse</wils.care.nurse_label>
   <wils.care.doctor_label>Doctor</wils.care.doctor_label>
   <WFL_Care_NurseTitles>The community has its first Doctor. Entry-level care workers are now called Nurses.</WFL_Care_NurseTitles>
+  <wils.care.specialist.counselor_label>Counselor</wils.care.specialist.counselor_label>
+  <wils.care.specialist.surgeon_label>Surgeon</wils.care.specialist.surgeon_label>
+  <wils.care.specialist.midwife_label>Midwife</wils.care.specialist.midwife_label>
+  <wils.care.specialist.veterinarian_label>Veterinarian</wils.care.specialist.veterinarian_label>
 </LanguageData>

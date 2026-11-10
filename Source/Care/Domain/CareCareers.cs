@@ -18,6 +18,44 @@ namespace FamilyLife.Domain
         public const int CheckupPoints = 8;
     }
 
+    /// <summary>One medical specialty: its role id, the skills it needs and what its activity is. Preliminary balance values, all plain data.</summary>
+    public sealed class CareSpecialty
+    {
+        public string Key, RoleId;
+        public KeyValuePair<string, int>[] Skills;
+        public int Index;
+    }
+
+    public static class CareSpecialties
+    {
+        /// <summary>
+        /// The specialties that have a real activity in the game. Every one needs Doctor first. Geneticist is not here: the game has no gene procedure a community doctor could carry out, so
+        /// nothing would be left of the role but its title (see docs/CAREERS.md).
+        /// </summary>
+        public static readonly CareSpecialty[] All =
+        {
+            Make(0, "Counselor", new KeyValuePair<string, int>("Social", 8)),
+            Make(1, "Surgeon", new KeyValuePair<string, int>("Medicine", 10)),
+            Make(2, "Midwife", new KeyValuePair<string, int>("Medicine", 8)),
+            Make(3, "Veterinarian", new KeyValuePair<string, int>("Medicine", 6), new KeyValuePair<string, int>("Animals", 6)),
+        };
+        private static CareSpecialty Make(int i, string key, params KeyValuePair<string, int>[] skills) => new CareSpecialty { Index = i, Key = key, RoleId = "wils.care.specialist." + key.ToLowerInvariant(), Skills = skills };
+
+        public static CareSpecialty ByIndex(int i) => i >= 0 && i < All.Length ? All[i] : null;
+        public static CareSpecialty ByKey(string key) => All.FirstOrDefault(s => s.Key == key);
+        public static IEnumerable<string> RoleIds => All.Select(s => s.RoleId);
+        /// <summary>General care experience and specialty experience a specialist needs, on top of Doctor and the skills.</summary>
+        public const int GeneralExperience = 150, SpecialtyExperience = 60, ActivityPoints = 10;
+
+        public static CareerRule Rule(CareSpecialty s)
+        {
+            var rule = new CareerRule { GeneralXp = GeneralExperience, SpecialtyXp = SpecialtyExperience };
+            foreach (var k in s.Skills) rule.Skill(k.Key, k.Value);
+            return rule;
+        }
+        public static bool MeetsSkills(CareSpecialty s, Func<string, int> skill) => s.Skills.All(k => skill(k.Key) >= k.Value);
+    }
+
     /// <summary>
     /// The community's professional terms for entry-level care workers. Before any Doctor has ever been appointed they are Healers; once the player appoints the first Doctor they are Nurses,
     /// and stay Nurses if the Doctor leaves or dies. It is the community's vocabulary, not anyone's promotion. Saved in a community-wide payload.

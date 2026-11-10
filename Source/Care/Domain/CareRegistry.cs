@@ -65,7 +65,7 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>Anyone the player has assigned to care work (Healer/Nurse or Doctor), whether or not they sit in the old post.</summary>
-        public static bool IsPractitioner(this FamilyRegistry r, int person) => r.Assignments().IsAssigned(person, CareRoles.Doctor) || r.Assignments().IsAssigned(person, CareRoles.Healer);
+        public static bool IsPractitioner(this FamilyRegistry r, int person) => r.Assignments().IsAssigned(person, CareRoles.Doctor) || r.Assignments().IsAssigned(person, CareRoles.Healer) || CareSpecialties.RoleIds.Any(id => r.Assignments().IsAssigned(person, id));
 
         // ---- the day's budget ----
 

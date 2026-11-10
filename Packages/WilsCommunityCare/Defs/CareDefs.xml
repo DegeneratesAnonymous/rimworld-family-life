@@ -7,4 +7,10 @@
     <stages><li><label>reassuring check-up</label><description>The doctor listened and put my mind at ease.</description><baseMoodEffect>4</baseMoodEffect></li></stages></ThoughtDef>
   <ThoughtDef><defName>WFL_DismissiveCheckup</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
     <stages><li><label>brushed off at a check-up</label><description>The doctor hardly seemed to listen.</description><baseMoodEffect>-2</baseMoodEffect></li></stages></ThoughtDef>
+  <JobDef><defName>WFL_SpecialistVisit</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>seeing to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_VetExam</defName><driverClass>FamilyLife.JobDriver_VetExam</driverClass><reportString>examining TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <ThoughtDef><defName>WFL_CounsellingHelped</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>3</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>counselled</label><description>Talking it through with someone who understood helped.</description><baseMoodEffect>5</baseMoodEffect></li></stages></ThoughtDef>
+  <ThoughtDef><defName>WFL_CounsellingListened</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>3</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>someone listened</label><description>It did not fix anything, but it was good to be heard.</description><baseMoodEffect>2</baseMoodEffect></li></stages></ThoughtDef>
 </Defs>
