@@ -428,6 +428,11 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref ticks, "moduleTicks", LookMode.Value); Scribe_Collections.Look(ref attempts, "moduleAttempts", LookMode.Value);
             Scribe_Collections.Look(ref reports, "moduleReports", LookMode.Value);
             if (Scribe.mode == LoadSaveMode.LoadingVars) Lifecycle.FromLists(ids, states, ticks, attempts, reports);
+            // Community-wide module state (careers, assignments): opaque payloads, kept for modules that are not installed.
+            if (Shared == null) Shared = new SharedState();
+            if (Scribe.mode == LoadSaveMode.Saving) Shared.Flush();
+            Scribe_Collections.Look(ref Shared.Ids, "sharedIds", LookMode.Value); Scribe_Collections.Look(ref Shared.Data, "sharedData", LookMode.Value); Scribe_Collections.Look(ref Shared.Versions, "sharedVersions", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars) Shared.DropCache();
             var quiet = Lifecycle.NoticeToList();
             Scribe_Collections.Look(ref quiet, "moduleNoticeOff", LookMode.Value);
             if (Scribe.mode == LoadSaveMode.LoadingVars) Lifecycle.NoticeFromList(quiet);

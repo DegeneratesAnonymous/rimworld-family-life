@@ -160,8 +160,50 @@ namespace FamilyLife.Domain
         }
     }
 
+    /// <summary>
+    /// Module state that belongs to the whole community rather than to a post: the same opaque, versioned, keyed payloads as on a post, with the same guarantees (an absent module
+    /// leaves its payload as it was; a later format can read an earlier one). Careers and professional assignments live here.
+    /// </summary>
+    public sealed class SharedState
+    {
+        public List<string> Ids = new List<string>(), Data = new List<string>();
+        public List<int> Versions = new List<int>();
+        private readonly Dictionary<string, IModuleState> cache = new Dictionary<string, IModuleState>();
+        private readonly Dictionary<string, int> written = new Dictionary<string, int>();
+
+        public T Of<T>(string id, IStateFactory<T> factory) where T : class, IModuleState
+        {
+            Align();
+            int i = Ids.IndexOf(id);
+            if (i >= 0)
+            {
+                if (cache.TryGetValue(id, out var c) && c is T typed) return typed;
+                var d = factory.Decode(new StateReader(Data[i]), Versions[i]); cache[id] = d; written[id] = factory.Version; return d;
+            }
+            var made = factory.Create(); Ids.Add(id); Versions.Add(factory.Version); Data.Add(made.Encode()); cache[id] = made; written[id] = factory.Version; return made;
+        }
+
+        public bool Has(string id) => Ids != null && Ids.Contains(id);
+        public void Flush()
+        {
+            Align();
+            foreach (var kv in cache.ToList()) { int i = Ids.IndexOf(kv.Key); if (i >= 0) { Data[i] = kv.Value.Encode(); if (written.TryGetValue(kv.Key, out var v)) Versions[i] = v; } }
+        }
+        public void DropCache() { cache.Clear(); written.Clear(); }
+
+        private void Align()
+        {
+            if (Ids == null) Ids = new List<string>(); if (Data == null) Data = new List<string>(); if (Versions == null) Versions = new List<int>();
+            while (Data.Count < Ids.Count) Data.Add(""); while (Versions.Count < Ids.Count) Versions.Add(1);
+            while (Data.Count > Ids.Count) Data.RemoveAt(Data.Count - 1); while (Versions.Count > Ids.Count) Versions.RemoveAt(Versions.Count - 1);
+        }
+    }
+
     public sealed partial class FamilyRegistry
     {
+        /// <summary>Community-wide module state (careers, assignments). Saved with the family records.</summary>
+        public SharedState Shared = new SharedState();
+
         /// <summary>Which modules are running, stopped for removal, or failed to stop, in this save. Kept for modules that are not installed.</summary>
         public readonly ModuleLifecycle Lifecycle = new ModuleLifecycle();
 
@@ -169,7 +211,7 @@ namespace FamilyLife.Domain
         public static System.Action<FamilyRegistry, CommunityOffice, int, int> HolderChanged;
 
         /// <summary>Encodes every post's module state ready for saving.</summary>
-        public void FlushAllState() { foreach (var o in Offices) o.FlushState(); }
+        public void FlushAllState() { foreach (var o in Offices) o.FlushState(); Shared?.Flush(); }
     }
 }
 

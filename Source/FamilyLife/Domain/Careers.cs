@@ -144,9 +144,10 @@ namespace FamilyLife.Domain
             return w.Strings("seen", seen).ToString();
         }
 
-        public static CareerLedger Decode(string text)
+        public static CareerLedger Decode(string text) => Decode(new StateReader(text));
+        public static CareerLedger Decode(StateReader r)
         {
-            var r = new StateReader(text); var l = new CareerLedger();
+            var l = new CareerLedger();
             foreach (int id in r.Ints("p"))
             {
                 var e = l.Of(id); var k = r.Strings("xk" + id); var v = r.Ints("xv" + id);
@@ -162,5 +163,32 @@ namespace FamilyLife.Domain
 
         /// <summary>A person who is gone keeps nothing; qualifications belong to the pawn, not the post.</summary>
         public void Forget(int person) { people.Remove(person); }
+        public IEnumerable<int> People() => people.Keys;
+    }
+}
+
+namespace FamilyLife.Framework
+{
+    using FamilyLife.Domain;
+    public sealed class CareerLedgerFactory : IStateFactory<CareerLedger>
+    {
+        public static readonly CareerLedgerFactory Instance = new CareerLedgerFactory();
+        public int Version => 1;
+        public CareerLedger Create() => new CareerLedger();
+        public CareerLedger Decode(StateReader reader, int version) => CareerLedger.Decode(reader);
+        public CareerLedger FromLegacy(StateReader legacy) => new CareerLedger();
+    }
+    public static class CareerAccess
+    {
+        /// <summary>The community's career ledger, created empty the first time it is asked for.</summary>
+        public static CareerLedger Careers(this FamilyRegistry r) => r.Shared.Of(CareerLedger.Id, CareerLedgerFactory.Instance);
+
+        /// <summary>Drops career data for people the registry no longer knows at all (never for anyone merely absent or dead, whose record stays). Returns how many were dropped.</summary>
+        public static int ReconcileCareers(this FamilyRegistry r)
+        {
+            var known = new System.Collections.Generic.HashSet<int>(r.Persons.Select(p => p.Id)); var l = r.Careers(); int n = 0;
+            foreach (int id in l.People().ToList()) if (!known.Contains(id)) { l.Forget(id); n++; }
+            return n;
+        }
     }
 }
