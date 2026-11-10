@@ -16,6 +16,8 @@ namespace FamilyLife.Domain
     {
         public string Id, ModuleId, Career, Specialty;
         public int Level = 1;
+        /// <summary>Optional: the label key to show now (a role can be titled differently as the community changes, without its id changing).</summary>
+        public Func<FamilyRegistry, string> TitleKey;
     }
 
     public sealed class ProfessionCatalog

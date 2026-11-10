@@ -28,7 +28,7 @@ namespace FamilyLife
                 bool assigned = book.IsAssigned(id, role.Id);
                 var check = AssignmentBook.Check(role, ledger, id);
                 var def = CareerService.Career(role.Career);
-                string title = (role.Id + "_label").Translate().ToString();
+                string title = CareerService.TitleOf(role, reg);
                 string status = assigned ? "WFL_Career_Assigned".Translate().ToString()
                     : check == AssignResult.Assigned ? (role.Level > 1 ? "WFL_Career_Qualified_Short".Translate().ToString() : "WFL_Career_Open".Translate().ToString())
                     : "WFL_Career_Needs".Translate(string.Join(", ", ledger.Missing(id, role.Career, role.Level >= 3 ? role.Specialty : null, role.Level >= 3 && def != null && def.Specialties.TryGetValue(role.Specialty, out var sr) ? sr : def?.Level2 ?? new CareerRule(), CareerService.SkillsOf(pawn)))).ToString();

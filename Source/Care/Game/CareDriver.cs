@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FamilyLife.Domain;
+using FamilyLife.Framework;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -34,6 +35,21 @@ namespace FamilyLife
         internal static float Fitness(Pawn p) => p == null || p.skills == null || p.Dead || p.WorkTypeIsDisabled(WorkTypeDefOf.Doctor) ? 0f : FrameworkServices.SkillFraction(p, SkillDefOf.Medicine);
         /// <summary>A check-up lasts a few seconds at triple speed.</summary>
         internal const int CheckupTicks = 900;
+
+        /// <summary>Who is seeing which patient and which bed is in use, so care workers never double up. Not saved.</summary>
+        internal static readonly CareClaims Claims = new CareClaims();
+
+        /// <summary>
+        /// The routine work of a care worker who is not the one in the old working seat: the same order of priority (real medical work first) and the same shared round and daily
+        /// budget, claiming each patient so nobody is seen twice.
+        /// </summary>
+        internal static void AssistantWork(FamilyComponent c, FamilyRegistry r, CommunityOffice office, Pawn worker, int now)
+        {
+            if (worker?.Map == null || !worker.Spawned || worker.Dead) return;
+            var s = FamilyLifeMod.Settings; if (s != null && !s.healthChecks) return;
+            if (!r.CheckupOpen(now) || CareDemand.DoctorShouldTend(worker, now) || ClinicVisits.Running(worker)) return;
+            if (Due("checkup" + worker.thingIDNumber, now, 300) || Forced && Due("checkupT" + worker.thingIDNumber, now, 200)) RoutineRound(c, r, office, worker, now);
+        }
 
         private static readonly Dictionary<int, int> skipUntil = new Dictionary<int, int>();
 
@@ -78,10 +94,11 @@ namespace FamilyLife
             if (!ClinicVisits.Allowed(r, office, holder, now)) return;
             var order = CareEvents.Priority(c, office);          // in an outbreak the sick come first
             // someone who cannot travel is visited, if they are willing
-            int bedside = r.NextCheckupPatient(now, id => AppointmentBook.Bedside(id) && !AppointmentBook.Waiting(id, now) && !AppointmentBook.Deferred(id) && !r.HasRefused(id, now) && Spawned(c, id) != null && CareEvents.SickFirst(c, r, office, id), order);
+            int me = holder.thingIDNumber;
+            int bedside = r.NextCheckupPatient(now, id => AppointmentBook.Bedside(id) && !AppointmentBook.Waiting(id, now) && !AppointmentBook.Deferred(id) && !r.HasRefused(id, now, me) && Spawned(c, id) != null && !Taken(id, me, now) && CareEvents.SickFirst(c, r, office, id), order, me);
             if (bedside != 0) { VisitInPlace(c, r, holder, bedside, now); return; }
             bool clinic = ClinicVisits.Spot(holder, out _, out _);
-            int toAsk = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && ClinicVisits.Askable(r, id, now) && CareEvents.SickFirst(c, r, office, id), order);
+            int toAsk = r.NextCheckupPatient(now, id => CanBeSeen(c, holder, id) && !Taken(id, me, now) && ClinicVisits.Askable(r, id, now, me) && CareEvents.SickFirst(c, r, office, id), order, me);
             if (toAsk == 0) return;
             if (clinic) { ClinicVisits.TryOpen(holder); return; }
             VisitInPlace(c, r, holder, toAsk, now);          // no medical room: the doctor goes to them
@@ -92,12 +109,16 @@ namespace FamilyLife
         {
             var patient = Spawned(c, patientId); if (patient == null) return;
             var will = CareRules.Assess(c, holder, patient, now, out var why);
-            if (will == PatientResponse.Refuses) { r.NoteRefusal(patientId, why.Kind, why.Reason, now); return; }
+            if (will == PatientResponse.Refuses) { r.NoteRefusal(patientId, why.Kind, why.Reason, now, holder.thingIDNumber); return; }
             if (will == PatientResponse.Busy) { AppointmentBook.Busy(patientId, now); return; }
             // 'Unable' here means unwell: the visit is exactly what they need, so it goes ahead
             if (PawnReadinessApi.StopReason(holder, now) != null) return;
-            if (!FrameworkServices.StartMeeting(holder, patient, CareDefOf.WFL_Checkup, 0)) AppointmentBook.Busy(patientId, now);
+            if (!Claims.TryClaim(patientId, holder.thingIDNumber, now)) return;          // someone else has this patient
+            if (!FrameworkServices.StartMeeting(holder, patient, CareDefOf.WFL_Checkup, 0)) { Claims.Release(patientId); AppointmentBook.Busy(patientId, now); }
         }
+
+        /// <summary>This patient is already being seen (or about to be) by another care worker.</summary>
+        internal static bool Taken(int patient, int me, int now) { int by = Claims.HeldBy(patient, now); return by != 0 && by != me; }
 
         /// <summary>A recent check-up is still doing them good, so they are not asked to come again yet.</summary>
         internal static bool RecentCheckup(Pawn p) => p?.health?.hediffSet != null && WFL_HediffDefOf.WFL_CheckedUp != null && p.health.hediffSet.HasHediff(WFL_HediffDefOf.WFL_CheckedUp);
@@ -121,9 +142,10 @@ namespace FamilyLife
         /// </summary>
         internal static void OnHealerChanged(FamilyComponent c, CommunityOffice office, int oldHolder, int newHolder)
         {
-            c.Registry.LapseHealerRefusals(newHolder);          // people who would not see the former doctor are asked afresh; those who declined check-ups themselves are still left alone
+            c.Registry.LapseHealerRefusals(id => c.Registry.IsPractitioner(id) || id == newHolder);          // people who would not see the former doctor are asked afresh; those who declined check-ups themselves are still left alone
             if (oldHolder == 0) return;
             var old = c.TryGetPawn(oldHolder);
+            Claims.ReleaseAll(oldHolder);
             if (old != null) { ClinicVisits.Close(old); if (old.CurJobDef == CareDefOf.WFL_ClinicDoctor) old.jobs.EndCurrentJob(JobCondition.InterruptForced, false); }
         }
 
@@ -133,14 +155,14 @@ namespace FamilyLife
         /// </summary>
         internal static void Reconcile(FamilyComponent c)
         {
-            ClinicVisits.Reset(); CareDemand.Reset();
+            ClinicVisits.Reset(); CareDemand.Reset(); Claims.Clear();
             var office = c.Registry.OfficeFor(OfficeKind.Healer);
             if (office == null) return;
             var r = c.Registry; var care = office.CareRecord();
             bool Here(int id) => r.GetPerson(id) != null;
             care.Examined = care.Examined.Where(Here).ToList();
             care.Missed = care.Missed.Where(Here).ToList();
-            r.ReconcileRefusals(FrameworkServices.Now);          // drops refusals about people or doctors who are gone, ones that have expired, and any damaged entry
+            r.ReconcileRefusals(FrameworkServices.Now, id => r.IsPractitioner(id) || id == office.HolderId);          // drops refusals about people or doctors who are gone, ones that have expired, and any damaged entry
         }
 
         internal static bool CanBeSeen(FamilyComponent c, Pawn doctor, int id) => !Skipped(id, FrameworkServices.Now) && PatientAvailable(c, doctor, id);
@@ -187,6 +209,7 @@ namespace FamilyLife
                     talkSum += FrameworkServices.RunConversation(doctor, patient, OfficeKind.Healer, SkillDefOf.Medicine, ExchangeTopic.Reassure, doctor.thingIDNumber + patient.thingIDNumber + now, CareRules.Modifiers(doctor, bed, false)).Quality;
                 float mods = CareRules.Modifiers(doctor, bed, inClinic);
                 level = CheckupQuality.Cap(CheckupQuality.Level(CheckupQuality.Score(PawnReadinessApi.Level(doctor, SkillDefOf.Medicine), PawnReadinessApi.Level(doctor, SkillDefOf.Social), mods, talkSum, Rand.RangeInclusive(-2, 2))), partial);
+                if (!r.Careers().IsQualified(doctor.thingIDNumber, CareRoles.Career) && level > ResultQuality.Fair) level = ResultQuality.Fair;          // entry-level care gives routine, not advanced, check-ups
                 if (WFL_HediffDefOf.WFL_CheckedUp != null && patient.health?.hediffSet != null)
                 {
                     var existing = patient.health.hediffSet.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
@@ -211,6 +234,8 @@ namespace FamilyLife
                     MoteMaker.ThrowText(patient.DrawPos, patient.Map, "WFL_Checkup_Result".Translate(("WFL_Quality_" + level).Translate()), level == ResultQuality.Poor ? new UnityEngine.Color(1f, .78f, .62f) : level == ResultQuality.Excellent ? new UnityEngine.Color(.72f, 1f, .72f) : UnityEngine.Color.white);
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Check-up effects skipped: " + ex.Message); }
+            Claims.Release(patient.thingIDNumber);
+            CareCareers.Report(FamilyComponent.Current, doctor, patient, level, now);
             r.NoteCareQuality(patient.thingIDNumber, level);
             Served(r, OfficeKind.Healer, doctor, patient, now);
             r.RecordOfficeWork(OfficeKind.Healer, doctor.thingIDNumber, FrameworkServices.NextToken(), now, .35f + .15f * Fitness(doctor) + .1f * (int)level);

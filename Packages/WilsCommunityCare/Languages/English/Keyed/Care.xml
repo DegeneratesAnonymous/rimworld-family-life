@@ -11,4 +11,8 @@
   <WFL_Event_BeginCheckupsDesc>Have the colony's doctor begin a round of check-ups now. Anyone who needs tending is seen to first; people are asked to come, and the sick are visited where they are. In an outbreak the sick are seen first.</WFL_Event_BeginCheckupsDesc>
   <WFL_Checkup_Illness>{0} is seeing the sick first. Tending still comes before any check-up.</WFL_Checkup_Illness>
   <WFL_Checkup_Result>Check-up: {0}</WFL_Checkup_Result>
+  <wils.care.healer_label>Healer</wils.care.healer_label>
+  <wils.care.nurse_label>Nurse</wils.care.nurse_label>
+  <wils.care.doctor_label>Doctor</wils.care.doctor_label>
+  <WFL_Care_NurseTitles>The community has its first Doctor. Entry-level care workers are now called Nurses.</WFL_Care_NurseTitles>
 </LanguageData>

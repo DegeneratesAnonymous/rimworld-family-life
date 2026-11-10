@@ -21,6 +21,7 @@ namespace FamilyLife
             catalog.Provide(Id, "wils.care.checkups");
             catalog.Provide(Id, "wils.care.outbreak");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.care.healer", ModuleId = Id, Kind = OfficeKind.Healer, LabelKey = "WFL_OfficeKind_Healer", PassionSkills = new[] { "Medicine" } });
+            CareCareers.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Healer, CareDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Healer, CareDriver.HealerWork);
             FamilyFramework.PlannedEvents.Register(new PlannedEventDefinition
@@ -46,12 +47,12 @@ namespace FamilyLife
                 Complete = (speaker, other, id, now) =>
                 {
                     var r = FamilyComponent.Current?.Registry; if (r == null) return;
-                    if (r.OfficeFor(OfficeKind.Healer)?.HolderId == speaker.thingIDNumber) CareDriver.CompleteCheckup(r, speaker, other, now);
+                    if (r.OfficeFor(OfficeKind.Healer)?.HolderId == speaker.thingIDNumber || r.IsPractitioner(speaker.thingIDNumber)) CareDriver.CompleteCheckup(r, speaker, other, now);
                 }
             });
             FamilyFramework.Handoffs.Add("wils.care.handoff", Id, CareDriver.OnHealerChanged);
             FamilyFramework.Reconcilers.Add("wils.care.reconcile", Id, CareDriver.Reconcile);
-            FamilyFramework.Resets.Add("wils.care.reset", Id, () => { ClinicVisits.Reset(); CareDemand.Reset(); });
+            FamilyFramework.Resets.Add("wils.care.reset", Id, () => { ClinicVisits.Reset(); CareDemand.Reset(); CareDriver.Claims.Clear(); });
         }
     }
 }
