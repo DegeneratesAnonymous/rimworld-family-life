@@ -95,6 +95,7 @@ namespace FamilyLife
             Scribe_Values.Look(ref PerspectiveInitialized,"perspectiveInitialized");
             Scribe_Deep.Look(ref Registry, "registry");
             if (Registry == null) Registry = new FamilyRegistry();     // a game that did not have the mod yet
+            Registry.ProfessionsAssigned = true;          // Teacher and Healer are professions the player assigns, not posts the assembly votes on
         }
 
         /// <summary>A new game or a loaded one: registration closes (once per session), then each module's on/off state follows what this save recorded, then running modules check their saved state against the world.</summary>

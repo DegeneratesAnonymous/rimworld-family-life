@@ -27,7 +27,7 @@ namespace FamilyLife.Tests
         }
 
         // Indexes and caches are rebuilt on load, so they are not saved.
-        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache", "stateVersion" };
+        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache", "stateVersion", "ProfessionsAssigned" };          // ProfessionsAssigned is a runtime setting the game applies on load, deliberately not saved
 
         [Theory]
         [InlineData(typeof(FamilyEvent))]
