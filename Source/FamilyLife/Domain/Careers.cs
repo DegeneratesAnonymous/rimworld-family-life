@@ -26,7 +26,7 @@ namespace FamilyLife.Domain
 
     /// <summary>
     /// Experience and qualifications for every pawn. Experience is reported by the module that saw the activity, once per activity key. Repeating the same kind of activity on the
-    /// same day earns diminishing returns (each module sets the points per activity, so there is no universal progression limit); <see cref="SafetyCapPerDay"/> is only a configurable
+    /// same day, beyond a generous daily allowance, earns gently diminishing returns with a floor of half (each module sets the points per activity, so there is no universal progression limit); <see cref="SafetyCapPerDay"/> is only a configurable
     /// backstop against a buggy reporter. Qualifications are only ever added, and the ledger keeps experience for careers whose module is not installed.
     ///
     /// Activity keys must be unique per real event: build them as module id + event kind + the event's own id (a class session id, a visit id), never from the pawn alone. The pawn,
@@ -38,9 +38,14 @@ namespace FamilyLife.Domain
         public const string Id = "wils.careers";
         public const int RememberDays = 60, RememberedActivities = 2000;
         /// <summary>Hard backstop on experience credited to one pawn in one day, for a reporter that misbehaves. 0 turns it off. Set from the module's settings.</summary>
-        public static int SafetyCapPerDay = 400;
-        /// <summary>Each repeat of the same kind of activity on one day earns this share of the previous one's points (1 = no diminishing).</summary>
-        public static float RepeatFactor = 0.6f;
+        public static int SafetyCapPerDay = 600;
+        /// <summary>
+        /// Repetition model. The first <see cref="FullPerDay"/> activities of one kind in a day earn full points (a busy teacher or doctor working all day is simply doing the job); after
+        /// that each repeat earns <see cref="RepeatFalloff"/> less, never below <see cref="MinShare"/> of normal. All three are configurable.
+        /// </summary>
+        public static int FullPerDay = 8;
+        public static float RepeatFalloff = .05f, MinShare = .5f;
+        public static float Share(int repeatsSoFar) => Math.Max(Math.Max(0f, Math.Min(1f, MinShare)), 1f - RepeatFalloff * Math.Max(0, repeatsSoFar - FullPerDay + 1));
 
         private sealed class Entry { public Dictionary<string, int> Xp = new Dictionary<string, int>(); public HashSet<string> Quals = new HashSet<string>(); public int Day, DayXp; public Dictionary<string, int> KindCount = new Dictionary<string, int>(); public HashSet<string> Legacy = new HashSet<string>(); }
         private readonly Dictionary<int, Entry> people = new Dictionary<int, Entry>();
@@ -74,7 +79,7 @@ namespace FamilyLife.Domain
             if (e.Day != day) { e.Day = day; e.DayXp = 0; e.KindCount.Clear(); }
             string k = kind ?? "";
             e.KindCount.TryGetValue(k, out int n);
-            int give = Math.Max(1, (int)Math.Round(points * Math.Pow(Math.Max(0f, Math.Min(1f, RepeatFactor)), n)));
+            int give = Math.Max(1, (int)Math.Round(points * Share(n)));
             if (SafetyCapPerDay > 0) give = Math.Min(give, SafetyCapPerDay - e.DayXp);
             if (give <= 0) return 0;
             e.KindCount[k] = n + 1; e.DayXp += give;

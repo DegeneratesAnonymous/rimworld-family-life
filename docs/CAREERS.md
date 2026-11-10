@@ -13,7 +13,7 @@ Both payloads sit in the registry's `SharedState` (versioned, opaque, kept for m
 
 ## Career rules (`Careers.cs`)
 - Level 1: no requirement. Level 2: skill minimums and general experience. Level 3: Level 2, specialty skill, specialty experience (may be banked before qualifying).
-- Experience is credited once per activity key; repeating one kind of activity on one day earns `RepeatFactor` (0.6) of the previous; `SafetyCapPerDay` (400, 0 = off) is only a backstop. Dedup keys are dated and forgotten after 60 days (max 2,000 kept).
+- Experience is credited once per activity key; the first `FullPerDay` (8) activities of a kind in a day earn full points, then each repeat earns `RepeatFalloff` (5%) less, never below `MinShare` (50%); `SafetyCapPerDay` (600, 0 = off) is only a backstop. All are configurable statics. Dedup keys are dated and forgotten after 60 days (max 2,000 kept).
 - Qualifications are never removed (skill decay, changed definitions). A lowered bar is met at the next check.
 - Careers of a module that is not installed stay in the ledger untouched.
 - Existing pawns get no invented history. Holders of the old Teacher/Healer posts are *grandfathered*: assigned, and given the Level 2 qualification marked legacy, with zero experience.

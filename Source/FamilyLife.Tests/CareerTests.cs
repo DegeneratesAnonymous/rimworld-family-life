@@ -67,34 +67,57 @@ namespace FamilyLife.Tests
             Assert.Equal(10, back.GeneralXp(1, "c"));
         }
 
-        [Fact] public void Repeating_the_same_kind_of_activity_on_one_day_earns_less_each_time_and_a_new_day_resets_it()
+        [Fact] public void A_normal_working_day_earns_full_experience_and_only_heavy_repetition_is_trimmed()
         {
-            var l = new CareerLedger(); int a = l.Award(1, "c", null, "k", "t0", 100, 7), b = l.Award(1, "c", null, "k", "t1", 100, 7), c = l.Award(1, "c", null, "k", "t2", 100, 7);
-            Assert.Equal(100, a); Assert.True(b < a && c < b);
-            Assert.Equal(100, l.Award(1, "c", null, "other", "t3", 100, 7));          // a different kind is not diminished
-            Assert.Equal(100, l.Award(1, "c", null, "k", "t4", 100, 8));
+            var l = new CareerLedger(); int total = 0;
+            for (int i = 0; i < CareerLedger.FullPerDay; i++) total += l.Award(1, "c", null, "k", "t" + i, 10, 7);
+            Assert.Equal(10 * CareerLedger.FullPerDay, total);                                           // a hospital or school day: all full value
+            int ninth = l.Award(1, "c", null, "k", "t9", 10, 7), twentieth = 0;
+            for (int i = 10; i < 21; i++) twentieth = l.Award(1, "c", null, "k", "t" + i, 10, 7);
+            Assert.True(ninth <= 10 && ninth >= 9); Assert.True(twentieth < ninth);
+            Assert.Equal(10, l.Award(1, "c", null, "other", "x", 10, 7));                                // another kind is not affected
+            Assert.Equal(10, l.Award(1, "c", null, "k", "next", 10, 8));                                 // a new day starts fresh
         }
 
-        [Fact] public void The_safety_cap_is_configurable_and_can_be_turned_off()
+        [Fact] public void Extreme_repetition_never_drops_below_the_floor_and_the_backstop_bounds_the_day()
         {
-            int old = CareerLedger.SafetyCapPerDay; float f = CareerLedger.RepeatFactor;
+            var l = new CareerLedger(); int last = 0, total = 0;
+            for (int i = 0; i < 300; i++) { last = l.Award(1, "c", null, "k", "e" + i, 20, 3); total += last; }
+            Assert.True(total <= CareerLedger.SafetyCapPerDay);
+            var m = new CareerLedger(); int old = CareerLedger.SafetyCapPerDay;
             try
             {
-                CareerLedger.RepeatFactor = 1f; CareerLedger.SafetyCapPerDay = 50;
-                var l = new CareerLedger(); int total = 0; for (int i = 0; i < 20; i++) total += l.Award(1, "c", null, "k", "t" + i, 10, 1);
-                Assert.Equal(50, total);
-                CareerLedger.SafetyCapPerDay = 0; var m = new CareerLedger(); total = 0; for (int i = 0; i < 20; i++) total += m.Award(1, "c", null, "k", "t" + i, 10, 1);
-                Assert.Equal(200, total);
+                CareerLedger.SafetyCapPerDay = 0; int worst = 20;
+                for (int i = 0; i < 300; i++) worst = System.Math.Min(worst, m.Award(1, "c", null, "k", "e" + i, 20, 3));
+                Assert.Equal(10, worst);                                                                  // half of normal, however many
             }
-            finally { CareerLedger.SafetyCapPerDay = old; CareerLedger.RepeatFactor = f; }
+            finally { CareerLedger.SafetyCapPerDay = old; }
+        }
+
+        [Fact] public void A_hospital_or_school_colony_still_progresses_fast_enough()
+        {
+            var l = new CareerLedger(); int days = 0; var d = Teaching();
+            for (; days < 30 && !l.IsQualified(1, d.Id); days++)
+            {
+                for (int v = 0; v < 12; v++) l.Award(1, d.Id, null, "teach.class", "c" + days + "_" + v, 10, days);        // twelve pupil-classes a day
+                l.Evaluate(1, d, Skills(6, 0));
+            }
+            Assert.True(l.IsQualified(1, d.Id)); Assert.True(days <= 2);
+        }
+
+        [Fact] public void Share_settings_are_configurable()
+        {
+            int f = CareerLedger.FullPerDay; float fa = CareerLedger.RepeatFalloff, ms = CareerLedger.MinShare;
+            try { CareerLedger.FullPerDay = 2; CareerLedger.RepeatFalloff = .25f; CareerLedger.MinShare = .7f; Assert.Equal(1f, CareerLedger.Share(1)); Assert.Equal(.75f, CareerLedger.Share(2), 3); Assert.Equal(.7f, CareerLedger.Share(50), 3); }
+            finally { CareerLedger.FullPerDay = f; CareerLedger.RepeatFalloff = fa; CareerLedger.MinShare = ms; }
         }
 
         [Fact] public void Old_activity_records_are_forgotten_and_the_record_is_bounded()
         {
-            int old = CareerLedger.SafetyCapPerDay; float f = CareerLedger.RepeatFactor;
+            int old = CareerLedger.SafetyCapPerDay; float f = CareerLedger.RepeatFalloff;
             try
             {
-                CareerLedger.SafetyCapPerDay = 0; CareerLedger.RepeatFactor = 1f;
+                CareerLedger.SafetyCapPerDay = 0; CareerLedger.RepeatFalloff = 0f;
                 var l = new CareerLedger(); l.Award(1, "c", null, "k", "old", 5, 1);
                 Assert.Equal(0, l.Award(1, "c", null, "k", "old", 5, 2));                                  // remembered
                 l.Award(1, "c", null, "k", "new", 5, 1 + CareerLedger.RememberDays + 5);                   // pruned the old one
@@ -102,7 +125,7 @@ namespace FamilyLife.Tests
                 var big = new CareerLedger(); for (int i = 0; i < CareerLedger.RememberedActivities + 300; i++) big.Award(1, "c", null, "k", "e" + i, 1, 100 + i / 50);
                 Assert.True(CareerLedger.Decode(big.Encode()).Encode().Split((char)10).Length < 20);
             }
-            finally { CareerLedger.SafetyCapPerDay = old; CareerLedger.RepeatFactor = f; }
+            finally { CareerLedger.SafetyCapPerDay = old; CareerLedger.RepeatFalloff = f; }
         }
 
         [Fact] public void The_same_event_credits_each_person_once_but_every_participant()
