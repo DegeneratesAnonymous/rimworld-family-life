@@ -40,7 +40,8 @@ namespace FamilyLife
         {
             var r = Comp?.Registry; if (r == null) return;
             var ledger = r.Assessments(); bool ok = false;
-            foreach (int id in EducationCareers.Instructors(r)) { ledger.End(id); ledger.SetLastYear(id, 0); }
+            foreach (int id in EducationCareers.Instructors(r)) { ledger.End(id); ledger.SetLastYear(id, 0); ledger.Postpone(id, 0); }
+            ledger.NoticeTick = 0;
             FrameworkServices.ForceUntil = Now + 6000;
             foreach (int id in EducationCareers.Instructors(r)) if (Comp.TryGetPawn(id) is Pawn t && t.Spawned) ok |= EducationEvents.BeginTesting(Comp, r, t, Now, true);
             Messages.Message(ok ? "Each teacher's own testing has begun for their pupils: each child sits a check every free hour for two days." : "The testing could not begin (no teacher has lessons on record to assess).", MessageTypeDefOf.TaskCompletion, false);

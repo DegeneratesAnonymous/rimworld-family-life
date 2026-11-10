@@ -112,5 +112,24 @@ namespace FamilyLife.Tests
             var l = new AssessmentLedger(); for (int i = 0; i < AssessmentLedger.MaxDone + 50; i++) l.MarkDone(i + 1, "Melee", 1);
             Assert.False(l.WasDone(1, "Melee", 1)); Assert.True(l.WasDone(AssessmentLedger.MaxDone + 50, "Melee", 1));
         }
+
+        [Fact] public void Postponement_and_the_notice_are_per_teacher_saved_and_a_skip_lasts_the_year()
+        {
+            var r = Colony(); var l = r.Assessments();
+            l.Postpone(1, 5000); l.NoticeTick = 700; l.NoticeYear = 5500; l.SetLastYear(2, 5500);
+            var back = SaveSim.Reload(SaveSim.Reload(r)).Assessments();
+            Assert.Equal(5000, back.PostponedUntil(1)); Assert.Equal(0, back.PostponedUntil(2));
+            Assert.Equal(700, back.NoticeTick); Assert.Equal(5500, back.NoticeYear);
+            Assert.Equal(5500, back.LastYearOf(2));                                  // skipped for this year: eligibility compares this
+        }
+
+        [Fact] public void Skipping_one_teacher_does_not_skip_another_and_a_postponed_teacher_is_not_assessed_early()
+        {
+            var l = new AssessmentLedger(); var log = Log(Rec(10, "Melee", 9f, 1), Rec(11, "Plants", 9f, 2));
+            l.SetLastYear(1, 5500); l.Postpone(2, 9000);
+            Assert.Equal(5500, l.LastYearOf(1)); Assert.NotEqual(5500, l.LastYearOf(2));
+            Assert.True(l.PostponedUntil(2) > 8000 && l.PostponedUntil(2) <= 9000);
+            Assert.Contains(11, AssessmentOwnership.PupilsFor(2, log, new[] { 1, 2 }, 5500, l));          // the records and ownership are untouched by either choice
+        }
     }
 }

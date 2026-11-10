@@ -27,14 +27,53 @@ namespace FamilyLife
             var ledger = r.Assessments(); var instructors = EducationCareers.Instructors(r);
             foreach (var orphan in ledger.Active.Where(x => !instructors.Contains(x.Owner)).ToList())
                 if (instructors.Count > 0) ledger.Transfer(orphan.Owner, instructors.FirstOrDefault(i => ledger.Of(i) == null));
+            var eligible = new List<int>();
             foreach (int id in instructors)
             {
                 var teacher = c.TryGetPawn(id); if (teacher == null || !teacher.Spawned || teacher.Dead || teacher.Map == null) continue;
                 var sitting = ledger.Of(id);
                 if (sitting != null) { RunTesting(c, r, ledger, sitting, teacher, now); continue; }
-                if (!IsAprimay(teacher.Map) || ledger.LastYearOf(id) == Year(teacher.Map)) continue;
-                BeginTesting(c, r, teacher, now, false);
+                if (IsEligible(c, r, ledger, instructors, teacher, now)) eligible.Add(id);
             }
+            // One consolidated notice for every teacher who has assessments due. It does not hold anything up: if it stands unanswered for a day the assessments begin. A postponed or skipped
+            // assessment is not started again by itself: a postponement sends a new notice when it ends, and a skip lasts the year.
+            if (eligible.Count == 0) { ledger.NoticeTick = 0; return; }
+            int year = Year(c.TryGetPawn(eligible[0]).Map);
+            if (ledger.NoticeTick == 0 || ledger.NoticeYear != year) { SendNotice(c, r, eligible); ledger.NoticeTick = Math.Max(1, now); ledger.NoticeYear = year; }
+            else if (now < ledger.NoticeTick || now - ledger.NoticeTick >= Day) BeginAll(c, now);
+        }
+
+        /// <summary>This teacher has assessments of their own due: it is Aprimay, they have not held, skipped or postponed this year's, and they own pupils' work. A teacher with nothing to assess is passed over for the year.</summary>
+        private static bool IsEligible(FamilyComponent c, FamilyRegistry r, AssessmentLedger ledger, IList<int> instructors, Pawn teacher, int now)
+        {
+            int id = teacher.thingIDNumber; int year = Year(teacher.Map);
+            if (!IsAprimay(teacher.Map) || ledger.LastYearOf(id) == year || now < ledger.PostponedUntil(id)) return false;
+            if (AssessmentOwnership.PupilsFor(id, r.EducationRecord().LessonLog, instructors, year, ledger).Count == 0) { ledger.SetLastYear(id, year); return false; }
+            return true;
+        }
+
+        private static List<Pawn> EligibleNow(FamilyComponent c, int now)
+        {
+            var r = c.Registry; var ledger = r.Assessments(); var instructors = EducationCareers.Instructors(r);
+            return instructors.Where(id => ledger.Of(id) == null).Select(id => c.TryGetPawn(id)).Where(t => t != null && t.Spawned && !t.Dead && t.Map != null && IsEligible(c, r, ledger, instructors, t, now)).ToList();
+        }
+
+        private static void ClearNotice(FamilyComponent c)
+        {
+            c.Registry.Assessments().NoticeTick = 0;
+            foreach (var l in Find.LetterStack.LettersListForReading.OfType<ChoiceLetter_Assessment>().ToList()) Find.LetterStack.RemoveLetter(l);
+        }
+
+        internal static void BeginAll(FamilyComponent c, int now) { foreach (var t in EligibleNow(c, now)) BeginTesting(c, c.Registry, t, now, false); ClearNotice(c); }
+        internal static void PostponeAll(FamilyComponent c, int now) { var l = c.Registry.Assessments(); foreach (var t in EligibleNow(c, now)) l.Postpone(t.thingIDNumber, now + 7 * Day); ClearNotice(c); }
+        internal static void SkipAll(FamilyComponent c, int now) { var l = c.Registry.Assessments(); foreach (var t in EligibleNow(c, now)) l.SetLastYear(t.thingIDNumber, Year(t.Map)); ClearNotice(c); }
+
+        private static void SendNotice(FamilyComponent c, FamilyRegistry r, List<int> teachers)
+        {
+            var def = DefDatabase<LetterDef>.GetNamedSilentFail("WFL_Assessment") ?? LetterDefOf.NeutralEvent;
+            var names = string.Join(", ", teachers.Select(id => c.TryGetPawn(id)?.LabelShort ?? "?"));
+            var letter = LetterMaker.MakeLetter("WFL_Event_Testing_Title".Translate(), "WFL_Event_Testing_TextMany".Translate(names), def);
+            Find.LetterStack.ReceiveLetter(letter);
         }
 
         /// <summary>Begins this teacher's assessment for the pupils they own. Returns false if there is nothing for them to assess.</summary>
@@ -207,6 +246,25 @@ namespace FamilyLife
             sit.initAction = () => pawn.pather?.StopDead();
             sit.tickAction = () => { if (++sat >= TestingMath.SitTicks) { EducationEvents.Sat(pawn); EndJobWith(JobCondition.Succeeded); } };
             yield return sit;
+        }
+    }
+
+    /// <summary>The one notice for all teachers' assessments: begin them, put them off a week, or skip this assessment period. It only carries the choice; each teacher's schedule and ownership are in the ledger.</summary>
+    public class ChoiceLetter_Assessment : ChoiceLetter
+    {
+        public override IEnumerable<DiaOption> Choices
+        {
+            get
+            {
+                var c = FamilyComponent.Current;
+                if (c != null && OfficeAuthority.MayDirect(c.Registry, FrameworkServices.AvatarId, OfficeKind.Teacher))
+                {
+                    yield return new DiaOption("WFL_Event_Begin".Translate()) { action = () => EducationEvents.BeginAll(c, FrameworkServices.Now), resolveTree = true };
+                    yield return new DiaOption("WFL_Event_Reschedule".Translate()) { action = () => EducationEvents.PostponeAll(c, FrameworkServices.Now), resolveTree = true };
+                    yield return new DiaOption("WFL_Event_Pass".Translate()) { action = () => EducationEvents.SkipAll(c, FrameworkServices.Now), resolveTree = true };
+                }
+                yield return Option_Close;          // nothing needs answering: the assessments begin by themselves after a day
+            }
         }
     }
 }

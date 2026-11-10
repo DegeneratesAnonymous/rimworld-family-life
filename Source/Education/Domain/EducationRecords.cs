@@ -49,6 +49,12 @@ namespace FamilyLife.Domain
         private readonly Dictionary<int, int> lastYear = new Dictionary<int, int>();
         private readonly List<string> done = new List<string>();
         private readonly HashSet<string> migrated = new HashSet<string>();
+        private readonly Dictionary<int, int> postponed = new Dictionary<int, int>();
+        /// <summary>When the one consolidated assessment notice was sent (0 = none waiting) and for which year. Nothing waits on an answer: when it has stood for a day the assessments begin.</summary>
+        public int NoticeTick, NoticeYear;
+
+        public int PostponedUntil(int owner) => postponed.TryGetValue(owner, out int t) ? t : 0;
+        public void Postpone(int owner, int until) { if (owner > 0) postponed[owner] = until; }
 
         public AssessmentSitting Of(int owner) => Active.FirstOrDefault(s => s.Owner == owner);
         public AssessmentSitting SittingFor(int pupil) => Active.FirstOrDefault(s => s.Ids.Contains(pupil));
@@ -91,6 +97,8 @@ namespace FamilyLife.Domain
                 w.Int("o" + i, s.Owner).Int("y" + i, s.Year).Int("t" + i, s.StartTick).Int("l" + i, s.Slot).Ints("i" + i, s.Ids).Ints("p" + i, s.Pass).Ints("r" + i, s.Try).Ints("c" + i, s.Score).Ints("x" + i, s.Excused);
             }
             var owners = lastYear.Keys.OrderBy(k => k).ToList();
+            var po = postponed.Keys.OrderBy(k => k).ToList();
+            w.Int("nt", NoticeTick).Int("ny", NoticeYear).Ints("po", po).Ints("pt", po.Select(k => postponed[k]).ToList());
             return w.Ints("lo", owners).Ints("ly", owners.Select(o => lastYear[o]).ToList()).Strings("done", done).Strings("mig", migrated.OrderBy(m => m, StringComparer.Ordinal).ToList()).ToString();
         }
 
@@ -104,6 +112,8 @@ namespace FamilyLife.Domain
             }
             var lo = r.Ints("lo"); var ly = r.Ints("ly");
             for (int i = 0; i < lo.Count && i < ly.Count; i++) l.lastYear[lo[i]] = ly[i];
+            l.NoticeTick = r.Int("nt"); l.NoticeYear = r.Int("ny");
+            var po = r.Ints("po"); var pt = r.Ints("pt"); for (int i = 0; i < po.Count && i < pt.Count; i++) l.postponed[po[i]] = pt[i];
             foreach (var d in r.Strings("done")) l.done.Add(d);
             foreach (var m in r.Strings("mig")) l.migrated.Add(m);
             return l;

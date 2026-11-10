@@ -62,5 +62,14 @@ namespace FamilyLife.Tests
             var r = Colony(); r.Careers().Award(1, CareRoles.Career, "Midwife", "k", "e", 10, 1);
             Assert.Equal(10, SaveSim.Reload(r).Careers().SpecialtyXp(1, CareRoles.Career, "Midwife"));
         }
+
+        [Fact] public void Counselling_is_never_certain_and_a_better_listener_and_a_bond_of_trust_help()
+        {
+            float low = CounselingMath.HelpChance(2, -50f, false, false), mid = CounselingMath.HelpChance(8, 0f, false, false), high = CounselingMath.HelpChance(20, 100f, true, true);
+            Assert.True(low >= .15f && high <= .9f); Assert.True(low < mid && mid < high);
+            Assert.True(CounselingMath.HelpChance(8, 60f, false, false) > CounselingMath.HelpChance(8, 0f, false, false));
+            Assert.True(CounselingMath.HelpChance(8, 0f, false, true) > CounselingMath.HelpChance(8, 0f, false, false));          // a qualified counselor does somewhat better
+            Assert.Equal(0f, CounselingMath.ReconcileBoost(4)); Assert.Equal(.15f, CounselingMath.ReconcileBoost(40), 3);
+        }
     }
 }

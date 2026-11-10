@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FamilyLife.Domain;
 using FamilyLife.Framework;
 using RimWorld;
@@ -32,6 +33,7 @@ namespace FamilyLife
             report.Step("stop the assessment, empty the class list, clear planned events and give up the post", () =>
             {
                 var lines = c.Registry.EndEducationActivity(now, PendingEvent.Testing);
+                foreach (var l in Find.LetterStack.LettersListForReading.OfType<ChoiceLetter_Assessment>().ToList()) Find.LetterStack.RemoveLetter(l); c.Registry.Assessments().NoticeTick = 0;
                 int sittings = c.Registry.Assessments().Active.Count; c.Registry.Assessments().Active.Clear(); if (sittings > 0) lines.Add(sittings + " assessment(s) in progress were stopped");
                 foreach (var l in FrameworkServices.RemoveNotices(PendingEvent.Testing)) lines.Add(l);
                 return lines.Count == 0 ? "nothing was under way" : string.Join("; ", lines);

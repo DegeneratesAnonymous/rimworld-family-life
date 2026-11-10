@@ -27,6 +27,8 @@ namespace FamilyLife
         public const int ClassPoints = 10, TutoringPoints = 8, AssistPoints = 6;
         /// <summary>A specialist who helps for at least half the instruction raises the class delivery by this much, once, whatever the number of helpers.</summary>
         public const float AssistBonus = 1.10f;
+        /// <summary>A tutor in the room lifts pupil engagement by this much, once, whatever the number of tutors. Distinct from the specialist delivery bonus.</summary>
+        public const float TutorEngagement = .4f;
         /// <summary>A tutor gives a child one lesson at most this often (ticks): about two game hours of rest between lessons.</summary>
         public const int TutorEvery = 5000;
 

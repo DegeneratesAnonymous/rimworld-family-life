@@ -18,6 +18,20 @@ namespace FamilyLife.Domain
         public const int CheckupPoints = 8;
     }
 
+    /// <summary>
+    /// How a counselling talk goes. Nothing is guaranteed: a better listener and a bond of trust make a good outcome more likely, never certain, and a talk that does not help costs nobody
+    /// anything. A talk can also encourage someone toward making peace after a quarrel, a little more likely with a skilled counselor.
+    /// </summary>
+    public static class CounselingMath
+    {
+        public static float HelpChance(int social, float trust, bool grieving, bool qualified)
+        {
+            float p = .35f + .04f * Math.Max(0, social - 4) + Math.Max(-100f, Math.Min(100f, trust)) / 400f + (grieving && social >= 8 ? .05f : 0f) + (qualified ? .1f : 0f);
+            return Math.Max(.15f, Math.Min(.9f, p));
+        }
+        public static float ReconcileBoost(int social) => Math.Max(0f, Math.Min(.15f, .02f * (social - 6)));
+    }
+
     /// <summary>One medical specialty: its role id, the skills it needs and what its activity is. Preliminary balance values, all plain data.</summary>
     public sealed class CareSpecialty
     {
