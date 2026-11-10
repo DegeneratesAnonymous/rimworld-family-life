@@ -83,6 +83,9 @@ namespace FamilyLife
 
         public static string TitleOf(ProfessionRole role, FamilyRegistry r) => (role.TitleKey?.Invoke(r) ?? role.Id + "_label").Translate().ToString();
 
+        /// <summary>The career's own name for headings, from its Level 2 role.</summary>
+        public static string CareerName(CareerDefinition def, FamilyRegistry r) { var role = Professions.All.FirstOrDefault(x => x.Career == def.Id && x.Level == 2); return role != null ? TitleOf(role, r) : def.Id; }
+
         /// <summary>A qualification id as a short phrase: the role it unlocks, or the career and specialty.</summary>
         public static string Describe(string qualification)
         {

@@ -16,6 +16,18 @@ namespace FamilyLife.Domain
         public CareerRule Skill(string skill, int min) { Skills[skill] = min; return this; }
     }
 
+    /// <summary>One step of a career as the pawn tab shows it. Skills are (name, have, need).</summary>
+    public sealed class CareerProgressRow
+    {
+        public string Key;          // null for the Level 2 step, otherwise the specialty
+        public bool Earned, Available;
+        public int GeneralXp, GeneralNeeded, SpecialtyXp, SpecialtyNeeded;
+        public List<KeyValuePair<string, int[]>> Skills = new List<KeyValuePair<string, int[]>>();
+        public float GeneralShare => GeneralNeeded <= 0 ? 1f : Math.Min(1f, GeneralXp / (float)GeneralNeeded);
+        public float SpecialtyShare => SpecialtyNeeded <= 0 ? 1f : Math.Min(1f, SpecialtyXp / (float)SpecialtyNeeded);
+        public bool SkillsMet => Skills.All(k => k.Value[0] >= k.Value[1]);
+    }
+
     /// <summary>A career a module defines: level 2 (qualified professional) and any number of level 3 specialties. All thresholds are data, so they can be tuned or overridden.</summary>
     public sealed class CareerDefinition
     {
@@ -146,6 +158,26 @@ namespace FamilyLife.Domain
                     if (!e.Quals.Contains(q) && GeneralXp(person, def.Id) >= s.Value.GeneralXp && SpecialtyXp(person, def.Id, s.Key) >= s.Value.SpecialtyXp && Meets(s.Value, skill)) { e.Quals.Add(q); gained.Add(q); }
                 }
             return gained;
+        }
+
+        /// <summary>
+        /// Where a person stands on each step of a career, for showing progress: the Level 2 step and each specialty, with experience against what is needed and each required skill against the
+        /// person's own. A specialty is <see cref="CareerProgressRow.Available"/> once Level 2 is earned (specialty experience can be banked before that, and is shown).
+        /// </summary>
+        public List<CareerProgressRow> Progress(int person, CareerDefinition def, Func<string, int> skill)
+        {
+            var rows = new List<CareerProgressRow>();
+            rows.Add(Row(person, def, null, def.Level2, IsQualified(person, def.Id), true, skill));
+            foreach (var s in def.Specialties.OrderBy(x => x.Key, StringComparer.Ordinal))
+                rows.Add(Row(person, def, s.Key, s.Value, IsSpecialist(person, def.Id, s.Key), IsQualified(person, def.Id), skill));
+            return rows;
+        }
+
+        private CareerProgressRow Row(int person, CareerDefinition def, string specialty, CareerRule rule, bool earned, bool available, Func<string, int> skill)
+        {
+            var row = new CareerProgressRow { Key = specialty, Earned = earned, Available = available, GeneralXp = GeneralXp(person, def.Id), GeneralNeeded = rule.GeneralXp, SpecialtyXp = specialty == null ? 0 : SpecialtyXp(person, def.Id, specialty), SpecialtyNeeded = specialty == null ? 0 : rule.SpecialtyXp };
+            foreach (var k in rule.Skills.OrderBy(x => x.Key, StringComparer.Ordinal)) row.Skills.Add(new KeyValuePair<string, int[]>(k.Key, new[] { skill(k.Key), k.Value }));
+            return row;
         }
 
         /// <summary>Which of a rule's requirements are still unmet, for showing progress. Empty when the rule is met.</summary>

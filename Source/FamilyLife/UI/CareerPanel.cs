@@ -41,13 +41,51 @@ namespace FamilyLife
                 }
                 y += 26f;
             }
+            foreach (var career in CareerService.Careers.Where(cd => FamilyFramework.Catalog.IsEnabled(cd.ModuleId))) DrawProgress(view, ref y, pawn, reg, ledger, book, career);
             var history = ledger.HistoryOf(id);
             if (history.Count > 0)
             {
-                string line = string.Join(", ", history.OrderByDescending(e => e.Tick).Take(3).Select(e => CareerService.Describe(e.Qualification)));
+                string line = string.Join(", ", history.OrderByDescending(e => e.Tick).Take(5).Select(e => CareerService.Describe(e.Qualification)));
                 GUI.color = Color.gray; Widgets.Label(new Rect(10f, y, view.width - 10f, 22f), "WFL_Career_History".Translate(line)); GUI.color = Color.white; y += 22f;
             }
             y += 4f;
+        }
+
+        /// <summary>
+        /// Progress through one career: experience against what each step needs, each required skill against the pawn's own (green when met), and a bar for each. Shown only once the pawn has any
+        /// experience, qualification or assignment in the career, and specialties only once they could matter.
+        /// </summary>
+        private static void DrawProgress(Rect view, ref float y, Pawn pawn, FamilyRegistry reg, CareerLedger ledger, AssignmentBook book, CareerDefinition career)
+        {
+            int id = pawn.thingIDNumber;
+            var rows = ledger.Progress(id, career, CareerService.SkillsOf(pawn));
+            bool involved = ledger.GeneralXp(id, career.Id) > 0 || ledger.IsQualified(id, career.Id) || CareerService.Professions.All.Any(r => r.Career == career.Id && book.IsAssigned(id, r.Id));
+            if (!involved) return;
+            string careerName = CareerService.CareerName(career, reg);
+            foreach (var row in rows)
+            {
+                if (row.Key != null && !(row.Earned || row.SpecialtyXp > 0 || row.Available && row.GeneralXp > 0)) continue;
+                var role = CareerService.Professions.All.FirstOrDefault(r => r.Career == career.Id && (row.Key == null ? r.Level == 2 : r.Level == 3 && r.Specialty == row.Key));
+                string name = role != null ? CareerService.TitleOf(role, reg) : careerName;
+                GUI.color = row.Earned ? new Color(.72f, 1f, .72f) : Color.white;
+                Widgets.Label(new Rect(10f, y, view.width - 10f, 22f), name + (row.Earned ? " \u2713" : row.Available ? "" : " (needs " + CareerService.Describe(career.Id) + ")")); GUI.color = Color.white; y += 20f;
+                if (row.Earned) continue;
+                y = Bar(view, y, "WFL_Career_General".Translate(row.GeneralXp, row.GeneralNeeded), row.GeneralShare);
+                if (row.Key != null) y = Bar(view, y, "WFL_Career_Specialty".Translate(row.SpecialtyXp, row.SpecialtyNeeded), row.SpecialtyShare);
+                foreach (var k in row.Skills)
+                {
+                    bool met = k.Value[0] >= k.Value[1];
+                    GUI.color = met ? new Color(.72f, 1f, .72f) : new Color(1f, .78f, .62f);
+                    Widgets.Label(new Rect(28f, y, view.width - 28f, 20f), "WFL_Career_Skill".Translate(k.Key, k.Value[0], k.Value[1])); GUI.color = Color.white; y += 18f;
+                }
+                y += 4f;
+            }
+        }
+
+        private static float Bar(Rect view, float y, string label, float share)
+        {
+            Widgets.Label(new Rect(28f, y, view.width - 28f, 18f), label); y += 18f;
+            Widgets.FillableBar(new Rect(28f, y, view.width - 48f, 8f), share); return y + 12f;
         }
     }
 }

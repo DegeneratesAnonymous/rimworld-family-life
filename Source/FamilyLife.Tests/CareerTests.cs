@@ -199,5 +199,20 @@ namespace FamilyLife.Tests
             var next = CareerLedger.Decode(l.Encode()).Recognise(900); Assert.Single(next); Assert.Equal(2, next[0].Person);
             l.Grandfather(5, "c"); Assert.True(l.IsQualified(5, "c"));
         }
+
+        [Fact] public void Progress_shows_each_step_with_experience_skills_and_availability()
+        {
+            var l = new CareerLedger(); var d = Teaching();
+            l.Award(1, d.Id, "Shooting", "k", "a", 30, 1);
+            var rows = l.Progress(1, d, Skills(3, 5));
+            var l2 = rows[0]; var spec = rows[1];
+            Assert.Null(l2.Key); Assert.False(l2.Earned); Assert.True(l2.Available); Assert.Equal(30, l2.GeneralXp); Assert.Equal(100, l2.GeneralNeeded); Assert.Equal(.3f, l2.GeneralShare, 2);
+            Assert.False(l2.SkillsMet); Assert.Equal(new[] { 3, 6 }, l2.Skills.Single(k => k.Key == "Social").Value);
+            Assert.Equal("Shooting", spec.Key); Assert.False(spec.Available); Assert.Equal(30, spec.SpecialtyXp); Assert.Equal(60, spec.SpecialtyNeeded);
+            for (int i = 0; i < 4; i++) l.Award(1, d.Id, "Shooting", "k", "b" + i, 40, 5 + i * 3);
+            l.Evaluate(1, d, Skills(6, 12));
+            var after = l.Progress(1, d, Skills(6, 12));
+            Assert.True(after[0].Earned && after[1].Earned && after[1].Available); Assert.Equal(1f, after[1].SpecialtyShare);
+        }
     }
 }

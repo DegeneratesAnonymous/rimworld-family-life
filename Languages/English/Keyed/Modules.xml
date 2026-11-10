@@ -25,4 +25,7 @@
   <WFL_Assembly_RecognitionHeader>Recognised this year for their work:</WFL_Assembly_RecognitionHeader>
   <WFL_Assembly_Recognition>{0}: {1}</WFL_Assembly_Recognition>
   <WFL_Assembly_Postpone>Postpone the assembly a month</WFL_Assembly_Postpone>
+  <WFL_Career_General>Experience {0} / {1}</WFL_Career_General>
+  <WFL_Career_Specialty>Specialty experience {0} / {1}</WFL_Career_Specialty>
+  <WFL_Career_Skill>{0}: {1} / {2}</WFL_Career_Skill>
 </LanguageData>
