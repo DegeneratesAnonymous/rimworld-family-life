@@ -155,7 +155,7 @@ namespace FamilyLife
         /// </summary>
         internal static void Reconcile(FamilyComponent c)
         {
-            ClinicVisits.Reset(); CareDemand.Reset(); Claims.Clear();
+            ClinicVisits.Reset(); CareDemand.Reset(); Claims.Clear(); PractitionerLoad.Clear();
             var office = c.Registry.OfficeFor(OfficeKind.Healer);
             if (office == null) return;
             var r = c.Registry; var care = office.CareRecord();
@@ -201,7 +201,7 @@ namespace FamilyLife
         {
             if (!r.RecordCheckup(doctor.thingIDNumber, patient.thingIDNumber, now)) return;
             AppointmentBook.Seen(patient.thingIDNumber);
-            r.NoteVisit(now);
+            r.NoteVisit(now, doctor.thingIDNumber);
             ResultQuality level = ResultQuality.Fair;
             try
             {

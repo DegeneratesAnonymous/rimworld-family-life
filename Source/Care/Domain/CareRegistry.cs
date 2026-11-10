@@ -76,6 +76,13 @@ namespace FamilyLife.Domain
             return c.RoutineDay == now / ActivityTuning.TicksPerDay ? c.RoutineUsed : 0;
         }
 
+        /// <summary>Whether a particular care worker may start another routine visit now: the community's scaled limit, their own limit and their own gap.</summary>
+        public static bool MayVisit(this FamilyRegistry r, int now, bool outbreak, int practitioner, float capacity)
+        {
+            var o = Post(r); if (o == null || !o.Held) return false;
+            return CheckupWorkload.MayStartFor(r.RoutineVisitsToday(now), PractitionerLoad.UsedToday(practitioner, now), outbreak, PractitionerLoad.SinceLast(practitioner, now), capacity);
+        }
+
         public static bool MayVisit(this FamilyRegistry r, int now, bool outbreak)
         {
             var o = Post(r); if (o == null || !o.Held) return false;
@@ -84,8 +91,9 @@ namespace FamilyLife.Domain
             return CheckupWorkload.MayStart(r.RoutineVisitsToday(now), outbreak, since);
         }
 
-        public static void NoteVisit(this FamilyRegistry r, int now)
+        public static void NoteVisit(this FamilyRegistry r, int now, int practitioner = 0)
         {
+            if (practitioner != 0) PractitionerLoad.Note(practitioner, now);
             var o = Post(r); if (o == null) return;
             var c = o.Care();
             int day = now / ActivityTuning.TicksPerDay;

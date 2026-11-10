@@ -56,6 +56,21 @@ namespace FamilyLife.Domain
         public static string EntryLevelTitleKey(FamilyRegistry r) => r.Shared.Has(Domain.CareTerms.Id) && r.CareTerms().NurseTitles ? "wils.care.nurse_label" : "wils.care.healer_label";
     }
 
+    /// <summary>Each care worker's own visits today, so one worker cannot be given more than their share. In memory: after a load a worker may do a few more that day, which is harmless.</summary>
+    public static class PractitionerLoad
+    {
+        private static readonly Dictionary<int, int[]> byPerson = new Dictionary<int, int[]>();          // person -> [day, used, lastVisitTick]
+        public static int UsedToday(int person, int now) => byPerson.TryGetValue(person, out var l) && l[0] == now / ActivityTuning.TicksPerDay ? l[1] : 0;
+        public static int SinceLast(int person, int now) => byPerson.TryGetValue(person, out var l) && l[2] != 0 && now >= l[2] ? now - l[2] : int.MaxValue;
+        public static void Note(int person, int now)
+        {
+            int day = now / ActivityTuning.TicksPerDay;
+            if (!byPerson.TryGetValue(person, out var l) || l[0] != day) l = byPerson[person] = new[] { day, 0, 0 };
+            l[1]++; l[2] = now;
+        }
+        public static void Clear() { byPerson.Clear(); }
+    }
+
     /// <summary>
     /// Who is seeing which patient. A patient is claimed by one practitioner at a time, so two care workers never examine the same person at once or duplicate a visit. A claim ends when the
     /// visit does, and in any case expires, so a visit that never finished cannot hold anyone forever. In memory only.
