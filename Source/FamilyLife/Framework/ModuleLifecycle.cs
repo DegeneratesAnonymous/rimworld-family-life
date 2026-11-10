@@ -27,6 +27,18 @@ namespace FamilyLife.Framework
     {
         public readonly List<ModuleLifecycleRecord> Records = new List<ModuleLifecycleRecord>();
 
+        /// <summary>
+        /// Modules whose "not installed" notice the player asked not to see again, in this save. Per module, so dismissing one never hides another that goes missing later.
+        /// Cleared for a module when it is installed again, so removing it a second time warns again.
+        /// </summary>
+        public readonly List<string> NoticeSuppressed = new List<string>();
+        public bool IsNoticeSuppressed(string id) => NoticeSuppressed.Contains(id);
+        public void SuppressNotice(string id) { if (!string.IsNullOrEmpty(id) && !NoticeSuppressed.Contains(id)) NoticeSuppressed.Add(id); }
+        public bool ClearNoticeSuppression(string id) => NoticeSuppressed.Remove(id);
+        /// <summary>The dismissed notices as a list for the save, and back (the game's ExposeLifecycle uses exactly these).</summary>
+        public List<string> NoticeToList() => NoticeSuppressed.ToList();
+        public void NoticeFromList(IEnumerable<string> ids) { NoticeSuppressed.Clear(); if (ids != null) foreach (var id in ids) SuppressNotice(id); }
+
         public ModuleLifecycleRecord Find(string id) => Records.FirstOrDefault(r => r.ModuleId == id);
         public ModuleState StateOf(string id) => Find(id)?.State ?? ModuleState.Active;
 

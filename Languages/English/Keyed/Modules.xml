@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- The notice shown once when a save refers to a module that is not installed. Per-module wording is keyed by the module id with dots as underscores. -->
+  <WFL_ModuleAbsent_TitleOne>Saved records for a module that is not installed</WFL_ModuleAbsent_TitleOne>
+  <WFL_ModuleAbsent_TitleMany>Saved records for modules that are not installed</WFL_ModuleAbsent_TitleMany>
+  <WFL_ModuleAbsent_Item>{0} is not installed. {1} Their saved records remain intact.</WFL_ModuleAbsent_Item>
+  <WFL_ModuleAbsent_Generic>Its offices and activities are inactive.</WFL_ModuleAbsent_Generic>
+  <WFL_ModuleAbsent_Unprepared>It was not fully prepared for removal.</WFL_ModuleAbsent_Unprepared>
+  <WFL_ModuleAbsent_Footer>Installing the module again brings its records back into use; nothing needs to be repaired. Removing a package on its own does not clean up after it: to take a module out for good, install it again, run its "prepare for removal" step, then remove it.</WFL_ModuleAbsent_Footer>
+  <WFL_ModuleAbsent_Quiet>Don't show again for this save</WFL_ModuleAbsent_Quiet>
+  <WFL_ModuleName_wils_education>Education</WFL_ModuleName_wils_education>
+  <WFL_ModuleName_wils_care>Community Care</WFL_ModuleName_wils_care>
+  <WFL_ModuleInactive_wils_education>The Teacher office and classes are inactive.</WFL_ModuleInactive_wils_education>
+  <WFL_ModuleInactive_wils_care>The Healer office and check-ups are inactive.</WFL_ModuleInactive_wils_care>
+</LanguageData>

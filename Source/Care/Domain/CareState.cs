@@ -28,22 +28,88 @@ namespace FamilyLife.Domain
         public List<int> Examined = new List<int>();
         /// <summary>People the last round did not reach. They go first next time and are never marked as having failed.</summary>
         public List<int> Missed = new List<int>();
-        /// <summary>People who declined this round, and when. A refusal is respected: they are not asked again for several days.</summary>
-        public List<int> Refused = new List<int>(), RefusedTick = new List<int>();
+        /// <summary>
+        /// Who declined, of whom, why, and until when. A refusal is respected until it expires. A <see cref="CareRefusalKind.HealerSpecific"/> one concerns the doctor who was refused
+        /// and lapses when the post changes hands; a <see cref="CareRefusalKind.ServiceWide"/> one is a refusal of check-ups themselves and outlives any doctor.
+        /// </summary>
+        public List<CareRefusal> Refusals = new List<CareRefusal>();
 
-        public string Encode() => new StateWriter().Int("roundStart", RoundStartTick).Int("lastIllness", LastIllnessTick).Int("roundWindow", RoundWindow).Bool("illnessRound", IllnessRound)
-            .Ints("examined", Examined).Ints("missed", Missed).Ints("refused", Refused).Ints("refusedTick", RefusedTick).ToString();
+        public string Encode()
+        {
+            var w = new StateWriter().Int("roundStart", RoundStartTick).Int("lastIllness", LastIllnessTick).Int("roundWindow", RoundWindow).Bool("illnessRound", IllnessRound)
+                .Ints("examined", Examined).Ints("missed", Missed);
+            // Version 2: structured refusals, as parallel lists (the format has no nesting). The reason is always non-empty so the lists stay aligned.
+            return w.Ints("refPatient", Refusals.Select(x => x.Patient).ToList()).Ints("refHealer", Refusals.Select(x => x.Healer).ToList())
+                .Ints("refKind", Refusals.Select(x => (int)x.Kind).ToList()).Strings("refReason", Refusals.Select(x => string.IsNullOrEmpty(x.Reason) ? CareRefusalReason.Unspecified : x.Reason).ToList())
+                .Ints("refTick", Refusals.Select(x => x.Tick).ToList()).Ints("refUntil", Refusals.Select(x => x.Until).ToList()).ToString();
+        }
 
         internal static CareRecordData Read(StateReader r)
         {
             var d = new CareRecordData
             {
                 RoundStartTick = r.Int("roundStart"), LastIllnessTick = r.Int("lastIllness"), RoundWindow = r.Int("roundWindow"), IllnessRound = r.Bool("illnessRound"),
-                Examined = r.Ints("examined"), Missed = r.Ints("missed"), Refused = r.Ints("refused"), RefusedTick = r.Ints("refusedTick")
+                Examined = r.Ints("examined"), Missed = r.Ints("missed")
             };
-            while (d.RefusedTick.Count < d.Refused.Count) d.RefusedTick.Add(0);
+            // Version 2
+            var patient = r.Ints("refPatient"); var healer = r.Ints("refHealer"); var kind = r.Ints("refKind"); var reason = r.Strings("refReason"); var tick = r.Ints("refTick"); var until = r.Ints("refUntil");
+            for (int i = 0; i < patient.Count; i++)
+            {
+                if (patient[i] <= 0 || d.Refusals.Any(x => x.Patient == patient[i] && x.Kind == KindAt(kind, i) && x.Healer == At(healer, i))) continue;
+                int t = At(tick, i);
+                d.Refusals.Add(new CareRefusal
+                {
+                    Patient = patient[i], Healer = At(healer, i), Kind = KindAt(kind, i), Reason = i < reason.Count && reason[i].Length > 0 ? reason[i] : CareRefusalReason.Unspecified,
+                    Tick = t, Until = i < until.Count ? until[i] : t + AppointmentBackoff.RefusalDays * ActivityTuning.TicksPerDay
+                });
+            }
+            // Version 1 and the all-in-one mod wrote only the patient and the tick: a refusal of check-ups, with no record of which doctor. Kept as exactly that (same cooldown), once.
+            var oldPatient = r.Ints("refused"); var oldTick = r.Ints("refusedTick");
+            for (int i = 0; i < oldPatient.Count; i++)
+            {
+                if (oldPatient[i] <= 0 || d.Refusals.Any(x => x.Patient == oldPatient[i] && x.Kind == CareRefusalKind.ServiceWide)) continue;
+                int t = i < oldTick.Count ? oldTick[i] : 0;
+                d.Refusals.Add(new CareRefusal { Patient = oldPatient[i], Healer = 0, Kind = CareRefusalKind.ServiceWide, Reason = CareRefusalReason.Legacy, Tick = t, Until = t + AppointmentBackoff.RefusalDays * ActivityTuning.TicksPerDay });
+            }
             return d;
         }
+
+        private static int At(List<int> list, int i) => i < list.Count ? list[i] : 0;
+        /// <summary>An unrecognised kind (written by a newer version) is treated as the more cautious one: a refusal of the service, which is respected whoever the doctor is.</summary>
+        private static CareRefusalKind KindAt(List<int> list, int i) => i < list.Count && list[i] == (int)CareRefusalKind.HealerSpecific ? CareRefusalKind.HealerSpecific : CareRefusalKind.ServiceWide;
+    }
+
+    /// <summary>What a refusal is about. Saved as a number; never inferred later from what else is on the record.</summary>
+    public enum CareRefusalKind : byte
+    {
+        /// <summary>The patient would not see this doctor. It concerns that doctor only and lapses when someone else takes the post.</summary>
+        HealerSpecific = 1,
+        /// <summary>The patient declined check-ups generally. It stands whoever the doctor is, until it expires.</summary>
+        ServiceWide = 2
+    }
+
+    /// <summary>Stable reason codes (data, not display text) for why someone declined.</summary>
+    public static class CareRefusalReason
+    {
+        public const string ReluctantWithHealer = "reluctant_with_healer";          // how they feel about this doctor (tension, little trust or attachment)
+        public const string LowMood = "low_mood";          // in too poor a mood for anyone's check-up
+        public const string Legacy = "legacy_declined";          // read from a save that recorded only the patient
+        public const string Unspecified = "unspecified";
+    }
+
+    public sealed class CareRefusal
+    {
+        public int Patient;
+        /// <summary>The doctor who was asking. Meaningful for <see cref="CareRefusalKind.HealerSpecific"/>; for a service-wide refusal it is who happened to ask (0 if unknown).</summary>
+        public int Healer;
+        public CareRefusalKind Kind;
+        public string Reason = CareRefusalReason.Unspecified;
+        public int Tick, Until;
+
+        /// <summary>Still being respected at this time (a clock that has gone backwards counts as not respected, as before).</summary>
+        public bool ActiveAt(int now) => now >= Tick && now < Until;
+        /// <summary>Whether it applies when <paramref name="healer"/> holds the post.</summary>
+        public bool AppliesTo(int healer) => Kind == CareRefusalKind.ServiceWide || (Healer != 0 && Healer == healer);
     }
 
     /// <summary>The doctor's own working state. Starts fresh for each holder.</summary>
@@ -84,7 +150,8 @@ namespace FamilyLife.Domain
     public sealed class CareRecordFactory : IStateFactory<CareRecordData>
     {
         public static readonly CareRecordFactory Instance = new CareRecordFactory();
-        public int Version => 1;
+        /// <summary>Version 2: refusals are structured (patient, doctor, kind, reason, tick, expiry). Version 1 held only patient and tick; it is read as a refusal of check-ups generally.</summary>
+        public int Version => 2;
         public CareRecordData Create() => new CareRecordData();
         public CareRecordData Decode(StateReader reader, int version) => CareRecordData.Read(reader);
         public CareRecordData FromLegacy(StateReader legacy) => CareRecordData.Read(legacy);
@@ -107,8 +174,7 @@ namespace FamilyLife.Domain
         public bool IllnessRound { get => record.IllnessRound; set => record.IllnessRound = value; }
         public List<int> Examined { get => record.Examined; set => record.Examined = value ?? new List<int>(); }
         public List<int> Missed { get => record.Missed; set => record.Missed = value ?? new List<int>(); }
-        public List<int> Refused { get => record.Refused; set => record.Refused = value ?? new List<int>(); }
-        public List<int> RefusedTick { get => record.RefusedTick; set => record.RefusedTick = value ?? new List<int>(); }
+        public List<CareRefusal> Refusals { get => record.Refusals; set => record.Refusals = value ?? new List<CareRefusal>(); }
 
         // the doctor's own
         public bool Started { get => holder.Started; set => holder.Started = value; }

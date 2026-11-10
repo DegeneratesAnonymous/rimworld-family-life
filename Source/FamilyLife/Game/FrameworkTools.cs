@@ -13,10 +13,23 @@ namespace FamilyLife
         private static void ModuleStatus()
         {
             var c = FamilyComponent.Current;
-            var lines = FamilyFramework.Catalog.Modules.Select(m => "  " + m.Id + ": " + FamilyFramework.Describe(c, m.Id) + (FamilyFramework.Catalog.IsEnabled(m.Id) ? " (running)" : " (not running)")).ToList();
-            var saved = c?.Registry.Lifecycle.Records.Where(r => !FamilyFramework.Catalog.IsRegistered(r.ModuleId)).Select(r => "  " + r.ModuleId + ": Absent (saved state " + r.State + " is kept)");
-            Log.Message("[Wil's Family Life] Modules (install order: " + string.Join(", ", FamilyFramework.InstallOrder) + "):\n" + string.Join("\n", lines.Concat(saved ?? Enumerable.Empty<string>())) +
-                (FamilyFramework.Problems.Count > 0 ? "\nProblems:\n  " + string.Join("\n  ", FamilyFramework.Problems) : ""));
+            var cat = FamilyFramework.Catalog;
+            var lines = new System.Collections.Generic.List<string>
+            {
+                "Registration " + (FamilyFramework.IsFinalized ? "closed at the first FinalizeInit" : "still open") + ". Install order: " + string.Join(", ", FamilyFramework.InstallOrder)
+            };
+            foreach (var m in cat.Modules)
+            {
+                string state = FamilyFramework.Failures.TryGetValue(m.Id, out var why) || cat.IsBroken(m.Id) ? "FAILED" + (why != null ? " - " + why : "")
+                    : (c?.Registry.Lifecycle.StateOf(m.Id) ?? FamilyLife.Framework.ModuleState.Active) == FamilyLife.Framework.ModuleState.Prepared ? "PREPARED"
+                    : cat.IsEnabled(m.Id) ? "active" : "registered, not running (" + FamilyFramework.Describe(c, m.Id) + ")";
+                lines.Add("  " + m.Id + ": " + state + " (api " + m.ApiVersion + ")");
+            }
+            foreach (var f in FamilyFramework.Failures.Where(f => !cat.IsRegistered(f.Key))) lines.Add("  " + f.Key + ": FAILED - " + f.Value);
+            if (c != null)
+                foreach (var a in FamilyLife.Framework.AbsentModules.Find(c.Registry, cat.IsRegistered))
+                    lines.Add("  " + a.ModuleId + ": ABSENT, saved records kept (" + a.State + "; posts " + a.Posts.Count + ", payloads " + a.Payloads.Count + (c.Registry.Lifecycle.IsNoticeSuppressed(a.ModuleId) ? "; notice dismissed" : "") + ")");
+            Log.Message("[Wil's Family Life] Module status:" + System.Environment.NewLine + string.Join(System.Environment.NewLine, lines) + (FamilyFramework.Problems.Count > 0 ? System.Environment.NewLine + "Validation problems:" + System.Environment.NewLine + "  " + string.Join(System.Environment.NewLine + "  ", FamilyFramework.Problems) : ""));
         }
     }
 }

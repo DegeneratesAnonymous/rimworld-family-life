@@ -91,8 +91,8 @@ namespace FamilyLife
         private static void VisitInPlace(FamilyComponent c, FamilyRegistry r, Pawn holder, int patientId, int now)
         {
             var patient = Spawned(c, patientId); if (patient == null) return;
-            var will = CareRules.Assess(c, holder, patient, now);
-            if (will == PatientResponse.Refuses) { r.NoteRefusal(patientId, now); return; }
+            var will = CareRules.Assess(c, holder, patient, now, out var why);
+            if (will == PatientResponse.Refuses) { r.NoteRefusal(patientId, why.Kind, why.Reason, now); return; }
             if (will == PatientResponse.Busy) { AppointmentBook.Busy(patientId, now); return; }
             // 'Unable' here means unwell: the visit is exactly what they need, so it goes ahead
             if (PawnReadinessApi.StopReason(holder, now) != null) return;
@@ -121,6 +121,7 @@ namespace FamilyLife
         /// </summary>
         internal static void OnHealerChanged(FamilyComponent c, CommunityOffice office, int oldHolder, int newHolder)
         {
+            c.Registry.LapseHealerRefusals(newHolder);          // people who would not see the former doctor are asked afresh; those who declined check-ups themselves are still left alone
             if (oldHolder == 0) return;
             var old = c.TryGetPawn(oldHolder);
             if (old != null) { ClinicVisits.Close(old); if (old.CurJobDef == CareDefOf.WFL_ClinicDoctor) old.jobs.EndCurrentJob(JobCondition.InterruptForced, false); }
@@ -139,9 +140,7 @@ namespace FamilyLife
             bool Here(int id) => r.GetPerson(id) != null;
             care.Examined = care.Examined.Where(Here).ToList();
             care.Missed = care.Missed.Where(Here).ToList();
-            var keep = Enumerable.Range(0, care.Refused.Count).Where(i => Here(care.Refused[i])).ToList();
-            care.RefusedTick = keep.Select(i => i < care.RefusedTick.Count ? care.RefusedTick[i] : 0).ToList();
-            care.Refused = keep.Select(i => care.Refused[i]).ToList();
+            r.ReconcileRefusals(FrameworkServices.Now);          // drops refusals about people or doctors who are gone, ones that have expired, and any damaged entry
         }
 
         internal static bool CanBeSeen(FamilyComponent c, Pawn doctor, int id) => !Skipped(id, FrameworkServices.Now) && PatientAvailable(c, doctor, id);
@@ -237,7 +236,7 @@ namespace FamilyLife
                     else lines.Add("  clinic: no free medical bed in an enclosed room the doctor can reach (visits will be one to one instead)");
                     int able = r.Persons.Count(p => p.InColony && p.Id != healer.HolderId && PatientAvailable(c, d, p.Id));
                     if (NeedsReason(d) != null) lines.Add("  the doctor should stop for: " + NeedsReason(d));
-                    lines.Add("  medical need on the map: " + CareDemand.MedicalNeed(d.Map, now) + (CareDemand.DoctorShouldTend(d, now) ? " (routine visits wait)" : "") + "; visits today " + r.RoutineVisitsToday(now) + " of " + CheckupWorkload.VisitsPerDay(healer.Care().IllnessRound) + "; declined this round: " + healer.Care().Refused.Count + ", missed last round: " + healer.Care().Missed.Count);
+                    lines.Add("  medical need on the map: " + CareDemand.MedicalNeed(d.Map, now) + (CareDemand.DoctorShouldTend(d, now) ? " (routine visits wait)" : "") + "; visits today " + r.RoutineVisitsToday(now) + " of " + CheckupWorkload.VisitsPerDay(healer.Care().IllnessRound) + "; declined: " + healer.Care().Refusals.Count(x => x.Kind == CareRefusalKind.ServiceWide) + " check-ups, " + healer.Care().Refusals.Count(x => x.Kind == CareRefusalKind.HealerSpecific) + " this doctor; missed last round: " + healer.Care().Missed.Count);
                     lines.Add("  patients able to come now: " + able + ", already seen this round: " + healer.Care().Examined.Count);
                 }
             }

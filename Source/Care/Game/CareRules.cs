@@ -72,7 +72,7 @@ namespace FamilyLife
         /// Whether the patient will take part in a routine appointment: from how they feel about this doctor, how they are, and who they are. Kinship makes a person a little more
         /// willing and never less. Nothing else about relatedness matters.
         /// </summary>
-        internal static PatientResponse Assess(FamilyComponent c, Pawn doctor, Pawn patient, int now)
+        internal static PatientResponse Assess(FamilyComponent c, Pawn doctor, Pawn patient, int now, out RefusalCause cause)
         {
             var r = c.Registry;
             bool unable = NeedsBedside(patient);
@@ -88,6 +88,7 @@ namespace FamilyLife
             }
             catch (Exception) { }
             float reluctance = CareParticipation.Reluctance(trust, tension, attach, 0f, mood, r.KinOfHolder(patient.thingIDNumber, OfficeKind.Healer), personality);
+            cause = CareParticipation.CauseOf(trust, tension, attach, 0f, mood);          // used only if they do refuse
             if (FrameworkServices.Forced) reluctance = 0f;          // a developer test is not held up by who happens to be in a mood
             return CareParticipation.Decide(unable, busy, reluctance, Rand.RangeInclusive(0, 99));
         }

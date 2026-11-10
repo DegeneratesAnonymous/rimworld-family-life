@@ -2,11 +2,29 @@
 
 Everything below is **unverified until someone plays it**. The automated checks (unit tests, assembly inspection, package layout, offline reading of real save files) prove structure; none of them starts RimWorld. Tick a box only for something you saw. Record what you saw, not what should have happened.
 
+## First runtime sequence (do this before anything below)
+1. Back up the old (all-in-one) save by copying its `.rws` file somewhere safe.
+2. Stage all three packages: `.\scripts\Stage-ToRimWorld.ps1` (RimWorld closed). Enable Development mode.
+3. Load the old save **first**, before starting any new game. Do not play.
+4. Confirm the one authoritative log line, written when that save loads (not at the main menu): `Modules: wils.framework, wils.familylife, wils.education, wils.care`. No `arrived after start-up` message may appear. If a module is missing from the line, stop and send the log.
+5. Run **Show module status**. Expect every module `active`, none FAILED, no ABSENT entry.
+6. Save under a new test name, then reload that test copy. The module line is not repeated (it is logged once per game session).
+7. Only then begin the scenarios in sections A to H.
+
+Extra checks for the hardening change (record what you see):
+- [ ] **Freeze timing.** The `Modules:` line appears when a game starts or loads, after every mod has initialised, and exactly once however many times you load a save in the session.
+- [ ] **Healer-specific refusal, then replacement.** Make a patient refuse the Healer (high tension with them, low trust); the clinic trace says they would rather not, and the Healer diagnostics count one under "this doctor". Replace the Healer: the new Healer asks that patient again.
+- [ ] **Service-wide refusal, then replacement.** Make a patient refuse while in a very low mood with no problem with the doctor (counted under "check-ups"). Replace the Healer: the patient is still left alone until the six-day cooldown ends.
+- [ ] **Old save refusals.** A pre-change save with a declined patient still leaves them alone after loading; saving and reloading neither adds nor loses any.
+- [ ] **Absent-module notice.** With only the framework staged, load a save that has a Teacher or Healer: one letter names the missing module(s), says what is inactive, that records are intact, and how to restore or remove properly. "Don't show again for this save" stops it after a reload, but removing a different module later warns again. A brand-new game shows nothing.
+- [ ] **Prepared module.** Prepare Education, save, remove it, load: **no** "not installed" letter for Education (removed on purpose); the log says it was prepared for removal. Prepared Education plus a missing Care warns about Care only.
+- [ ] **Reinstall.** Reinstall a module that had been reported: it is active again (or still Prepared if you prepared it), its records are unchanged, and the dismissal no longer applies.
+
 Stage the packages with `.\scripts\Stage-ToRimWorld.ps1` (close RimWorld first). Turn on Development mode for the developer actions ("Wil's Family Life, testing"); **Show module status** lists every module, its state and any registration problem.
 
 ## A. Framework only
 Stage with `-FrameworkOnly` (and make sure `WilsEducation` and `WilsCommunityCare` are not in `Mods`).
-- [ ] The game loads with no red error. The log shows `Modules: wils.framework, wils.familylife`, and no problem.
+- [ ] The game loads with no red error. The log (written when the game loads) shows `Modules: wils.framework, wils.familylife`, and no problem.
 - [ ] No error about a missing job, thought or hediff def, and none about a missing Education or Care type.
 - [ ] The Family window, people, relationships and navigation work.
 - [ ] No lectern "hold class" button, no medical-bed "begin check-ups" button, no Teacher or Healer vacant card.

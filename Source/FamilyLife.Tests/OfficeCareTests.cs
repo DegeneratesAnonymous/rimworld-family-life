@@ -193,7 +193,7 @@ namespace FamilyLife.Tests
             Assert.Equal(PatientResponse.Willing, CareParticipation.Decide(false, false, 80f, 99));          // not the same answer every time
             // A refusal is remembered for days, and the person is not asked again meanwhile.
             var r = Colony();
-            r.NoteRefusal(2, 5000);
+            r.NoteRefusal(2, CareRefusalKind.ServiceWide, CareRefusalReason.LowMood, 5000);
             Assert.True(r.HasRefused(2, 5000 + Day));
             Assert.False(r.HasRefused(2, 5000 + (AppointmentBackoff.RefusalDays + 1) * Day));
             Assert.False(r.HasRefused(3, 5000));
@@ -242,13 +242,13 @@ namespace FamilyLife.Tests
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
             o.Care().Examined = new List<int> { 2, 3 };
-            o.Care().Refused = new List<int> { 21 }; o.Care().RefusedTick = new List<int> { 1500 };
+            o.Care().Refusals = new List<CareRefusal> { TestRefusals.Make(21, 1, CareRefusalKind.ServiceWide, 1500) };
             o.Care().RoundStartTick = 1000; o.Care().NextRoundTick = 0;
             Assert.True(r.BeginCheckupRound(1000 + 40 * Day, 30 * Day));
             Assert.Contains(4, o.Care().Missed); Assert.Contains(20, o.Care().Missed); Assert.Contains(22, o.Care().Missed);
             Assert.DoesNotContain(2, o.Care().Missed);           // they were seen
             Assert.DoesNotContain(21, o.Care().Missed);          // they declined: that is their right, not something to chase
-            Assert.Empty(o.Care().Refused);
+            Assert.Empty(o.Care().Refusals);
         }
 
         // ---------------------------------------------------------------- the benefit
@@ -327,13 +327,13 @@ namespace FamilyLife.Tests
         {
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
-            r.NoteRefusal(2, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; r.NoteVisit(5000);
+            r.NoteRefusal(2, CareRefusalKind.ServiceWide, CareRefusalReason.LowMood, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; r.NoteVisit(5000);
             r.ProfessionalExchange(OfficeKind.Healer, 1, 3, ExchangeTopic.Advice, EventTier.Good, 6000);
             r.NoteCareQuality(3, ResultQuality.Good);
             o.Education().LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
             o.Education().BookUse.Add("3|77|5000");
             var back = SaveSim.Reload(r).OfficeFor(OfficeKind.Healer);
-            Assert.Equal(new[] { 2 }, back.Care().Refused.ToArray());
+            Assert.Equal(new[] { 2 }, back.Care().Refusals.Select(x => x.Patient).ToArray());
             Assert.Equal(new[] { 4 }, back.Care().Missed.ToArray());
             Assert.Equal(20 * Day, back.Care().RoundWindow);
             Assert.Equal(1, back.Care().RoutineUsed);
@@ -349,13 +349,13 @@ namespace FamilyLife.Tests
         public void A_new_holder_keeps_the_communitys_care_record_but_starts_their_own_working_state_and_a_brand_new_office_starts_empty()
         {
             var fresh = new CommunityOffice();
-            Assert.Empty(fresh.Care().Missed); Assert.Empty(fresh.Care().Refused); Assert.Empty(fresh.Education().LessonLog); Assert.Equal(0, fresh.Care().RoundWindow);
+            Assert.Empty(fresh.Care().Missed); Assert.Empty(fresh.Care().Refusals); Assert.Empty(fresh.Education().LessonLog); Assert.Equal(0, fresh.Care().RoundWindow);
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
-            r.NoteRefusal(2, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; o.Care().KinSeen = 3; o.Care().KinQuality = 9f;
+            r.NoteRefusal(2, CareRefusalKind.ServiceWide, CareRefusalReason.LowMood, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; o.Care().KinSeen = 3; o.Care().KinQuality = 9f;
             o.Education().LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
             Assert.True(r.ResignOffice(OfficeKind.Healer, 1, 9000));
-            Assert.Single(o.Care().Refused); Assert.Equal(new[] { 4 }, o.Care().Missed); Assert.Equal(20 * Day, o.Care().RoundWindow);          // the community's care record outlives the doctor: declines are still respected, the missed still go first
+            Assert.Single(o.Care().Refusals); Assert.Equal(new[] { 4 }, o.Care().Missed); Assert.Equal(20 * Day, o.Care().RoundWindow);          // the community's care record outlives the doctor: declines are still respected, the missed still go first
             Assert.Equal(0, o.Care().KinSeen); Assert.Equal(0f, o.Care().KinQuality);          // the doctor's own record of how they treated people does not pass to the next
             Assert.Single(o.Education().LessonLog);          // what the children studied is theirs, not the holder's
         }

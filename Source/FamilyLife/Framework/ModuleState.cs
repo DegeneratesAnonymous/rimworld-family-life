@@ -102,6 +102,7 @@ namespace FamilyLife.Domain
         public List<string> PayloadIds = new List<string>(), PayloadData = new List<string>();
         public List<int> PayloadHolders = new List<int>(), PayloadVersions = new List<int>();
         private readonly Dictionary<string, IModuleState> stateCache = new Dictionary<string, IModuleState>();
+        private readonly Dictionary<string, int> stateVersion = new Dictionary<string, int>();          // the format version each cached state will be written in
 
         /// <summary>
         /// A module's state on this post. <paramref name="perHolder"/> state belongs to whoever holds the post: it starts fresh for a new holder (so nothing needs to be reset when a
@@ -116,18 +117,18 @@ namespace FamilyLife.Domain
                 if (perHolder && PayloadHolders[i] != HolderId)
                 {
                     var fresh = factory.Create();
-                    PayloadHolders[i] = HolderId; PayloadVersions[i] = factory.Version; PayloadData[i] = fresh.Encode(); stateCache[id] = fresh;
+                    PayloadHolders[i] = HolderId; PayloadVersions[i] = factory.Version; PayloadData[i] = fresh.Encode(); stateCache[id] = fresh; stateVersion[id] = factory.Version;
                     return fresh;
                 }
                 if (stateCache.TryGetValue(id, out var cached) && cached is T typed) return typed;
                 var decoded = factory.Decode(new StateReader(PayloadData[i]), PayloadVersions[i]);
-                stateCache[id] = decoded;
+                stateCache[id] = decoded; stateVersion[id] = factory.Version;
                 return decoded;
             }
             int legacy = PayloadIds.IndexOf(LegacyOfficeMigration.PayloadId);
             var made = legacy >= 0 ? factory.FromLegacy(new StateReader(PayloadData[legacy])) : factory.Create();
             PayloadIds.Add(id); PayloadHolders.Add(HolderId); PayloadVersions.Add(factory.Version); PayloadData.Add(made.Encode());
-            stateCache[id] = made;
+            stateCache[id] = made; stateVersion[id] = factory.Version;
             return made;
         }
 
@@ -138,12 +139,12 @@ namespace FamilyLife.Domain
             foreach (var kv in stateCache.ToList())
             {
                 int i = PayloadIds.IndexOf(kv.Key);
-                if (i >= 0) PayloadData[i] = kv.Value.Encode();
+                if (i >= 0) { PayloadData[i] = kv.Value.Encode(); if (stateVersion.TryGetValue(kv.Key, out var v)) PayloadVersions[i] = v; }          // the payload now holds this version's format
             }
         }
 
         /// <summary>Forgets the decoded copies (after a load, so the next use reads what the save held).</summary>
-        public void DropStateCache() => stateCache.Clear();
+        public void DropStateCache() { stateCache.Clear(); stateVersion.Clear(); }
 
         /// <summary>The four lists always agree in length, even if a hand-edited or damaged save left them uneven.</summary>
         private void Align()

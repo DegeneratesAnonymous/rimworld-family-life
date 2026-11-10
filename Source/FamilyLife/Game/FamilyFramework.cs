@@ -18,7 +18,7 @@ namespace FamilyLife
     }
 
     /// <summary>
-    /// The framework's public host. It builds its registries once, installs the modules that announce themselves (each from its own mod constructor, in load order), then freezes: the
+    /// The framework's public host. It builds its registries once, installs the modules that announce themselves (each from its own mod constructor, in load order), then finalizes at the first FinalizeInit: the
     /// whole set is validated once, and from then on nothing can be added and nothing is looked up by reflection. A module that is absent has no entry; one that is refused, failed or is
     /// in a stopped lifecycle state is ignored by every registry. Owner: the framework. Optional modules reference this type and nothing in the framework's internals.
     /// </summary>
@@ -86,10 +86,19 @@ namespace FamilyLife
         public static bool Install(IFamilyModule module) => module != null ? host.Install(module.Id, module.Register) : host.Install(null, null);
 
         /// <summary>
-        /// Ends registration and checks the whole set once. Modules built for another API, or needing something nothing offers, are switched off (not half-loaded). Called after every mod
-        /// constructor has run, before any save is loaded.
+        /// Ends registration and checks the whole set once, then writes the one authoritative line naming the modules that are really running. Called from the first game
+        /// component's FinalizeInit, which is certainly after every mod constructor and after definition loading, so no module can arrive "late" however the game orders its
+        /// start-up. Safe to call any number of times: only the first does anything (no repeated validation, log line or side effect).
         /// </summary>
-        public static void Freeze() => host.Freeze(Offices.Validate());
+        public static void FinalizeStartup()
+        {
+            if (host.Finalize(Offices.Validate())) Log.Message("[Wil's Family Life] " + host.ActiveLine() + (host.Problems.Count > 0 ? " (" + host.Problems.Count + " problem(s) logged above)" : "") + ".");
+        }
+
+        /// <summary>Whether start-up has been finalized (registration is closed).</summary>
+        public static bool IsFinalized => host.IsFinalized;
+        /// <summary>Modules refused, failed or switched off by validation, with the reason.</summary>
+        public static IReadOnlyDictionary<string, string> Failures => host.Failures;
 
         /// <summary>Touching this at start-up runs the framework's own registration before the first save is loaded.</summary>
         public static void Ensure() { }
@@ -166,8 +175,9 @@ namespace FamilyLife
                     catch (Exception ex) { Log.Warning("[Wil's Family Life] '" + m.Id + "' could not check its saved state: " + ex.Message); }
                 }
             }
-            foreach (var rec in r.Lifecycle.Records)
-                if (!Catalog.IsRegistered(rec.ModuleId)) Log.Message("[Wil's Family Life] Module '" + rec.ModuleId + "' is not installed; its saved state (" + rec.State + ") is kept untouched.");
+            foreach (var m in AbsentModules.Find(r, Catalog.IsRegistered))
+                Log.Message("[Wil's Family Life] Module '" + m.ModuleId + "' is not installed; its saved records (" + m.State + (m.Posts.Count > 0 ? ", " + m.Posts.Count + " post(s)" : "") + (m.Payloads.Count > 0 ? ", " + m.Payloads.Count + " state payload(s)" : "") + ") are kept untouched" + (m.Prepared ? " (it was prepared for removal)." : "."));
+            ModuleNotice.ShowIfNeeded(c);
         }
 
         /// <summary>The state of one module in this save: Active, a preparation state, or Absent when its code is not installed.</summary>

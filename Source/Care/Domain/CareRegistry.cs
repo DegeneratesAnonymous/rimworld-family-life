@@ -27,10 +27,10 @@ namespace FamilyLife.Domain
             if (intervalTicks <= 0 || now < c.NextRoundTick || r.CheckupOpen(now)) return false;
             // Anyone the last round did not reach (and who did not decline) is first this time; nobody is marked as having failed for not being reached.
             var prior = c.Examined;
-            c.Missed = r.Persons.Where(p => p.InColony && p.Id != office.HolderId).Select(p => p.Id).Where(id => !prior.Contains(id) && !c.Refused.Contains(id)).Take(96).ToList();
+            c.Missed = r.Persons.Where(p => p.InColony && p.Id != office.HolderId).Select(p => p.Id).Where(id => !prior.Contains(id) && !c.Refusals.Any(x => x.Patient == id)).Take(96).ToList();
             c.RoundStartTick = now; c.Examined = new List<int>(); c.NextRoundTick = now + intervalTicks;
             c.RoundWindow = CheckupWorkload.WindowDays(r.Persons.Count(p => p.InColony && p.Id != office.HolderId), c.IllnessRound) * ActivityTuning.TicksPerDay;
-            c.Refused = new List<int>(); c.RefusedTick = new List<int>();
+            c.Refusals = new List<CareRefusal>();          // a new round asks everyone afresh
             return true;
         }
 
@@ -92,22 +92,51 @@ namespace FamilyLife.Domain
 
         // ---- refusals ----
 
-        public static void NoteRefusal(this FamilyRegistry r, int person, int now)
+        /// <summary>
+        /// Records that a patient declined. The caller says which kind it is and why: nothing is inferred later. A <see cref="CareRefusalKind.HealerSpecific"/> refusal is about the
+        /// doctor holding the post now; a <see cref="CareRefusalKind.ServiceWide"/> one is about check-ups themselves. Asking again before it expires refreshes the same entry.
+        /// </summary>
+        public static void NoteRefusal(this FamilyRegistry r, int person, CareRefusalKind kind, string reason, int now)
         {
-            var o = Post(r); if (o == null) return;
-            var c = o.Care();
-            int i = c.Refused.IndexOf(person);
-            if (i >= 0) { c.RefusedTick[i] = now; return; }
-            c.Refused.Add(person); c.RefusedTick.Add(now);
-            while (c.Refused.Count > 64) { c.Refused.RemoveAt(0); c.RefusedTick.RemoveAt(0); }
+            var o = Post(r); if (o == null || person <= 0) return;
+            if (kind != CareRefusalKind.HealerSpecific && kind != CareRefusalKind.ServiceWide) return;
+            var c = o.CareRecord();
+            int healer = o.Held ? o.HolderId : 0;
+            if (kind == CareRefusalKind.HealerSpecific && healer == 0) return;          // refusing "this doctor" needs a doctor
+            var entry = c.Refusals.FirstOrDefault(x => x.Patient == person && x.Kind == kind && (kind == CareRefusalKind.ServiceWide || x.Healer == healer));
+            if (entry == null) { entry = new CareRefusal { Patient = person, Kind = kind }; c.Refusals.Add(entry); }
+            entry.Healer = healer; entry.Reason = string.IsNullOrEmpty(reason) ? CareRefusalReason.Unspecified : reason;
+            entry.Tick = now; entry.Until = now + AppointmentBackoff.RefusalDays * ActivityTuning.TicksPerDay;
+            while (c.Refusals.Count > 64) c.Refusals.RemoveAt(0);
         }
 
+        /// <summary>Whether this person's refusal is being respected now, for the doctor who holds the post now: a refusal of check-ups, or a refusal of this doctor, not yet expired.</summary>
         public static bool HasRefused(this FamilyRegistry r, int person, int now)
         {
             var o = Post(r); if (o == null) return false;
-            var c = o.Care();
-            int i = c.Refused.IndexOf(person);
-            return i >= 0 && now >= c.RefusedTick[i] && now - c.RefusedTick[i] < AppointmentBackoff.RefusalDays * ActivityTuning.TicksPerDay;
+            int healer = o.Held ? o.HolderId : 0;
+            return o.CareRecord().Refusals.Any(x => x.Patient == person && x.AppliesTo(healer) && x.ActiveAt(now));
+        }
+
+        /// <summary>The post changed hands: refusals of the outgoing doctor lapse, so the new one is not held to them. Refusals of check-ups generally stay until they expire.</summary>
+        public static int LapseHealerRefusals(this FamilyRegistry r, int newHolder)
+        {
+            var o = Post(r); if (o == null) return 0;
+            var c = o.CareRecord();
+            return c.Refusals.RemoveAll(x => x.Kind == CareRefusalKind.HealerSpecific && x.Healer != newHolder);
+        }
+
+        /// <summary>
+        /// Checks the saved refusals against the world: those about someone no longer here, about a doctor no longer here or no longer holding the post, or already expired are dropped.
+        /// A damaged entry (no patient, a doctor-specific one with no doctor) goes too. Returns how many were removed.
+        /// </summary>
+        public static int ReconcileRefusals(this FamilyRegistry r, int now)
+        {
+            var o = Post(r); if (o == null) return 0;
+            var c = o.CareRecord();
+            int healer = o.Held ? o.HolderId : 0;
+            return c.Refusals.RemoveAll(x => x.Patient <= 0 || r.GetPerson(x.Patient) == null || now >= x.Until && now >= x.Tick
+                || x.Kind == CareRefusalKind.HealerSpecific && (x.Healer == 0 || r.GetPerson(x.Healer) == null || x.Healer != healer));
         }
 
         // ---- how people were treated ----

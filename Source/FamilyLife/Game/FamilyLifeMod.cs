@@ -110,20 +110,6 @@ namespace FamilyLife
         }
     }
 
-    /// <summary>
-    /// Runs after every mod constructor, so every optional module has announced itself: the framework validates the whole set once and stops accepting registrations. Nothing is
-    /// registered or looked up by reflection after this.
-    /// </summary>
-    [StaticConstructorOnStartup]
-    internal static class FamilyFrameworkStartup
-    {
-        static FamilyFrameworkStartup()
-        {
-            FamilyFramework.Freeze();
-            Log.Message("[Wil's Family Life] Modules: " + string.Join(", ", FamilyFramework.InstallOrder) + (FamilyFramework.Problems.Count > 0 ? " (" + FamilyFramework.Problems.Count + " problem(s) logged)" : "") + ".");
-        }
-    }
-
     public class FamilyLifeMod : Mod
     {
         public static FamilySettings Settings;

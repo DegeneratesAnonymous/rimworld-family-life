@@ -97,8 +97,8 @@ namespace FamilyLife
             if (Registry == null) Registry = new FamilyRegistry();     // a game that did not have the mod yet
         }
 
-        /// <summary>A new game or a loaded one: each module's on/off state follows what this save recorded, then running modules check their saved state against the world.</summary>
-        public override void FinalizeInit() { base.FinalizeInit(); FamilyFramework.ApplyLifecycle(this); }
+        /// <summary>A new game or a loaded one: registration closes (once per session), then each module's on/off state follows what this save recorded, then running modules check their saved state against the world.</summary>
+        public override void FinalizeInit() { base.FinalizeInit(); FamilyFramework.FinalizeStartup(); FamilyFramework.ApplyLifecycle(this); }
 
         public override void GameComponentTick()
         {

@@ -145,11 +145,11 @@ namespace FamilyLife
             int id = r.NextCheckupPatient(now, x => CareDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && Askable(r, x, now) && CareEvents.SickFirst(c, r, office, x), CareEvents.Priority(c, office));
             var patient = id == 0 ? null : c.TryGetPawn(id);
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
-            switch (CareRules.Assess(c, doctor, patient, now))
+            switch (CareRules.Assess(c, doctor, patient, now, out var why))
             {
                 case PatientResponse.Unable: AppointmentBook.NeedsVisit(id, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " is not fit to come; they will be visited"); return;
                 case PatientResponse.Busy: AppointmentBook.Busy(id, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " is busy just now"); return;
-                case PatientResponse.Refuses: r.NoteRefusal(id, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
+                case PatientResponse.Refuses: r.NoteRefusal(id, why.Kind, why.Reason, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
             }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None)) { AppointmentBook.NeedsVisit(id, now); return; }
             s.Idle = 0;

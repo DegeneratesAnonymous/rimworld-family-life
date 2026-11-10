@@ -6,6 +6,15 @@ namespace FamilyLife.Domain
 {
     /// <summary>Healer, teacher and hall keeper are chosen by the colony at its yearly assembly. The chaplain is not chosen: the game's own ideoligion names its moral guide.</summary>
     public enum OfficeKind : byte { Healer, Teacher, HallKeeper, Chaplain }
+
+    /// <summary>
+    /// Which module owns a post kind that older saves wrote, for telling a player which module a saved post belongs to when that module is not installed. Save compatibility only: new
+    /// posts are identified by their registered id. Shrinks away when posts carry their own module in a definition.
+    /// </summary>
+    public static class LegacyOfficeOwners
+    {
+        public static string ModuleOf(OfficeKind kind) => kind == OfficeKind.Teacher ? "wils.education" : kind == OfficeKind.Healer ? "wils.care" : null;
+    }
     public enum OfficeEnd : byte { None, TermEnded, Neglected, Left, Resigned, Replaced }
     public enum AssemblyState : byte { Campaign, Voting, Counted, Cancelled }
 

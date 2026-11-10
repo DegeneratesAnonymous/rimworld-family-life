@@ -57,11 +57,11 @@ namespace FamilyLife.Tests
         {
             var r = Colony(); var o = Post(r, OfficeKind.Healer, 1);
             var c = o.Care();
-            c.RoundStartTick = 7000; c.RoundWindow = 20 * Day; c.IllnessRound = true; c.Examined.AddRange(new[] { 2, 3 }); c.Missed.Add(4); c.Refused.Add(20); c.RefusedTick.Add(6000);
+            c.RoundStartTick = 7000; c.RoundWindow = 20 * Day; c.IllnessRound = true; c.Examined.AddRange(new[] { 2, 3 }); c.Missed.Add(4); c.Refusals.Add(TestRefusals.Make(20, 1, CareRefusalKind.HealerSpecific, 6000));
             c.RoutineDay = 3; c.RoutineUsed = 2; c.LastVisitTick = 9000; c.KinSeen = 4; c.OtherSeen = 5; c.KinQuality = 9.5f; c.OtherQuality = 7f; c.LastIllnessTick = 1234;
             var back = SaveSim.Reload(r).OfficeFor(OfficeKind.Healer).Care();
             Assert.Equal(7000, back.RoundStartTick); Assert.Equal(20 * Day, back.RoundWindow); Assert.True(back.IllnessRound);
-            Assert.Equal(new[] { 2, 3 }, back.Examined.ToArray()); Assert.Equal(new[] { 4 }, back.Missed.ToArray()); Assert.Equal(new[] { 20 }, back.Refused.ToArray()); Assert.Equal(new[] { 6000 }, back.RefusedTick.ToArray());
+            Assert.Equal(new[] { 2, 3 }, back.Examined.ToArray()); Assert.Equal(new[] { 4 }, back.Missed.ToArray()); Assert.Equal(new[] { 20 }, back.Refusals.Select(x => x.Patient).ToArray()); Assert.Equal(6000, back.Refusals.Single().Tick); Assert.Equal(CareRefusalKind.HealerSpecific, back.Refusals.Single().Kind); Assert.Equal(1, back.Refusals.Single().Healer);
             Assert.Equal(2, back.RoutineUsed); Assert.Equal(9000, back.LastVisitTick); Assert.Equal(9.5f, back.KinQuality); Assert.Equal(5, back.OtherSeen); Assert.Equal(1234, back.LastIllnessTick);
         }
 
@@ -94,9 +94,9 @@ namespace FamilyLife.Tests
             Assert.Equal(0, o.Assessment().TestingStartTick); Assert.Empty(o.Assessment().TestIds);          // the old teacher's assessment is not carried over
             Assert.Single(o.Education().LessonLog); Assert.Single(o.Education().BookUse);                    // the children's record is
             var healer = Post(r, OfficeKind.Healer, 1);
-            healer.Care().Examined.Add(2); healer.Care().Refused.Add(20); healer.Care().RefusedTick.Add(1); healer.Care().KinSeen = 5; healer.Care().RoutineUsed = 3;
+            healer.Care().Examined.Add(2); healer.Care().Refusals.Add(TestRefusals.Make(20, 0, CareRefusalKind.ServiceWide, 1)); healer.Care().KinSeen = 5; healer.Care().RoutineUsed = 3;
             healer.HolderId = 4; healer.HolderFamily = r.FamilyOf(4);
-            Assert.Equal(new[] { 2 }, healer.Care().Examined); Assert.Equal(new[] { 20 }, healer.Care().Refused);          // the community's care record is not the doctor's: it is inherited
+            Assert.Equal(new[] { 2 }, healer.Care().Examined); Assert.Equal(new[] { 20 }, healer.Care().Refusals.Select(x => x.Patient).ToArray());          // the community's care record is not the doctor's: it is inherited
             Assert.Equal(0, healer.Care().KinSeen); Assert.Equal(0, healer.Care().RoutineUsed);                           // the doctor's own working state starts fresh
         }
 
@@ -115,7 +115,7 @@ namespace FamilyLife.Tests
         public void A_modules_payload_is_left_untouched_by_a_registry_that_never_loads_the_module_and_survives_a_reload()
         {
             var r = Colony(); var o = Post(r, OfficeKind.Healer, 1);
-            o.Care().Examined.AddRange(new[] { 2, 3 }); o.Care().Refused.Add(20); o.Care().RefusedTick.Add(1500);
+            o.Care().Examined.AddRange(new[] { 2, 3 }); o.Care().Refusals.Add(TestRefusals.Make(20, 1, CareRefusalKind.HealerSpecific, 1500));
             o.FlushState();
             string carePayload = o.PayloadData[o.PayloadIds.IndexOf(CareOfficeData.Id)];
             // a colony saved with Community Care, loaded without it: nothing reads or writes that payload...
@@ -126,7 +126,7 @@ namespace FamilyLife.Tests
             Assert.Equal(carePayload, onlyEducation.PayloadData[onlyEducation.PayloadIds.IndexOf(CareOfficeData.Id)]);
             // ...and when the module comes back, its data is exactly as it was
             var again = SaveSim.Reload(reloaded).OfficeFor(OfficeKind.Healer).Care();
-            Assert.Equal(new[] { 2, 3 }, again.Examined.ToArray()); Assert.Equal(new[] { 20 }, again.Refused.ToArray());
+            Assert.Equal(new[] { 2, 3 }, again.Examined.ToArray()); Assert.Equal(new[] { 20 }, again.Refusals.Select(x => x.Patient).ToArray());
         }
 
         [Fact]
@@ -188,7 +188,7 @@ namespace FamilyLife.Tests
             Assert.True(LegacyOfficeMigration.Capture(healer, OldSave())); Assert.True(LegacyOfficeMigration.Capture(teacher, OldSave()));
             var c = healer.Care();
             Assert.Equal(90000, c.NextRoundTick); Assert.Equal(61000, c.RoundStartTick); Assert.Equal(20000, c.LastIllnessTick); Assert.Equal(1260000, c.RoundWindow); Assert.True(c.IllnessRound);
-            Assert.Equal(new[] { 2, 3 }, c.Examined.ToArray()); Assert.Equal(new[] { 4 }, c.Missed.ToArray()); Assert.Equal(new[] { 20 }, c.Refused.ToArray()); Assert.Equal(new[] { 61500 }, c.RefusedTick.ToArray());
+            Assert.Equal(new[] { 2, 3 }, c.Examined.ToArray()); Assert.Equal(new[] { 4 }, c.Missed.ToArray()); var legacyRefusal = c.Refusals.Single(); Assert.Equal(20, legacyRefusal.Patient); Assert.Equal(61500, legacyRefusal.Tick); Assert.Equal(CareRefusalKind.ServiceWide, legacyRefusal.Kind); Assert.Equal(CareRefusalReason.Legacy, legacyRefusal.Reason); Assert.Equal(61500 + AppointmentBackoff.RefusalDays * ActivityTuning.TicksPerDay, legacyRefusal.Until);
             Assert.Equal(3, c.RoutineUsed); Assert.Equal(62000, c.LastVisitTick); Assert.Equal(6.5f, c.KinQuality); Assert.Equal(5, c.OtherSeen);
             Assert.True(c.Started);          // an old save's holder is not given a fresh day of grace
             Assert.Equal(90000, c.NextRoundTick);

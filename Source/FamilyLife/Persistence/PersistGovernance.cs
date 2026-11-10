@@ -413,6 +413,7 @@ namespace FamilyLife.Domain
 namespace FamilyLife.Domain
 {
     using System.Collections.Generic;
+    using System.Linq;
     using FamilyLife.Framework;
     using Verse;
 
@@ -427,6 +428,9 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref ticks, "moduleTicks", LookMode.Value); Scribe_Collections.Look(ref attempts, "moduleAttempts", LookMode.Value);
             Scribe_Collections.Look(ref reports, "moduleReports", LookMode.Value);
             if (Scribe.mode == LoadSaveMode.LoadingVars) Lifecycle.FromLists(ids, states, ticks, attempts, reports);
+            var quiet = Lifecycle.NoticeToList();
+            Scribe_Collections.Look(ref quiet, "moduleNoticeOff", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars) Lifecycle.NoticeFromList(quiet);
         }
     }
 }

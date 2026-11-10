@@ -130,11 +130,11 @@ namespace FamilyLife.Tests
         public void Ending_care_keeps_the_communitys_record_of_who_was_missed_and_who_declined()
         {
             var r = Colony(); var healer = Post(r, OfficeKind.Healer, 2);
-            healer.Care().Missed.Add(3); healer.Care().Refused.Add(30); healer.Care().RefusedTick.Add(1234); healer.Care().RoundStartTick = 6000; healer.Care().Examined.Add(3);
+            healer.Care().Missed.Add(3); healer.Care().Refusals.Add(TestRefusals.Make(30, 2, CareRefusalKind.ServiceWide, 1234)); healer.Care().RoundStartTick = 6000; healer.Care().Examined.Add(3);
             r.EndCareActivity(10000, PendingEvent.Checkups, PendingEvent.Illness);
             Assert.Equal(0, healer.Care().RoundStartTick);          // the round in progress is closed
             Assert.Equal(new[] { 3 }, healer.Care().Missed);          // the missed still go first when care returns
-            Assert.Equal(new[] { 30 }, healer.Care().Refused);          // and a refusal is still respected
+            Assert.Equal(new[] { 30 }, healer.Care().Refusals.Select(x => x.Patient).ToArray());          // and a refusal is still respected
         }
 
         // ---------------------------------------------------------------- the post changes hands

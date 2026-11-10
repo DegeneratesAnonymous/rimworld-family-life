@@ -17,7 +17,7 @@ namespace FamilyLife.Tests
     internal static class SaveSim
     {
         // Indexes and caches that the real load rebuilds.
-        private static readonly string[] Skip = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache" };
+        private static readonly string[] Skip = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache", "stateVersion" };
 
         public static FamilyRegistry Reload(FamilyRegistry original)
         {
