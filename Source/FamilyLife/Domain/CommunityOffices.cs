@@ -404,6 +404,14 @@ namespace FamilyLife.Domain
 
         // ---- the yearly assembly ----
 
+        /// <summary>Puts the next assembly back by some days. Only between assemblies: one that is under way is not interrupted. Nothing else depends on the assembly, so this affects no career, class or round.</summary>
+        public bool PostponeAssembly(int now, int days)
+        {
+            if (days <= 0 || NextAssemblyTick == 0 || OpenAssembly != null) return false;
+            NextAssemblyTick = Math.Max(NextAssemblyTick, now) + days * ActivityTuning.TicksPerDay;
+            return true;
+        }
+
         public CommunityAssembly OpenAssembly => Assemblies.FirstOrDefault(a => a.Open);
 
         /// <summary>

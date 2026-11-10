@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FamilyLife.Domain;
+using FamilyLife.Framework;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -59,6 +60,14 @@ namespace FamilyLife
                     : "WFL_Assembly_RaceOpen".Translate(post).ToString());
                 foreach (int cand in challengers)
                     lines.Add("    " + "WFL_Assembly_Stands".Translate(FamilyUi.NameOf(r, cand), MotiveWords(r.MotivesOf(race, cand))).ToString());
+            }
+            // professional achievements since the last assembly are recognised here; recognising them changes nothing about anyone's qualification or work
+            var recognised = r.Careers().Recognise(FrameworkServices.Now);
+            if (recognised.Count > 0)
+            {
+                lines.Add("");
+                lines.Add("WFL_Assembly_RecognitionHeader".Translate().ToString());
+                foreach (var e in recognised.Take(12)) lines.Add("    " + "WFL_Assembly_Recognition".Translate(FamilyUi.NameOf(r, e.Person), CareerService.Describe(e.Qualification)).ToString());
             }
             Find.LetterStack.ReceiveLetter("WFL_Assembly_Title".Translate(), "WFL_Assembly_Text".Translate(string.Join("\n", lines)), LetterDefOf.PositiveEvent);
         }

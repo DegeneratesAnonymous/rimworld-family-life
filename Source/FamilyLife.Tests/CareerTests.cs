@@ -181,5 +181,23 @@ namespace FamilyLife.Tests
             var m = l.Missing(1, d.Id, null, d.Level2, Skills(4, 0));
             Assert.Contains("Social 6", m); Assert.Contains("experience 30/100", m);
         }
+
+        [Fact] public void Career_history_is_kept_per_person_bounded_and_saved()
+        {
+            var l = new CareerLedger(); l.NoteQualified(1, "c", 100); l.NoteQualified(2, "c", 200); l.NoteQualified(1, "c:Melee", 300);
+            Assert.Equal(new[] { 100, 300 }, l.HistoryOf(1).Select(e => e.Tick).ToArray());
+            Assert.Equal(2, CareerLedger.Decode(l.Encode()).HistoryOf(1).Count);
+            for (int i = 0; i < CareerLedger.MaxHistory + 20; i++) l.NoteQualified(3, "c", 1000 + i);
+            Assert.True(CareerLedger.Decode(l.Encode()).HistoryOf(3).Count <= CareerLedger.MaxHistory);
+        }
+
+        [Fact] public void An_achievement_is_recognised_by_one_assembly_only_and_recognition_changes_nothing()
+        {
+            var l = new CareerLedger(); l.NoteQualified(1, "c", 100); l.NoteQualified(2, "c", 500);
+            var first = l.Recognise(300); Assert.Single(first); Assert.Equal(1, first[0].Person);
+            Assert.Empty(l.Recognise(300));
+            var next = CareerLedger.Decode(l.Encode()).Recognise(900); Assert.Single(next); Assert.Equal(2, next[0].Person);
+            l.Grandfather(5, "c"); Assert.True(l.IsQualified(5, "c"));
+        }
     }
 }

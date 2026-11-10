@@ -51,6 +51,28 @@ namespace FamilyLife.Domain
         private readonly Dictionary<int, Entry> people = new Dictionary<int, Entry>();
         private readonly List<string> seen = new List<string>();      // "key@day", oldest first
         private readonly HashSet<string> seenSet = new HashSet<string>();
+        private readonly List<string> history = new List<string>();          // "tick|person|qualification", oldest first
+        public const int MaxHistory = 120;
+        private int recognisedUpTo;
+
+        /// <summary>Records that a qualification was earned (for the pawn's career history and for the assembly to recognise).</summary>
+        public void NoteQualified(int person, string qualification, int tick)
+        {
+            history.Add(tick + "|" + person + "|" + qualification);
+            while (history.Count > MaxHistory) history.RemoveAt(0);
+        }
+
+        public sealed class HistoryEntry { public int Tick, Person; public string Qualification; }
+        private static HistoryEntry Parse(string h) { var p = h.Split('|'); return p.Length == 3 && int.TryParse(p[0], out int t) && int.TryParse(p[1], out int who) ? new HistoryEntry { Tick = t, Person = who, Qualification = p[2] } : null; }
+        public List<HistoryEntry> HistoryOf(int person) => history.Select(Parse).Where(e => e != null && e.Person == person).ToList();
+
+        /// <summary>Achievements not yet recognised by an assembly, up to <paramref name="now"/>. Each is returned once: asking again returns only newer ones.</summary>
+        public List<HistoryEntry> Recognise(int now)
+        {
+            var fresh = history.Select(Parse).Where(e => e != null && e.Tick > recognisedUpTo && e.Tick <= now).ToList();
+            recognisedUpTo = Math.Max(recognisedUpTo, now);
+            return fresh;
+        }
 
         private Entry Of(int person) { if (!people.TryGetValue(person, out var e)) people[person] = e = new Entry(); return e; }
         private static string Special(string career, string specialty) => career + ":" + specialty;
@@ -146,7 +168,7 @@ namespace FamilyLife.Domain
                 w.Strings("xk" + id, xk).Ints("xv" + id, xk.Select(k => e.Xp[k]).ToList()).Strings("q" + id, e.Quals.OrderBy(q => q, StringComparer.Ordinal).ToList()).Int("d" + id, e.Day).Int("dx" + id, e.DayXp)
                     .Strings("kc" + id, e.KindCount.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => x.Key + "=" + x.Value).ToList()).Strings("lg" + id, e.Legacy.OrderBy(x => x, StringComparer.Ordinal).ToList());
             }
-            return w.Strings("seen", seen).ToString();
+            return w.Strings("seen", seen).Strings("hist", history).Int("recog", recognisedUpTo).ToString();
         }
 
         public static CareerLedger Decode(string text) => Decode(new StateReader(text));
@@ -162,6 +184,8 @@ namespace FamilyLife.Domain
                 foreach (var c in r.Strings("kc" + id)) { int i = c.LastIndexOf('='); if (i > 0 && int.TryParse(c.Substring(i + 1), out int cnt)) e.KindCount[c.Substring(0, i)] = cnt; }
                 foreach (var c in r.Strings("lg" + id)) e.Legacy.Add(c);
             }
+            foreach (var h in r.Strings("hist")) l.history.Add(h);
+            l.recognisedUpTo = r.Int("recog");
             foreach (var s in r.Strings("seen")) { int i = s.LastIndexOf('@'); if (i > 0 && l.seenSet.Add(s.Substring(0, i))) l.seen.Add(s); }
             return l;
         }

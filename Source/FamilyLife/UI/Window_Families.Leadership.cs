@@ -432,6 +432,8 @@ namespace FamilyLife
             if (registry.HallNamed && FamilyKit.Action(new Rect(196f, cy, 150f, 26f), "WFL_Hall_Clear".Translate(), true)) registry.ClearHall();
             cy += 32f;
             if (registry.NextAssemblyTick > 0) cy += FamilyKit.Label(cv, cy, "WFL_Assembly_Next".Translate(FamilyUi.Date(registry.NextAssemblyTick)), 0f, true);
+            if (registry.NextAssemblyTick > 0 && registry.OpenAssembly == null && FamilyKit.Action(new Rect(0f, cy, 200f, 26f), "WFL_Assembly_Postpone".Translate(), true)) registry.PostponeAssembly(Find.TickManager.TicksGame, 30);
+            if (registry.NextAssemblyTick > 0 && registry.OpenAssembly == null) cy += 32f;
             var openAssembly = registry.OpenAssembly;
             if (openAssembly != null)
                 foreach (var race in openAssembly.Races)

@@ -41,6 +41,12 @@ namespace FamilyLife
                 }
                 y += 26f;
             }
+            var history = ledger.HistoryOf(id);
+            if (history.Count > 0)
+            {
+                string line = string.Join(", ", history.OrderByDescending(e => e.Tick).Take(3).Select(e => CareerService.Describe(e.Qualification)));
+                GUI.color = Color.gray; Widgets.Label(new Rect(10f, y, view.width - 10f, 22f), "WFL_Career_History".Translate(line)); GUI.color = Color.white; y += 22f;
+            }
             y += 4f;
         }
     }

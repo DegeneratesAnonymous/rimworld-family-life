@@ -72,7 +72,10 @@ namespace FamilyLife
                 int given = ledger.Award(pawn.thingIDNumber, careerId, specialty, kind, activityKey, points, day);
                 if (given <= 0) return 0;
                 foreach (var gained in ledger.Evaluate(pawn.thingIDNumber, def, SkillsOf(pawn)))
+                {
+                    ledger.NoteQualified(pawn.thingIDNumber, gained, now);
                     Messages.Message("WFL_Career_Qualified".Translate(pawn.LabelShort, Describe(gained)), pawn, MessageTypeDefOf.PositiveEvent, false);
+                }
                 return given;
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] A career report was skipped: " + ex.Message); return 0; }

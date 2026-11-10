@@ -21,4 +21,8 @@
   <WFL_Career_Experience>Professional experience: {0}</WFL_Career_Experience>
   <WFL_Career_Assign>Assign</WFL_Career_Assign>
   <WFL_Career_Unassign>Unassign</WFL_Career_Unassign>
+  <WFL_Career_History>Qualified: {0}</WFL_Career_History>
+  <WFL_Assembly_RecognitionHeader>Recognised this year for their work:</WFL_Assembly_RecognitionHeader>
+  <WFL_Assembly_Recognition>{0}: {1}</WFL_Assembly_Recognition>
+  <WFL_Assembly_Postpone>Postpone the assembly a month</WFL_Assembly_Postpone>
 </LanguageData>

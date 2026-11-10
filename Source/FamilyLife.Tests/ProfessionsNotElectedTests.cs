@@ -71,5 +71,18 @@ namespace FamilyLife.Tests
             back.MaintainOffices(5000); back.ElectOffices(5000, Everyone);
             Assert.Equal(healer, back.OfficeFor(OfficeKind.Healer).HolderId);
         }
+
+        [Fact] public void The_assembly_can_be_postponed_between_assemblies_and_nothing_professional_changes()
+        {
+            var r = Colony(); r.ElectOffices(2000, Everyone); r.MaintainOffices(3000);
+            int due = r.NextAssemblyTick; Assert.True(due > 0);
+            var l = r.Careers(); l.Grandfather(2, "c"); r.SeatService(OfficeKind.Teacher, 2, 3000);
+            Assert.True(r.PostponeAssembly(4000, 30)); Assert.Equal(due + 30 * Day, r.NextAssemblyTick);
+            Assert.False(r.PostponeAssembly(4000, 0));
+            Assert.Null(r.CallAssembly(due + 1, Everyone));                                                    // not held while postponed
+            Assert.True(l.IsQualified(2, "c")); Assert.Equal(2, r.OfficeFor(OfficeKind.Teacher).HolderId);
+            var later = r.CallAssembly(due + 31 * Day, Everyone); Assert.NotNull(later);
+            Assert.False(r.PostponeAssembly(due + 31 * Day, 5));                                               // one under way is not interrupted
+        }
     }
 }
