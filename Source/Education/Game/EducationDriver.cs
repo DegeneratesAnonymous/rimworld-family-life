@@ -110,7 +110,7 @@ namespace FamilyLife
             var sched = r.TeacherSchedule(); var legacy = r.OfficeFor(OfficeKind.Teacher);
             bool adults = s != null && s.adultStudents;
             int every = Math.Max(1, Math.Min(10, s?.classEveryDays ?? 3)) * Day;
-            var teachers = r.Assignments().Holders(EducationCareers.Teacher).Where(id => r.GetPerson(id)?.InColony == true).ToList();
+            var teachers = EducationCareers.Instructors(r);
             foreach (int id in teachers)
             {
                 if (legacy != null && legacy.HolderId == id) sched.Seed(id, legacy.NextSessionTick);          // an existing save carries on from the old post's date
@@ -124,7 +124,7 @@ namespace FamilyLife
                     var students = r.Persons.Where(p => p.InColony && p.Id != id && (p.Juvenile || adults) && !ClassSessions.Board.IsBusy(p.Id))
                         .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == teacher.Map && FreeFor(c, p.Id)).Select(p => p.Id).Take(24).ToList();
                     if (students.Count == 0) { sched.Set(id, now + Day / 2); continue; }
-                    var began = ClassSessions.TryBegin(c, teacher, students, now);
+                    var began = ClassSessions.TryBegin(c, teacher, students, now, null, false, EducationCareers.FocusSubject(r, id));
                     if (began == BeginResult.Started) { sched.Set(id, now + every); Messages.Message("WFL_Class_Begins".Translate(teacher.LabelShort), teacher, MessageTypeDefOf.NeutralEvent, false); }
                     else if (began == BeginResult.Cannot) sched.Set(id, now + Day / 2);          // nothing to teach or nowhere to teach it: not tried again for half a day
                 }

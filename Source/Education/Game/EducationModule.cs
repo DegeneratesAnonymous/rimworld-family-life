@@ -43,7 +43,7 @@ namespace FamilyLife
                     var r = FamilyComponent.Current?.Registry; if (r == null) return;
                     if (r.GetPerson(other.thingIDNumber)?.Juvenile != true && !(FamilyLifeMod.Settings?.adultStudents ?? false)) return;
                     if (r.OfficeFor(OfficeKind.Teacher)?.HolderId == speaker.thingIDNumber && r.OfficeFor(OfficeKind.Teacher).SessionQueue.Contains(other.thingIDNumber)) EducationDriver.CompleteLesson(r, speaker, other, now);
-                    else if (r.Assignments().IsAssigned(speaker.thingIDNumber, EducationCareers.Tutor) || r.Assignments().IsAssigned(speaker.thingIDNumber, EducationCareers.Teacher)) EducationCareers.CompleteTutoring(r, speaker, other, now);
+                    else if (r.Assignments().IsAssigned(speaker.thingIDNumber, EducationCareers.Tutor) || EducationCareers.Instructors(r).Contains(speaker.thingIDNumber)) EducationCareers.CompleteTutoring(r, speaker, other, now);
                 }
             });
             FamilyFramework.Handoffs.Add("wils.education.handoff", Id, EducationDriver.OnTeacherChanged);

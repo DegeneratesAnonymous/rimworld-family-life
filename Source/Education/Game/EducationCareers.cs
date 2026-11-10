@@ -15,6 +15,11 @@ namespace FamilyLife
     {
         public const string Career = "wils.education.teaching";
         public const string Tutor = "wils.education.tutor", Teacher = "wils.education.teacher";
+        /// <summary>The twelve vanilla skills a subject specialist can be qualified in (skill def names).</summary>
+        public static readonly string[] Subjects = { "Shooting", "Melee", "Construction", "Mining", "Cooking", "Plants", "Animals", "Crafting", "Artistic", "Medicine", "Social", "Intellectual" };
+        public static string SpecialistRole(string subject) => "wils.education.specialist." + subject.ToLowerInvariant();
+        /// <summary>Subject specialist: a Teacher who also has real mastery (skill 12) and has taught the subject a good deal (150 points of that subject, 400 overall). Preliminary balance values.</summary>
+        public const int SpecialistSkill = 12, SpecialistSubjectExperience = 150, SpecialistExperience = 400;
 
         /// <summary>Teacher: enough social skill to hold a room, and about a dozen real lessons or classes of experience. No single subject is required: teaching is not only Intellectual.</summary>
         public const int TeacherSocial = 4, TeacherExperience = 120;
@@ -28,9 +33,29 @@ namespace FamilyLife
             CareerService.RegisterCareer(new CareerDefinition { Id = Career, ModuleId = moduleId, Level2 = new CareerRule { GeneralXp = TeacherExperience }.Skill("Social", TeacherSocial) });
             CareerService.RegisterRole(new ProfessionRole { Id = Tutor, ModuleId = moduleId, Career = Career, Level = 1 });
             CareerService.RegisterRole(new ProfessionRole { Id = Teacher, ModuleId = moduleId, Career = Career, Level = 2 });
+            var def = CareerService.Career(Career);
+            foreach (string subject in Subjects)
+            {
+                def.Specialties[subject] = new CareerRule { GeneralXp = SpecialistExperience, SpecialtyXp = SpecialistSubjectExperience }.Skill(subject, SpecialistSkill).Skill("Social", TeacherSocial);
+                CareerService.RegisterRole(new ProfessionRole { Id = SpecialistRole(subject), ModuleId = moduleId, Career = Career, Level = 3, Specialty = subject });
+            }
             CareerService.RegisterSeat(moduleId, OfficeKind.Teacher, Teacher);
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".classes", ModuleId = moduleId, Interval = 600, Run = now => { var c = FamilyComponent.Current; if (c != null) EducationDriver.ClassWork(c, now); } });
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".tutors", ModuleId = moduleId, Interval = 1200, Run = now => { var c = FamilyComponent.Current; if (c != null) TutorWork(c, now); } });
+        }
+
+        /// <summary>The subject a specialist-only instructor teaches (their first specialist assignment), or null if they are assigned as a Teacher or hold none.</summary>
+        internal static string FocusSubject(FamilyRegistry r, int id)
+        {
+            var book = r.Assignments(); if (book.IsAssigned(id, Teacher)) return null;
+            return Subjects.FirstOrDefault(s => book.IsAssigned(id, SpecialistRole(s)));
+        }
+
+        /// <summary>Everyone who instructs classes: assigned Teachers and subject specialists (a specialist gives focused classes in their subject and covers for an absent Teacher).</summary>
+        internal static System.Collections.Generic.List<int> Instructors(FamilyRegistry r)
+        {
+            var book = r.Assignments();
+            return book.Holders(Teacher).Concat(Subjects.SelectMany(s => book.Holders(SpecialistRole(s)))).Distinct().Where(id => r.GetPerson(id)?.InColony == true).ToList();
         }
 
         /// <summary>Experience for a pupil's finished class or lesson, with the subject as the specialty so subject experience is banked for later.</summary>

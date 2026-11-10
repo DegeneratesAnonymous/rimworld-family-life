@@ -32,4 +32,16 @@
   <WFL_HoldClass_Queued>{0} cannot start the class just now. It will be held at the next opportunity.</WFL_HoldClass_Queued>
   <wils.education.tutor_label>Tutor</wils.education.tutor_label>
   <wils.education.teacher_label>Teacher</wils.education.teacher_label>
+  <wils.education.specialist.shooting_label>Marksmanship Instructor</wils.education.specialist.shooting_label>
+  <wils.education.specialist.melee_label>Combat Instructor</wils.education.specialist.melee_label>
+  <wils.education.specialist.construction_label>Construction Instructor</wils.education.specialist.construction_label>
+  <wils.education.specialist.mining_label>Mining Instructor</wils.education.specialist.mining_label>
+  <wils.education.specialist.cooking_label>Culinary Instructor</wils.education.specialist.cooking_label>
+  <wils.education.specialist.plants_label>Agriculture Instructor</wils.education.specialist.plants_label>
+  <wils.education.specialist.animals_label>Animal Handling Instructor</wils.education.specialist.animals_label>
+  <wils.education.specialist.crafting_label>Crafts Instructor</wils.education.specialist.crafting_label>
+  <wils.education.specialist.artistic_label>Art Instructor</wils.education.specialist.artistic_label>
+  <wils.education.specialist.medicine_label>Medicine Instructor</wils.education.specialist.medicine_label>
+  <wils.education.specialist.social_label>Rhetoric Instructor</wils.education.specialist.social_label>
+  <wils.education.specialist.intellectual_label>Scholar</wils.education.specialist.intellectual_label>
 </LanguageData>

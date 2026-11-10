@@ -56,7 +56,7 @@ namespace FamilyLife
         /// </summary>
         private static Pawn ChooseTeacher(FamilyComponent c, FamilyRegistry r, Building lectern)
         {
-            var all = r.Assignments().Holders(EducationCareers.Teacher).Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && !p.Dead && (lectern == null || p.Map == lectern.Map)).ToList();
+            var all = EducationCareers.Instructors(r).Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && !p.Dead && (lectern == null || p.Map == lectern.Map)).ToList();
             var free = all.Where(p => !ClassSessions.Running(p) && !ClassSessions.Board.IsBusy(p.thingIDNumber));
             Func<Pawn, float> dist = p => lectern == null ? 0f : p.Position.DistanceToSquared(lectern.Position);
             var pick = free.OrderBy(dist).FirstOrDefault() ?? all.OrderBy(dist).FirstOrDefault();
@@ -76,7 +76,7 @@ namespace FamilyLife
             var ids = r.Persons.Where(p => p.InColony && p.Id != teacher.thingIDNumber && (p.Juvenile || adults) && !ClassSessions.Board.IsBusy(p.Id))
                 .Where(p => c.TryGetPawn(p.Id) is Pawn k && k.Spawned && k.Map == teacher.Map && FrameworkServices.Available(k)).Select(p => p.Id).Take(24).ToList();
             if (ids.Count == 0) { if (announce) Messages.Message("WFL_HoldClass_NoPupils".Translate(), MessageTypeDefOf.RejectInput, false); return BeginResult.Later; }          // nobody free yet: worth waiting for
-            var result = ClassSessions.TryBegin(c, teacher, ids, now, lectern, true);
+            var result = ClassSessions.TryBegin(c, teacher, ids, now, lectern, true, EducationCareers.FocusSubject(r, teacher.thingIDNumber));
             if (result != BeginResult.Started) return result;
             Messages.Message("WFL_HoldClass_Started".Translate(teacher.LabelShort, ids.Count), teacher, MessageTypeDefOf.PositiveEvent, false);
             return result;

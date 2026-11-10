@@ -22,20 +22,34 @@ Both payloads sit in the registry's `SharedState` (versioned, opaque, kept for m
 `LegacyProfessionMigration` runs from the maintenance roster. For each held Teacher/Healer office it assigns the holder once (key `office:<kind>:<holder>`), without touching the office. A later player unassignment is not undone. A new holder is migrated on their own.
 
 ## Working seat
-The old Teacher/Healer office records still carry class/round working state. `FamilyRegistry.SeatService` puts an assigned professional in that seat (same hand-over hooks as a change of post, no vote). `ProfessionalSeating.Pick` keeps the sitting person while assigned and present, otherwise the first present assigned colleague covers. Implemented for **Education only** so far.
+The old Teacher/Healer office records still carry shared working state (the community record, assessment, per-holder care budget). `FamilyRegistry.SeatService` puts an assigned professional in that seat (same hand-over hooks as a change of post, no vote). `ProfessionalSeating.Pick` keeps the sitting person while assigned and present, otherwise a colleague covers. Teacher: seat follows Teacher role holders. Care: Doctors first; with no Doctor assigned, Healer-role holders carry on.
 
-## Educators (implemented)
-- Roles: Tutor (L1), Teacher (L2, needs Social 4 and 120 experience; configurable constants in `EducationCareers`). Class = 10 points per attending pupil, tutoring = 8, scaled by attendance share and delivery. The subject skill is recorded as the specialty experience.
-- Tutors give one-to-one lessons using the class gap rule (they never tutor what they know less well), at most one per 5,000 ticks per tutor, never during a class. Existing XP formulas are unchanged.
-- Classes still run one at a time through the seated teacher; another assigned teacher covers when the seated one is gone. Several teachers running classes in parallel needs per-teacher scheduling state (not done).
-- The pawn's Family tab has a Professions section: status, what is missing, Assign/Unassign.
+## Educators (implemented, offline only)
+- Roles: Tutor (L1), Teacher (L2: Social 4, 120 experience), and twelve subject specialists (L3: Teacher + skill 12 in the subject + 150 subject experience + 400 overall). Constants are in `EducationCareers`.
+- **Parallel classes.** Each class is a session on `ClassBoard` (instructor, assistants, pupils, subject, place); nobody is in two at once and a room hosts one class. Each instructor has their own schedule (`TeacherSchedule`, seeded from the old post's date). Teachers and specialists all hold classes; a teacher with no classroom gives one-to-one lessons like a tutor. A specialist-only instructor teaches only their subject. Assessment stays with the seated lead teacher. `ClassBoard.Substitute` supports an assistant taking over; specialists do not yet assist inside a teacher's class.
+- Existing lesson length, breaks, age rules, release rules, XP formulas, books and assessment are unchanged.
 
-## Not done yet
-Phase 1 rename; Care (Healer/Nurse/Doctor, shared workload, claims); the 12 subject specialists and Care specialists; Assembly refactor and rename; assembly recognition of achievements; notifications beyond a qualification message; career history view.
+## Community Care (implemented, offline only)
+- Roles: Healer (L1, shown as Nurse after the first Doctor is assigned; stable id `wils.care.healer`) and Doctor (L2: Medicine 6, 100 experience).
+- Legacy Healer holders keep their Healer assignment and the elected office, are given Doctor qualification (legacy, no experience) and are NOT appointed Doctor. The first Doctor the player assigns sets the Nurse terminology flag (`wils.care.terms`), which persists if the Doctor leaves.
+- The round, budget and refusals stay community-wide. Every assigned care worker does routine visits, claiming patients and beds through `CareClaims` (atomic, expiring). Refusals are per care worker (HealerSpecific) or service-wide; they lapse only when that worker stops serving. Entry-level (unqualified) workers' check-ups are capped at Fair.
+
+## Assembly
+Teacher and Healer are never elected, reviewed or neglected out of their seat once `ProfessionsAssigned` is set (the game sets it on load). The assembly is shown as the Community Assembly; political posts, the hall keeper and the chaplain are unchanged. Renames are display-only; package ids are unchanged.
+
+## Not done
+Counselor, Surgeon, Midwife, Veterinarian, Geneticist; specialists assisting in a teacher's class; assembly recognition of achievements and a postpone option; career history view; UI for requirements of level 3 beyond the Professions section; per-teacher assessments.
+
+## Decisions for you
+- Assessment and the community record still sit on the seated lead teacher.
+- Nurses/Healers do routine visits at all times (Fair cap when unqualified), rather than only assisting once a Doctor exists.
+- Education specialists are Teacher + specialty; they appear as separate assignable roles.
 
 ## In-game checks (none done)
-1. Load an old save with a Teacher: the Family tab of the teacher shows Teacher assigned; classes continue.
-2. Assign a second colonist as Tutor: they offer one-to-one lessons to children when idle; Unassign stops it.
-3. A Tutor is not offered a subject the child knows better. Experience grows in the tooltip; at 120 with Social 4 a message announces Teacher qualification and does not assign it.
-4. Unassign the Teacher, assign another qualified colonist: classes continue with them; the old teacher keeps the qualification.
-5. Save, reload, repeat: assignments and experience unchanged.
+1. Load an old save with a Teacher and a Healer: both appear assigned in the pawn tab; classes and check-ups continue; the Healer still reads "Healer".
+2. Assign a second qualified Teacher and a lectern/desk second room: two classes run at once with different pupils; nobody is in two; a pupil released for a need is not double-booked.
+3. Assign a Tutor: one-to-one lessons happen between classes; a Tutor never gets a subject the child knows better.
+4. Assign the legacy Healer as Doctor: a message says entry-level workers are now Nurses; unassign the Doctor: still Nurses; save/reload: still Nurses.
+5. Two care workers, one outbreak: no patient is examined twice; a refusal to one does not bind the other.
+6. Advance to the assembly: no Teacher/Healer race appears; hall keeper race does. Letters say Community Assembly.
+7. Save, reload, repeat each.

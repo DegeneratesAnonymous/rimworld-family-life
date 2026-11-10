@@ -101,7 +101,7 @@ namespace FamilyLife
         }
 
         /// <summary>Starts a class: the teacher goes to the front of the classroom (fetching a book first if one fits) and calls the children when they arrive.</summary>
-        internal static BeginResult TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false)
+        internal static BeginResult TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false, string onlySubject = null)
         {
             if (teacher == null || Running(teacher) || Board.IsBusy(teacher.thingIDNumber)) return BeginResult.Cannot;
             roster = roster.Where(id => !Board.IsBusy(id)).ToList();          // someone already in another class stays there
@@ -121,6 +121,7 @@ namespace FamilyLife
             var office = c.Registry.OfficeFor(OfficeKind.Teacher);
             var teacherLevels = new Dictionary<string, int>(); var disabled = new HashSet<string>();
             if (teacher.skills != null) foreach (var sk in teacher.skills.skills) { teacherLevels[sk.def.defName] = sk.Level; if (sk.TotallyDisabled) disabled.Add(sk.def.defName); }
+            if (onlySubject != null) foreach (var other in teacherLevels.Keys.Where(k => k != onlySubject).ToList()) teacherLevels.Remove(other);          // a specialist teaches their subject, nothing else
             string subject = LessonSubjects.Choose(teacherLevels, disabled, pupils.Select(p => Snapshot(c, p)).ToList(), book == null ? null : BookSkill(book, pupils), office?.Education().RecentSubjects, teacher.thingIDNumber + now / 60000);
             if (subject == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " has nothing the children could learn from them"); return BeginResult.Cannot; }
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
