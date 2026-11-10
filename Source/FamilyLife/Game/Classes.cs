@@ -41,7 +41,8 @@ namespace FamilyLife
         internal static bool Running(Pawn teacher) => teacher != null && byTeacher.ContainsKey(teacher.thingIDNumber);
 
         /// <summary>Repeated failures to get a class going wait longer each time (ten seconds, thirty, ninety, then every few game hours), so nothing loops.</summary>
-        internal static bool MayTry(Pawn teacher, int now) => !backoff.TryGetValue(teacher.thingIDNumber, out var b) || now >= b[1] || now < b[1] - 200000;
+        internal static void ClearBackoff() => backoff.Clear();
+        internal static bool MayTry(Pawn teacher, int now) => OfficeDriver.Forced || !backoff.TryGetValue(teacher.thingIDNumber, out var b) || now >= b[1] || now < b[1] - 200000;
         private static void Fail(Pawn teacher, int now)
         {
             backoff.TryGetValue(teacher.thingIDNumber, out var b); int fails = (b?[0] ?? 0) + 1;
@@ -104,8 +105,13 @@ namespace FamilyLife
             IntVec3 cell = IntVec3.Invalid; Room room = null; Thing front = lectern;
             bool found = lectern != null ? ClassRooms.SpotAt(lectern, teacher, out cell, out room) : ClassRooms.TeachingSpot(teacher, out cell, out room, out front);
             if (!found) { OfficeDriver.Trace("class: nowhere to hold a class for " + teacher.LabelShort); return BeginResult.Cannot; }
-            if (byPlayer) { if (!OfficeDriver.Available(teacher) || CareDemand.StopReason(teacher, now) != null) return BeginResult.Later; }
-            else if (!OfficeDriver.Ready(teacher) || CareDemand.StopReason(teacher, now) != null || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher)) { Fail(teacher, now); return BeginResult.Later; }
+            string stop = CareDemand.StopReason(teacher, now);
+            if (byPlayer) { if (!OfficeDriver.Available(teacher) || stop != null) { OfficeDriver.Trace("class: " + teacher.LabelShort + " cannot start yet (" + (stop ?? "not available") + ")"); return BeginResult.Later; } }
+            else if (!OfficeDriver.Ready(teacher) || stop != null || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher))
+            {
+                OfficeDriver.Trace("class: " + teacher.LabelShort + " cannot start yet (" + (stop ?? (!OfficeDriver.Ready(teacher) ? "not free" : teacher.CurJob?.playerForced == true ? "following an order" : Find.Selector.IsSelected(teacher) ? "selected" : "being played")) + ")");
+                Fail(teacher, now); return BeginResult.Later;
+            }
             var pupils = roster.Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned).ToList();
             var book = ClassRooms.BestBook(teacher, pupils);
             var office = c.Registry.OfficeFor(OfficeKind.Teacher);
