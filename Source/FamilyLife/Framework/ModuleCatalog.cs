@@ -20,6 +20,10 @@ namespace FamilyLife.Framework
         /// <summary>Modules this one cannot work without. An optional module may require only the framework; modules never require one another.</summary>
         public string[] Requires = new string[0];
         public bool IsFramework;
+        /// <summary>The framework API the module was written against (<see cref="ModuleCatalog.CurrentApiVersion"/>). A module built for another version is refused, not half-loaded.</summary>
+        public int ApiVersion;
+        /// <summary>Capabilities (offered by the framework or another module) that must exist for this module to work. Optional modules should leave this empty.</summary>
+        public string[] RequiresCapabilities = new string[0];
     }
 
     /// <summary>
@@ -29,12 +33,15 @@ namespace FamilyLife.Framework
     public sealed class ModuleCatalog
     {
         public const string FrameworkId = "wils.framework";
+        /// <summary>The version of the registration contracts in this assembly. Bumped when a contract changes in a way an older module cannot follow.</summary>
+        public const int CurrentApiVersion = 1;
         // wils.<area>[.<name>] in lower case: the stable form used in saves, logs and settings
         public static readonly Regex IdPattern = new Regex(@"^wils(\.[a-z][a-z0-9]*)+$", RegexOptions.Compiled);
 
         private readonly Dictionary<string, ModuleInfo> modules = new Dictionary<string, ModuleInfo>();
         private readonly Dictionary<string, string> capabilities = new Dictionary<string, string>();          // capability id -> owning module
-        private readonly HashSet<string> disabled = new HashSet<string>();
+        private readonly HashSet<string> disabled = new HashSet<string>();          // switched off by its lifecycle state (preparing, prepared)
+        private readonly HashSet<string> broken = new HashSet<string>();            // refused or failed during registration: off for the whole session
 
         public IEnumerable<ModuleInfo> Modules => modules.Values;
 
@@ -61,10 +68,10 @@ namespace FamilyLife.Framework
             capabilities[capability] = moduleId;
         }
 
-        public bool HasModule(string id) => modules.ContainsKey(id) && !disabled.Contains(id);
+        public bool HasModule(string id) => IsEnabled(id);
 
         /// <summary>True if some enabled module offers the capability. This is what other code asks before showing an interaction.</summary>
-        public bool Has(string capability) => capabilities.TryGetValue(capability, out var owner) && !disabled.Contains(owner);
+        public bool Has(string capability) => capabilities.TryGetValue(capability, out var owner) && IsEnabled(owner);
 
         public void SetEnabled(string moduleId, bool enabled)
         {
@@ -73,7 +80,13 @@ namespace FamilyLife.Framework
             if (enabled) disabled.Remove(moduleId); else disabled.Add(moduleId);
         }
 
-        public bool IsEnabled(string moduleId) => modules.ContainsKey(moduleId) && !disabled.Contains(moduleId);
+        public bool IsEnabled(string moduleId) => modules.ContainsKey(moduleId) && !disabled.Contains(moduleId) && !broken.Contains(moduleId);
+
+        public bool IsRegistered(string moduleId) => modules.ContainsKey(moduleId);
+
+        /// <summary>A module that was refused or failed while registering. Everything it had registered is ignored for the rest of the session.</summary>
+        public void MarkBroken(string moduleId) { if (moduleId != null) broken.Add(moduleId); }
+        public bool IsBroken(string moduleId) => broken.Contains(moduleId);
 
         /// <summary>
         /// Checks the whole set once: exactly one framework, every required module present, optional modules requiring only the framework, and no cycles. Returns every problem
@@ -91,9 +104,29 @@ namespace FamilyLife.Framework
                     else if (!m.IsFramework && !modules[need].IsFramework) problems.Add("Module '" + m.Id + "' requires '" + need + "': optional modules may depend only on the framework, never on one another.");
                     else if (m.IsFramework) problems.Add("The framework requires '" + need + "': the framework must not depend on any module.");
                 }
+            foreach (var m in modules.Values)
+            {
+                if (m.ApiVersion != CurrentApiVersion) problems.Add("Module '" + m.Id + "' was built for framework API " + m.ApiVersion + " but this framework provides API " + CurrentApiVersion + "; it was not loaded.");
+                foreach (var cap in m.RequiresCapabilities ?? new string[0])
+                    if (!capabilities.ContainsKey(cap)) problems.Add("Module '" + m.Id + "' needs the capability '" + cap + "', which nothing offers.");
+            }
             // a cycle can only appear through the rules broken above, but it is checked directly as well
             foreach (var m in modules.Values) if (Reaches(m.Id, m.Id, new HashSet<string>())) problems.Add("Module '" + m.Id + "' depends on itself through a cycle.");
             return problems;
+        }
+
+        /// <summary>The modules the checks above reject outright: a different API version, a missing required module or a missing required capability. They are switched off, not half-loaded.</summary>
+        public List<string> UnloadableModules()
+        {
+            var bad = new List<string>();
+            foreach (var m in modules.Values.Where(x => !x.IsFramework))
+            {
+                bool ok = m.ApiVersion == CurrentApiVersion
+                    && (m.Requires ?? new string[0]).All(n => modules.ContainsKey(n) && modules[n].IsFramework)
+                    && (m.RequiresCapabilities ?? new string[0]).All(c => capabilities.ContainsKey(c));
+                if (!ok) bad.Add(m.Id);
+            }
+            return bad;
         }
 
         private bool Reaches(string from, string target, HashSet<string> seen)

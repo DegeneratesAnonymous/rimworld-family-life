@@ -25,7 +25,7 @@ namespace FamilyLife
             get
             {
                 var c = FamilyComponent.Current;
-                var def = FamilyModules.PlannedEvents.For(kind);
+                var def = FamilyFramework.PlannedEvents.For(kind);
                 if (c != null && def != null && OfficeAuthority.MayDirect(c.Registry, PerspectiveShiftBridge.AvatarId, def.Post))
                 {
                     yield return new DiaOption("WFL_Event_Begin".Translate()) { action = () => { OfficeEvents.Begin(kind); Find.LetterStack.RemoveLetter(this); }, resolveTree = true };
@@ -47,7 +47,7 @@ namespace FamilyLife
         private static LetterDef LetterKind => letterDef ?? (letterDef = DefDatabase<LetterDef>.GetNamedSilentFail("WFL_OfficeEvent") ?? LetterDefOf.NeutralEvent);
 
         private static CommunityOffice Office(OfficeKind kind) => FamilyComponent.Current?.Registry.OfficeFor(kind);
-        private static CommunityOffice OfficeFor(int eventKind) { var d = FamilyModules.PlannedEvents.For(eventKind); return d == null ? null : Office(d.Post); }
+        private static CommunityOffice OfficeFor(int eventKind) { var d = FamilyFramework.PlannedEvents.For(eventKind); return d == null ? null : Office(d.Post); }
 
         internal static float Longitude(Map m) => Find.WorldGrid.LongLatOf(m.Tile).x;
         internal static bool IsAprimay(Map m) => GenDate.Quadrum(Find.TickManager.TicksAbs, Longitude(m)) == Quadrum.Aprimay;
@@ -58,7 +58,7 @@ namespace FamilyLife
         {
             var o = OfficeFor(kind); if (o == null || !o.Held) return;
             o.PendingKind = kind; o.PendingTick = now + PlanLead;
-            string key = FamilyModules.PlannedEvents.For(kind)?.NoticeKey ?? "Checkups";
+            string key = FamilyFramework.PlannedEvents.For(kind)?.NoticeKey ?? "Checkups";
             var letter = (ChoiceLetter_OfficeEvent)LetterMaker.MakeLetter(("WFL_Event_" + key + "_Title").Translate(), ("WFL_Event_" + key + "_Text").Translate(holder.LabelShort), LetterKind, holder);
             letter.kind = kind;
             Find.LetterStack.ReceiveLetter(letter);
@@ -86,7 +86,7 @@ namespace FamilyLife
         /// <summary>Begins a planned event now. The framework checks the post and the holder; the module that owns the event does the rest.</summary>
         internal static bool Begin(int kind)
         {
-            var def = FamilyModules.PlannedEvents.For(kind);
+            var def = FamilyFramework.PlannedEvents.For(kind);
             var c = FamilyComponent.Current; var r = c?.Registry; if (r == null) return false;
             if (def == null)
             {
@@ -106,7 +106,7 @@ namespace FamilyLife
         /// <summary>Put it off for a week. Checked again when it runs: only someone who may direct the post can.</summary>
         internal static void Reschedule(int kind)
         {
-            var def = FamilyModules.PlannedEvents.For(kind);
+            var def = FamilyFramework.PlannedEvents.For(kind);
             var c = FamilyComponent.Current; var o = OfficeFor(kind); if (o == null || c == null || def == null) return;
             if (!OfficeAuthority.MayDirect(c.Registry, PerspectiveShiftBridge.AvatarId, def.Post)) return;
             if (o.PendingKind == kind) o.PendingTick += RescheduleBy;
@@ -115,7 +115,7 @@ namespace FamilyLife
 
         internal static void Pass(int kind)
         {
-            var def = FamilyModules.PlannedEvents.For(kind);
+            var def = FamilyFramework.PlannedEvents.For(kind);
             var o = OfficeFor(kind); var c = FamilyComponent.Current; if (o == null || c == null || def == null) return;
             if (!OfficeAuthority.MayDirect(c.Registry, PerspectiveShiftBridge.AvatarId, def.Post)) return;
             o.PendingKind = 0;
@@ -127,7 +127,7 @@ namespace FamilyLife
         internal static IEnumerable<Gizmo> Gizmos(Building b)
         {
             if (b == null || !b.Spawned || b.Faction != Faction.OfPlayer) yield break;
-            foreach (var provider in FamilyModules.BuildingGizmos.Enabled())
+            foreach (var provider in FamilyFramework.BuildingGizmos.Enabled())
                 foreach (var g in provider(b)) yield return g;
         }
     }

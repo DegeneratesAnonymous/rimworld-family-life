@@ -1,156 +1,166 @@
-# Modular architecture: audit, ownership and the extraction plan
+# Modular architecture: framework, Education and Community Care
 
-This is the working document for splitting Wil's Family Life into a framework and optional modules. It records what was found in the code (not what earlier descriptions said), who owns what, what has been done and verified, and what has not. **Nothing here claims the modules are independently installable yet: that needs separate assemblies and packages, which are stages 3 and 4 below.**
+This is the working document for splitting Wil's Family Life into a framework and optional modules. It records what the code actually does, who owns what, what has been verified and what has not. Installation and migration steps are in [INSTALLATION.md](INSTALLATION.md); the checks that need the game are in [MODULE-VERIFICATION.md](MODULE-VERIFICATION.md).
+
+**Read this first: the extraction is built and checked offline; it has not been run in RimWorld.** Compilation, unit tests, assembly inspection and package layout checks are real evidence of structure. They are not evidence that a class starts, a pupil is released, or a save loads. Section 11 lists exactly which is which.
 
 ## 1. Where this stands
 
 | Stage | What | State |
 |---|---|---|
-| 0 | Audit and ownership (this document) | Done |
-| 1 | Boundaries inside the repository: each owner has its own folders, registration contracts exist and are tested, Education and Community Care are reached only through them, and the boundary is enforced by tests | **Done and tested offline** |
-| 2 | Move the module-owned *state* out of the shared registry (module payloads) so a module's code can leave the framework assembly | Not started (the real blocker, section 7) |
-| 3 | Separate assemblies for Education and Community Care, then the framework, then Family Life | Not started |
-| 4 | Separate mod packages, About.xml files, load order, the bundle, load-combination tests | Not started |
-| 5 | Family Life extraction; future modules | Not started |
+| 0 | Audit and ownership | Done |
+| 1 | Boundaries inside the repository, registration contracts, tests | Done |
+| 2 | Module state out of the shared registry (versioned payloads), legacy migration, isolation builds | Done; revised here (holder vs community records, section 5) |
+| 3 | Separate assemblies for Education and Community Care, built against the framework's public surface only | **Done and compiled for 1.6 and 1.7; no `InternalsVisibleTo`** |
+| 4 | Separate packages with their own About.xml, defs, strings, load order | **Built (`scripts/Build-Packages.ps1`) and statically checked; not loaded in RimWorld** |
+| 5 | Persistent module lifecycle, retryable removal preparation, hand-over and load reconciliation | **Built and unit-tested for the pure parts; the game-side cleanup is unobserved** |
+| 6 | Family Life extraction; future modules (Training Instructor, Counselor, others) | Not started, on purpose |
 
-Verified so far (offline): 1,017 tests pass, including the boundary tests, the registration contracts, saved-identifier compatibility against the last all-in-one version, and the pre-existing domain behaviour. Both game versions build (1.6, 1.7) and the 25 patch classes check. **Nothing has been run in RimWorld** for this change.
+## 2. What was audited, and what changed
 
-## 2. Audit of the current architecture
+Read from the code, not from earlier descriptions.
 
-Read from the source on this branch.
+- Before: one assembly (`FamilyLife.dll`), `FamilyRegistry`/`CommunityOffice` partial classes carrying module members, `OfficeDriver` and `OfficeEvents` as `partial` classes with the Teacher's and Healer's code interleaved, and `GovernanceMeetings` holding Teacher and Healer branches.
+- Now: three assemblies per game version.
 
-- **One project, one assembly** (`Source/FamilyLife/FamilyLife.csproj`, `FamilyLife.dll`, namespace `FamilyLife`), built once per game version (1.6 on .NET Framework 4.7.2, 1.7 on .NET 10) into `1.6/Assemblies` and `1.7/Assemblies`. About 32,000 lines: Domain about 13,000, Game about 12,600, UI about 5,300, Persistence about 1,000.
-- **Domain is pure.** No file under `Domain/` references Verse, RimWorld or Unity. The test project compiles that folder directly and would stop building if it did. This is what makes the rest of the plan feasible.
-- **The registry is one class.** `FamilyRegistry` is a `partial class` over about 40 files (people, houses, bonds, offices, estates, crime, institutions, ...). `CommunityOffice` is likewise partial. A partial class cannot span assemblies, so anything module-specific that is a member of those two classes cannot leave the framework assembly until it is turned into module-owned state (stage 2).
-- **Saves.** One game component (`FamilyComponent`) scribes the registry (`Scribe_Deep.Look(ref Registry, "registry")`). About 790 labels across about 70 saved classes (`Persistence/Persist.cs`, `PersistGovernance.cs`). Enums are saved as numbers (`OfficeKind`, `OfficeEnd`, `FamilyRole`, `PendingEvent`).
-- **Start-up.** `FamilyLifeMod` reads settings and patches Harmony by reflecting over the assembly once (`CreateClassProcessor` per patch class). Perspective Shift is bridged by reflection (`PerspectiveShiftBridge`), cached.
-- **Patches.** 25 patch classes: relationship and death hooks, thing-story hooks, food and meal hooks, area restriction, the character card, the colonist bar, play-settings button, and one for building buttons. Only the last concerned a module.
-- **Scheduling.** `FamilyComponent.GameComponentTick` runs a throttled sync, four staggered maintenance phases, and several drivers. Office work ran inside `Governance.Maintain` (phase 0).
-- **Defs.** 110 defs: 52 `JobDef`, 49 `ThoughtDef`, one each of `HediffDef`, `LetterDef`, `GatheringDef`, `JoyKindDef`, `JoyGiverDef`, `QuestScriptDef`, `WorldObjectDef`, two `ScenarioDef`. XML names C# classes (`driverClass`, `letterClass`, `workerClass`, `Class=`) by `FamilyLife.<Name>`; RimWorld resolves them in any loaded assembly, so keeping the namespace keeps the XML valid when a class moves.
-- **Content.** 11 English translation files; 14 role icons under `Textures/WilsFamilyLife/Roles`, one UI texture; no `AGENTS.md` in this repository (conventions come from `README.md`, `docs/`, and the existing tests and scripts).
-- **Packaging.** `About/About.xml` (packageId `SpacemanWil.WilsFamilyLife`, v0.13.4), `scripts/Stage-ToRimWorld.ps1` (builds both versions, copies one folder set). One package only.
-
-## 3. Ownership
-
-Each existing system has exactly one owner. Systems that are not being extracted now keep their current home and are marked **existing feature**; they are not silently deleted or hidden in the framework.
-
-**Community Framework** (shared foundation; useful with no optional module installed)
-- Pawn identity records and name snapshots, kinship, lineages/Houses, households, membership and Associates, bonds (Closeness, Trust, Tension, Familiarity), knowledge and disclosure, actor authority (`KnowledgeAndAuthority`, `PerspectivePolicy`, `ContextPolicies`, `OfficeAuthority`), culture and ambition infrastructure, event records and memories, narrative presentation, text variety, the office registry, elections and succession (`CommunityOffices`, `Succession`), planned-event notices, professional contact (`ProfessionalExchange`), results (`ProfessionalResults`), working hours, pawn readiness (`PawnReadiness`), shared indexes/caches/throttles/performance probe, the community window shell (navigation, layout, perspective selector), the pawn inspect tab, role icons and badges, settings shell, module registration (`Framework/`, `Game/FamilyModules.cs`).
-
-**Family Life**
-- Family meals and time, parenting, dates and sitters, traditions and gatherings, weddings, funerals, coming of age, reunions and visiting relatives, camping, bedtime stories, comfort, kin rescue, family zones and home areas, family doors; the hall keeper's meals and the chaplain post are held here today as part of the existing features.
-
-**Education** (`Education/`)
-- Teacher post, classes, subjects, attendance and breaks, book-supported lessons, the learning record, the annual assessment, rewards, classroom selection, the "Hold class" button and its queue, the one-to-one lesson, and their jobs, defs and strings.
-
-**Community Care** (`Care/`)
-- Healer post, check-up rounds and the appointment book, preventive-care conversations, medical bedside visits, the outbreak round, check-up benefits and memories (`WFL_CheckedUp`), the "begin check-ups" button, and their jobs, defs and strings.
-
-**Existing features not yet extracted** (kept where they are; future module boundaries in section 9): House politics and affairs (estates and inheritance, crime families and heists, institutions and movements, council, favours, reparation, stewardship and steward duties, marriage alliances, house relations, household policy), the household economy (supplies, barter, claims), feuds and rifts (`Conflict`), the yearly assembly and voting (`AssemblyDriver`, `GovernanceDriver`).
-
-Cross-cutting items and who holds them: the cooperative exchange and the professional-contact limiter are **framework** (both modules use them); `ExchangeTopic` and the topic lists stay in `GuidedExchanges` (framework) for now; `ResultQuality` and `PendingEvent` are framework; the topic phrasing strings are shared.
-
-## 4. Dependency map
-
-```
-                    wils.framework   (Domain, shared Game/UI, Framework contracts)
-                 /          |            \
-        wils.familylife  wils.education  wils.care        (each requires the framework only)
-```
-
-Rules, all enforced by `ModuleCatalog.Validate()` at start-up and by `ArchitectureTests`:
-- An optional module may require the framework and nothing else. Modules never require one another.
-- The framework requires no module.
-- No reference between Education and Community Care (zero today).
-- Shared code names a module in exactly one place, the composition root `Game/FamilyModules.cs`.
-
-Measured couplings left (the architecture tests fail if a new one appears):
-
-| From | To | Where | Plan |
-|---|---|---|---|
-| shared | Education, Care | `Game/FamilyModules.cs` names `EducationModule` and `CareModule` | Expected: this is the composition root. It disappears when each module is its own assembly and registers itself. |
-| Education, Care | shared | They use framework internals directly (registry, `FamilyComponent`, `Activities`, `PawnReadiness`, `Conversations`, `OfficeDriver` partial) | Allowed direction. Becomes `InternalsVisibleTo` or public framework API in stage 3. |
-| Education, Care | `CommunityOffice` / `FamilyRegistry` partial members | Fields and methods live in `Education/Domain` and `Care/Domain` but are *members of framework classes* | The stage 2 blocker. See section 7. |
-
-## 5. Registration contracts (built and tested)
-
-All in `Source/FamilyLife/Framework/` (plain C#, no game types, tested directly) plus the host `Game/FamilyModules.cs`.
-
-| Contract | Purpose | Identifier form |
+| Assembly | Project | Contains |
 |---|---|---|
-| `ModuleCatalog` | Modules, capabilities, enable/disable, whole-set validation (one framework, required modules present, optional modules require only the framework, no cycles) | `wils.<area>` and `wils.<area>.<name>` |
-| `OfficeCatalog` / `OfficeDefinition` | Posts a module defines; the stable id is an alias for the already-saved `OfficeKind` byte, so a save needs no change | `wils.care.healer`, `wils.education.teacher`, `wils.familylife.hallkeeper`, `wils.familylife.chaplain` |
-| `OfficeAvailability` | Posts of an absent module are not elected, not wished for, not shown as vacant (a holder already in a save stays visible) | |
-| `WorkRoster` / `WorkItem` | Autonomous work from one shared roster: staggered, budgeted, rotated, skipped for a disabled module, cancellable, one failure never stops the rest | `wils.education.office.teacher`, ... |
-| `PlannedEventCatalog` | Routine events (check-up round, outbreak round, annual assessment): saved kind, notice key, begin/skip behaviour. A waiting event of an absent module is cleared, never run | `wils.care.checkups`, `wils.care.outbreak`, `wils.education.assessment` |
-| `ContributionList<T>` | Things modules add to the interface; a disabled module's are skipped. Used for building buttons, developer-menu diagnostics and state resets | `wils.education.buttons`, `wils.care.diagnostics`, `wils.education.reset`, ... |
-| Capabilities | What other code asks about instead of asking whether a module is installed | `wils.education.tutoring`, `wils.education.classes`, `wils.education.assessment`, `wils.care.checkups`, `wils.care.outbreak`, `wils.familylife.meals` |
+| `FamilyLife.dll` (package `SpacemanWil.WilsFamilyLife`) | `Source/FamilyLife` | Domain, shared Game/UI, Persistence, the registration contracts (`Framework/`), `FamilyFramework`, `FrameworkServices`, Family Life's own posts (hall keeper, chaplain) |
+| `WilsEducation.dll` (package `SpacemanWil.WilsEducation`) | `Source/Education` | Teacher registration, classes, lessons, attendance, subjects, learning record, assessments, lectern button, `EducationMod`, `EducationDefOf`, removal step |
+| `WilsCommunityCare.dll` (package `SpacemanWil.WilsCommunityCare`) | `Source/Care` | Healer registration, check-up rounds, clinic and appointments, outbreak round, check-up condition, `CareMod`, `CareDefOf`, removal step |
 
-Registration happens once, when `FamilyModules` is first used (the mod constructor touches it), and is validated once; any problem is logged as an error naming the identifier. Nothing is discovered by reflection while the game runs. The existing Harmony patch loader reflects once at start-up; Education and Community Care now add no patch of their own (a test enforces it): their buttons go through the one shared building patch and the contribution list.
+Each module project has exactly one `ProjectReference`, to the framework, and compiles only its own folder. `AssemblyBoundaryTests` reads the built assemblies and checks that the framework references no module, the modules never reference each other, no top-level type is in two assemblies, the framework carries no `InternalsVisibleTo`, and the module packages hold only their own DLL.
 
-What was *not* built, on purpose: registration for narrative templates, Story Thread providers, settings sections, window tab contributions and module-owned persistence. Those need a real second consumer to design against; the stage 2 payload work will drive persistence, and the window contributions are stage 5.
+## 3. The dependency audit
 
-## 6. Serialized identifiers and compatibility
+The first audit (a scan of what each module's game code named) found eleven internal shared game types used by Education and nine by Community Care, eleven distinct names in all, plus the framework-owned DefOf and settings types. Each was handled by the smallest change that works; none was made public just so that code would compile.
 
-`Source/FamilyLife.Tests/Baselines/saved-identifiers.txt` lists, as written by the last all-in-one commit (`fc0bd3d`): every saved label of every saved class (787), every def name (110), every class named from XML, the saved enums (`OfficeKind`, `OfficeEnd`, `FamilyRole`) and the `PendingEvent` numbers. `SavedIdentifierTests` requires every line to still exist, enum members to keep their order (they are saved as numbers), and every class XML names to still be declared. Result: a save written before this work reads exactly the same labels and numbers; **no save migration was needed for stage 1**, because no type, label, def, namespace or enum value changed.
+| Type | Used by | Members needed | Why it was in shared code | Decision |
+|---|---|---|---|---|
+| `Activities` | both | `Now`, `GainMemory` | Game clock and mood helper used by dozens of Family Life files | Stays internal. `FrameworkServices.Now` and `GainMemory` forward to it |
+| `Conversations` | both | `Run` | The cooperative professional exchange, used by both posts | Stays internal. `FrameworkServices.RunConversation`; its three-field result `ExchangeResult` became public |
+| `DiagnosticSection` | both | the record | Nested in the old host | Public, nested in `FamilyFramework` |
+| `FamilyModules` | both | the registries | The composition root, naming both modules | Replaced by public `FamilyFramework`; it names no module (section 4) |
+| `Governance` | Education | `Free` | Governance helper (is this person free to be called away) | Stays internal. `FrameworkServices.IsFree` |
+| `GovernanceMeetings` | both | `NextToken`, `Start`, plus **Teacher and Healer branches** | The shared "one pawn walks to another" job | Branches removed. `MeetingCatalog`/`MeetingDefinition` (a module registers its job, duration, preparation and completion). `FrameworkServices.StartMeeting`, `NextToken` |
+| `HallDriver` | Education | `LooksLikeSchool` | The hall keeper tells a school room from a dining hall by furniture name | Stays internal (the hall keeper owns it). `FrameworkServices.LooksLikeSchool`; candidate to move into Education when the hall keeper leaves the framework |
+| `OfficeDriver` (partial) | both | `Trace`, `Forced`, `Ready`, `Available`, `FreeFor`, `ForceUntil`, `WorkNow`, `Diagnose`, `NeedsReason`, `Served`, **plus the Teacher's and Healer's own halves of the class** | Interleaved partial class | Module halves moved out as `EducationDriver` and `CareDriver`; the shared members are reached through `FrameworkServices`. The post's fitness and passion skills are declared by the module (`RegisterFitness`, `OfficeDefinition.PassionSkills`) instead of a switch on Teacher/Healer in the framework |
+| `OfficeEvents` (partial) | both | planning, beginning, notices, year | Interleaved partial class | Module halves moved out as `EducationEvents` and `CareEvents`; `FrameworkServices.PlanEvent`, `BeginPlannedEvent`, `RemoveNotices`, `Year`, `IsAprimay` |
+| `PawnReadiness` | both | `StopReason`, `Level`, `Fatigue`, `Excusable`, `Danger` | Cached "should this pawn stop what they are doing" | Stays internal. `PawnReadinessApi` is a four-method public facade |
+| `PerspectiveShiftBridge` | both | `AvatarId`, `IsAvatar` | Reflection bridge to the optional Perspective Shift mod | Stays internal. `FrameworkServices.AvatarId`, `IsAvatar` |
+| `WFL_StoryDefOf` job fields | both | the module's own jobs | One DefOf for everything | Module jobs moved to `EducationDefOf` and `CareDefOf`, shipped with the module's own defs |
+| `FamilyComponent`, `FamilyLifeMod.Settings`, `FamilySettings` | both | | Already public | Unchanged |
 
-Why this holds, and when it will stop holding:
-- Moving a C# type between *files* is invisible to a save. Moving it between *assemblies* is not guaranteed to be: RimWorld writes a class name only for polymorphic `Scribe_Deep` entries, and resolves it by name across loaded assemblies, so keeping the namespace `FamilyLife` and the class name keeps those valid. This must be tested per type before each assembly move.
-- The module-owned *fields* (education's learning record, care's appointment state) are scribed inside `CommunityOffice`. When they move to module payloads (stage 2) the old labels must still be read on load (a migration), and a save with a module removed must still load. That is the part that needs a real migration and real save testing.
-- The unnamed identifiers a module adds (its job, hediff, thought and letter defs) are in the module's own XML once packaged; the def names stay, so an old save resolves them.
+**Remaining couplings, all recorded in `ArchitectureTests` (they must only shrink):** the saved `OfficeKind` enum still names Teacher and Healer (a saved number); `RolePresentation` carries the role names and icons so a historic holder reads correctly with the module absent; the election's work-needed and house-wish tables in `CommunityOffices.cs` have a case per post; the camp "lesson" moment in `Flavors.cs` credits a teacher; the save reader's default kind. None of these executes Teacher or Healer behaviour. Moving the election tables into a post's definition is the next step before a third post can be added by a module without editing the framework.
 
-Education/Care identifiers that appear in saves today: jobs `WFL_ClassTeacher`, `WFL_ClassStudent`, `WFL_TestStudent`, `WFL_OfficeLesson`, `WFL_ClinicDoctor`, `WFL_ClinicPatient`, `WFL_Checkup`; hediff `WFL_CheckedUp`; letter `WFL_OfficeEvent` / class `ChoiceLetter_OfficeEvent`; thoughts `WFL_ReassuringCheckup`, `WFL_DismissiveCheckup`, `WFL_InspiringLesson`, `WFL_BoringLesson`, `WFL_Testing*`; office field labels (`pendingKind`, `testIds`, `lessonLog`, `missed`, `refused`, ...).
+`FrameworkServices` is deliberately small and says so in its header: if only one module needs something, it belongs in that module.
 
-## 7. The real blocker, and the extraction order
+## 4. Initialization
 
-`FamilyRegistry` and `CommunityOffice` are partial classes, and module-specific members were added to them. Stage 1 put those members in `Education/Domain` and `Care/Domain` so ownership is visible, but they still compile into the framework assembly. To let the code leave:
+1. **Framework** (`FamilyFramework`, first use): builds its registries, registers the framework module, and installs Family Life's own module (hall keeper, chaplain; still hosted here).
+2. **Each optional module** announces itself from its own `Mod` constructor (`EducationMod`, `CareMod`) with one call, `FamilyFramework.Install(module)`. The game constructs mod classes in load order, and each module package declares `loadAfter` the framework, so the framework is ready. The framework never references a module assembly.
+3. **Freeze**: after every mod constructor has run (a `[StaticConstructorOnStartup]` class), `FamilyFramework.Freeze()` validates the whole set once and closes registration. Nothing is added or discovered afterwards, and nothing is looked up by reflection per tick or per frame (the Harmony loader still reflects once, at start-up, over the framework assembly only).
 
-1. **Module payloads on the office record.** Give `CommunityOffice` one neutral, versioned payload slot per module (`Dictionary<string, string>` keyed by module id, plus a schema version) that the module reads and writes itself. Education's `LessonLog`, `BookUse`, `RecentSubjects`, `TestScore`, `TestExcused`; Care's `Missed`, `Refused`, `RoundWindow`, `RoutineDay`, favouritism counters. Fields that are genuinely shared (`PendingKind`, `PendingTick`, the session queue, `Examined`) stay.
-2. **Load-time migration.** On load, if the old labels are present and the payload is empty, fill the payload from them once (idempotent); keep reading the old labels for a release; do not write them again. A save made after migration written without the module installed keeps the payload as an opaque string, untouched.
-3. **Registry methods become module services** (extension methods or module classes) over the framework's public API (`OfficeFor`, `Persons`, `ChangeBond`...), which needs that API made public (or `InternalsVisibleTo`).
-4. Only then move `Education/` to its own project, then `Care/`, then the framework.
+`ModuleHost` (pure, tested) enforces: duplicate module ids are refused (the first is untouched); a module arriving after the freeze is refused; a module whose registration throws part way is marked broken, so everything it did register is ignored for the session; a module built for a different `ApiVersion`, one needing a capability nothing offers, and one requiring another optional module are switched off, not half-loaded. Duplicate offices, saved kinds, capabilities, planned events, meetings, work items and contributions throw at registration, naming both owners. Every problem is logged once with the identifier.
 
-Order: Education first (it is the smaller state and had no dependency on Care), then Community Care, then Family Life. Family Life last because it is the largest and its code is the most entangled with the existing house features.
+What a module registers: its post (`OfficeDefinition`, with the saved kind as its stable alias), autonomous work (one `WorkRoster` item; no loop of its own), planned events with their notices, a meeting (the job, duration, placement and completion), building buttons, developer diagnostics, a hand-over handler, a load reconciler, a reset, and a removal step. **Not built, because no second consumer exists to design against:** registration for Story Thread providers, settings sections, window tabs and narrative templates.
 
-## 8. Packaging plan (not yet built)
+## 5. Record ownership by lifetime
 
-| Package | packageId | Requires | Ships |
+State is kept where its lifetime says, not on whoever currently holds the post. Per-holder state starts fresh for a new holder (stamped with the holder id; nothing needs resetting when the post changes hands, even if the module was absent at that moment).
+
+| Record | Lives | Why |
+|---|---|---|
+| Education: what each child studied (`LessonLog`), books used, recent subjects, last assessment year | Community (`wils.education`) | Belongs to the children; the next teacher inherits it |
+| Education: the assessment in progress (ids, sittings, results of this sitting) | Holder (`wils.education.assessment`) | The outgoing teacher's sitting ends with them |
+| Care: the round in progress, who was seen, missed, declined and until when, the last outbreak | Community (`wils.care.record`) | A new doctor continues an outstanding round; refusals stay respected; nobody is examined twice because the doctor changed |
+| Care: when the next round is planned, the daily routine budget, the doctor's own favouritism record | Holder (`wils.care`) | About that doctor's own conduct |
+
+(The earlier revision kept all of Care's state per holder; that discarded everyone's refusals and the missed list when the doctor changed. It is corrected and tested.)
+
+**Hand-over** (`FamilyFramework.Handoffs`, raised by the registry whenever a post's holder changes or is lost): Education ends the outgoing teacher's class safely (attendance settled once, pupils released) and drops a queued class; Care closes the outgoing doctor's clinic. The former holder stops scheduling because the post no longer lists them.
+
+**Absent module and the framework's own bookkeeping.** A post of a module that is not running can neither be done nor neglected. The framework now (a) does not count its work as unmet, so removing a module for a while does not end the holder's post as "Neglected", bar them or lower their house's standing, and (b) leaves it out of the yearly assembly instead of standing the holder down for want of candidates. Both are tested.
+
+## 6. Lifecycle
+
+Per save, in the family records (`FamilyRegistry.Lifecycle`, written for modules that are not installed too):
+
+| State | Meaning | New work | Survives save/restart |
 |---|---|---|---|
-| Wil's Community Framework | `SpacemanWil.WilsCommunityFramework` | Harmony | framework assembly, shared defs, role icons, shared strings |
-| Wil's Family Life | `SpacemanWil.WilsFamilyLife` (**kept**: existing installs and saves know it) | Framework | family-life assembly, its defs/strings; carries the existing house features until they have their own packages |
-| Wil's Education | `SpacemanWil.WilsEducation` | Framework | education assembly, its defs/strings, the teacher icon |
-| Wil's Community Care | `SpacemanWil.WilsCommunityCare` | Framework | care assembly, its defs/strings, the healer icon |
+| Active | Running (also: no record) | yes | n/a |
+| PreparationRequested | A preparation is under way | **no, from that moment** | If the save lands here it is read back as PreparationFailed |
+| PreparationFailed | The last attempt did not finish; the report says why | no | yes, with the report and attempt count |
+| Prepared | Cleaned; safe to remove | no | yes, until explicitly reactivated |
+| Absent | The module's code is not installed (computed, not stored) | no | its saved state is untouched |
 
-All `loadAfter` the framework and Harmony. Each declares 1.6 and 1.7 with the matching `1.6/Assemblies` and `1.7/Assemblies`. The "all modules" bundle is a folder of the four packages (no duplicate monolithic assembly). Install sequence for an existing player: install the Framework, then the modules wanted, then update Family Life; **a save from the all-in-one version needs all four to behave as before.** The shared role icons stay in the framework, and a module's own icon ships with the module, loaded by the same texture path, so nothing is duplicated. None of this is built; do not publish or merge.
+- **A prepared module stays inactive across restarts and reinstalls.** Loading, restarting or reinstalling never reactivates it; only `FamilyFramework.Reactivate` (the developer action "Reactivate ...") does, and it starts valid new work from a clean in-memory state.
+- **Absence is not preparation.** Preparation needs the module installed (only its code knows what it owns); `PrepareForRemoval` on an absent module reports failure. A module removed without preparing leaves no claim that it was clean.
+- Unknown lifecycle states from a newer version are read as stopped.
 
-## 9. Absence and removal, honestly
+## 7. Removal preparation
 
-- **New game without a module:** supported by the design (no post, no work, no button, no event; capability checks say no). Verified offline only through the registries and the architecture tests.
-- **Adding a module to an existing save:** designed to work (posts become available, their work starts, history appears); not tested in the game.
-- **Disabling an activity in settings:** already worked (`holdClasses`, `healthChecks`); unchanged.
-- **Removing a module from a save:** **not safe today and not claimed.** A removed module leaves: hediffs on pawns, thoughts, a waiting planned event, jobs on pawns mid-activity, and office payload. A "prepare for removal" step (end sessions, release jobs and reservations, clear queues, cancel pending events, handle the hediff and memories explicitly, keep the neutral history) is **not implemented**; the contribution list `Resets` and the clearing of a waiting event of an absent module are the first pieces. Until it exists, do not remove a module from a save you care about.
+Developer actions "Prepare Education / Community Care for removal" run `FamilyFramework.PrepareForRemoval`, which stops new work first and then runs the module's steps through a `CleanupReport`:
 
-## 10. Integrations
+1. End every module job (current and queued) on everyone and release their reservations (`ModuleCleanup.EndJobs`); drop the queued class; reset in-memory sessions.
+2. Close the round / stop the assessment, empty the class list, clear the waiting planned event and its letter, and give up the post (pure, tested: `EndEducationActivity`, `EndCareActivity`).
+3. Remove only the module's own hediff and memories (`WFL_CheckedUp`, the lesson/assessment and check-up memories).
+4. **Verify**: count what is left (pawns on module jobs, memories, hediffs, notices, post still holding work). Any remainder throws, so the report says "NOT prepared", the lifecycle becomes PreparationFailed, the report is stored in the save, and the step can simply be run again. A repeated run on a prepared module changes nothing; if a repeat fails, the module is reported as not ready.
 
-Ideology (chaplain via the moral guide), Biotech (children, babies), Royalty, Perspective Shift (reflection bridge, cached, optional), Better Bedrooms, hygiene/toilet mods (read through need names, no reference). None is required. Each stays with the module that needs it when the assemblies split; the framework keeps only the Perspective Shift bridge (shared authority) and the need-name readers (`PawnReadiness`).
+Not undone, by design, and listed in each report: skill experience already given (ordinary skill progress); health already changed; the neutral records (what was studied, who was seen); the framework's role icon/name for a historic post; a class cut short is settled once for the time attended, never paid twice.
 
-## 11. Possible later modules (documented, not built)
+## 8. Absence, preparation and arbitrary removal
 
-- **House Affairs:** stewardship and steward duties, house relations and petitions, marriage alliances, household policy. Needs from the framework: house records, authority checks, planned-event notices, contribution lists for window sections.
-- **Community Governance:** the yearly assembly, voting, campaign, succession politics, institutions and movements, the council. Needs: the office registry and election infrastructure (already framework), authority, notices. Optional with Education and Care: their posts are elected through it.
-- **Household Economy:** supplies, claims, barter, favours and debts. Needs: houses, households, work roster, contributions.
-- **Underworld:** crime families, heists, protection arrangements, reparation, coups. Needs: knowledge and secrets (framework), incidents, authority. Optional with Governance.
+| | Temporary absence (module not installed, not prepared) | Prepared removal |
+|---|---|---|
+| Saved payloads | Preserved untouched (round-tripped in tests) | Active work cleared; neutral records kept |
+| Framework records | Deserialize without module code (payloads are opaque text; saved letters carry only an int kind) | Same |
+| The post and its holder | Kept as history; not neglected, not put to the vote | Post given up |
+| Returning module | Validates its payload (a damaged payload falls back to an empty record, tested); reconciles on load: clears the class list and in-memory sessions, prunes people no longer present from the care record; never resumes a session blindly | Stays stopped until explicitly reactivated; cancelled sessions do not return |
+| Defs in the save | Unresolvable job, hediff and thought defs of an absent module are dropped by RimWorld with warnings (expected, **not observed**) | Avoided: they were removed first |
 
-No new election, justice, crime or economy mechanics were added or are planned in this refactor.
+**Arbitrary removal of a module from a running save without preparation is unsupported.** It is expected to load, with warnings for the defs, but pawns mid-class, memories and the check-up condition are exactly what preparation exists to clear. Say so to users (INSTALLATION.md does).
 
-## 12. Verification status
+## 9. Packages
 
-Offline, done: `dotnet test` 1,017 passed (3 consecutive runs; one earlier run had a single unrelated failure in `StoryPolarityTests`, which passed alone five times, consistent with the existing shared static narrative hook, and was not investigated further); both builds; 25 patch classes; boundary, contract and saved-identifier tests.
+| Package folder | packageId | Requires | Ships |
+|---|---|---|---|
+| repository root, built to `dist/WilsFamilyLife` | `SpacemanWil.WilsFamilyLife` (**name kept**: existing installs know it) | Harmony | `FamilyLife.dll`, shared defs, role icons, shared strings, patches. This is the framework **and** Family Life until Family Life is extracted |
+| `Packages/WilsEducation` | `SpacemanWil.WilsEducation` | Harmony, the framework | `WilsEducation.dll`, its 4 jobs and 5 thoughts, 30 strings |
+| `Packages/WilsCommunityCare` | `SpacemanWil.WilsCommunityCare` | Harmony, the framework | `WilsCommunityCare.dll`, its 3 jobs, 1 hediff, 2 thoughts, 11 strings |
 
-Not done, and not claimed: separate assemblies and packages; load-combination tests (they need the packages); old-save migration of module state (nothing to migrate yet); module cleanup workflow; any in-game check. **Manual checklist for when the packages exist:** framework alone (family window, People/Relationships/Story/Home/House Affairs tabs, no Teacher/Healer cards, no class or check-up buttons, no errors in `Player.log`); each module added to the same save; an old all-in-one save loaded with all four; a class saved and loaded mid-session; an appointment saved and loaded; the Teacher/Healer replaced; Perspective Shift on and off; removal with the cleanup step.
+All three declare 1.6 and 1.7 and `loadAfter` Harmony and the framework; the module packages never name each other. A def lives in exactly one package (tested). `scripts/Build-Packages.ps1` assembles and checks `dist/`; `scripts/Stage-ToRimWorld.ps1` copies chosen packages into the game (`-FrameworkOnly`, `-Only`). A separate `SpacemanWil.WilsCommunityFramework` package id is deferred until Family Life is extracted; introducing it now would break every existing mod list for no gain.
 
-## 13. Stage 2 status (module state and removal)
+## 10. Performance
 
-- **Done, verified offline:** module state is an opaque versioned payload on the office record (`Framework/ModuleState.cs`); legacy labels are migrated lazily; Care and Education use extension-method services over public framework API; isolation projects (`Source/Isolation/`) build each module's pure code against the shared pure code alone; a pure `CleanupReport` and `EndCareActivity` / `EndEducationActivity`, tested; game-level `PrepareForRemoval` per module, reachable from the developer menu.
-- **Removal limits:** neutral records stay in the save. Role icons and defs ship with the module, so a saved post shows a plain label once it is gone. Preparation reflects the game as it is now: run it again if the module ran after. It was not observed in RimWorld.
-- **Stage 3 blockers:** about fifteen shared Game types that module Game code uses are internal (need public API or `InternalsVisibleTo`), and the composition root disappears once modules are separate assemblies. Packages, load-combination tests and in-game checks remain.
+- A stopped or absent module schedules nothing: its work items stay on the shared roster but are skipped by an enabled check; an absent module has no items at all. There is no second scheduler, no extra colony scan, and no per-tick module discovery.
+- Measured offline on this build machine (not in the game, so indicative only): one roster pass with every module stopped costs about 1 microsecond.
+- No TPS improvement is claimed. Moving code into assemblies changes where it is compiled, not how much work runs. Active modules do the same work as before. Payload growth is bounded as before (the lesson log and assessment lists keep their existing caps); no new unbounded history was added.
+
+## 11. Verification: what is evidence of what
+
+**Pure/domain tests (1,096 on this branch, `dotnet test`).** Registration order and refusals (`ModuleHostTests`: framework only, +Education, +Care, both in either order, duplicates, late arrival, wrong API, missing capability, failure part way); lifecycle persistence, failure, retry, idempotence, reload (`ModuleLifecycleTests`); absence versus preparation, hand-over, record ownership (`ModuleAbsenceTests`, `ModuleStateTests`); migration of synthetic legacy data; the architecture tests.
+
+**Game-assembly compilation.** `FamilyLife`, `WilsEducation` and `WilsCommunityCare` build for 1.6 (net472) and 1.7 (net10) with no `InternalsVisibleTo`; the 25 patch classes check against the game's assemblies. This proves the modules use only the framework's public surface.
+
+**Package/static validation.** `Build-Packages.ps1` and `AssemblyBoundaryTests` (assembly references, type ownership, no duplicates, package contents). Static inspection; nothing is loaded.
+
+**A real pre-extraction save, offline.** `RealSaveMigrationTests` (opt-in via `WFL_REAL_SAVE`) read the office records of five real saves from this machine (written before module payloads existed): the Healer's legacy fields (`nextRound`, `roundStart`, `examined`, ...) and, in four of the five, the Teacher's, migrate into the modules' payloads exactly once, read back identically after a flush and reload, and migrating twice changes nothing. **This used the migration's own label list and the modules' state code on the saves' XML. It did not run RimWorld's loader.** The save's Teacher had no lesson log or assessment in progress, so those paths were not exercised by real data.
+
+**Not observed anywhere, and not claimed:** that the packages load; that Education works alone; that a class starts, finishes, pays XP once and releases pupils; that an assessment survives a save; that preparation ends a live class; that a prepared save loads without the module; that reinstalling does not resurrect work; that the legacy reader runs in the real loader; that unresolvable defs of an absent module only warn. [MODULE-VERIFICATION.md](MODULE-VERIFICATION.md) lists the steps for each.
+
+## 12. Planned roles (documented, not implemented)
+
+The extraction boundary is still moving, so no new role is being added. When they are, they use the same registration, scheduling, knowledge, authority, persistence and cleanup contracts as above, with no new framework hooks specific to them.
+
+- **Education**: Teacher (built), **Training Instructor** (planned; practical skills as distinct from schooling; needs a post definition, a work item, a meeting or session, its own community record and holder state, a removal step, and an election-policy entry in the post's definition rather than the framework's tables).
+- **Community Care**: Healer (built), **Counselor** (planned; mood and relationships support; same shape; it must go through the existing cooperative exchange and the daily contact limiter, not around them).
+
+## 13. Remaining work toward Family Life extraction
+
+1. Move the election work-needed and house-wish tables, the camp-lesson credit and the role presentation rows into post definitions, so a module can add a post without touching the framework.
+2. Give the hall keeper and chaplain a home (Family Life) and move `HallDriver.LooksLikeSchool` out of the framework.
+3. Extract Family Life's remaining systems (meals, traditions, parenting, estates, crime, institutions ...) behind the same contracts; the registry partial classes are the hard part (each system's state needs the payload treatment).
+4. Introduce `SpacemanWil.WilsCommunityFramework` once Family Life leaves the base package, with a migration note.
+5. Registration contracts for Story Thread providers, settings sections and window contributions, designed against the first real consumer.
+6. Play-test everything in section 11's "not observed" list.

@@ -116,7 +116,7 @@ namespace FamilyLife
                 // before treating distance as a failed conversation, and count the talk itself only once together.
                 if (Other.Position.DistanceTo(pawn.Position) > 3) { if (++waited > 600) EndJobWith(JobCondition.Incompletable); return; }
                 waited++;
-                int needed = job.def == WFL_StoryDefOf.WFL_OfficeLesson ? OfficeDriver.LessonTicks : job.def == WFL_StoryDefOf.WFL_Checkup ? OfficeDriver.CheckupTicks : 180;
+                int needed = FamilyFramework.Meetings.Find(job.def)?.Ticks ?? 180;
                 if (++together >= needed) { if(job.def==WFL_StoryDefOf.WFL_MarriageNegotiation) MarriageAlliancePlanner.CompleteNegotiation(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_MarriageConsent) MarriageAlliancePlanner.CompleteConsent(pawn,Other,job.count);
                     else if(job.def==WFL_StoryDefOf.WFL_HouseUnionNegotiation) MarriageAlliancePlanner.CompleteUnion(pawn,Other,job.count);
@@ -138,7 +138,7 @@ namespace FamilyLife
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             // A lesson or a check-up lasts as long as the speaker's; the wait ends when theirs does.
             var talkDef = job.targetA.Pawn?.CurJobDef;
-            yield return Toils_General.Wait(talkDef == WFL_StoryDefOf.WFL_OfficeLesson ? OfficeDriver.LessonTicks + 1500 : talkDef == WFL_StoryDefOf.WFL_Checkup ? OfficeDriver.CheckupTicks + 600 : 1200);
+            yield return Toils_General.Wait(FamilyFramework.Meetings.Find(talkDef) is MeetingDefinition meeting ? meeting.Ticks + meeting.ListenerSlackTicks : 1200);
         }
     }
 }

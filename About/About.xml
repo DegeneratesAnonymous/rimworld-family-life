@@ -35,6 +35,9 @@ WHAT WORKS NOW
 - Relationships: how attached, trusting and tense each person is toward their relatives, a closeness summary for each household, and deeper (temporary) grief when someone close dies. Your surnames on the character card link to the family.
 - Everyday family life: relatives choose to spend time together during joy time, children are read to before bed (the free parent with the best Social skill, with a book if one is nearby), and relatives who eat together feel it. A soft daily limit keeps it from crowding out anything else.
 
+OPTIONAL MODULES
+The community Teacher and Healer are now separate mods that plug into this one: Wil's Education and Wil's Community Care. They need this mod and nothing else (not each other). Without them this mod works on its own; a Teacher or Healer your colony already elected stays on record. See docs/INSTALLATION.md before updating an existing game.
+
 Works with vanilla RimWorld 1.6 and 1.7. Requires Harmony. Biotech is optional. Other mods are never required.
 
 Created by Spaceman_Wil. Uses Harmony by Andreas Pardeike.</description>

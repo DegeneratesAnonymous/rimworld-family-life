@@ -19,8 +19,8 @@ namespace FamilyLife.Tests
             return dir?.FullName ?? throw new FileNotFoundException("repository root");
         }
         private static string Src => Path.Combine(Root(), "Source", "FamilyLife");
-        private static string Read(string rel) => File.ReadAllText(Path.Combine(Src, rel));
-        private static string[] AllGameFiles() => Directory.GetFiles(Src, "*.cs", SearchOption.AllDirectories).Where(f => !f.Replace('\\', '/').Contains("/obj/")).ToArray();
+        private static string Read(string rel) => RepoPaths.Read(rel);
+        private static string[] AllGameFiles() => RepoPaths.AllSource();
 
         [Fact]
         public void A_refused_or_missed_appointment_is_never_chased_or_escorted()
@@ -59,7 +59,7 @@ namespace FamilyLife.Tests
         public void Pupils_and_the_doctor_stop_for_real_needs_and_emergencies()
         {
             string classes = Read("Education/Game/Classes.cs"), clinic = Read("Care/Game/Clinic.cs");
-            Assert.Contains("PawnReadiness.StopReason(pawn", classes);          // both the teacher's and the pupils' jobs
+            Assert.Contains("PawnReadinessApi.StopReason(pawn", classes);          // both the teacher's and the pupils' jobs
             Assert.Contains("TeacherGone()", classes);
             Assert.Contains("CareDemand.DoctorShouldTend(pawn", clinic);
         }

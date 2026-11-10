@@ -289,7 +289,7 @@ namespace FamilyLife
             Trace(guest.LabelShort + "'s visit to " + pass.Zone?.label + " ended");
         }
 
-        public static void Reset() { RoleBar.Reset(); PostBadges.Reset(); RoleIcons.Reset(); ComfortDriver.Reset(); ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); KinVisitDriver.Reset(); KinRescueDriver.Reset(); EstateDriver.Reset(); AssemblyDriver.Reset(); GovernanceDriver.Reset(); GovernanceMeetings.Reset(); FamilyModules.ResetAll(); PawnReadiness.Reset(); FamilyZoneView.Sync(); }
+        public static void Reset() { RoleBar.Reset(); PostBadges.Reset(); RoleIcons.Reset(); ComfortDriver.Reset(); ByGuest.Clear(); cooldown.Clear(); FamilyDoorRule.Reset(); FamilyHome.Reset(); FamilyMeals.Reset(); HouseAgency.Reset(); SocialMoments.Reset(); KinVisitDriver.Reset(); KinRescueDriver.Reset(); EstateDriver.Reset(); AssemblyDriver.Reset(); GovernanceDriver.Reset(); GovernanceMeetings.Reset(); FamilyFramework.ResetAll(); PawnReadiness.Reset(); FamilyZoneView.Sync(); }
     }
 
     [DefOf]

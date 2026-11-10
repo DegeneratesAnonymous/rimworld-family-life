@@ -18,3 +18,10 @@ tools/**/obj/
 docs/calibration/history.csv
 
 obj-isolation/
+
+# Built module assemblies and the assembled install folders
+Packages/*/1.6/Assemblies/*.dll
+Packages/*/1.7/Assemblies/*.dll
+Packages/*/1.6/Assemblies/*.json
+Packages/*/1.7/Assemblies/*.json
+dist/

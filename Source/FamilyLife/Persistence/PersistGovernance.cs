@@ -409,3 +409,24 @@ namespace FamilyLife.Domain
         }
     }
 }
+
+namespace FamilyLife.Domain
+{
+    using System.Collections.Generic;
+    using FamilyLife.Framework;
+    using Verse;
+
+    public sealed partial class FamilyRegistry
+    {
+        /// <summary>The lifecycle of the modules in this save (running, prepared for removal, failed). Written for modules that are not installed too.</summary>
+        private void ExposeLifecycle()
+        {
+            List<string> ids = null, reports = null; List<int> states = null, ticks = null, attempts = null;
+            if (Scribe.mode == LoadSaveMode.Saving) Lifecycle.ToLists(out ids, out states, out ticks, out attempts, out reports);
+            Scribe_Collections.Look(ref ids, "moduleIds", LookMode.Value); Scribe_Collections.Look(ref states, "moduleStates", LookMode.Value);
+            Scribe_Collections.Look(ref ticks, "moduleTicks", LookMode.Value); Scribe_Collections.Look(ref attempts, "moduleAttempts", LookMode.Value);
+            Scribe_Collections.Look(ref reports, "moduleReports", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars) Lifecycle.FromLists(ids, states, ticks, attempts, reports);
+        }
+    }
+}

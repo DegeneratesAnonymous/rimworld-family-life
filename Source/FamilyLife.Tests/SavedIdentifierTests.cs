@@ -46,8 +46,7 @@ namespace FamilyLife.Tests
 
         private static string SourceText()
         {
-            string src = Path.Combine(Root(), "Source", "FamilyLife");
-            return string.Join("\n", Directory.GetFiles(src, "*.cs", SearchOption.AllDirectories).Where(f => !f.Replace('\\', '/').Contains("/obj/")).Select(File.ReadAllText));
+            return string.Join("\n", RepoPaths.AllSource().Select(File.ReadAllText));
         }
 
         [Fact]
@@ -67,7 +66,7 @@ namespace FamilyLife.Tests
         {
             string root = Root();
             var defs = new HashSet<string>(); var classes = new HashSet<string>();
-            foreach (var f in Directory.GetFiles(Path.Combine(root, "Defs"), "*.xml", SearchOption.AllDirectories).Concat(Directory.GetFiles(Path.Combine(root, "Patches"), "*.xml")))
+            foreach (var f in RepoPaths.DefAndPatchFiles())
             {
                 string text = File.ReadAllText(f);
                 foreach (Match m in Regex.Matches(text, @"<(\w+)(?: [^>]*)?>\s*<defName>(\w+)</defName>")) defs.Add("def " + m.Groups[1].Value + " " + m.Groups[2].Value);
@@ -82,7 +81,7 @@ namespace FamilyLife.Tests
         public void Every_class_the_xml_names_is_declared_in_the_source_so_no_job_points_at_absent_code()
         {
             string root = Root(); string source = SourceText();
-            foreach (var f in Directory.GetFiles(Path.Combine(root, "Defs"), "*.xml", SearchOption.AllDirectories).Concat(Directory.GetFiles(Path.Combine(root, "Patches"), "*.xml")))
+            foreach (var f in RepoPaths.DefAndPatchFiles())
             {
                 string text = File.ReadAllText(f);
                 foreach (Match m in Regex.Matches(text, @"(?:driverClass|letterClass|workerClass|thoughtClass|hediffClass)>\s*FamilyLife\.(\w+)|Class=""FamilyLife\.(\w+)"""))
@@ -116,9 +115,9 @@ namespace FamilyLife.Tests
         {
             string src = Path.Combine(Root(), "Source", "FamilyLife");
             var seen = new Dictionary<string, string>();
-            foreach (var rel in new[] { "Game/FamilyModules.cs", "Game/FamilyLifeModule.cs", "Education/Game/EducationModule.cs", "Care/Game/CareModule.cs" })
+            foreach (var rel in new[] { "Game/FamilyFramework.cs", "Game/FamilyLifeModule.cs", "Education/Game/EducationModule.cs", "Care/Game/CareModule.cs" })
             {
-                string text = Regex.Replace(File.ReadAllText(Path.Combine(src, rel)), @"//[^\n]*", "");
+                string text = Regex.Replace(RepoPaths.Read(rel), @"//[^\n]*", "");
                 string module = Regex.Match(text, @"const string Id = ""(wils\.\w+)""").Groups[1].Value;
                 foreach (Match m in Regex.Matches(text, @"""(wils(?:\.[a-z][a-z0-9]*)+)"""))
                 {

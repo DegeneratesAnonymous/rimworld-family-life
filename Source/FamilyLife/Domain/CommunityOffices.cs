@@ -268,6 +268,7 @@ namespace FamilyLife.Domain
 
         private void Install(CommunityOffice office, int winner, int now, int backers, int opponents)
         {
+            int before = office.HolderId;
             office.HolderId = winner; office.HolderFamily = FamilyOf(winner); office.ElectedTick = now; office.TermEndTick = NextAssemblyTick;
             office.LastWorkTick = now; office.Work = 0; office.QualitySum = 0f; office.QualityCount = 0; office.UnmetSinceTick = 0; office.CounterReady = false;
             office.EndReason = OfficeEnd.None; office.EndedTick = 0; office.Backers = backers; office.Opponents = opponents; office.Terms++;
@@ -276,6 +277,7 @@ namespace FamilyLife.Domain
             office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();          // a new holder's module state starts fresh by itself (per-holder payloads)
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
             AdvanceRecognition(winner, .25f, now);
+            if (before != winner) HolderChanged?.Invoke(this, office, before, winner);
         }
 
         /// <summary>One voter's regard for one candidate: how well they do the work, how far the voter trusts them, shared house, and known misconduct.</summary>
@@ -291,11 +293,13 @@ namespace FamilyLife.Domain
 
         private void EndOffice(CommunityOffice office, OfficeEnd why, int now)
         {
+            int before = office.HolderId;
             office.LastHolderId = office.HolderId; office.HolderId = 0; office.HolderFamily = 0; office.EndReason = why; office.EndedTick = now;
             office.UnmetSinceTick = 0; office.CounterReady = false; office.SessionStartTick = 0; office.SessionQueue.Clear();
             office.PendingKind = 0;
             office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();          // module state stamped with the old holder is discarded the next time it is read
             if (why == OfficeEnd.Neglected) { office.BarredId = office.LastHolderId; office.BarredUntil = now + AssemblyYearTicks / 2; }
+            if (before != 0) HolderChanged?.Invoke(this, office, before, 0);
         }
 
         public bool ResignOffice(OfficeKind kind, int person, int now)
@@ -365,6 +369,8 @@ namespace FamilyLife.Domain
                 var holder = GetPerson(office.HolderId);
                 if (holder == null || !holder.InColony) { EndOffice(office, OfficeEnd.Left, now); continue; }
                 office.HolderFamily = FamilyOf(office.HolderId);
+                // A post whose module is absent or stopped cannot be done, so it cannot be neglected: nothing is held against the holder, and the post stays as it was until the module returns.
+                if (!FamilyLife.Framework.OfficeAvailability.IsOffered(office.Kind)) { office.UnmetSinceTick = 0; continue; }
                 if (!IsAppointed(office.Kind) && office.UnmetSinceTick != 0 && now - office.UnmetSinceTick > OfficeNeglectTicks && now - office.LastWorkTick > OfficeNeglectTicks)
                 {
                     var house = GetLineage(office.HolderFamily);
@@ -390,7 +396,7 @@ namespace FamilyLife.Domain
             if (NextAssemblyTick == 0 || now < NextAssemblyTick || OpenAssembly != null) return null;
             while (NextAssemblyTick <= now) NextAssemblyTick += AssemblyYearTicks;
             var assembly = new CommunityAssembly { Id = NextAssemblyId++, StartedTick = now, VotingTick = now + AssemblyCampaignTicks, State = AssemblyState.Campaign };
-            var kinds = Enum.GetValues(typeof(OfficeKind)).Cast<OfficeKind>().Where(k => !IsAppointed(k)).ToList();
+            var kinds = Enum.GetValues(typeof(OfficeKind)).Cast<OfficeKind>().Where(k => !IsAppointed(k) && FamilyLife.Framework.OfficeAvailability.IsOffered(k)).ToList();          // a post of an absent or stopped module is left untouched
             var fields = kinds.ToDictionary(k => k, k => OfficeCandidates(k, now, ctx, EnsureOffice(k), true));
 
             // A holder who is no longer fit or willing for their own post steps down; those who remain keep standing for it.

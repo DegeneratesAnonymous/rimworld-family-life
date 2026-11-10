@@ -141,7 +141,7 @@ namespace FamilyLife
         private static void DueNow()
         {
             var r = Comp?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Held)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); foreach (var due in FamilyModules.DueNow.Enabled()) due(o); }          // each module brings its own timers due
+            foreach (var o in r.Offices.Where(x => x.Held)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); foreach (var due in FamilyFramework.DueNow.Enabled()) due(o); }          // each module brings its own timers due
             OfficeDriver.ForceUntil = Now + 6000;          // for the next two hours a test is not held up by who is busy or on a work schedule
             var c = Comp;
             OfficeDriver.WorkNow(c, Now);          // start them now rather than at the next check

@@ -161,6 +161,12 @@ namespace FamilyLife.Domain
 
     public sealed partial class FamilyRegistry
     {
+        /// <summary>Which modules are running, stopped for removal, or failed to stop, in this save. Kept for modules that are not installed.</summary>
+        public readonly ModuleLifecycle Lifecycle = new ModuleLifecycle();
+
+        /// <summary>Raised when a post gets a new holder or loses its holder: (registry, post, old holder, new holder). Set once by the framework host; nothing in the domain depends on it.</summary>
+        public static System.Action<FamilyRegistry, CommunityOffice, int, int> HolderChanged;
+
         /// <summary>Encodes every post's module state ready for saving.</summary>
         public void FlushAllState() { foreach (var o in Offices) o.FlushState(); }
     }

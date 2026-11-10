@@ -41,7 +41,7 @@ namespace FamilyLife.Tests
             var done = r.EndCareActivity(9000, PendingEvent.Checkups, PendingEvent.Illness);
             Assert.NotEmpty(done);
             Assert.Equal(0, o.Care().RoundStartTick); Assert.False(o.Care().IllnessRound);
-            Assert.Equal(0, o.PendingKind); Assert.Empty(o.Care().Examined);
+            Assert.Equal(0, o.PendingKind); Assert.Equal(new[] { 2 }, o.Care().Examined);          // the record of who was seen stays
             Assert.False(o.Held);
         }
 

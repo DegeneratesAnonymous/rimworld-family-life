@@ -551,18 +551,4 @@
     <stackLimit>1</stackLimit>
     <stages><li><label>took part in the assembly</label><description>The whole colony stood together and chose its own way. I had a say.</description><baseMoodEffect>8</baseMoodEffect></li></stages>
   </ThoughtDef>
-  <ThoughtDef><defName>WFL_ReassuringCheckup</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>reassuring check-up</label><description>The doctor listened and put my mind at ease.</description><baseMoodEffect>4</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_DismissiveCheckup</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>brushed off at a check-up</label><description>The doctor hardly seemed to listen.</description><baseMoodEffect>-2</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_InspiringLesson</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>inspiring lesson</label><description>The teacher made it all make sense. I wanted to learn more.</description><baseMoodEffect>4</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_BoringLesson</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>dull, confusing lesson</label><description>I could not follow the teacher, and sitting there was tedious.</description><baseMoodEffect>-3</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_TestingProud</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>6</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>did well in the assessment</label><description>I took part and it went well. I am proud of myself.</description><baseMoodEffect>5</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_TestingDone</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>4</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>finished the assessment</label><description>The assessment is over. I did all right.</description><baseMoodEffect>2</baseMoodEffect></li></stages></ThoughtDef>
-  <ThoughtDef><defName>WFL_TestingDisappointed</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
-    <stages><li><label>a hard assessment</label><description>The assessment did not go as well as I hoped. There is time to do better.</description><baseMoodEffect>-1</baseMoodEffect></li></stages></ThoughtDef>
 </Defs>

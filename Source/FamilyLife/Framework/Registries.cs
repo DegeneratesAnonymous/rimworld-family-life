@@ -13,6 +13,8 @@ namespace FamilyLife.Framework
     {
         public string Id, ModuleId, LabelKey;
         public OfficeKind Kind;
+        /// <summary>Names of the skills whose passion makes someone want this post (a calling is the clearest reason to want it).</summary>
+        public string[] PassionSkills = new string[0];
     }
 
     public sealed class OfficeCatalog
@@ -42,12 +44,15 @@ namespace FamilyLife.Framework
         /// <summary>A post can be given out only while the module that defines it is present and enabled. An old save that holds a post of an absent module keeps the record and shows it as historic.</summary>
         public bool Available(OfficeKind kind) { var d = ByKind(kind); return d != null && modules.IsEnabled(d.ModuleId); }
 
-        /// <summary>Every saved kind has a definition (otherwise a loaded save would hold a post nothing can describe).</summary>
+        /// <summary>
+        /// A saved kind with no definition is a post of a module that is not installed: it stays in the save as a historic record and is never given out. It is not an error here (the
+        /// tests check that every kind the framework ships has an owner).
+        /// </summary>
+        public bool IsHistoric(OfficeKind kind) => !byKind.ContainsKey(kind);
+
         public List<string> Validate()
         {
             var problems = new List<string>();
-            foreach (OfficeKind k in Enum.GetValues(typeof(OfficeKind)))
-                if (!byKind.ContainsKey(k)) problems.Add("Saved office kind " + k + " has no registered definition.");
             foreach (var d in byId.Values) if (!modules.Modules.Any(m => m.Id == d.ModuleId)) problems.Add("Office '" + d.Id + "' belongs to unregistered module '" + d.ModuleId + "'.");
             return problems;
         }
@@ -190,8 +195,8 @@ namespace FamilyLife.Framework
         }
 
         public IEnumerable<T> Enabled() { foreach (var e in entries) if (modules.IsEnabled(e.Key)) yield return e.Value; }
-        /// <summary>The first contribution of one module, whether or not the module is currently enabled (a preparation step must still be reachable).</summary>
-        public T EnabledFor(string moduleId) { foreach (var e in entries) if (e.Key == moduleId) return e.Value; return default(T); }
+        /// <summary>Every contribution of one module, whether or not the module is currently enabled (a preparation step must still be reachable while the module is stopped).</summary>
+        public IEnumerable<T> ForModule(string moduleId) { foreach (var e in entries) if (e.Key == moduleId) yield return e.Value; }
         public int Count => entries.Count;
     }
 }

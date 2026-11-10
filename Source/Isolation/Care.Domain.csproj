@@ -12,7 +12,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\FamilyLife\Care\Domain\**\*.cs" />
+    <Compile Include="..\Care\Domain\**\*.cs" />
     <ProjectReference Include="Shared.Domain.csproj" />
   </ItemGroup>
 </Project>

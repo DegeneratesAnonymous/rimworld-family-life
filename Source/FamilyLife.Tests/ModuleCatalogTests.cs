@@ -12,10 +12,10 @@ namespace FamilyLife.Tests
         private static ModuleCatalog Standard()
         {
             var c = new ModuleCatalog();
-            c.Register(new ModuleInfo { Id = ModuleCatalog.FrameworkId, Name = "Framework", IsFramework = true });
-            c.Register(new ModuleInfo { Id = "wils.education", Name = "Education", Requires = new[] { ModuleCatalog.FrameworkId } });
-            c.Register(new ModuleInfo { Id = "wils.care", Name = "Community Care", Requires = new[] { ModuleCatalog.FrameworkId } });
-            c.Register(new ModuleInfo { Id = "wils.familylife", Name = "Family Life", Requires = new[] { ModuleCatalog.FrameworkId } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = ModuleCatalog.FrameworkId, Name = "Framework", IsFramework = true });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.education", Name = "Education", Requires = new[] { ModuleCatalog.FrameworkId } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.care", Name = "Community Care", Requires = new[] { ModuleCatalog.FrameworkId } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.familylife", Name = "Family Life", Requires = new[] { ModuleCatalog.FrameworkId } });
             return c;
         }
 
@@ -31,7 +31,7 @@ namespace FamilyLife.Tests
         [InlineData("")] [InlineData(null)] [InlineData("education")] [InlineData("Wils.Education")] [InlineData("wils.")] [InlineData("wils.edu cation")] [InlineData("wils..x")]
         public void Identifiers_must_be_stable_namespaced_names(string id)
         {
-            var ex = Assert.Throws<RegistrationException>(() => new ModuleCatalog().Register(new ModuleInfo { Id = id }));
+            var ex = Assert.Throws<RegistrationException>(() => new ModuleCatalog().Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = id }));
             Assert.Contains("identifier", ex.Message);
         }
 
@@ -39,7 +39,7 @@ namespace FamilyLife.Tests
         public void A_duplicate_module_or_capability_is_refused_with_a_message_that_names_it()
         {
             var c = Standard();
-            var dup = Assert.Throws<RegistrationException>(() => c.Register(new ModuleInfo { Id = "wils.education" }));
+            var dup = Assert.Throws<RegistrationException>(() => c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.education" }));
             Assert.Contains("wils.education", dup.Message);
             c.Provide("wils.education", "wils.education.tutoring");
             var clash = Assert.Throws<RegistrationException>(() => c.Provide("wils.care", "wils.education.tutoring"));
@@ -73,7 +73,7 @@ namespace FamilyLife.Tests
         public void Optional_modules_may_require_only_the_framework_and_never_each_other()
         {
             var c = Standard();
-            c.Register(new ModuleInfo { Id = "wils.bad", Requires = new[] { "wils.education" } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.bad", Requires = new[] { "wils.education" } });
             var problems = c.Validate();
             Assert.Contains(problems, p => p.Contains("wils.bad") && p.Contains("never on one another"));
         }
@@ -82,8 +82,8 @@ namespace FamilyLife.Tests
         public void The_framework_may_not_depend_on_a_module_and_a_missing_requirement_is_reported()
         {
             var c = new ModuleCatalog();
-            c.Register(new ModuleInfo { Id = ModuleCatalog.FrameworkId, IsFramework = true, Requires = new[] { "wils.education" } });
-            c.Register(new ModuleInfo { Id = "wils.education", Requires = new[] { "wils.missing" } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = ModuleCatalog.FrameworkId, IsFramework = true, Requires = new[] { "wils.education" } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.education", Requires = new[] { "wils.missing" } });
             var problems = c.Validate();
             Assert.Contains(problems, p => p.Contains("framework must not depend"));
             Assert.Contains(problems, p => p.Contains("wils.missing") && p.Contains("not present"));
@@ -94,9 +94,9 @@ namespace FamilyLife.Tests
         public void A_cycle_is_found_and_reported()
         {
             var c = new ModuleCatalog();
-            c.Register(new ModuleInfo { Id = ModuleCatalog.FrameworkId, IsFramework = true });
-            c.Register(new ModuleInfo { Id = "wils.a", Requires = new[] { "wils.b" } });
-            c.Register(new ModuleInfo { Id = "wils.b", Requires = new[] { "wils.a" } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = ModuleCatalog.FrameworkId, IsFramework = true });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.a", Requires = new[] { "wils.b" } });
+            c.Register(new ModuleInfo { ApiVersion = ModuleCatalog.CurrentApiVersion, Id = "wils.b", Requires = new[] { "wils.a" } });
             Assert.Contains(c.Validate(), p => p.Contains("cycle"));
         }
 
@@ -132,8 +132,8 @@ namespace FamilyLife.Tests
             Assert.False(o.Available(OfficeKind.Teacher));          // Teacher is not offered without Education
             Assert.True(o.Available(OfficeKind.Healer));            // and Care does not depend on it
             Assert.False(o.Available(OfficeKind.HallKeeper));       // never registered
-            var problems = o.Validate();
-            Assert.Contains(problems, p => p.Contains("HallKeeper")); Assert.Contains(problems, p => p.Contains("Chaplain"));
+            Assert.True(o.IsHistoric(OfficeKind.HallKeeper) && o.IsHistoric(OfficeKind.Chaplain));          // a post whose module is not installed is a historic record, not an error
+            Assert.Empty(o.Validate());
             o.Register(new OfficeDefinition { Id = "wils.familylife.hallkeeper", ModuleId = "wils.familylife", Kind = OfficeKind.HallKeeper });
             o.Register(new OfficeDefinition { Id = "wils.familylife.chaplain", ModuleId = "wils.familylife", Kind = OfficeKind.Chaplain });
             Assert.Empty(o.Validate());

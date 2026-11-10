@@ -22,17 +22,10 @@
   <JobDef><defName>WFL_CoupConfront</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>confronting TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_HeistRecruit</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>speaking quietly with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ProtectionOffer</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>talking terms with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_OfficeLesson</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a lesson.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_Checkup</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_HallSit</defName><driverClass>FamilyLife.JobDriver_HallSit</driverClass><reportString>waiting for a meal in the hall.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_HallServe</defName><driverClass>FamilyLife.JobDriver_HallServe</driverClass><reportString>serving a meal to TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastAssemblyVote</defName><driverClass>FamilyLife.JobDriver_CastAssemblyVote</driverClass><reportString>going to the assembly to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_Comfort</defName><driverClass>FamilyLife.JobDriver_Comfort</driverClass><reportString>comforting TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_FetchHeirloom</defName><driverClass>FamilyLife.JobDriver_FetchHeirloom</driverClass><reportString>fetching TargetA, an inheritance.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_CastVote</defName><driverClass>FamilyLife.JobDriver_CastVote</driverClass><reportString>going to vote.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_ClassTeacher</defName><driverClass>FamilyLife.JobDriver_ClassTeacher</driverClass><reportString>teaching a class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_ClassStudent</defName><driverClass>FamilyLife.JobDriver_ClassStudent</driverClass><reportString>attending class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_ClinicDoctor</defName><driverClass>FamilyLife.JobDriver_ClinicDoctor</driverClass><reportString>seeing patients in the clinic.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_ClinicPatient</defName><driverClass>FamilyLife.JobDriver_ClinicPatient</driverClass><reportString>having a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
-  <JobDef><defName>WFL_TestStudent</defName><driverClass>FamilyLife.JobDriver_TestStudent</driverClass><reportString>sitting a test.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

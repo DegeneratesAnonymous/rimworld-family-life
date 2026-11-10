@@ -94,9 +94,10 @@ namespace FamilyLife.Tests
             Assert.Equal(0, o.Assessment().TestingStartTick); Assert.Empty(o.Assessment().TestIds);          // the old teacher's assessment is not carried over
             Assert.Single(o.Education().LessonLog); Assert.Single(o.Education().BookUse);                    // the children's record is
             var healer = Post(r, OfficeKind.Healer, 1);
-            healer.Care().Examined.Add(2); healer.Care().Refused.Add(20); healer.Care().RefusedTick.Add(1);
+            healer.Care().Examined.Add(2); healer.Care().Refused.Add(20); healer.Care().RefusedTick.Add(1); healer.Care().KinSeen = 5; healer.Care().RoutineUsed = 3;
             healer.HolderId = 4; healer.HolderFamily = r.FamilyOf(4);
-            Assert.Empty(healer.Care().Examined); Assert.Empty(healer.Care().Refused);          // a new doctor starts their own record
+            Assert.Equal(new[] { 2 }, healer.Care().Examined); Assert.Equal(new[] { 20 }, healer.Care().Refused);          // the community's care record is not the doctor's: it is inherited
+            Assert.Equal(0, healer.Care().KinSeen); Assert.Equal(0, healer.Care().RoutineUsed);                           // the doctor's own working state starts fresh
         }
 
         [Fact]

@@ -20,7 +20,7 @@ namespace FamilyLife
 
         internal static bool Handles(JobDef def) => def != null && (def == WFL_StoryDefOf.WFL_StewardPetition || def == WFL_StoryDefOf.WFL_StewardGuest ||
             def == WFL_StoryDefOf.WFL_StewardMediate || def == WFL_StoryDefOf.WFL_StewardNegotiate || def == WFL_StoryDefOf.WFL_CoupRecruit || def == WFL_StoryDefOf.WFL_CoupConfront || def == WFL_StoryDefOf.WFL_HeistRecruit ||
-            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_OfficeLesson || def == WFL_StoryDefOf.WFL_Checkup || def == WFL_StoryDefOf.WFL_InstitutionPetition);
+            def == WFL_StoryDefOf.WFL_ProtectionOffer || def == WFL_StoryDefOf.WFL_InstitutionPetition || FamilyFramework.Meetings.Known(def));          // a module's own meetings are looked up, never named here
 
         /// <summary>A number that has not been used before, handed over only when physical work was really finished.</summary>
         internal static int NextToken() => (int)(unchecked((uint)((Find.TickManager?.TicksGame ?? 0) * 7919 + (++tokenCounter) * 104729)) % 2000000000u) + 1;
@@ -34,8 +34,7 @@ namespace FamilyLife
             var job = JobMaker.MakeJob(def, other); job.count = id;
             if(def==WFL_StoryDefOf.WFL_StewardPetition||def==WFL_StoryDefOf.WFL_StewardGuest||def==WFL_StoryDefOf.WFL_StewardMediate||def==WFL_StoryDefOf.WFL_StewardNegotiate||def==WFL_StoryDefOf.WFL_InstitutionPetition)
                 PreferOffice(job,FamilyComponent.Current,FamilyComponent.Current?.Registry.FamilyOf(actor.thingIDNumber)??0,actor,other);
-            if (def == WFL_StoryDefOf.WFL_OfficeLesson && OfficeDriver.LecternCell(actor, out var lectern)) job.targetB = lectern;          // the teacher speaks from the classroom's lectern
-            if (def == WFL_StoryDefOf.WFL_Checkup && OfficeDriver.MedicalRoomCell(actor, out var room)) job.targetB = room;       // the examination is held in the medical room when there is one
+            FamilyFramework.Meetings.Find(def)?.Prepare?.Invoke(job, actor);          // a module may place its meeting (a lectern, a medical room)
             actor.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
             return true;
         }
@@ -72,14 +71,8 @@ namespace FamilyLife
                 }
                 FinishDuty(r, StewardDutyKind.Mediate, id, NextToken(), now, a);
             }
-            else if (def == WFL_StoryDefOf.WFL_OfficeLesson)
-            {
-                if (r.GetPerson(b)?.Juvenile == true && r.OfficeFor(OfficeKind.Teacher)?.HolderId == a) OfficeDriver.CompleteLesson(r, speaker, other, now);
-            }
-            else if (def == WFL_StoryDefOf.WFL_Checkup)
-            {
-                if (r.OfficeFor(OfficeKind.Healer)?.HolderId == a) OfficeDriver.CompleteCheckup(r, speaker, other, now);
-            }
+            else if (FamilyFramework.Meetings.Find(def) is MeetingDefinition meeting)
+                meeting.Complete(speaker, other, id, now);          // nothing happens for a meeting whose module is stopped
             else if(def==WFL_StoryDefOf.WFL_StewardNegotiate)
                 FinishDuty(r,StewardDutyKind.Negotiate,-id,NextToken(),now,a);
             else if (def == WFL_StoryDefOf.WFL_InstitutionPetition)

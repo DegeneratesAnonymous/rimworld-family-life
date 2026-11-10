@@ -110,6 +110,20 @@ namespace FamilyLife
         }
     }
 
+    /// <summary>
+    /// Runs after every mod constructor, so every optional module has announced itself: the framework validates the whole set once and stops accepting registrations. Nothing is
+    /// registered or looked up by reflection after this.
+    /// </summary>
+    [StaticConstructorOnStartup]
+    internal static class FamilyFrameworkStartup
+    {
+        static FamilyFrameworkStartup()
+        {
+            FamilyFramework.Freeze();
+            Log.Message("[Wil's Family Life] Modules: " + string.Join(", ", FamilyFramework.InstallOrder) + (FamilyFramework.Problems.Count > 0 ? " (" + FamilyFramework.Problems.Count + " problem(s) logged)" : "") + ".");
+        }
+    }
+
     public class FamilyLifeMod : Mod
     {
         public static FamilySettings Settings;
@@ -119,7 +133,7 @@ namespace FamilyLife
         public FamilyLifeMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<FamilySettings>();
-            FamilyModules.Ensure();          // register the modules once, and report any problem before a save is loaded
+            FamilyFramework.Ensure();          // register the modules once, and report any problem before a save is loaded
 
             // One patch class at a time: if a hook fails (another mod, a new game build) it is skipped and logged,
             // and the periodic reconcile still keeps the family records correct.

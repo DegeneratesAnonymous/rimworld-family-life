@@ -346,7 +346,7 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
-        public void A_new_holder_starts_their_own_record_and_a_brand_new_office_starts_empty()
+        public void A_new_holder_keeps_the_communitys_care_record_but_starts_their_own_working_state_and_a_brand_new_office_starts_empty()
         {
             var fresh = new CommunityOffice();
             Assert.Empty(fresh.Care().Missed); Assert.Empty(fresh.Care().Refused); Assert.Empty(fresh.Education().LessonLog); Assert.Equal(0, fresh.Care().RoundWindow);
@@ -355,7 +355,8 @@ namespace FamilyLife.Tests
             r.NoteRefusal(2, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; o.Care().KinSeen = 3; o.Care().KinQuality = 9f;
             o.Education().LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
             Assert.True(r.ResignOffice(OfficeKind.Healer, 1, 9000));
-            Assert.Empty(o.Care().Refused); Assert.Empty(o.Care().Missed); Assert.Equal(0, o.Care().RoundWindow); Assert.Equal(0, o.Care().KinSeen);
+            Assert.Single(o.Care().Refused); Assert.Equal(new[] { 4 }, o.Care().Missed); Assert.Equal(20 * Day, o.Care().RoundWindow);          // the community's care record outlives the doctor: declines are still respected, the missed still go first
+            Assert.Equal(0, o.Care().KinSeen); Assert.Equal(0f, o.Care().KinQuality);          // the doctor's own record of how they treated people does not pass to the next
             Assert.Single(o.Education().LessonLog);          // what the children studied is theirs, not the holder's
         }
 

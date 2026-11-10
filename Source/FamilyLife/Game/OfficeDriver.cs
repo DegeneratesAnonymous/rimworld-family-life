@@ -28,18 +28,18 @@ namespace FamilyLife
             Passion = (id, kind) => PassionFor(c.TryGetPawn(id), kind)
         };
 
-        /// <summary>Whether the pawn burns for the skills the post uses: a calling, which is the clearest reason to want it.</summary>
+        /// <summary>Whether the pawn burns for the skills the post uses: a calling, which is the clearest reason to want it. Which skills a post uses is declared by the module that owns it.</summary>
         internal static bool PassionFor(Pawn p, OfficeKind kind)
         {
             if (p?.skills == null) return false;
-            bool Burns(SkillDef def) { var s = p.skills.GetSkill(def); return s != null && !s.TotallyDisabled && s.passion != Passion.None; }
-            switch (kind)
+            var skills = FamilyFramework.PostSkills(kind);
+            foreach (var name in skills.Passion)
             {
-                case OfficeKind.Healer: return Burns(SkillDefOf.Medicine);
-                case OfficeKind.Teacher: return Burns(SkillDefOf.Intellectual) || Burns(SkillDefOf.Social);
-                case OfficeKind.HallKeeper: return Burns(SkillDefOf.Cooking) || Burns(SkillDefOf.Social);
-                default: return false;
+                var def = DefDatabase<SkillDef>.GetNamedSilentFail(name); if (def == null) continue;
+                var s = p.skills.GetSkill(def);
+                if (s != null && !s.TotallyDisabled && s.passion != Passion.None) return true;
             }
+            return false;
         }
 
         /// <summary>
@@ -75,9 +75,9 @@ namespace FamilyLife
         internal static float SkillFor(Pawn p, OfficeKind kind)
         {
             if (p == null || p.skills == null || p.Dead) return 0f;
-            float S(SkillDef def) { var s = p.skills.GetSkill(def); return s == null || s.TotallyDisabled ? 0f : Math.Min(1f, s.Level / 20f); }
-            if (kind == OfficeKind.Healer) return p.WorkTypeIsDisabled(WorkTypeDefOf.Doctor) ? 0f : S(SkillDefOf.Medicine);
-            return p.WorkTagIsDisabled(WorkTags.Social) ? 0f : .6f * S(SkillDefOf.Intellectual) + .4f * S(SkillDefOf.Social);
+            var post = FamilyFramework.PostSkills(kind);
+            if (post.Fitness == null) return 0f;
+            return post.Fitness(p);
         }
 
         internal static void Run(FamilyComponent c, int now)
@@ -93,7 +93,7 @@ namespace FamilyLife
             Esteem(c, r, now);
             AssemblyDriver.Run(c, r, now);
             // each module's post work runs from the one shared roster, and not at all while that module is off
-            FamilyModules.Roster.RunDue(now, 0, (item, ex) => Log.Warning("[Wil's Family Life] Community work '" + item.Id + "' skipped: " + ex.Message));
+            FamilyFramework.Roster.RunDue(now, 0, (item, ex) => Log.Warning("[Wil's Family Life] Community work '" + item.Id + "' skipped: " + ex.Message));
         }
 
         /// <summary>The chaplain is the ideoligion's moral guide, the one who converts and speaks for the faith. The post simply follows the game.</summary>
@@ -125,7 +125,7 @@ namespace FamilyLife
 
         internal static void Work(FamilyComponent c, FamilyRegistry r, CommunityOffice office, int now)
         {
-            var provider = FamilyModules.WorkFor(office.Kind);          // null when the module that defines this post is absent or off
+            var provider = FamilyFramework.WorkFor(office.Kind);          // null when the module that defines this post is absent or off
             if (provider == null) return;
             try { provider(c, r, office, Spawned(c, office.HolderId), FamilyLifeMod.Settings, now); }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Community post '" + office.Kind + "' skipped: " + ex.Message); }
@@ -178,7 +178,7 @@ namespace FamilyLife
         internal static List<string> Diagnose(FamilyComponent c, int now, OfficeKind? only = null)
         {
             var lines = new List<string>();
-            foreach (var section in FamilyModules.Diagnostics.Enabled())
+            foreach (var section in FamilyFramework.Diagnostics.Enabled())
                 if (only == null || only == section.Kind) lines.AddRange(section.Lines(c, now));
             return lines;
         }
@@ -199,9 +199,6 @@ namespace FamilyLife
             if (Forced && p != null) return !p.Drafted && !p.Downed && !p.InMentalState && !p.IsPrisoner;
             return Governance.Free(c, id);
         }
-
-        /// <summary>A lesson lasts two game hours; a check-up a few seconds at triple speed.</summary>
-        internal const int LessonTicks = 5000, CheckupTicks = 900;
 
     }
 }

@@ -12,17 +12,20 @@ namespace FamilyLife
     /// Family Life as registered today. It still includes the existing house features that have not yet been given a module of their own (see docs/MODULAR-ARCHITECTURE.md), among
     /// them the hall keeper and the chaplain, so those posts are owned here rather than in the framework.
     /// </summary>
-    internal static class FamilyLifeModule
+    internal sealed class FamilyLifeModule : IFamilyModule
     {
         internal const string Id = "wils.familylife";
+        string IFamilyModule.Id => Id;
 
-        internal static void Register()
+        public void Register()
         {
-            FamilyModules.Catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Family Life", Requires = new[] { ModuleCatalog.FrameworkId } });
-            FamilyModules.Catalog.Provide(Id, "wils.familylife.meals");
-            FamilyModules.Offices.Register(new OfficeDefinition { Id = "wils.familylife.hallkeeper", ModuleId = Id, Kind = OfficeKind.HallKeeper, LabelKey = "WFL_OfficeKind_HallKeeper" });
-            FamilyModules.Offices.Register(new OfficeDefinition { Id = "wils.familylife.chaplain", ModuleId = Id, Kind = OfficeKind.Chaplain, LabelKey = "WFL_OfficeKind_Chaplain" });
-            FamilyModules.RegisterOfficeWork(Id, OfficeKind.HallKeeper, OfficeDriver.HallWork);
+            FamilyFramework.Catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Family Life", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            FamilyFramework.Catalog.Provide(Id, "wils.familylife.meals");
+            FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.familylife.hallkeeper", ModuleId = Id, Kind = OfficeKind.HallKeeper, LabelKey = "WFL_OfficeKind_HallKeeper", PassionSkills = new[] { "Cooking", "Social" } });
+            FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.familylife.chaplain", ModuleId = Id, Kind = OfficeKind.Chaplain, LabelKey = "WFL_OfficeKind_Chaplain" });
+            FamilyFramework.RegisterFitness(OfficeKind.HallKeeper, FrameworkServices.SocialFitness);
+            FamilyFramework.RegisterFitness(OfficeKind.Chaplain, FrameworkServices.SocialFitness);
+            FamilyFramework.RegisterOfficeWork(Id, OfficeKind.HallKeeper, OfficeDriver.HallWork);
         }
     }
 }

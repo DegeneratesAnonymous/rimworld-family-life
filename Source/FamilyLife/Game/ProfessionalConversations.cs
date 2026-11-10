@@ -11,7 +11,7 @@ namespace FamilyLife
 {
     // One exchange between a professional (a doctor, a teacher) and the person they are talking to. Owner: the framework; Education and Community Care both use it.
 
-    internal struct ExchangeResult { public EventTier Tier; public float Quality, Scale; }
+    public struct ExchangeResult { public EventTier Tier; public float Quality, Scale; }
 
     /// <summary>
     /// One exchange between a doctor or teacher and the person they are talking to. It is cooperative: how it goes depends on how well the professional delivers it (their skill
