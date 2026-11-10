@@ -25,17 +25,26 @@ namespace FamilyLife.Domain
     }
 
     /// <summary>
-    /// Experience and qualifications for every pawn. Experience is reported by the module that saw the activity, once per activity key, with a daily cap per pawn so trivial
-    /// repetition cannot be farmed. Qualifications are only ever added.
+    /// Experience and qualifications for every pawn. Experience is reported by the module that saw the activity, once per activity key. Repeating the same kind of activity on the
+    /// same day earns diminishing returns (each module sets the points per activity, so there is no universal progression limit); <see cref="SafetyCapPerDay"/> is only a configurable
+    /// backstop against a buggy reporter. Qualifications are only ever added, and the ledger keeps experience for careers whose module is not installed.
+    ///
+    /// Activity keys must be unique per real event: build them as module id + event kind + the event's own id (a class session id, a visit id), never from the pawn alone. The pawn,
+    /// career and specialty are added here, so the same event credits each person once. Remembered keys are dated and forgotten after <see cref="RememberDays"/>, which is longer
+    /// than any activity can be reported again.
     /// </summary>
     public sealed class CareerLedger : IModuleState
     {
         public const string Id = "wils.careers";
-        public const int DailyCap = 40, RememberedActivities = 400;
+        public const int RememberDays = 60, RememberedActivities = 2000;
+        /// <summary>Hard backstop on experience credited to one pawn in one day, for a reporter that misbehaves. 0 turns it off. Set from the module's settings.</summary>
+        public static int SafetyCapPerDay = 400;
+        /// <summary>Each repeat of the same kind of activity on one day earns this share of the previous one's points (1 = no diminishing).</summary>
+        public static float RepeatFactor = 0.6f;
 
-        private sealed class Entry { public Dictionary<string, int> Xp = new Dictionary<string, int>(); public HashSet<string> Quals = new HashSet<string>(); public int Day, DayXp; }
+        private sealed class Entry { public Dictionary<string, int> Xp = new Dictionary<string, int>(); public HashSet<string> Quals = new HashSet<string>(); public int Day, DayXp; public Dictionary<string, int> KindCount = new Dictionary<string, int>(); public HashSet<string> Legacy = new HashSet<string>(); }
         private readonly Dictionary<int, Entry> people = new Dictionary<int, Entry>();
-        private readonly List<string> seen = new List<string>();
+        private readonly List<string> seen = new List<string>();      // "key@day", oldest first
         private readonly HashSet<string> seenSet = new HashSet<string>();
 
         private Entry Of(int person) { if (!people.TryGetValue(person, out var e)) people[person] = e = new Entry(); return e; }
@@ -52,24 +61,48 @@ namespace FamilyLife.Domain
         public int Level(int person, string career) => !IsQualified(person, career) ? 1 : Specialties(person, career).Any() ? 3 : 2;
 
         /// <summary>
-        /// Credits a finished activity. <paramref name="activityKey"/> identifies it (module, kind, participants, day) so reporting it twice credits once. Specialty experience may be earned
-        /// before qualifying. Returns the experience actually credited (0 for a repeat or when the day's cap is reached).
+        /// Credits a finished activity. <paramref name="kind"/> groups activities of one sort for diminishing returns (e.g. "teach.class"); <paramref name="activityKey"/> identifies this one
+        /// event so reporting it twice credits once. Specialty experience may be earned before qualifying. Returns the experience actually credited.
         /// </summary>
-        public int Award(int person, string career, string specialty, string activityKey, int points, int day)
+        public int Award(int person, string career, string specialty, string kind, string activityKey, int points, int day)
         {
             if (person <= 0 || points <= 0 || string.IsNullOrEmpty(career) || string.IsNullOrEmpty(activityKey)) return 0;
+            Prune(day);
             string key = person + "|" + career + "|" + (specialty ?? "") + "|" + activityKey;
             if (seenSet.Contains(key)) return 0;
             var e = Of(person);
-            if (e.Day != day) { e.Day = day; e.DayXp = 0; }
-            int give = Math.Min(points, DailyCap - e.DayXp);
+            if (e.Day != day) { e.Day = day; e.DayXp = 0; e.KindCount.Clear(); }
+            string k = kind ?? "";
+            e.KindCount.TryGetValue(k, out int n);
+            int give = Math.Max(1, (int)Math.Round(points * Math.Pow(Math.Max(0f, Math.Min(1f, RepeatFactor)), n)));
+            if (SafetyCapPerDay > 0) give = Math.Min(give, SafetyCapPerDay - e.DayXp);
             if (give <= 0) return 0;
-            e.DayXp += give;
+            e.KindCount[k] = n + 1; e.DayXp += give;
             e.Xp[career] = GeneralXp(person, career) + give;
             if (!string.IsNullOrEmpty(specialty)) e.Xp[Special(career, specialty)] = SpecialtyXp(person, career, specialty) + give;
-            seen.Add(key); seenSet.Add(key);
-            while (seen.Count > RememberedActivities) { seenSet.Remove(seen[0]); seen.RemoveAt(0); }
+            seen.Add(key + "@" + day); seenSet.Add(key);
+            while (seen.Count > RememberedActivities) Forgetting(0);
             return give;
+        }
+
+        private void Forgetting(int index) { string s = seen[index]; seenSet.Remove(s.Substring(0, s.LastIndexOf('@'))); seen.RemoveAt(index); }
+        private void Prune(int day) { while (seen.Count > 0 && int.TryParse(seen[0].Substring(seen[0].LastIndexOf('@') + 1), out int d) && day - d > RememberDays) Forgetting(0); }
+
+        /// <summary>
+        /// A qualification given to someone who already held the old post, so their work carries on. It records no experience (none is known) and is marked legacy so the UI can say so.
+        /// Skill and experience requirements are not checked: it is a recognition of the post they held, not a result of a test.
+        /// </summary>
+        public bool Grandfather(int person, string career)
+        {
+            var e = Of(person); bool added = e.Quals.Add(career); e.Legacy.Add(career); return added;
+        }
+        public bool IsLegacy(int person, string career) => people.TryGetValue(person, out var e) && e.Legacy.Contains(career);
+
+        /// <summary>Careers the ledger holds data for that no loaded definition names: a module that is absent or was renamed. Kept untouched; for the status listing.</summary>
+        public List<string> UnknownCareers(IEnumerable<CareerDefinition> defs)
+        {
+            var known = new HashSet<string>(defs.Select(d => d.Id));
+            return people.Values.SelectMany(e => e.Xp.Keys.Select(k => k.Split(':')[0]).Concat(e.Quals.Select(q => q.Split(':')[0]))).Where(c => !known.Contains(c)).Distinct().OrderBy(c => c, StringComparer.Ordinal).ToList();
         }
 
         public static bool Meets(CareerRule rule, Func<string, int> skill) => rule.Skills.All(s => skill(s.Key) >= s.Value);
@@ -105,7 +138,8 @@ namespace FamilyLife.Domain
             foreach (int id in ids)
             {
                 var e = people[id]; var xk = e.Xp.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
-                w.Strings("xk" + id, xk).Ints("xv" + id, xk.Select(k => e.Xp[k]).ToList()).Strings("q" + id, e.Quals.OrderBy(q => q, StringComparer.Ordinal).ToList()).Int("d" + id, e.Day).Int("dx" + id, e.DayXp);
+                w.Strings("xk" + id, xk).Ints("xv" + id, xk.Select(k => e.Xp[k]).ToList()).Strings("q" + id, e.Quals.OrderBy(q => q, StringComparer.Ordinal).ToList()).Int("d" + id, e.Day).Int("dx" + id, e.DayXp)
+                    .Strings("kc" + id, e.KindCount.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => x.Key + "=" + x.Value).ToList()).Strings("lg" + id, e.Legacy.OrderBy(x => x, StringComparer.Ordinal).ToList());
             }
             return w.Strings("seen", seen).ToString();
         }
@@ -119,8 +153,10 @@ namespace FamilyLife.Domain
                 for (int i = 0; i < k.Count && i < v.Count; i++) e.Xp[k[i]] = v[i];
                 foreach (var q in r.Strings("q" + id)) e.Quals.Add(q);
                 e.Day = r.Int("d" + id); e.DayXp = r.Int("dx" + id);
+                foreach (var c in r.Strings("kc" + id)) { int i = c.LastIndexOf('='); if (i > 0 && int.TryParse(c.Substring(i + 1), out int cnt)) e.KindCount[c.Substring(0, i)] = cnt; }
+                foreach (var c in r.Strings("lg" + id)) e.Legacy.Add(c);
             }
-            foreach (var s in r.Strings("seen")) if (l.seenSet.Add(s)) l.seen.Add(s);
+            foreach (var s in r.Strings("seen")) { int i = s.LastIndexOf('@'); if (i > 0 && l.seenSet.Add(s.Substring(0, i))) l.seen.Add(s); }
             return l;
         }
 
