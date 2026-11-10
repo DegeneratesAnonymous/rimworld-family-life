@@ -422,6 +422,7 @@ namespace FamilyLife.Domain
             {
                 var post = r.OfficeFor(kind);
                 bool held = post != null && post.Held && r.GetPerson(post.HolderId) != null;
+                if (!held && !FamilyLife.Framework.OfficeAvailability.IsOffered(kind)) continue;          // no vacant card for a post whose module is not installed
                 cards.Add(new RoleCardData
                 {
                     Role = RoleDisplay.OfficeRole(kind), HolderId = held ? post.HolderId : 0, Vacant = !held, FamilyId = 0,

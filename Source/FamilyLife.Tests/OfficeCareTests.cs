@@ -184,11 +184,11 @@ namespace FamilyLife.Tests
         [Fact]
         public void A_person_who_cannot_travel_is_visited_a_busy_one_is_asked_later_and_a_refusal_is_respected()
         {
-            Assert.Equal(Willingness.Unable, CareParticipation.Decide(true, true, 90f, 0));          // too unwell to travel: visited, whatever else
-            Assert.Equal(Willingness.Busy, CareParticipation.Decide(false, true, 90f, 0));
-            Assert.Equal(Willingness.Willing, CareParticipation.Decide(false, false, 10f, 0));
-            Assert.Equal(Willingness.Refuses, CareParticipation.Decide(false, false, 80f, 0));
-            Assert.Equal(Willingness.Willing, CareParticipation.Decide(false, false, 80f, 99));          // not the same answer every time
+            Assert.Equal(PatientResponse.Unable, CareParticipation.Decide(true, true, 90f, 0));          // too unwell to travel: visited, whatever else
+            Assert.Equal(PatientResponse.Busy, CareParticipation.Decide(false, true, 90f, 0));
+            Assert.Equal(PatientResponse.Willing, CareParticipation.Decide(false, false, 10f, 0));
+            Assert.Equal(PatientResponse.Refuses, CareParticipation.Decide(false, false, 80f, 0));
+            Assert.Equal(PatientResponse.Willing, CareParticipation.Decide(false, false, 80f, 99));          // not the same answer every time
             // A refusal is remembered for days, and the person is not asked again meanwhile.
             var r = Colony();
             r.NoteRefusal(2, 5000);

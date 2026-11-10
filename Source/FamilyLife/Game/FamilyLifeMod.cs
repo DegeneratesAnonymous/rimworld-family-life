@@ -119,6 +119,7 @@ namespace FamilyLife
         public FamilyLifeMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<FamilySettings>();
+            FamilyModules.Ensure();          // register the modules once, and report any problem before a save is loaded
 
             // One patch class at a time: if a hook fails (another mod, a new game build) it is skipped and logged,
             // and the periodic reconcile still keeps the family records correct.

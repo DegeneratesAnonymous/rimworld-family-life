@@ -150,38 +150,6 @@ namespace FamilyLife
             Messages.Message("Started what could start.\n" + string.Join("\n", lines), MessageTypeDefOf.TaskCompletion, false);
         }
 
-        [DebugAction(Cat, "Start a class now", allowedGameStates = AllowedGameStates.Playing)]
-        private static void ClassNow()
-        {
-            var c = Comp; var r = c?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Teacher)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); }
-            ClassSessions.ClearBackoff();          // earlier failed tries must not hold a test off
-            OfficeDriver.ForceUntil = Now + 6000;
-            HoldClass.Queue(null, Now);          // if the teacher cannot start now, the class is held at the next opportunity (for up to a day)
-            OfficeDriver.WorkNow(c, Now, OfficeKind.Teacher);
-            var lines = OfficeDriver.Diagnose(c, Now, OfficeKind.Teacher);
-            foreach (var l in lines) Log.Message("[Wil's Family Life] test: " + l);
-            Messages.Message("Started the class if it could start.\n" + string.Join("\n", lines), MessageTypeDefOf.TaskCompletion, false);
-        }
-
-        [DebugAction(Cat, "Start a check-up round now (clears recent check-ups)", allowedGameStates = AllowedGameStates.Playing)]
-        private static void CheckupNow()
-        {
-            var c = Comp; var r = c?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Healer)) { o.NextRoundTick = 0; o.RoundStartTick = 0; o.Examined.Clear(); }
-            AppointmentBook.Reset();
-            foreach (var p in Find.Maps.SelectMany(m => m.mapPawns.FreeColonistsSpawned))          // a test should not be skipped because someone was seen recently
-            {
-                var h = p.health?.hediffSet?.GetFirstHediffOfDef(WFL_HediffDefOf.WFL_CheckedUp);
-                if (h != null) p.health.RemoveHediff(h);
-            }
-            OfficeDriver.ForceUntil = Now + 6000;
-            OfficeDriver.WorkNow(c, Now, OfficeKind.Healer);
-            var lines = OfficeDriver.Diagnose(c, Now, OfficeKind.Healer);
-            foreach (var l in lines) Log.Message("[Wil's Family Life] test: " + l);
-            Messages.Message("Started the check-up round if it could start.\n" + string.Join("\n", lines), MessageTypeDefOf.TaskCompletion, false);
-        }
-
         [DebugAction(Cat, "Offer the check-up, outbreak and testing letters now", allowedGameStates = AllowedGameStates.Playing)]
         private static void OfferEventsNow()
         {
@@ -189,16 +157,6 @@ namespace FamilyLife
             foreach (var o in r.Offices) o.PendingKind = 0;
             OfficeEvents.Plan(PendingEvent.Checkups);
             Messages.Message("Sent the check-up notice. Use 'Start annual testing now' for the testing, or press the button on a lectern.", MessageTypeDefOf.TaskCompletion, false);
-        }
-
-        [DebugAction(Cat, "Start annual testing now (two days)", allowedGameStates = AllowedGameStates.Playing)]
-        private static void TestingNow()
-        {
-            var r = Comp?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.TestingStartTick = 0; }
-            OfficeDriver.ForceUntil = Now + 6000;
-            bool ok = OfficeEvents.Begin(PendingEvent.Testing);
-            Messages.Message(ok ? "The testing has begun: each child sits a check every free hour for two days." : "The testing could not begin.", MessageTypeDefOf.TaskCompletion, false);
         }
 
         [DebugAction(Cat, "Call the yearly assembly now", allowedGameStates = AllowedGameStates.Playing)]

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - modular boundaries (stage 1; see docs/MODULAR-ARCHITECTURE.md)
+- **Education and Community Care now have their own folders** (`Education/`, `Care/`), each with a pure `Domain` part and a `Game` part, plus a small `Framework/` of registration contracts. Files that mixed the two (the office driver, planned events, the class/clinic file, the care helpers) were split by owner. Namespaces, saved labels, def names and enum values are unchanged, so existing saves are read exactly as before.
+- **Registration contracts:** modules, capabilities, posts, shared work, planned events, building buttons, diagnostics and resets are registered once at start-up, with stable ids such as `wils.education.teacher` and `wils.care.healer`, and validated once (duplicates, wrong namespace, optional modules requiring each other, cycles, and a saved office kind with no definition are reported by id). Posts of an absent or disabled module are not given out; their work, events and buttons do not run or show.
+- **One shared roster runs the posts' work** from the existing maintenance step (same cadence as before). Education and Community Care no longer have their own patch; their buttons go through one shared building patch.
+- **Boundaries are enforced by tests:** Education and Community Care reference each other nowhere, shared code names them only at the registration root, the contract folder is free of game and module references, and every saved identifier from the last all-in-one version still exists. 1,017 tests pass.
+- **Not done yet:** separate assemblies and packages, module-owned save state, the removal workflow, load-combination and in-game testing. See the document for the plan and for why removing a module from a save is not yet safe.
+
 ## Unreleased - the doctor and teacher rebalanced (audit in docs/OFFICES.md)
 - **Routine work yields to medical work.** Emergency treatment, ongoing care, an outbreak assessment, then routine check-ups. The clinic closes the moment anyone needs tending and nothing routine starts while that is so. A check-up no longer tends anyone as a side effect.
 - **Patients are asked, not collected.** Too ill or hurt to travel: visited where they are, never summoned to a shared room. Busy: asked again later with a growing gap, then carried to the next round with no mark. Declines: left alone for six days. The fetch-and-escort behaviour is gone.

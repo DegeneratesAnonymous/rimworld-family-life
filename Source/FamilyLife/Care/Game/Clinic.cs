@@ -91,7 +91,7 @@ namespace FamilyLife
             if (doctor == null || Running(doctor)) return true;
             if (!Spot(doctor, out var bed, out var cell)) { OfficeDriver.Trace("clinic: no medical bed in an enclosed room for " + doctor.LabelShort); return false; }
             int now = Activities.Now;
-            if (CareDemand.DoctorShouldTend(doctor, now) || CareDemand.StopReason(doctor, now) != null) return true;          // tending and the doctor's own needs come first
+            if (CareDemand.DoctorShouldTend(doctor, now) || PawnReadiness.StopReason(doctor, now) != null) return true;          // tending and the doctor's own needs come first
             if (!OfficeDriver.Ready(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(doctor)) return true;       // there is a clinic: wait until the doctor is free
             OfficeDriver.Trace("clinic: " + doctor.LabelShort + " goes to " + cell + " beside " + bed.LabelCap);
             byDoctor[doctor.thingIDNumber] = new ClinicSession { DoctorId = doctor.thingIDNumber, Bed = bed, DoctorCell = cell };
@@ -147,9 +147,9 @@ namespace FamilyLife
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
             switch (CareRules.Assess(c, doctor, patient, now))
             {
-                case Willingness.Unable: AppointmentBook.NeedsVisit(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " is not fit to come; they will be visited"); return;
-                case Willingness.Busy: AppointmentBook.Busy(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " is busy just now"); return;
-                case Willingness.Refuses: r.NoteRefusal(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
+                case PatientResponse.Unable: AppointmentBook.NeedsVisit(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " is not fit to come; they will be visited"); return;
+                case PatientResponse.Busy: AppointmentBook.Busy(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " is busy just now"); return;
+                case PatientResponse.Refuses: r.NoteRefusal(id, now); OfficeDriver.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
             }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None)) { AppointmentBook.NeedsVisit(id, now); return; }
             s.Idle = 0;
@@ -163,7 +163,7 @@ namespace FamilyLife
 
         /// <summary>Daytime only, within the day's budget, spaced through the day. A developer test ignores all three.</summary>
         internal static bool Allowed(FamilyRegistry r, CommunityOffice office, Pawn doctor, int now) =>
-            OfficeDriver.Forced || TestingMath.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.IllnessRound);
+            OfficeDriver.Forced || WorkingHours.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.IllnessRound);
 
         private static IntVec3 WanderCell(Pawn doctor, ClinicSession s)
         {
@@ -235,8 +235,8 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             // The round is kept by the post's record, so ending here for tending, a meal, sleep, a visit to the toilet or a gathering only pauses it: the doctor takes it up again afterwards.
-            this.FailOn(() => ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks || CareDemand.StopReason(pawn, Activities.Now) != null || CareDemand.DoctorShouldTend(pawn, Activities.Now));
-            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + "), reason: " + (CareDemand.StopReason(pawn, Activities.Now) ?? (CareDemand.DoctorShouldTend(pawn, Activities.Now) ? "someone needs tending" : "none"))); ClinicVisits.Close(pawn); });
+            this.FailOn(() => ClinicVisits.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.healthChecks || PawnReadiness.StopReason(pawn, Activities.Now) != null || CareDemand.DoctorShouldTend(pawn, Activities.Now));
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " (doctor) finished (" + cond + "), reason: " + (PawnReadiness.StopReason(pawn, Activities.Now) ?? (CareDemand.DoctorShouldTend(pawn, Activities.Now) ? "someone needs tending" : "none"))); ClinicVisits.Close(pawn); });
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var wait = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             wait.initAction = () => pawn.pather?.StopDead();
@@ -260,13 +260,13 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
-            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " leaves the clinic (" + cond + "), reason: " + (CareDemand.StopReason(pawn, Activities.Now) ?? "none")); if (pawn.jobs != null) pawn.jobs.posture = PawnPosture.Standing; });
+            AddFinishAction(cond => { OfficeDriver.Trace("clinic: " + pawn.LabelShort + " leaves the clinic (" + cond + "), reason: " + (PawnReadiness.StopReason(pawn, Activities.Now) ?? "none")); if (pawn.jobs != null) pawn.jobs.posture = PawnPosture.Standing; });
             this.AddEndCondition(() =>
             {
                 var s = Doctor == null ? null : ClinicVisits.Of(Doctor.thingIDNumber);
                 return s == null || s.PatientId != pawn.thingIDNumber ? JobCondition.Succeeded : JobCondition.Ongoing;          // the doctor has finished with this patient, or let them go
             });
-            this.FailOn(() => Doctor == null || Doctor.Dead || ClinicVisits.Of(Doctor.thingIDNumber) == null || CareDemand.StopReason(pawn, Activities.Now) != null);
+            this.FailOn(() => Doctor == null || Doctor.Dead || ClinicVisits.Of(Doctor.thingIDNumber) == null || PawnReadiness.StopReason(pawn, Activities.Now) != null);
             yield return Toils_Goto.GotoCell(TargetIndex.C, PathEndMode.OnCell);
             var lie = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             lie.initAction = () =>

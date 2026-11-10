@@ -105,7 +105,7 @@ namespace FamilyLife
             IntVec3 cell = IntVec3.Invalid; Room room = null; Thing front = lectern;
             bool found = lectern != null ? ClassRooms.SpotAt(lectern, teacher, out cell, out room) : ClassRooms.TeachingSpot(teacher, out cell, out room, out front);
             if (!found) { OfficeDriver.Trace("class: nowhere to hold a class for " + teacher.LabelShort); return BeginResult.Cannot; }
-            string stop = CareDemand.StopReason(teacher, now);
+            string stop = PawnReadiness.StopReason(teacher, now);
             if (byPlayer) { if (!OfficeDriver.Available(teacher) || stop != null) { OfficeDriver.Trace("class: " + teacher.LabelShort + " cannot start yet (" + (stop ?? "not available") + ")"); return BeginResult.Later; } }
             else if (!OfficeDriver.Ready(teacher) || stop != null || teacher.CurJob?.playerForced == true || (Find.Selector.IsSelected(teacher) && !OfficeDriver.Forced) || PerspectiveShiftBridge.IsAvatar(teacher))
             {
@@ -121,7 +121,7 @@ namespace FamilyLife
             if (subject == null) { OfficeDriver.Trace("class: " + teacher.LabelShort + " has nothing the children could learn from them"); return BeginResult.Cannot; }
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
             if (book != null && !(BookValues(book).Keys.Any(k => k.defName == subject))) book = null;          // a book that is not about this subject is left on the shelf
-            float delivery = LessonMath.Delivery(CareRules.Level(teacher, skillDef), CareRules.Level(teacher, SkillDefOf.Social), 0f, ClassRooms.Facility(room, front), CareRules.Fatigue(teacher));
+            float delivery = LessonMath.Delivery(PawnReadiness.Level(teacher, skillDef), PawnReadiness.Level(teacher, SkillDefOf.Social), 0f, ClassRooms.Facility(room, front), PawnReadiness.Fatigue(teacher));
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0, ByPlayer = byPlayer, Subject = subject, Delivery = delivery };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count, teacher.Map);
             if (room != null) foreach (var rc in room.Cells) s.RoomCells.Add(rc);
@@ -153,7 +153,7 @@ namespace FamilyLife
                 if (s.Left.TryGetValue(id, out int back) && now < back) continue;
                 if (s.Calls.TryGetValue(id, out int n) && n >= 3) continue;
                 bool able = s.ByPlayer ? OfficeDriver.Available(kid) : OfficeDriver.Ready(kid) && OfficeDriver.FreeFor(c, id) && !(kid.CurJob?.playerForced == true && !OfficeDriver.Forced);
-                if (!able || PerspectiveShiftBridge.IsAvatar(kid) || CareDemand.StopReason(kid, now) != null) continue;          // the pawn being played is never sent to class
+                if (!able || PerspectiveShiftBridge.IsAvatar(kid) || PawnReadiness.StopReason(kid, now) != null) continue;          // the pawn being played is never sent to class
                 var seat = s.Seats.Count > 0 ? s.Seats[seatIndex % s.Seats.Count] : s.TeacherCell;
                 if (!kid.CanReach(seat, PathEndMode.OnCell, Danger.None)) { s.Calls[id] = 3; continue; }
                 var job = JobMaker.MakeJob(WFL_StoryDefOf.WFL_ClassStudent, teacher, seat);
@@ -288,10 +288,10 @@ namespace FamilyLife
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOn(() => CareDemand.StopReason(pawn, Activities.Now) != null || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
+            this.FailOn(() => PawnReadiness.StopReason(pawn, Activities.Now) != null || ClassSessions.Of(pawn.thingIDNumber) == null || !FamilyLifeMod.Settings.holdClasses);
             AddFinishAction(cond =>
             {
-                string why = CareDemand.StopReason(pawn, Activities.Now);
+                string why = PawnReadiness.StopReason(pawn, Activities.Now);
                 OfficeDriver.Trace("class: " + pawn.LabelShort + " (teacher) finished (" + cond + "), reason: " + (why ?? "none") + ", session " + (ClassSessions.Of(pawn.thingIDNumber) != null));
                 if (pawn.carryTracker?.CarriedThing != null && pawn.Spawned) pawn.carryTracker.TryDropCarriedThing(pawn.Position, ThingPlaceMode.Near, out _);
                 ClassSessions.End(pawn, cond == JobCondition.Succeeded, why ?? cond.ToString());
@@ -338,7 +338,7 @@ namespace FamilyLife
             {
                 var kid = c.TryGetPawn(id);
                 if (kid != null && kid.Spawned && kid.CurJobDef == WFL_StoryDefOf.WFL_ClassStudent) continue;
-                bool excuse = kid == null || !kid.Spawned || kid.Dead || !kid.Awake() || CareDemand.StopReason(kid, now) != null || (s.Left.TryGetValue(id, out int back) && now < back);
+                bool excuse = kid == null || !kid.Spawned || kid.Dead || !kid.Awake() || PawnReadiness.StopReason(kid, now) != null || (s.Left.TryGetValue(id, out int back) && now < back);
                 if (excuse) s.Excused[id] = (s.Excused.TryGetValue(id, out int e) ? e : 0) + 60;
             }
         }
@@ -353,12 +353,12 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             // Any real need or emergency, or the teacher stopping, ends it, and the pupil is then left alone: they are not sent straight back.
-            this.FailOn(() => TeacherGone() || CareDemand.StopReason(pawn, Activities.Now) != null);
+            this.FailOn(() => TeacherGone() || PawnReadiness.StopReason(pawn, Activities.Now) != null);
             AddFinishAction(cond =>
             {
                 var s = Teacher == null ? null : ClassSessions.Of(Teacher.thingIDNumber);
                 int now = Activities.Now;
-                string why = CareDemand.StopReason(pawn, now);
+                string why = PawnReadiness.StopReason(pawn, now);
                 OfficeDriver.Trace("class: " + pawn.LabelShort + " (pupil) finished (" + cond + "), reason: " + (why ?? "none"));
                 if (s == null || cond == JobCondition.Succeeded) return;
                 // an order from the player, another job taking over, or a need being seen to: they are not recalled until the next block, or until they are fit again

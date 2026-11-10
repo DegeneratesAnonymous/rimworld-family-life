@@ -85,11 +85,9 @@ namespace FamilyLife.Domain
         public const int AssemblyVotingTicks = ActivityTuning.TicksPerDay;
         public const int OfficeNeglectTicks = 15 * ActivityTuning.TicksPerDay;
         public const int MaxOfficeActsPerDay = 3;
-        public const int CheckupWindowTicks = 14 * ActivityTuning.TicksPerDay;          // a round lasts until everyone has been seen; the doctor can be called away and come back
         public const int SessionWindowTicks = ActivityTuning.TicksPerDay;
         public const int ClassWindowTicks = SessionWindowTicks;
         public const int MaxSessionSize = 6;
-        public const int MaxClassSize = 24;          // a class is the colony's children; the hall keeper's meals stay at MaxSessionSize
         public const float MinOfficeSkill = .3f;
         public const float SupportFloor = .35f;
         public List<CommunityOffice> Offices = new List<CommunityOffice>();
@@ -166,7 +164,7 @@ namespace FamilyLife.Domain
             var changed = new List<CommunityOffice>();
             foreach (OfficeKind kind in Enum.GetValues(typeof(OfficeKind)))
             {
-                if (IsAppointed(kind)) continue;
+                if (IsAppointed(kind) || !FamilyLife.Framework.OfficeAvailability.IsOffered(kind)) continue;          // a post of a module that is not installed is not given out
                 var office = EnsureOffice(kind);
                 if (office.Held || now < office.NextVoteTick) continue;
                 office.NextVoteTick = now + 2 * ActivityTuning.TicksPerDay;
@@ -185,7 +183,7 @@ namespace FamilyLife.Domain
         public HouseWish HouseWishFor(int family, OfficeKind kind)
         {
             var h = GetLineage(family);
-            if (h == null || !IsActiveHouse(family) || IsAppointed(kind)) return HouseWish.None;
+            if (h == null || !IsActiveHouse(family) || IsAppointed(kind) || !FamilyLife.Framework.OfficeAvailability.IsOffered(kind)) return HouseWish.None;
             var amb = h.Ambition ?? new HouseAmbitionRecord(); var sit = h.Situation ?? new HouseSituation();
             bool Is(HouseAmbitionKind k) => amb.Primary == k || amb.Secondary == k;
             bool Gap(HouseCapability c) => Is(HouseAmbitionKind.FillSkillGap) && amb.TargetCapability == c;
@@ -594,53 +592,7 @@ namespace FamilyLife.Domain
             if (ag.Progress >= 1f) ag.EndedTick = now;
         }
 
-        // ---- the doctor's check-ups ----
-
-        /// <summary>
-        /// Opens a round of check-ups when one is due: every colonist is to be seen once. The interval is the player's choice. Nobody is booked in
-        /// advance and nothing is forced.
-        /// </summary>
-        public bool BeginCheckupRound(int now, int intervalTicks)
-        {
-            var office = OfficeFor(OfficeKind.Healer);
-            if (office == null || !office.Held || intervalTicks <= 0 || now < office.NextRoundTick || CheckupOpen(now)) return false;
-            // Anyone the last round did not reach (and who did not decline) is first this time; nobody is marked as having failed for not being reached.
-            var prior = office.Examined;
-            office.Missed = RoundStartPeople(office).Where(id => !prior.Contains(id) && !office.Refused.Contains(id)).Take(96).ToList();
-            office.RoundStartTick = now; office.Examined.Clear(); office.NextRoundTick = now + intervalTicks;
-            office.RoundWindow = CheckupWorkload.WindowDays(Persons.Count(p => p.InColony && p.Id != office.HolderId), office.IllnessRound) * ActivityTuning.TicksPerDay;
-            office.Refused.Clear(); office.RefusedTick.Clear();
-            return true;
-        }
-
-        private IEnumerable<int> RoundStartPeople(CommunityOffice office) => Persons.Where(p => p.InColony && p.Id != office.HolderId).Select(p => p.Id);
-
-        public bool CheckupOpen(int now)
-        {
-            var office = OfficeFor(OfficeKind.Healer);
-            return office != null && office.Held && office.RoundStartTick != 0 && now - office.RoundStartTick < (office.RoundWindow > 0 ? office.RoundWindow : CheckupWindowTicks);
-        }
-
-        /// <summary>The next person still to be seen this round, chosen from those the game says are free to go. The doctor is not their own patient.</summary>
-        public int NextCheckupPatient(int now, Func<int, bool> available, Func<int, int> priority = null)
-        {
-            var office = OfficeFor(OfficeKind.Healer);
-            if (office == null || !CheckupOpen(now)) return 0;
-            return Persons.Where(p => p.InColony && p.Id != office.HolderId && !office.Examined.Contains(p.Id) && (available == null || available(p.Id)))
-                .OrderBy(p => priority == null ? 0 : priority(p.Id)).ThenBy(p => office.Missed.Contains(p.Id) ? 0 : 1).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // no house is seen first; those missed last time are
-        }
-
-        /// <summary>The doctor has really seen this person. Counted once per round; a round ends when everyone present has been seen.</summary>
-        public bool RecordCheckup(int doctor, int patient, int now)
-        {
-            var office = OfficeFor(OfficeKind.Healer);
-            if (office == null || office.HolderId != doctor || !CheckupOpen(now) || patient == doctor || GetPerson(patient)?.InColony != true || office.Examined.Contains(patient)) return false;
-            office.Examined.Add(patient); office.Missed.Remove(patient);
-            if (Persons.Where(p => p.InColony && p.Id != doctor).All(p => office.Examined.Contains(p.Id))) office.RoundStartTick = 0;
-            return true;
-        }
-
-        // ---- sessions: the teacher's classes and the hall keeper's meals ----
+        // ---- sessions: shared by the teacher's classes and the hall keeper's meals (the teacher's wrappers are in Education/Domain) ----
 
         /// <summary>
         /// Opens a session (a class, a meal) when one is due and there is someone to see to. With nobody available nothing starts and the session
@@ -676,9 +628,6 @@ namespace FamilyLife.Domain
             q.Add(person);
         }
 
-        public bool BeginClass(int now, int intervalTicks, IEnumerable<int> students) => BeginSession(OfficeKind.Teacher, now, intervalTicks, students, MaxClassSize);
-        public int NextStudent(int now) => NextInSession(OfficeKind.Teacher, now);
-        public void ClassDone(int student) => SessionDone(OfficeKind.Teacher, student);
         public bool BeginHallMeal(int now, int intervalTicks, IEnumerable<int> diners) => BeginSession(OfficeKind.HallKeeper, now, intervalTicks, diners);
         public int NextDiner(int now) => NextInSession(OfficeKind.HallKeeper, now);
         public void DinerServed(int diner) => SessionDone(OfficeKind.HallKeeper, diner);

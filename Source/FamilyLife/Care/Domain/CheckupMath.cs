@@ -1,18 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FamilyLife.Domain
 {
-    // Two yearly events belong to the community posts: the doctor's check-up round and the teacher's annual assessment of the children. Both happen by themselves; the
-    // player is told and may reschedule or decline. Each is measured: a check-up has a quality that decides how much it helps, and an assessment is derived from what
-    // the child actually studied, how much they took part and how it went.
-
-    public enum ResultQuality : byte { Poor, Fair, Good, Excellent }
-
-    public static class PendingEvent
-    {
-        public const int None = 0, Checkups = 1, Illness = 2, Testing = 3;
-    }
+    // Check-up quality, the doctor's workload and appointment gaps. Owner: Community Care.
 
     /// <summary>
     /// The doctor's check. Medicine does most of the work; Social is how well the doctor gets the patient to say what is wrong; the room, the doctor's own state and how the
@@ -101,21 +93,5 @@ namespace FamilyLife.Domain
         public static int RetryAfter(int tries) => tries <= 1 ? 1500 : tries == 2 ? 4000 : tries == 3 ? 10000 : tries == 4 ? 20000 : tries == 5 ? 30000 : 45000;
         public static bool GiveUp(int tries) => tries >= MaxTries;
         public const int RefusalDays = 6;
-    }
-
-    /// <summary>The annual assessment: a few daytime sittings over two days, and a result worked out from what the child studied. See <see cref="Assessments"/>.</summary>
-    public static class TestingMath
-    {
-        public const int DurationTicks = 2 * 60000, SitTicks = 600, MakeUpTicks = 30000;
-        public const int FirstHour = 7, LastHour = 19, MaxSessions = 4;
-        /// <summary>When each of the three planned sittings comes due, counted from the start. The fourth is a make-up for anyone who missed.</summary>
-        public static readonly int[] Offsets = { 18000, 60000, 96000 };
-
-        public static bool Daytime(int hour) => hour >= FirstHour && hour < LastHour;
-        public static bool Due(int sessionsHeld, int elapsed) => sessionsHeld < Offsets.Length && elapsed >= Offsets[sessionsHeld];
-        public static bool MakeUpDue(int sessionsHeld, int elapsed, bool someoneNeedsOne) => sessionsHeld == Offsets.Length && someoneNeedsOne && elapsed >= DurationTicks - 12000 && elapsed < DurationTicks + MakeUpTicks;
-        /// <summary>The assessment is over after the planned two days, or once the one make-up sitting has been held or its time has passed.</summary>
-        public static bool Over(int sessionsHeld, int elapsed, bool someoneNeedsOne) =>
-            sessionsHeld >= MaxSessions || elapsed >= DurationTicks + MakeUpTicks || (sessionsHeld >= Offsets.Length && elapsed >= DurationTicks && !someoneNeedsOne);
     }
 }

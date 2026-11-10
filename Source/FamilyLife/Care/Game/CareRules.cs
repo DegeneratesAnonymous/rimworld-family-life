@@ -9,17 +9,14 @@ using Verse.AI.Group;
 
 namespace FamilyLife
 {
-    // What the doctor's and teacher's routine work has to give way to, and what makes a person ready to take part. Everything here is read on a timer or from a cache:
-    // the jobs ask often, the answers are recomputed rarely.
+    // What the doctor's routine work gives way to, and who can come to a shared room. Owner: Community Care.
 
     internal static class CareDemand
     {
-        private const int CacheTicks = 120, StopCacheTicks = 30;
+        private const int CacheTicks = 120;
         private static readonly Dictionary<int, int[]> mapCache = new Dictionary<int, int[]>();          // map id -> [tick, level]
-        private static readonly Dictionary<int, StopEntry> stopCache = new Dictionary<int, StopEntry>();
-        private sealed class StopEntry { public int Tick; public string Reason; }
 
-        internal static void Reset() { mapCache.Clear(); stopCache.Clear(); dangerCache.Clear(); }
+        internal static void Reset() { mapCache.Clear(); }
 
         /// <summary>
         /// The most urgent medical need on the map: someone down or bleeding (emergency), or someone who should be tended now (ongoing care). Read at most twice a game
@@ -55,50 +52,6 @@ namespace FamilyLife
             if (doctor.workSettings != null && !doctor.workSettings.WorkIsActive(WorkTypeDefOf.Doctor)) return false;
             return CarePriority.TendingFirst(MedicalNeed(doctor.Map, now));
         }
-
-        /// <summary>A threat on the map: no one goes to class or to a check-up while raiders are in the colony.</summary>
-        internal static bool Danger(Map map)
-        {
-            if (map == null) return false;
-            int now = Activities.Now;
-            if (dangerCache.TryGetValue(map.uniqueID, out var c) && now >= c[0] && now - c[0] < CacheTicks) return c[1] == 1;          // read at most twice a game minute per map, not once per pawn
-            bool danger = false;
-            try { danger = GenHostility.AnyHostileActiveThreatToPlayer(map, false); } catch (Exception) { }
-            dangerCache[map.uniqueID] = new[] { now, danger ? 1 : 0 };
-            return danger;
-        }
-        private static readonly Dictionary<int, int[]> dangerCache = new Dictionary<int, int[]>();
-
-        /// <summary>Why this person should stop what a class or an appointment has them doing, or null. Recomputed every half second at most.</summary>
-        internal static string StopReason(Pawn p, int now)
-        {
-            if (p == null || p.Dead) return "gone";
-            if (stopCache.TryGetValue(p.thingIDNumber, out var e) && now >= e.Tick && now - e.Tick < StopCacheTicks) return e.Reason;
-            string reason = null;
-            try
-            {
-                if (p.Drafted) reason = "drafted";
-                else if (p.InMentalState) reason = "mental break";
-                else if (p.Downed) reason = "down";
-                else
-                {
-                    reason = OfficeDriver.NeedsReason(p);
-                    if (reason == null && p.health != null)
-                    {
-                        if (p.health.hediffSet.BleedRateTotal > .01f || HealthAIUtility.ShouldBeTendedNowByPlayer(p)) reason = "needs tending";
-                        else if (HealthAIUtility.ShouldSeekMedicalRest(p)) reason = "needs rest";
-                    }
-                    if (reason == null && Danger(p.Map)) reason = "danger";
-                }
-            }
-            catch (Exception) { }
-            if (stopCache.Count > 200) stopCache.Clear();
-            stopCache[p.thingIDNumber] = new StopEntry { Tick = now, Reason = reason };
-            return reason;
-        }
-
-        /// <summary>A stop that is nobody's fault, so an absence for it is not held against them.</summary>
-        internal static bool Excusable(string reason) => reason != null && reason != "gone";
     }
 
     internal static class CareRules
@@ -114,18 +67,16 @@ namespace FamilyLife
             }
             catch (Exception) { return false; }
         }
-
         private static float BondValue(FamilyRegistry r, int from, int to, Func<Bond, float> pick) { var b = r.BondsFrom(from).FirstOrDefault(x => x.To == to); return b == null ? 0f : pick(b); }
-
         /// <summary>
         /// Whether the patient will take part in a routine appointment: from how they feel about this doctor, how they are, and who they are. Kinship makes a person a little more
         /// willing and never less. Nothing else about relatedness matters.
         /// </summary>
-        internal static Willingness Assess(FamilyComponent c, Pawn doctor, Pawn patient, int now)
+        internal static PatientResponse Assess(FamilyComponent c, Pawn doctor, Pawn patient, int now)
         {
             var r = c.Registry;
             bool unable = NeedsBedside(patient);
-            string stop = CareDemand.StopReason(patient, now);
+            string stop = PawnReadiness.StopReason(patient, now);
             bool busy = stop != null && stop != "needs tending" && stop != "needs rest" && stop != "down" || patient.CurJob?.playerForced == true && !OfficeDriver.Forced;
             float trust = BondValue(r, patient.thingIDNumber, doctor.thingIDNumber, b => b.Trust), tension = BondValue(r, patient.thingIDNumber, doctor.thingIDNumber, b => b.Tension), attach = BondValue(r, patient.thingIDNumber, doctor.thingIDNumber, b => b.Attachment);
             float mood = patient.needs?.mood?.CurLevelPercentage ?? .6f;
@@ -140,7 +91,6 @@ namespace FamilyLife
             if (OfficeDriver.Forced) reluctance = 0f;          // a developer test is not held up by who happens to be in a mood
             return CareParticipation.Decide(unable, busy, reluctance, Rand.RangeInclusive(0, 99));
         }
-
         /// <summary>The room and the doctor's own state, summed, for the quality of a check-up. Bounded by <see cref="CheckupQuality"/>.</summary>
         internal static float Modifiers(Pawn doctor, Building_Bed bed, bool inClinic)
         {
@@ -165,10 +115,5 @@ namespace FamilyLife
             catch (Exception) { }
             return m;
         }
-
-        internal static int Level(Pawn p, SkillDef d) { var s = p?.skills?.GetSkill(d); return s == null || s.TotallyDisabled ? 0 : s.Level; }
-
-        /// <summary>Tiredness counted against delivery: none when rested, more as rest runs out.</summary>
-        internal static float Fatigue(Pawn p) { float rest = p?.needs?.rest?.CurLevelPercentage ?? .7f; return rest >= .5f ? 0f : (.5f - rest) * 6f; }
     }
 }
