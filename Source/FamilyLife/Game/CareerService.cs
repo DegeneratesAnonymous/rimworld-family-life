@@ -28,23 +28,24 @@ namespace FamilyLife
         /// Makes the holders of an old post professionals: <paramref name="roleId"/> assigned players sit in the post's working seat (no vote), and whoever held the post in an older save is
         /// migrated once. Runs from the maintenance roster, so it stops when the module does.
         /// </summary>
-        public static void RegisterSeat(string moduleId, OfficeKind kind, string roleId, string fallbackRoleId = null)
+        public static void RegisterSeat(string moduleId, OfficeKind kind, string roleId, string fallbackRoleId = null, IEnumerable<string> middleRoleIds = null)
         {
             legacyPosts.Add(new LegacyPost { Kind = kind, RoleId = fallbackRoleId ?? roleId });          // an old holder becomes the entry-level role when there is one (never a Doctor by migration)
             FamilyFramework.Roster.Register(new WorkItem
             {
                 Id = moduleId + ".seat." + kind.ToString().ToLowerInvariant(), ModuleId = moduleId, Interval = 0,
-                Run = now => { var c = FamilyComponent.Current; if (c != null) Seat(c, kind, roleId, fallbackRoleId, now); }
+                Run = now => { var c = FamilyComponent.Current; if (c != null) Seat(c, kind, roleId, fallbackRoleId, middleRoleIds, now); }
             });
         }
 
-        private static void Seat(FamilyComponent c, OfficeKind kind, string roleId, string fallbackRoleId, int now)
+        private static void Seat(FamilyComponent c, OfficeKind kind, string roleId, string fallbackRoleId, IEnumerable<string> middleRoleIds, int now)
         {
             var r = c.Registry;
             LegacyProfessionMigration.Run(r, now, legacyPosts, Professions);
             var role = Professions.ById(roleId); if (role == null) return;
             var book = r.Assignments();
             var roster = book.Holders(roleId).Where(id => r.GetPerson(id)?.InColony == true).ToList();
+            if (roster.Count == 0 && middleRoleIds != null) roster = middleRoleIds.SelectMany(m => book.Holders(m)).Distinct().Where(id => r.GetPerson(id)?.InColony == true).ToList();          // e.g. only specialists assigned: they carry the rounds
             if (roster.Count == 0 && fallbackRoleId != null) roster = book.Holders(fallbackRoleId).Where(id => r.GetPerson(id)?.InColony == true).ToList();          // e.g. no Doctor yet: the Healers carry on
             int current = r.OfficeFor(kind)?.HolderId ?? 0;
             int pick = ProfessionalSeating.Pick(roster, current, id => c.TryGetPawn(id) is Pawn p && !p.Dead);

@@ -6,6 +6,7 @@ using Xunit;
 
 namespace FamilyLife.Tests
 {
+    [Xunit.Collection("OfficeAvailability")]
     public class ProfessionalSeatTests
     {
         private static FamilyRegistry Colony() { var r = new FamilyRegistry(); r.Apply(new[] { T.P(1, "A"), T.P(2, "B"), T.P(3, "C") }, 1000); return r; }

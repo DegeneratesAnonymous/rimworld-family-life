@@ -51,5 +51,21 @@ namespace FamilyLife.Tests
             var r = Colony(); var c = r.Careers(); c.Award(1, "c", null, "k", "a", 5, 1); c.Award(99, "c", null, "k", "b", 5, 1);
             Assert.Equal(1, r.ReconcileCareers()); Assert.Equal(5, c.GeneralXp(1, "c")); Assert.Equal(0, c.GeneralXp(99, "c"));
         }
+
+        [Fact] public void Every_career_payload_of_every_module_is_carried_through_untouched_when_that_module_is_absent()
+        {
+            var r = Colony();
+            var ids = new[] { AssessmentLedger.Id, EducationRecord.Id, TeacherSchedule.Id, CareTerms.Id, "wils.future.payload" };
+            foreach (var id in ids) { r.Shared.Ids.Add(id); r.Shared.Data.Add("k=v" + (char)10 + "n=" + id.Length); r.Shared.Versions.Add(9); }
+            var back = SaveSim.Reload(SaveSim.Reload(r));          // nothing reads them: no module code is present in this scenario
+            foreach (var id in ids) { int i = back.Shared.Ids.IndexOf(id); Assert.True(i >= 0, id); Assert.Equal("k=v" + (char)10 + "n=" + id.Length, back.Shared.Data[i]); Assert.Equal(9, back.Shared.Versions[i]); }
+        }
+
+        [Fact] public void A_career_report_for_the_same_event_twice_credits_once_even_across_a_save()
+        {
+            var r = Colony(); var l = r.Careers();
+            Assert.True(l.Award(1, "c", "Surgeon", "care.surgery", "surgery|7|1|5000", 12, 3) > 0);
+            Assert.Equal(0, SaveSim.Reload(r).Careers().Award(1, "c", "Surgeon", "care.surgery", "surgery|7|1|5000", 12, 3));
+        }
     }
 }
