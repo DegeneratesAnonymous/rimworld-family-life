@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Wil's Family Life</name>
+  <name>Wil's Community Framework</name>
   <author>Spaceman_Wil</author>
   <packageId>SpacemanWil.WilsFamilyLife</packageId>
   <modVersion>0.13.4</modVersion>
@@ -36,7 +36,7 @@ WHAT WORKS NOW
 - Everyday family life: relatives choose to spend time together during joy time, children are read to before bed (the free parent with the best Social skill, with a book if one is nearby), and relatives who eat together feel it. A soft daily limit keeps it from crowding out anything else.
 
 OPTIONAL MODULES
-The community Teacher and Healer are now separate mods that plug into this one: Wil's Education and Wil's Community Care. They need this mod and nothing else (not each other). Without them this mod works on its own; a Teacher or Healer your colony already elected stays on record. See docs/INSTALLATION.md before updating an existing game.
+The community Teacher and Healer are now separate mods that plug into this one: Wil's Educators and Wil's Community Care. They need this mod and nothing else (not each other). Without them this mod works on its own; Teachers and Healers are now professions the player assigns (Wil's Educators and Wil's Community Care); a Teacher or Healer your colony already had keeps working and is carried over. See docs/INSTALLATION.md before updating an existing game.
 
 Works with vanilla RimWorld 1.6 and 1.7. Requires Harmony. Biotech is optional. Other mods are never required.
 

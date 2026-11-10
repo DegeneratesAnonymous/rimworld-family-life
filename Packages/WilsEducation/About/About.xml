@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Wil's Education</name>
+  <name>Wil's Educators</name>
   <author>Spaceman_Wil</author>
   <packageId>SpacemanWil.WilsEducation</packageId>
   <modVersion>0.1.0</modVersion>
@@ -17,7 +17,7 @@
     </li>
     <li>
       <packageId>SpacemanWil.WilsFamilyLife</packageId>
-      <displayName>Wil's Family Life (the framework)</displayName>
+      <displayName>Wil's Community Framework (the framework)</displayName>
     </li>
   </modDependencies>
   <loadAfter>
@@ -26,11 +26,11 @@
   </loadAfter>
   <description>WIL'S EDUCATION (early development)
 
-The community Teacher for Wil's Family Life: the colony elects a Teacher, who holds classes for the colony's children, teaches subjects the teacher is really better at, uses books, runs a yearly assessment, and keeps a record of what each child has studied.
+Careers in teaching for Wil's Community Framework: anyone can be assigned as a Tutor, qualified Teachers hold classes for the colony's children, teaches subjects the teacher is really better at, uses books, runs a yearly assessment, and keeps a record of what each child has studied.
 
-Requires Wil's Family Life, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Community Care and works without it.
+Requires Wil's Community Framework, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Community Care and works without it.
 
-Load it after Wil's Family Life. If you take it out of a game, use the developer action "Prepare Education for removal" first (see the installation notes); the mod's own records stay in the save and are picked up again if you add it back.
+Load it after Wil's Community Framework. If you take it out of a game, use the developer action "Prepare Education for removal" first (see the installation notes); the mod's own records stay in the save and are picked up again if you add it back.
 
 Created by Spaceman_Wil. Uses Harmony by Andreas Pardeike.</description>
 </ModMetaData>

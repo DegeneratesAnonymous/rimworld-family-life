@@ -255,27 +255,27 @@
   <WFL_TestFail_0>Hm, that was hard.</WFL_TestFail_0>
   <WFL_TestFail_1>I'm not sure...</WFL_TestFail_1>
   <WFL_TestFail_2>Oh, no.</WFL_TestFail_2>
-  <WFL_Office_Until>until the next assembly, {0}</WFL_Office_Until>
+  <WFL_Office_Until>until the next Community Assembly, {0}</WFL_Office_Until>
   <WFL_Office_Appointed>named by the ideoligion</WFL_Office_Appointed>
   <WFL_Grade_Good>well</WFL_Grade_Good>
   <WFL_Grade_Fair>fairly</WFL_Grade_Fair>
   <WFL_Grade_Poor>poorly</WFL_Grade_Poor>
-  <WFL_Assembly_Title>The yearly assembly</WFL_Assembly_Title>
-  <WFL_Assembly_Text>The families are gathering to choose the colony's posts. Everyone who can goes to the polling place to vote.&#10;&#10;{0}</WFL_Assembly_Text>
+  <WFL_Assembly_Title>The Community Assembly</WFL_Assembly_Title>
+  <WFL_Assembly_Text>The families are gathering for the Community Assembly, to choose the colony's offices. Everyone who can goes to the polling place to vote.&#10;&#10;{0}</WFL_Assembly_Text>
   <WFL_Assembly_RaceIncumbent>The {0}: {1} holds it, and has served {2}. Standing again.</WFL_Assembly_RaceIncumbent>
   <WFL_Assembly_RaceOpen>The {0}: nobody holds it. Standing:</WFL_Assembly_RaceOpen>
-  <WFL_Assembly_ResultTitle>The assembly has chosen</WFL_Assembly_ResultTitle>
+  <WFL_Assembly_ResultTitle>The Community Assembly has chosen</WFL_Assembly_ResultTitle>
   <WFL_Assembly_ResultText>The votes are counted.&#10;&#10;{0}</WFL_Assembly_ResultText>
   <WFL_Assembly_ResultKept>The {0}: {1} is kept on, having served {2}.</WFL_Assembly_ResultKept>
   <WFL_Assembly_ResultNew>The {0}: {1} is chosen. {2}</WFL_Assembly_ResultNew>
   <WFL_Assembly_ResultNone>The {0}: nobody was chosen.</WFL_Assembly_ResultNone>
-  <WFL_Assembly_Next>The next assembly: {0}</WFL_Assembly_Next>
+  <WFL_Assembly_Next>The next Community Assembly: {0}</WFL_Assembly_Next>
   <WFL_Assembly_RaceLine>The {0} ({1}): {2}</WFL_Assembly_RaceLine>
   <WFL_AssemblyState_Campaign>houses are choosing whom to back</WFL_AssemblyState_Campaign>
   <WFL_AssemblyState_Voting>voting</WFL_AssemblyState_Voting>
   <WFL_AssemblyState_Counted>counted</WFL_AssemblyState_Counted>
   <WFL_AssemblyState_Cancelled>called off</WFL_AssemblyState_Cancelled>
-  <WFL_Ask_AssemblyVote>The yearly assembly is voting on the colony's posts. Go and cast your ballot?</WFL_Ask_AssemblyVote>
+  <WFL_Ask_AssemblyVote>The Community Assembly is voting on the colony's offices. Go and cast your ballot?</WFL_Ask_AssemblyVote>
   <WFL_Chaplain_Named>{0}, the ideoligion's moral guide, is now the colony's chaplain.</WFL_Chaplain_Named>
   <WFL_Hall_Begins>{0} is serving a meal in the hall.</WFL_Hall_Begins>
   <WFL_S_HallMeals>Hall meals (the hall keeper)</WFL_S_HallMeals>
@@ -316,12 +316,12 @@
   <WFL_Comfort_Failed_1>Whatever {0} said, {1} was not ready to hear it.</WFL_Comfort_Failed_1>
   <WFL_Comfort_Failed_2>{1} pulled away from {0}.</WFL_Comfort_Failed_2>
   <WFL_Kin_ArrivedShuttleText>A shuttle has set down kin of the {0} family for the reunion: {1}. They will stay a few days, then go home.</WFL_Kin_ArrivedShuttleText>
-  <WFL_Gathering_Title_assembly>The yearly assembly</WFL_Gathering_Title_assembly>
+  <WFL_Gathering_Title_assembly>The Community Assembly</WFL_Gathering_Title_assembly>
   <WFL_Gathering_Text_assembly>{0} has called the whole colony together. The candidates will speak, and everyone who comes may vote.</WFL_Gathering_Text_assembly>
-  <WFL_Gathering_Report_assembly>at the yearly assembly.</WFL_Gathering_Report_assembly>
+  <WFL_Gathering_Report_assembly>at the Community Assembly.</WFL_Gathering_Report_assembly>
   <WFL_Speech_0>{0} rises to speak for the post of {1}. "{2}."</WFL_Speech_0>
   <WFL_Speech_1>"I ask for your voice for {1}," says {0}. The crowd listens.</WFL_Speech_1>
-  <WFL_Speech_2>{0} stands before the assembly and makes the case for the {1}: {2}.</WFL_Speech_2>
+  <WFL_Speech_2>{0} stands before the Community Assembly and makes the case for the {1}: {2}.</WFL_Speech_2>
   <WFL_Speech_3>There is a stir as {0} speaks about the {1}.</WFL_Speech_3>
   <!-- Heirlooms and estates -->
   <WFL_Estate_Title>Possessions, heirlooms and estates</WFL_Estate_Title>

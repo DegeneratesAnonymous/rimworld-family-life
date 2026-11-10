@@ -296,7 +296,7 @@
   <WFL_FW_RoleWhy_Heir>Named by the head.</WFL_FW_RoleWhy_Heir>
   <WFL_FW_RoleWhy_Named>Named by the colony's ideoligion.</WFL_FW_RoleWhy_Named>
   <WFL_FW_RoleWhy_Elected>Elected. The term runs until {0}.</WFL_FW_RoleWhy_Elected>
-  <WFL_FW_RoleWhy_ElectedOpen>Elected at the colony's yearly assembly.</WFL_FW_RoleWhy_ElectedOpen>
+  <WFL_FW_RoleWhy_ElectedOpen>Elected at the colony's Community Assembly (held yearly).</WFL_FW_RoleWhy_ElectedOpen>
   <WFL_FW_Status_Succession>Succession under way: {0}.</WFL_FW_Status_Succession>
   <WFL_FW_Status_NoSteward>No Steward is appointed.</WFL_FW_Status_NoSteward>
   <WFL_FW_Status_Vacant>Nobody holds this post.</WFL_FW_Status_Vacant>
@@ -329,7 +329,7 @@
   <WFL_FW_Approach_RestoreCohesion>Spend time together&#10;Mend open estrangements&#10;Hold a gathering</WFL_FW_Approach_RestoreCohesion>
   <WFL_FW_Approach_ExpandLegacy>Hold traditions&#10;Mark milestones as a family&#10;Record memorable deeds</WFL_FW_Approach_ExpandLegacy>
   <WFL_FW_Approach_PreserveIndependence>Pay back what the house owes&#10;Avoid new debts to other houses</WFL_FW_Approach_PreserveIndependence>
-  <WFL_FW_Approach_IncreaseInfluence>Hold a colony post&#10;Support allies in the assembly&#10;Take part in public occasions</WFL_FW_Approach_IncreaseInfluence>
+  <WFL_FW_Approach_IncreaseInfluence>Hold a colony post&#10;Support allies in the Community Assembly&#10;Take part in public occasions</WFL_FW_Approach_IncreaseInfluence>
   <WFL_FW_Approach_Contentment>Nothing urgent. Keep doing what works.</WFL_FW_Approach_Contentment>
   <WFL_FW_Approach_None>Nothing to suggest yet.</WFL_FW_Approach_None>
   <WFL_FW_SuccessionLabel>Succession</WFL_FW_SuccessionLabel>
