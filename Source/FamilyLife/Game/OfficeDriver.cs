@@ -444,7 +444,8 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Teacher, anyone && (s == null || s.holdClasses), now);
             if (s != null && !s.holdClasses) return;
 
-            OfficeEvents.Teacher(c, r, office, holder, now);          // the annual testing of the children, offered in Aprimay; classes go on whatever else is happening
+            OfficeEvents.Teacher(c, r, office, holder, now);
+            if (HoldClass.IsQueued && (Due("classPending", now, 120) || Forced)) HoldClass.Tick(now);          // a class asked for earlier is held as soon as the teacher can          // the annual testing of the children, offered in Aprimay; classes go on whatever else is happening
             if (ClassSessions.Running(holder)) return;
             bool classroom = ClassroomKnown(holder, now);          // a lectern, a blackboard or a desk in a room: the class is held there, to everyone at once
             if (now >= office.NextSessionTick && office.SessionQueue.Count == 0)

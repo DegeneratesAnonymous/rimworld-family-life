@@ -157,6 +157,7 @@ namespace FamilyLife
             foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Teacher)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); }
             ClassSessions.ClearBackoff();          // earlier failed tries must not hold a test off
             OfficeDriver.ForceUntil = Now + 6000;
+            HoldClass.Queue(null, Now);          // if the teacher cannot start now, the class is held at the next opportunity (for up to a day)
             OfficeDriver.WorkNow(c, Now, OfficeKind.Teacher);
             var lines = OfficeDriver.Diagnose(c, Now, OfficeKind.Teacher);
             foreach (var l in lines) Log.Message("[Wil's Family Life] test: " + l);
