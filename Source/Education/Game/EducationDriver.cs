@@ -94,7 +94,6 @@ namespace FamilyLife
             r.NoteOfficeNeed(OfficeKind.Teacher, anyone && (s == null || s.holdClasses), now);
             if (s != null && !s.holdClasses) return;
 
-            EducationEvents.Teacher(c, r, office, holder, now);
             if (HoldClass.IsQueued && (Due("classPending", now, 120) || Forced)) HoldClass.Tick(now);          // a class asked for earlier is held as soon as the teacher can          // the annual testing of the children, offered in Aprimay; classes go on whatever else is happening
             // Holding classes is every assigned teacher's own work (ClassWork), not the seated one's alone: this post only carries the assessment and the community's record.
         }
@@ -107,6 +106,7 @@ namespace FamilyLife
         {
             var r = c.Registry; var s = FamilyLifeMod.Settings;
             if (s != null && !s.holdClasses) return;
+            EducationEvents.RunAssessments(c, now);          // each teacher's own assessments
             var sched = r.TeacherSchedule(); var legacy = r.OfficeFor(OfficeKind.Teacher);
             bool adults = s != null && s.adultStudents;
             int every = Math.Max(1, Math.Min(10, s?.classEveryDays ?? 3)) * Day;

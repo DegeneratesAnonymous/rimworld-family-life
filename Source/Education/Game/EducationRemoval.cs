@@ -32,6 +32,7 @@ namespace FamilyLife
             report.Step("stop the assessment, empty the class list, clear planned events and give up the post", () =>
             {
                 var lines = c.Registry.EndEducationActivity(now, PendingEvent.Testing);
+                int sittings = c.Registry.Assessments().Active.Count; c.Registry.Assessments().Active.Clear(); if (sittings > 0) lines.Add(sittings + " assessment(s) in progress were stopped");
                 foreach (var l in FrameworkServices.RemoveNotices(PendingEvent.Testing)) lines.Add(l);
                 return lines.Count == 0 ? "nothing was under way" : string.Join("; ", lines);
             });
@@ -44,6 +45,7 @@ namespace FamilyLife
                 int notices = ModuleCleanup.CountNotices(PendingEvent.Testing); if (notices > 0) left.Add(notices + " notice(s)");
                 var teacher = c.Registry.OfficeFor(OfficeKind.Teacher);
                 if (teacher != null && (teacher.Held || teacher.SessionQueue.Count > 0 || teacher.PendingKind == PendingEvent.Testing || teacher.Assessment().TestingStartTick != 0)) left.Add("the teacher's post still holds work");
+                if (c.Registry.Assessments().Active.Count > 0) left.Add("an assessment is still in progress");
                 if (left.Count > 0) throw new InvalidOperationException("not ready for removal: " + string.Join(", ", left) + ". Run the preparation again.");
                 return "nothing left";
             });

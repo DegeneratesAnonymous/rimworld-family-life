@@ -54,7 +54,7 @@ namespace FamilyLife
         /// Which assigned teacher gives the class the player asked for: one not already teaching, on the lectern's map, nearest the lectern. If every teacher is busy, the nearest is named so the
         /// message says who is teaching. Falls back to whoever sits in the old post, so a save with no assignments yet still works.
         /// </summary>
-        private static Pawn ChooseTeacher(FamilyComponent c, FamilyRegistry r, Building lectern)
+        internal static Pawn ChooseTeacher(FamilyComponent c, FamilyRegistry r, Building lectern)
         {
             var all = EducationCareers.Instructors(r).Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && !p.Dead && (lectern == null || p.Map == lectern.Map)).ToList();
             var free = all.Where(p => !ClassSessions.Running(p) && !ClassSessions.Board.IsBusy(p.thingIDNumber));

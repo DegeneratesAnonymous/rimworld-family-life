@@ -39,10 +39,11 @@ namespace FamilyLife
         private static void TestingNow()
         {
             var r = Comp?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.Assessment().TestingStartTick = 0; }
+            var ledger = r.Assessments(); bool ok = false;
+            foreach (int id in EducationCareers.Instructors(r)) { ledger.End(id); ledger.SetLastYear(id, 0); }
             FrameworkServices.ForceUntil = Now + 6000;
-            bool ok = FrameworkServices.BeginPlannedEvent(PendingEvent.Testing);
-            Messages.Message(ok ? "The testing has begun: each child sits a check every free hour for two days." : "The testing could not begin.", MessageTypeDefOf.TaskCompletion, false);
+            foreach (int id in EducationCareers.Instructors(r)) if (Comp.TryGetPawn(id) is Pawn t && t.Spawned) ok |= EducationEvents.BeginTesting(Comp, r, t, Now, true);
+            Messages.Message(ok ? "Each teacher's own testing has begun for their pupils: each child sits a check every free hour for two days." : "The testing could not begin (no teacher has lessons on record to assess).", MessageTypeDefOf.TaskCompletion, false);
         }
     }
 }

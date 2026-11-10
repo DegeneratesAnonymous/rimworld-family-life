@@ -25,12 +25,6 @@ namespace FamilyLife
             EducationCareers.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Teacher, EducationDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Teacher, EducationDriver.TeacherWork);
-            FamilyFramework.PlannedEvents.Register(new PlannedEventDefinition
-            {
-                Id = "wils.education.assessment", ModuleId = Id, SavedKind = PendingEvent.Testing, Post = OfficeKind.Teacher,
-                NoticeKey = "Testing", NoPostKey = "WFL_Event_NoPost_Teacher",
-                Begin = EducationEvents.BeginAssessment, Pass = EducationEvents.PassTesting
-            });
             FamilyFramework.BuildingGizmos.Add("wils.education.buttons", Id, LecternButtons);
             FamilyFramework.Diagnostics.Add("wils.education.diagnostics", Id, new FamilyFramework.DiagnosticSection { Kind = OfficeKind.Teacher, Lines = EducationDriver.DiagnoseTeacher });
             FamilyFramework.Removal.Add("wils.education.removal", Id, EducationRemoval.Prepare);

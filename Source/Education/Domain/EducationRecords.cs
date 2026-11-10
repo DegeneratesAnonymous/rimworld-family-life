@@ -72,6 +72,13 @@ namespace FamilyLife.Domain
         }
         public void End(int owner) { Active.RemoveAll(s => s.Owner == owner); }
 
+        /// <summary>A teacher is gone: their assessment in progress passes to another teacher, once that teacher has none of their own. Pupils and results are kept as they are.</summary>
+        public bool Transfer(int from, int to)
+        {
+            var s = Of(from); if (s == null || from == to || Of(to) != null) return false;
+            s.Owner = to; return true;
+        }
+
         public bool HasMigrated(string key) => migrated.Contains(key);
         public void MarkMigrated(string key) { migrated.Add(key); }
 
@@ -175,6 +182,7 @@ namespace FamilyLife.Domain
             var ledger = r.Assessments(); string key = "office:" + office.HolderId;
             if (ledger.HasMigrated(key)) return false;
             ledger.MarkMigrated(key);
+            if (office.PendingKind == PendingEvent.Testing) office.PendingKind = 0;          // the old planned notice is no longer used: assessments start from each teacher's own schedule
             if (office.PayloadIds.Contains(EducationOfficeData.Id) && office.Education().LastTestingYear != 0) ledger.SetLastYear(office.HolderId, Math.Max(ledger.LastYearOf(office.HolderId), office.Education().LastTestingYear));
             if (office.PayloadIds.Contains(AssessmentData.Id))
             {
