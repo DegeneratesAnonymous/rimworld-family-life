@@ -73,5 +73,17 @@ namespace FamilyLife.Tests
             var back = SaveSim.Reload(SaveSim.Reload(r));
             Assert.Equal(777, back.TeacherSchedule().NextFor(1));
         }
+
+        [Fact] public void Assistants_join_a_running_class_up_to_a_limit_only_when_free_and_can_cover_for_the_instructor()
+        {
+            var b = new ClassBoard(); b.Open(1, new[] { 10 }, "Melee", "a", 1); b.Open(2, new[] { 11 }, "Plants", "b", 1);
+            Assert.True(b.AddAssistant(1, 5)); Assert.True(b.AddAssistant(1, 6)); Assert.False(b.AddAssistant(1, 7));      // at most two
+            Assert.False(b.AddAssistant(2, 5));                                                                            // already helping elsewhere
+            Assert.False(b.AddAssistant(2, 1));                                                                            // an instructor cannot assist
+            Assert.False(b.AddAssistant(2, 10));                                                                           // a pupil cannot
+            Assert.False(b.AddAssistant(99, 8));                                                                           // no such class
+            Assert.True(b.Substitute(1, 5)); Assert.Equal(5, b.Of(5).Instructor); Assert.True(b.IsBusy(10));
+            b.Release(6); Assert.False(b.IsBusy(6));
+        }
     }
 }

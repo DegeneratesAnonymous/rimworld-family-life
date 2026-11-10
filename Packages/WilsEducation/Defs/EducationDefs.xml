@@ -2,6 +2,7 @@
 <Defs>
   <JobDef><defName>WFL_OfficeLesson</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a lesson.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ClassTeacher</defName><driverClass>FamilyLife.JobDriver_ClassTeacher</driverClass><reportString>teaching a class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_ClassAssist</defName><driverClass>FamilyLife.JobDriver_ClassAssist</driverClass><reportString>helping in class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_ClassStudent</defName><driverClass>FamilyLife.JobDriver_ClassStudent</driverClass><reportString>attending class.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <JobDef><defName>WFL_TestStudent</defName><driverClass>FamilyLife.JobDriver_TestStudent</driverClass><reportString>sitting a test.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
   <ThoughtDef><defName>WFL_InspiringLesson</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>

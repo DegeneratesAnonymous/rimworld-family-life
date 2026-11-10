@@ -56,6 +56,14 @@ namespace FamilyLife.Domain
             if (!string.IsNullOrEmpty(s.Location)) places.Remove(s.Location);
         }
 
+        /// <summary>A free person joins a running class to help. Refused if they are already in a class, the class is not running, or it already has <see cref="MaxAssistants"/>.</summary>
+        public bool AddAssistant(int instructor, int person)
+        {
+            if (!byInstructor.TryGetValue(instructor, out var s) || person <= 0 || person == instructor || IsBusy(person) || byInstructor.ContainsKey(person) || s.Assistants.Count >= MaxAssistants) return false;
+            s.Assistants.Add(person); sessionOf[person] = instructor; return true;
+        }
+        public const int MaxAssistants = 2;
+
         /// <summary>A pupil leaves the session (released, or gone). They are free to join another.</summary>
         public void Release(int pupil)
         {
