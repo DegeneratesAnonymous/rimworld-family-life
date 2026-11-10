@@ -11,8 +11,6 @@ namespace FamilyLife
         public CareMod(ModContentPack content) : base(content)
         {
             FamilyFramework.Install(new CareModule());
-            try { new HarmonyLib.Harmony("SpacemanWil.WilsCommunityCare").PatchAll(System.Reflection.Assembly.GetExecutingAssembly()); }
-            catch (System.Exception ex) { Log.Warning("[Wil's Family Life] Community Care could not attach to vanilla medical work (operation and tending experience will not count): " + ex.Message); }
         }
     }
 }

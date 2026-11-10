@@ -37,6 +37,8 @@ namespace FamilyLife
         public static readonly MeetingCatalog Meetings;
         public static readonly ContributionList<Func<Building, IEnumerable<Gizmo>>> BuildingGizmos;
         public static readonly ContributionList<DiagnosticSection> Diagnostics;
+        public static readonly ContributionList<Action<Pawn, Pawn, int>> OperationCompleted;          // a vanilla operation was completed: (doer, patient, bill id). Read-only: the framework owns the patch, modules only listen
+        public static readonly ContributionList<Action<Pawn, Pawn>> Tended;          // a vanilla tend was done: (doctor, patient). Read-only, as above
         public static readonly ContributionList<Action<CommunityOffice>> DueNow;          // developer menu: brings a module's timers on a post due
         public static readonly ContributionList<Func<FamilyComponent, CleanupReport>> Removal;          // "prepare for removal": one per module
         public static readonly ContributionList<Action> Resets;          // clears a module's in-memory state when a game is loaded or ended
@@ -59,6 +61,8 @@ namespace FamilyLife
             Meetings = new MeetingCatalog(Catalog);
             BuildingGizmos = new ContributionList<Func<Building, IEnumerable<Gizmo>>>(Catalog);
             Diagnostics = new ContributionList<DiagnosticSection>(Catalog);
+            OperationCompleted = new ContributionList<Action<Pawn, Pawn, int>>(Catalog);
+            Tended = new ContributionList<Action<Pawn, Pawn>>(Catalog);
             Resets = new ContributionList<Action>(Catalog);
             Removal = new ContributionList<Func<FamilyComponent, CleanupReport>>(Catalog);
             DueNow = new ContributionList<Action<CommunityOffice>>(Catalog);
