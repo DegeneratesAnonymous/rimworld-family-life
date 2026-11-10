@@ -149,3 +149,44 @@ namespace FamilyLife.Domain
     /// <summary>Which role the holder of an old post becomes.</summary>
     public sealed class LegacyPost { public OfficeKind Kind; public string RoleId; }
 }
+
+namespace FamilyLife.Domain
+{
+    /// <summary>
+    /// The compatibility seat: the old Teacher and Healer office records still carry the working state of classes and rounds, and everything that reads them keeps working. Who sits
+    /// there is no longer decided by a vote. It follows the professionals the player has assigned.
+    /// </summary>
+    public static class ProfessionalSeating
+    {
+        /// <summary>
+        /// Who should sit in the working seat. The sitting person stays while they are still assigned and present (no churn); otherwise the first present assigned professional takes it, so
+        /// a colleague covers for one who has died or left. 0 means nobody is assigned. <paramref name="roster"/> is in assignment order.
+        /// </summary>
+        public static int Pick(IList<int> roster, int current, Func<int, bool> present)
+        {
+            if (current != 0 && roster.Contains(current) && present(current)) return current;
+            foreach (int id in roster) if (present(id)) return id;
+            return 0;
+        }
+    }
+
+    public sealed partial class FamilyRegistry
+    {
+        /// <summary>
+        /// Puts a person in (or empties) the working seat of a professional post, with the same effects as the post changing hands so classes, rounds and per-holder records settle
+        /// correctly, but without any vote and without touching their other posts. Returns whether anything changed.
+        /// </summary>
+        public bool SeatService(OfficeKind kind, int person, int now)
+        {
+            var office = EnsureOffice(kind);
+            if (person != 0 && GetPerson(person)?.InColony != true) person = 0;
+            if (office.HolderId == person) return false;
+            if (office.Held) EndOffice(office, person == 0 ? OfficeEnd.Left : OfficeEnd.Replaced, now);
+            if (person == 0) return true;
+            office.HolderId = person; office.HolderFamily = FamilyOf(person); office.ElectedTick = now; office.TermEndTick = 0; office.LastWorkTick = now;
+            office.Work = 0; office.QualitySum = 0f; office.QualityCount = 0; office.UnmetSinceTick = 0; office.EndReason = OfficeEnd.None; office.EndedTick = 0; office.Terms++;
+            HolderChanged?.Invoke(this, office, 0, person);
+            return true;
+        }
+    }
+}

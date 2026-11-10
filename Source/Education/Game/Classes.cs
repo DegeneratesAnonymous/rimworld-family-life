@@ -244,7 +244,7 @@ namespace FamilyLife
     /// </summary>
     internal static class LessonGrant
     {
-        internal static GrantResult Apply(FamilyComponent c, FamilyRegistry r, Pawn teacher, Pawn pupil, SkillDef skill, float xpShare, int attended, int possible, float delivery, float tierSum, int exchanges, Thing book, int now)
+        internal static GrantResult Apply(FamilyComponent c, FamilyRegistry r, Pawn teacher, Pawn pupil, SkillDef skill, float xpShare, int attended, int possible, float delivery, float tierSum, int exchanges, Thing book, int now, string kind = "class")
         {
             var rec = new GrantResult();
             var tsk = teacher.skills?.GetSkill(skill); var psk = pupil.skills?.GetSkill(skill);
@@ -276,6 +276,7 @@ namespace FamilyLife
             }
             catch (Exception) { }
             rec.Xp = xp; rec.BookXp = bookXp; rec.Gap = gap;
+            EducationCareers.Report(c, teacher, pupil, skill, kind, xpShare, delivery, now);          // professional experience, once per pupil per class
             return rec;
         }
     }

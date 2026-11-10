@@ -22,6 +22,7 @@ namespace FamilyLife
             catalog.Provide(Id, "wils.education.tutoring");
             catalog.Provide(Id, "wils.education.assessment");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.education.teacher", ModuleId = Id, Kind = OfficeKind.Teacher, LabelKey = "WFL_OfficeKind_Teacher", PassionSkills = new[] { "Intellectual", "Social" } });
+            EducationCareers.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Teacher, EducationDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Teacher, EducationDriver.TeacherWork);
             FamilyFramework.PlannedEvents.Register(new PlannedEventDefinition
@@ -40,7 +41,9 @@ namespace FamilyLife
                 Complete = (speaker, other, id, now) =>
                 {
                     var r = FamilyComponent.Current?.Registry; if (r == null) return;
-                    if (r.GetPerson(other.thingIDNumber)?.Juvenile == true && r.OfficeFor(OfficeKind.Teacher)?.HolderId == speaker.thingIDNumber) EducationDriver.CompleteLesson(r, speaker, other, now);
+                    if (r.GetPerson(other.thingIDNumber)?.Juvenile != true && !(FamilyLifeMod.Settings?.adultStudents ?? false)) return;
+                    if (r.OfficeFor(OfficeKind.Teacher)?.HolderId == speaker.thingIDNumber && r.OfficeFor(OfficeKind.Teacher).SessionQueue.Contains(other.thingIDNumber)) EducationDriver.CompleteLesson(r, speaker, other, now);
+                    else if (r.Assignments().IsAssigned(speaker.thingIDNumber, EducationCareers.Tutor)) EducationCareers.CompleteTutoring(r, speaker, other, now);
                 }
             });
             FamilyFramework.Handoffs.Add("wils.education.handoff", Id, EducationDriver.OnTeacherChanged);

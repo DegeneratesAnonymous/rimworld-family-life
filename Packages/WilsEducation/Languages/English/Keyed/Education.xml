@@ -30,4 +30,6 @@
   <WFL_Testing_Support_Tutor>{0} may do better with some time one-to-one with the teacher.</WFL_Testing_Support_Tutor>
   <WFL_Testing_Support_Approach>A different approach in class may suit {0}: shorter blocks, or a subject they enjoy more.</WFL_Testing_Support_Approach>
   <WFL_HoldClass_Queued>{0} cannot start the class just now. It will be held at the next opportunity.</WFL_HoldClass_Queued>
+  <wils.education.tutor_label>Tutor</wils.education.tutor_label>
+  <wils.education.teacher_label>Teacher</wils.education.teacher_label>
 </LanguageData>

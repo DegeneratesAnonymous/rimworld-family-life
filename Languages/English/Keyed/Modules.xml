@@ -12,4 +12,13 @@
   <WFL_ModuleName_wils_care>Community Care</WFL_ModuleName_wils_care>
   <WFL_ModuleInactive_wils_education>The Teacher office and classes are inactive.</WFL_ModuleInactive_wils_education>
   <WFL_ModuleInactive_wils_care>The Healer office and check-ups are inactive.</WFL_ModuleInactive_wils_care>
+  <WFL_Career_Qualified>{0} is now qualified as {1}.</WFL_Career_Qualified>
+  <WFL_Tab_Professions>Professions</WFL_Tab_Professions>
+  <WFL_Career_Assigned>assigned</WFL_Career_Assigned>
+  <WFL_Career_Open>open to anyone</WFL_Career_Open>
+  <WFL_Career_Qualified_Short>qualified, not assigned</WFL_Career_Qualified_Short>
+  <WFL_Career_Needs>needs {0}</WFL_Career_Needs>
+  <WFL_Career_Experience>Professional experience: {0}</WFL_Career_Experience>
+  <WFL_Career_Assign>Assign</WFL_Career_Assign>
+  <WFL_Career_Unassign>Unassign</WFL_Career_Unassign>
 </LanguageData>
