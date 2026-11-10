@@ -13,4 +13,7 @@
     <stages><li><label>counselled</label><description>Talking it through with someone who understood helped.</description><baseMoodEffect>5</baseMoodEffect></li></stages></ThoughtDef>
   <ThoughtDef><defName>WFL_CounsellingListened</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>3</durationDays><stackLimit>1</stackLimit>
     <stages><li><label>someone listened</label><description>It did not fix anything, but it was good to be heard.</description><baseMoodEffect>2</baseMoodEffect></li></stages></ThoughtDef>
+  <JobDef><defName>WFL_AttendBirth</defName><driverClass>FamilyLife.JobDriver_AttendBirth</driverClass><reportString>staying with TargetA.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <ThoughtDef><defName>WFL_BirthAttended</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>4</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>not alone at the birth</label><description>Someone who knew what they were doing stayed with me through the birth.</description><baseMoodEffect>4</baseMoodEffect></li></stages></ThoughtDef>
 </Defs>

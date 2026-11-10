@@ -7,7 +7,7 @@ namespace FamilyLife
     [DefOf]
     public static class CareDefOf
     {
-        public static JobDef WFL_Checkup, WFL_ClinicDoctor, WFL_ClinicPatient, WFL_SpecialistVisit, WFL_VetExam;
+        public static JobDef WFL_Checkup, WFL_ClinicDoctor, WFL_ClinicPatient, WFL_SpecialistVisit, WFL_VetExam, WFL_AttendBirth;
         static CareDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(CareDefOf)); }
     }
 }
