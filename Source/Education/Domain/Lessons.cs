@@ -152,8 +152,10 @@ namespace FamilyLife.Domain
         public string Skill = "";
         public float Xp, Effect, EngageSum;
         public int Ticks, Possible, Exchanges, Classes;
+        /// <summary>Who gave the lesson (0 in a record made before teachers were named). Records of one pupil and subject from different teachers stay apart until they are assessed together.</summary>
+        public int Teacher;
 
-        public string Encode() => string.Join("|", Pupil.ToString(CultureInfo.InvariantCulture), Skill, F(Xp), F(Effect), F(EngageSum), Ticks.ToString(CultureInfo.InvariantCulture), Possible.ToString(CultureInfo.InvariantCulture), Exchanges.ToString(CultureInfo.InvariantCulture), Classes.ToString(CultureInfo.InvariantCulture));
+        public string Encode() => string.Join("|", Pupil.ToString(CultureInfo.InvariantCulture), Skill, F(Xp), F(Effect), F(EngageSum), Ticks.ToString(CultureInfo.InvariantCulture), Possible.ToString(CultureInfo.InvariantCulture), Exchanges.ToString(CultureInfo.InvariantCulture), Classes.ToString(CultureInfo.InvariantCulture), Teacher.ToString(CultureInfo.InvariantCulture));
         private static string F(float v) => v.ToString("0.###", CultureInfo.InvariantCulture);
 
         public static LessonRecord Parse(string text)
@@ -164,7 +166,7 @@ namespace FamilyLife.Domain
             try
             {
                 var inv = CultureInfo.InvariantCulture;
-                return new LessonRecord { Pupil = int.Parse(p[0], inv), Skill = p[1], Xp = float.Parse(p[2], inv), Effect = float.Parse(p[3], inv), EngageSum = float.Parse(p[4], inv), Ticks = int.Parse(p[5], inv), Possible = int.Parse(p[6], inv), Exchanges = int.Parse(p[7], inv), Classes = int.Parse(p[8], inv) };
+                return new LessonRecord { Pupil = int.Parse(p[0], inv), Skill = p[1], Xp = float.Parse(p[2], inv), Effect = float.Parse(p[3], inv), EngageSum = float.Parse(p[4], inv), Ticks = int.Parse(p[5], inv), Possible = int.Parse(p[6], inv), Exchanges = int.Parse(p[7], inv), Classes = int.Parse(p[8], inv), Teacher = p.Length > 9 ? int.Parse(p[9], inv) : 0 };
             }
             catch (FormatException) { return null; }
         }
@@ -178,13 +180,20 @@ namespace FamilyLife.Domain
             for (int i = 0; i < log.Count; i++)
             {
                 var r = Parse(log[i]);
-                if (r == null || r.Pupil != add.Pupil || r.Skill != add.Skill) continue;
+                if (r == null || r.Pupil != add.Pupil || r.Skill != add.Skill || r.Teacher != add.Teacher) continue;
                 r.Xp += add.Xp; r.Effect += add.Effect; r.EngageSum += add.EngageSum; r.Ticks += add.Ticks; r.Possible += add.Possible; r.Exchanges += add.Exchanges; r.Classes += add.Classes;
                 log[i] = r.Encode();
                 return;
             }
             log.Add(add.Encode());
             while (log.Count > MaxRecords) log.RemoveAt(0);
+        }
+
+        /// <summary>Several records of one pupil and subject (from different teachers) as one, for assessing together.</summary>
+        public static LessonRecord Merge(IEnumerable<LessonRecord> records)
+        {
+            var list = records.ToList(); var first = list[0];
+            return new LessonRecord { Pupil = first.Pupil, Skill = first.Skill, Xp = list.Sum(x => x.Xp), Effect = list.Sum(x => x.Effect), EngageSum = list.Sum(x => x.EngageSum), Ticks = list.Sum(x => x.Ticks), Possible = list.Sum(x => x.Possible), Exchanges = list.Sum(x => x.Exchanges), Classes = list.Sum(x => x.Classes) };
         }
 
         public static List<LessonRecord> For(List<string> log, int pupil) => (log ?? new List<string>()).Select(Parse).Where(r => r != null && r.Pupil == pupil).ToList();
