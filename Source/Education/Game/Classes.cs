@@ -33,10 +33,12 @@ namespace FamilyLife
 
     internal static class ClassSessions
     {
+        /// <summary>Who is in which class right now. Any number of classes run at once; nobody is in two.</summary>
+        internal static readonly ClassBoard Board = new ClassBoard();
         private static readonly Dictionary<int, ClassSession> byTeacher = new Dictionary<int, ClassSession>();
         private static readonly Dictionary<int, int[]> backoff = new Dictionary<int, int[]>();          // teacher -> [failed tries, next try]
 
-        internal static void Reset() { byTeacher.Clear(); backoff.Clear(); }
+        internal static void Reset() { byTeacher.Clear(); backoff.Clear(); Board.Clear(); }
         internal static ClassSession Of(int teacherId) => byTeacher.TryGetValue(teacherId, out var s) ? s : null;
         internal static bool Running(Pawn teacher) => teacher != null && byTeacher.ContainsKey(teacher.thingIDNumber);
 
@@ -101,7 +103,9 @@ namespace FamilyLife
         /// <summary>Starts a class: the teacher goes to the front of the classroom (fetching a book first if one fits) and calls the children when they arrive.</summary>
         internal static BeginResult TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false)
         {
-            if (teacher == null || Running(teacher) || roster.Count == 0) return BeginResult.Cannot;
+            if (teacher == null || Running(teacher) || Board.IsBusy(teacher.thingIDNumber)) return BeginResult.Cannot;
+            roster = roster.Where(id => !Board.IsBusy(id)).ToList();          // someone already in another class stays there
+            if (roster.Count == 0) return BeginResult.Cannot;
             IntVec3 cell = IntVec3.Invalid; Room room = null; Thing front = lectern;
             bool found = lectern != null ? ClassRooms.SpotAt(lectern, teacher, out cell, out room) : ClassRooms.TeachingSpot(teacher, out cell, out room, out front);
             if (!found) { FrameworkServices.Trace("class: nowhere to hold a class for " + teacher.LabelShort); return BeginResult.Cannot; }
@@ -122,6 +126,10 @@ namespace FamilyLife
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
             if (book != null && !(BookValues(book).Keys.Any(k => k.defName == subject))) book = null;          // a book that is not about this subject is left on the shelf
             float delivery = LessonMath.Delivery(PawnReadinessApi.Level(teacher, skillDef), PawnReadinessApi.Level(teacher, SkillDefOf.Social), 0f, ClassRooms.Facility(room, front), PawnReadinessApi.Fatigue(teacher));
+            string place = front != null ? "t" + front.thingIDNumber : room != null ? "r" + room.ID : "c" + cell.x + "_" + cell.z;
+            var seated = Board.Open(teacher.thingIDNumber, roster, subject, place, now);          // claims the instructor, the pupils and the room in one step
+            if (seated == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " must wait, the room is already in use"); return BeginResult.Later; }
+            roster = seated; if (roster.Count == 0) { Board.Close(teacher.thingIDNumber); return BeginResult.Cannot; }
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0, ByPlayer = byPlayer, Subject = subject, Delivery = delivery };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count, teacher.Map);
             if (room != null) foreach (var rc in room.Cells) s.RoomCells.Add(rc);
@@ -169,7 +177,7 @@ namespace FamilyLife
         internal static void End(Pawn teacher, bool finishedNormally, string reason = null)
         {
             if (teacher == null || !byTeacher.TryGetValue(teacher.thingIDNumber, out var s)) return;
-            byTeacher.Remove(teacher.thingIDNumber);
+            byTeacher.Remove(teacher.thingIDNumber); Board.Close(teacher.thingIDNumber);
             s.Finished = true; s.EndReason = reason;
             var c = FamilyComponent.Current; var r = c?.Registry;
             if (r == null) return;
@@ -209,7 +217,6 @@ namespace FamilyLife
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] The class could not be settled: " + ex.Message); }
-            foreach (int id in s.Roster) r.ClassDone(id);
         }
 
         /// <summary>The teacher says something to one pupil in the room, favouring whoever has had least attention: a question, an explanation, a quiz, a story, a word to settle them.</summary>

@@ -96,43 +96,49 @@ namespace FamilyLife
 
             EducationEvents.Teacher(c, r, office, holder, now);
             if (HoldClass.IsQueued && (Due("classPending", now, 120) || Forced)) HoldClass.Tick(now);          // a class asked for earlier is held as soon as the teacher can          // the annual testing of the children, offered in Aprimay; classes go on whatever else is happening
-            if (ClassSessions.Running(holder)) return;
-            bool classroom = ClassroomKnown(holder, now);          // a lectern, a blackboard or a desk in a room: the class is held there, to everyone at once
-            if (now >= office.NextSessionTick && office.SessionQueue.Count == 0)
-            {
-                var students = r.Persons.Where(p => p.InColony && p.Id != holderId && (p.Juvenile || adults))
-                    .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == holder.Map && FreeFor(c, p.Id) && (classroom || LearnableSkill(holder, pawn) != null))
-                    .Select(p => p.Id).Take(24).ToList();
-                int every = Math.Max(1, Math.Min(10, s?.classEveryDays ?? 3)) * Day;
-                if (r.BeginClass(now, every, students))
-                    Messages.Message("WFL_Class_Begins".Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
-            }
-            if (classroom)
-            {
-                if (office.SessionQueue.Count > 0 && ClassSessions.MayTry(holder, now) && (Due("classroom", now, 600) || Forced && Due("classroomT", now, 200)))
-                {
-                    r.NextStudent(now);
-                    if (office.SessionQueue.Count > 0)
-                    {
-                        var began = ClassSessions.TryBegin(c, holder, office.SessionQueue.ToList(), now);
-                        if (began == BeginResult.Cannot) { office.SessionQueue.Clear(); office.NextSessionTick = Math.Max(office.NextSessionTick, now + Day / 2); }          // nothing to teach or nowhere to teach it: not tried again for half a day
-                    }
-                }
-                return;
-            }
-            int next = r.NextStudent(now);
-            if (next == 0) return;
-            var student = Spawned(c, next);
-            if (student == null || student.Map != holder.Map || !FrameworkServices.IsFree(c, next) || LearnableSkill(holder, student) == null) { r.ClassDone(next); return; }      // cannot come today
-            if (Due("lesson", now, 600) && !FrameworkServices.StartMeeting(holder, student, EducationDefOf.WFL_OfficeLesson, 0)) r.SessionDefer(OfficeKind.Teacher, next);
+            // Holding classes is every assigned teacher's own work (ClassWork), not the seated one's alone: this post only carries the assessment and the community's record.
         }
 
-        private static int classroomChecked = -100000; private static bool classroomResult;
+        /// <summary>
+        /// Every assigned teacher holds their own classes on their own schedule, any number at the same time. Each is its own session on the class board: its instructor, pupils, subject and
+        /// place, with nobody in two at once. With no classroom the teacher gives one-to-one lessons, as a tutor does.
+        /// </summary>
+        internal static void ClassWork(FamilyComponent c, int now)
+        {
+            var r = c.Registry; var s = FamilyLifeMod.Settings;
+            if (s != null && !s.holdClasses) return;
+            var sched = r.TeacherSchedule(); var legacy = r.OfficeFor(OfficeKind.Teacher);
+            bool adults = s != null && s.adultStudents;
+            int every = Math.Max(1, Math.Min(10, s?.classEveryDays ?? 3)) * Day;
+            var teachers = r.Assignments().Holders(EducationCareers.Teacher).Where(id => r.GetPerson(id)?.InColony == true).ToList();
+            foreach (int id in teachers)
+            {
+                if (legacy != null && legacy.HolderId == id) sched.Seed(id, legacy.NextSessionTick);          // an existing save carries on from the old post's date
+                else sched.Seed(id, 0);
+                var teacher = Spawned(c, id);
+                if (teacher == null || ClassSessions.Running(teacher) || ClassSessions.Board.IsBusy(id)) continue;
+                if (HoldClass.IsQueued && legacy != null && legacy.HolderId == id) continue;          // a class the player asked for goes first
+                if (ClassroomKnown(teacher, now))
+                {
+                    if (!sched.Due(id, now) || !ClassSessions.MayTry(teacher, now) || !(Due("classroom" + id, now, 600) || Forced)) continue;
+                    var students = r.Persons.Where(p => p.InColony && p.Id != id && (p.Juvenile || adults) && !ClassSessions.Board.IsBusy(p.Id))
+                        .Where(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == teacher.Map && FreeFor(c, p.Id)).Select(p => p.Id).Take(24).ToList();
+                    if (students.Count == 0) { sched.Set(id, now + Day / 2); continue; }
+                    var began = ClassSessions.TryBegin(c, teacher, students, now);
+                    if (began == BeginResult.Started) { sched.Set(id, now + every); Messages.Message("WFL_Class_Begins".Translate(teacher.LabelShort), teacher, MessageTypeDefOf.NeutralEvent, false); }
+                    else if (began == BeginResult.Cannot) sched.Set(id, now + Day / 2);          // nothing to teach or nowhere to teach it: not tried again for half a day
+                }
+                else EducationCareers.OneToOne(c, teacher, now, adults);
+            }
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<int, KeyValuePair<int, bool>> classroomCache = new System.Collections.Generic.Dictionary<int, KeyValuePair<int, bool>>();
         private static bool ClassroomKnown(Pawn teacher, int now)
         {
-            if (now - classroomChecked < 600 && now >= classroomChecked) return classroomResult;
-            classroomChecked = now;
-            return classroomResult = ClassRooms.TeachingSpot(teacher, out _, out _, out _);
+            if (classroomCache.TryGetValue(teacher.thingIDNumber, out var hit) && now - hit.Key < 600 && now >= hit.Key) return hit.Value;
+            bool found = ClassRooms.TeachingSpot(teacher, out _, out _, out _);
+            classroomCache[teacher.thingIDNumber] = new KeyValuePair<int, bool>(now, found);
+            return found;
         }
 
         /// <summary>
@@ -173,7 +179,7 @@ namespace FamilyLife
                     int able = kids.Count(p => Spawned(c, p.Id) is Pawn pawn && pawn.Map == t.Map && FreeFor(c, p.Id) && Ready(pawn));
                     if (NeedsReason(t) != null) lines.Add("  the teacher should stop for: " + NeedsReason(t));
                     foreach (var k in kids) if (Spawned(c, k.Id) is Pawn kp && NeedsReason(kp) != null) lines.Add("  " + kp.LabelShort + " should stop for: " + NeedsReason(kp));
-                    lines.Add("  children in the colony: " + kids.Count + ", able to come now: " + able + ", waiting in the class list: " + teacher.SessionQueue.Count + (ClassSessions.Running(t) ? ", class already running" : ""));
+                    lines.Add("  children in the colony: " + kids.Count + ", able to come now: " + able + ", classes running now: " + ClassSessions.Board.Sessions.Count() + (ClassSessions.Running(t) ? ", this teacher's class is running" : ""));
                 }
             }
             return lines;

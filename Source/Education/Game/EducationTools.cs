@@ -25,6 +25,7 @@ namespace FamilyLife
         {
             var c = Comp; var r = c?.Registry; if (r == null) return;
             foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Teacher)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); }
+            foreach (int t in r.TeacherSchedule().People.ToList()) r.TeacherSchedule().Set(t, 0);
             ClassSessions.ClearBackoff();          // earlier failed tries must not hold a test off
             FrameworkServices.ForceUntil = Now + 6000;
             HoldClass.Queue(null, Now);          // if the teacher cannot start now, the class is held at the next opportunity (for up to a day)

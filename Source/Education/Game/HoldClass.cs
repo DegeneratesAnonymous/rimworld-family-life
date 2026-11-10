@@ -50,22 +50,34 @@ namespace FamilyLife
             if (result != BeginResult.Later) pending = false;
         }
 
+        /// <summary>
+        /// Which assigned teacher gives the class the player asked for: one not already teaching, on the lectern's map, nearest the lectern. If every teacher is busy, the nearest is named so the
+        /// message says who is teaching. Falls back to whoever sits in the old post, so a save with no assignments yet still works.
+        /// </summary>
+        private static Pawn ChooseTeacher(FamilyComponent c, FamilyRegistry r, Building lectern)
+        {
+            var all = r.Assignments().Holders(EducationCareers.Teacher).Select(id => c.TryGetPawn(id)).Where(p => p != null && p.Spawned && !p.Dead && (lectern == null || p.Map == lectern.Map)).ToList();
+            var free = all.Where(p => !ClassSessions.Running(p) && !ClassSessions.Board.IsBusy(p.thingIDNumber));
+            Func<Pawn, float> dist = p => lectern == null ? 0f : p.Position.DistanceToSquared(lectern.Position);
+            var pick = free.OrderBy(dist).FirstOrDefault() ?? all.OrderBy(dist).FirstOrDefault();
+            if (pick != null) return pick;
+            var office = r.OfficeFor(OfficeKind.Teacher);
+            return office != null && office.Held ? c.TryGetPawn(office.HolderId) : null;
+        }
+
         /// <summary>Starts the class if the teacher can. Later means the teacher is not able just now (the caller may queue it); Cannot means it is not possible at all.</summary>
         private static BeginResult Attempt(Building lectern, int now, bool announce)
         {
             var c = FamilyComponent.Current; var r = c?.Registry; if (r == null) return BeginResult.Cannot;
-            var office = r.OfficeFor(OfficeKind.Teacher);
-            var teacher = office != null && office.Held ? c.TryGetPawn(office.HolderId) : null;
+            var teacher = ChooseTeacher(c, r, lectern);
             if (teacher == null || !teacher.Spawned || lectern != null && teacher.Map != lectern.Map) { if (announce) Messages.Message("WFL_HoldClass_NoTeacher".Translate(), MessageTypeDefOf.RejectInput, false); return BeginResult.Cannot; }
             if (ClassSessions.Running(teacher)) { if (announce) Messages.Message("WFL_HoldClass_Running".Translate(teacher.LabelShort), MessageTypeDefOf.RejectInput, false); return BeginResult.Cannot; }
             bool adults = FamilyLifeMod.Settings != null && FamilyLifeMod.Settings.adultStudents;
-            var ids = r.Persons.Where(p => p.InColony && p.Id != office.HolderId && (p.Juvenile || adults))
+            var ids = r.Persons.Where(p => p.InColony && p.Id != teacher.thingIDNumber && (p.Juvenile || adults) && !ClassSessions.Board.IsBusy(p.Id))
                 .Where(p => c.TryGetPawn(p.Id) is Pawn k && k.Spawned && k.Map == teacher.Map && FrameworkServices.Available(k)).Select(p => p.Id).Take(24).ToList();
             if (ids.Count == 0) { if (announce) Messages.Message("WFL_HoldClass_NoPupils".Translate(), MessageTypeDefOf.RejectInput, false); return BeginResult.Later; }          // nobody free yet: worth waiting for
-            var saved = office.SessionQueue.ToList(); int savedStart = office.SessionStartTick;
-            office.SessionQueue = ids; office.SessionStartTick = now;          // they are the class: lessons are credited the same way as a class held on the usual round
             var result = ClassSessions.TryBegin(c, teacher, ids, now, lectern, true);
-            if (result != BeginResult.Started) { office.SessionQueue = saved; office.SessionStartTick = savedStart; return result; }
+            if (result != BeginResult.Started) return result;
             Messages.Message("WFL_HoldClass_Started".Translate(teacher.LabelShort, ids.Count), teacher, MessageTypeDefOf.PositiveEvent, false);
             return result;
         }
@@ -85,10 +97,10 @@ namespace FamilyLife
             if (result == BeginResult.Later)
             {
                 Queue(lectern, now);
-                var c = FamilyComponent.Current; var o = c?.Registry.OfficeFor(OfficeKind.Teacher); var t = o != null ? c.TryGetPawn(o.HolderId) : null;
+                var c = FamilyComponent.Current; var t = c != null ? ChooseTeacher(c, c.Registry, lectern) : null;
                 Messages.Message("WFL_HoldClass_Queued".Translate(t?.LabelShort ?? "-"), t, MessageTypeDefOf.NeutralEvent, false);
             }
-            else if (result == BeginResult.Cannot && lectern != null) { var c = FamilyComponent.Current; var o = c?.Registry.OfficeFor(OfficeKind.Teacher); var t = o != null ? c.TryGetPawn(o.HolderId) : null; if (t != null && !ClassSessions.Running(t)) Messages.Message("WFL_HoldClass_Cannot".Translate(t.LabelShort), MessageTypeDefOf.RejectInput, false); }
+            else if (result == BeginResult.Cannot && lectern != null) { var c = FamilyComponent.Current; var t = c != null ? ChooseTeacher(c, c.Registry, lectern) : null; if (t != null && !ClassSessions.Running(t)) Messages.Message("WFL_HoldClass_Cannot".Translate(t.LabelShort), MessageTypeDefOf.RejectInput, false); }
         }
     }
 }

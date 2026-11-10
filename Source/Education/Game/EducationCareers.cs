@@ -29,6 +29,7 @@ namespace FamilyLife
             CareerService.RegisterRole(new ProfessionRole { Id = Tutor, ModuleId = moduleId, Career = Career, Level = 1 });
             CareerService.RegisterRole(new ProfessionRole { Id = Teacher, ModuleId = moduleId, Career = Career, Level = 2 });
             CareerService.RegisterSeat(moduleId, OfficeKind.Teacher, Teacher);
+            FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".classes", ModuleId = moduleId, Interval = 600, Run = now => { var c = FamilyComponent.Current; if (c != null) EducationDriver.ClassWork(c, now); } });
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".tutors", ModuleId = moduleId, Interval = 1200, Run = now => { var c = FamilyComponent.Current; if (c != null) TutorWork(c, now); } });
         }
 
@@ -48,16 +49,21 @@ namespace FamilyLife
             var r = c.Registry; var s = FamilyLifeMod.Settings;
             if (s != null && !s.holdClasses) return;
             foreach (int id in r.Assignments().Holders(Tutor).ToList())
-            {
-                if (r.GetPerson(id)?.InColony != true) continue;
-                var tutor = c.TryGetPawn(id);
-                if (tutor == null || !tutor.Spawned || tutor.Dead || ClassSessions.Running(tutor) || !FrameworkServices.Ready(tutor)) continue;
-                if (FrameworkServices.NeedsReason(tutor) != null || !Due("tutor" + id, now)) continue;
-                bool adults = s != null && s.adultStudents;
-                var pupil = r.Persons.Where(p => p.InColony && p.Id != id && (p.Juvenile || adults) && c.TryGetPawn(p.Id) is Pawn k && k.Spawned && !k.Dead && k.Map == tutor.Map && FrameworkServices.FreeFor(c, p.Id) && EducationDriver.LearnableSkill(tutor, k) != null)
-                    .OrderBy(p => (p.Id * 31 + now / 5000) % 97).Select(p => c.TryGetPawn(p.Id)).FirstOrDefault();
-                if (pupil != null) FrameworkServices.StartMeeting(tutor, pupil, EducationDefOf.WFL_OfficeLesson, 0);
-            }
+                if (r.GetPerson(id)?.InColony == true && c.TryGetPawn(id) is Pawn tutor) OneToOne(c, tutor, now, s != null && s.adultStudents);
+        }
+
+        /// <summary>
+        /// One instructor offers one idle child a lesson in a subject they are clearly better at. Used by tutors, and by a teacher who has no classroom. Spaced out per instructor, and never
+        /// while they are in a class (or the child is).
+        /// </summary>
+        internal static void OneToOne(FamilyComponent c, Pawn tutor, int now, bool adults)
+        {
+            var r = c.Registry; int id = tutor.thingIDNumber;
+            if (!tutor.Spawned || tutor.Dead || ClassSessions.Running(tutor) || ClassSessions.Board.IsBusy(id) || !FrameworkServices.Ready(tutor)) return;
+            if (FrameworkServices.NeedsReason(tutor) != null || !Due("tutor" + id, now)) return;
+            var pupil = r.Persons.Where(p => p.InColony && p.Id != id && (p.Juvenile || adults) && !ClassSessions.Board.IsBusy(p.Id) && c.TryGetPawn(p.Id) is Pawn k && k.Spawned && !k.Dead && k.Map == tutor.Map && FrameworkServices.FreeFor(c, p.Id) && EducationDriver.LearnableSkill(tutor, k) != null)
+                .OrderBy(p => (p.Id * 31 + now / 5000) % 97).Select(p => c.TryGetPawn(p.Id)).FirstOrDefault();
+            if (pupil != null) FrameworkServices.StartMeeting(tutor, pupil, EducationDefOf.WFL_OfficeLesson, 0);
         }
 
         private static readonly System.Collections.Generic.Dictionary<string, int> last = new System.Collections.Generic.Dictionary<string, int>();
