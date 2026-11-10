@@ -35,6 +35,8 @@ namespace FamilyLife
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".specialists", ModuleId = moduleId, Interval = 900, Run = now => { var c = FamilyComponent.Current; if (c != null) Work(c, now); } });
         }
 
+        internal static void Reset() { last.Clear(); }
+
         private static bool Recent(string key, int now) => last.TryGetValue(key, out int t) && now >= t && now - t < Cooldown;
 
         private static void Work(FamilyComponent c, int now)
@@ -101,7 +103,7 @@ namespace FamilyLife
         {
             if (doer == null || patient == null || doer == patient || !doer.RaceProps.Humanlike || !Running(out var c)) return;
             int now = FrameworkServices.Now;
-            CareerService.Report(c, doer, CareRoles.Career, patient.RaceProps.Animal ? "Veterinarian" : "Surgeon", patient.RaceProps.Animal ? "care.surgery.animal" : "care.surgery", "surgery|" + billId + "|" + doer.thingIDNumber + "|" + now, 12, now);
+            if (CareerService.Report(c, doer, CareRoles.Career, patient.RaceProps.Animal ? "Veterinarian" : "Surgeon", patient.RaceProps.Animal ? "care.surgery.animal" : "care.surgery", "surgery|" + billId + "|" + doer.thingIDNumber + "|" + now, 12, now) > 0) MedicalWorkHits.OperationsCredited++;
         }
 
         /// <summary>A vanilla tend was done. Tending animals counts for the veterinarian specialty; tending people counts a little toward general care experience.</summary>
@@ -109,7 +111,7 @@ namespace FamilyLife
         {
             if (doctor == null || patient == null || doctor == patient || !doctor.RaceProps.Humanlike || !Running(out var c)) return;
             int now = FrameworkServices.Now;
-            if (patient.RaceProps.Animal) CareerService.Report(c, doctor, CareRoles.Career, "Veterinarian", "care.tend.animal", "tend|" + doctor.thingIDNumber + "|" + patient.thingIDNumber + "|" + now, 4, now);
+            if (patient.RaceProps.Animal) { if (CareerService.Report(c, doctor, CareRoles.Career, "Veterinarian", "care.tend.animal", "tend|" + doctor.thingIDNumber + "|" + patient.thingIDNumber + "|" + now, 4, now) > 0) MedicalWorkHits.AnimalTendsCredited++; }
             else if (patient.RaceProps.Humanlike) CareerService.Report(c, doctor, CareRoles.Career, null, "care.tend", "tend|" + doctor.thingIDNumber + "|" + patient.thingIDNumber + "|" + now, 2, now);
         }
 
@@ -234,7 +236,7 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
-            this.FailOn(() => PawnReadinessApi.StopReason(pawn, FrameworkServices.Now) != null);
+            this.FailOn(() => PawnReadinessApi.StopReason(pawn, FrameworkServices.Now) != null || CareDemand.DoctorShouldTend(pawn, FrameworkServices.Now));          // real medical work comes first
             AddFinishAction(cond => { if (job.targetA.Thing != null) CareDriver.Claims.Release(job.targetA.Thing.thingIDNumber); });
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
             yield return Toils_General.Wait(600).FailOnDespawnedOrNull(TargetIndex.A).WithProgressBarToilDelay(TargetIndex.A);
@@ -260,7 +262,7 @@ namespace FamilyLife
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
-            this.FailOn(() => PawnReadinessApi.StopReason(pawn, FrameworkServices.Now) != null);
+            this.FailOn(() => PawnReadinessApi.StopReason(pawn, FrameworkServices.Now) != null || CareDemand.DoctorShouldTend(pawn, FrameworkServices.Now));          // an emergency releases the midwife
             AddFinishAction(cond =>
             {
                 var mother = job.targetA.Thing as Pawn; if (mother == null) return;

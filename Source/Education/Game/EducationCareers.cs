@@ -44,6 +44,7 @@ namespace FamilyLife
                 CareerService.RegisterRole(new ProfessionRole { Id = SpecialistRole(subject), ModuleId = moduleId, Career = Career, Level = 3, Specialty = subject });
             }
             CareerService.RegisterSeat(moduleId, OfficeKind.Teacher, Teacher);
+            CareerService.Registered(moduleId);
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".classes", ModuleId = moduleId, Interval = 600, Run = now => { var c = FamilyComponent.Current; if (c != null) EducationDriver.ClassWork(c, now); } });
             FamilyFramework.Roster.Register(new WorkItem { Id = moduleId + ".tutors", ModuleId = moduleId, Interval = 1200, Run = now => { var c = FamilyComponent.Current; if (c != null) TutorWork(c, now); } });
         }

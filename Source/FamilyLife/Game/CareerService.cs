@@ -18,6 +18,45 @@ namespace FamilyLife
         public static readonly ProfessionCatalog Professions = new ProfessionCatalog();
         private static readonly List<LegacyPost> legacyPosts = new List<LegacyPost>();
 
+        /// <summary>A meaningful careers event, written when "log events" is on in the mod settings (never per tick). Qualifications, migrations and failures are written regardless, with <see cref="Note"/>.</summary>
+        public static void Event(string text) { var s = FamilyLifeMod.Settings; if (s != null && s.logEvents) Log.Message("[Wil's Family Life] careers: " + text); }
+        /// <summary>A rare careers event that is always written: registration, migration, a qualification, a reconcile that changed something.</summary>
+        public static void Note(string text) => Log.Message("[Wil's Family Life] careers: " + text);
+
+        /// <summary>One line per module once its careers and roles are registered, so a missing or half-registered module shows in the log.</summary>
+        public static void Registered(string moduleId) => Note(moduleId + " registered: " + careers.Values.Count(c => c.ModuleId == moduleId) + " career(s), " + Professions.All.Count(r => r.ModuleId == moduleId) + " role(s)");
+
+        /// <summary>
+        /// Once per loaded game, after registration closes: drops career and assignment data for people the family records never knew, and says what it did. Never throws: a failure is logged and
+        /// the data is left exactly as it was.
+        /// </summary>
+        public static void OnLoaded(FamilyComponent c)
+        {
+            try
+            {
+                var r = c.Registry; int careers = r.ReconcileCareers(), assignments = r.ReconcileAssignments();
+                Note("loaded: " + r.Assignments().Count + " assignment(s); reconciled " + careers + " career record(s) and " + assignments + " assignment(s) of people no longer known");
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] careers: load reconcile failed, data left as it was: " + ex.Message); }
+        }
+
+        /// <summary>A readable summary of every pawn's careers for the developer menu.</summary>
+        public static List<string> Status(FamilyComponent c)
+        {
+            var r = c.Registry; var lines = new List<string>(); var l = r.Careers(); var b = r.Assignments();
+            lines.Add("Roles: " + string.Join(", ", Professions.All.Select(x => x.Id)));
+            lines.Add("Hooks seen this session: operations " + MedicalWorkHits.Operations + ", tends " + MedicalWorkHits.Tends + ", operations credited " + MedicalWorkHits.OperationsCredited + ", animal tends credited " + MedicalWorkHits.AnimalTendsCredited);
+            foreach (var p in r.Persons.Where(x => x.InColony).OrderBy(x => x.Id))
+            {
+                var roles = b.RolesOf(p.Id).ToList(); var quals = Careers.SelectMany(d => new[] { d.Id }.Concat(d.Specialties.Keys.Select(k => d.Id + ":" + k))).Where(q => q.Contains(":") ? l.IsSpecialist(p.Id, q.Split(':')[0], q.Split(':')[1]) : l.IsQualified(p.Id, q)).ToList();
+                int xp = Careers.Sum(d => l.GeneralXp(p.Id, d.Id));
+                if (roles.Count == 0 && quals.Count == 0 && xp == 0) continue;
+                lines.Add(FamilyUi.NameOf(r, p.Id) + ": assigned [" + string.Join(", ", roles) + "] qualified [" + string.Join(", ", quals) + "] experience " + xp);
+            }
+            lines.Add("Saved payloads: " + string.Join(", ", r.Shared.Ids ?? new List<string>()));
+            return lines;
+        }
+
         public static IEnumerable<CareerDefinition> Careers => careers.Values.OrderBy(c => c.Id, StringComparer.Ordinal);
         public static CareerDefinition Career(string id) => id != null && careers.TryGetValue(id, out var c) ? c : null;
 
@@ -41,7 +80,7 @@ namespace FamilyLife
         private static void Seat(FamilyComponent c, OfficeKind kind, string roleId, string fallbackRoleId, IEnumerable<string> middleRoleIds, int now)
         {
             var r = c.Registry;
-            LegacyProfessionMigration.Run(r, now, legacyPosts, Professions);
+            foreach (var done in LegacyProfessionMigration.Run(r, now, legacyPosts, Professions)) Note("migrated legacy post (" + done + ") to a professional assignment with a legacy qualification and no invented experience");
             var role = Professions.ById(roleId); if (role == null) return;
             var book = r.Assignments();
             var roster = book.Holders(roleId).Where(id => r.GetPerson(id)?.InColony == true).ToList();
@@ -49,7 +88,7 @@ namespace FamilyLife
             if (roster.Count == 0 && fallbackRoleId != null) roster = book.Holders(fallbackRoleId).Where(id => r.GetPerson(id)?.InColony == true).ToList();          // e.g. no Doctor yet: the Healers carry on
             int current = r.OfficeFor(kind)?.HolderId ?? 0;
             int pick = ProfessionalSeating.Pick(roster, current, id => c.TryGetPawn(id) is Pawn p && !p.Dead);
-            if (pick != current) r.SeatService(kind, pick, now);
+            if (pick != current) { r.SeatService(kind, pick, now); Event(kind + " working seat: " + current + " -> " + pick); }
         }
 
         public static Func<string, int> SkillsOf(Pawn p) => name =>
@@ -68,13 +107,16 @@ namespace FamilyLife
             try
             {
                 var def = Career(careerId); if (c == null || pawn == null || def == null) return 0;
+                if (c.Registry.GetPerson(pawn.thingIDNumber)?.InColony != true) return 0;          // only the colony's own people build a career (not a raider who tends someone, or a passing guest)
                 var ledger = c.Registry.Careers();
                 int day = now / ActivityTuning.TicksPerDay;
                 int given = ledger.Award(pawn.thingIDNumber, careerId, specialty, kind, activityKey, points, day);
                 if (given <= 0) return 0;
+                Event(pawn.LabelShort + " +" + given + " " + careerId + (specialty != null ? ":" + specialty : "") + " (" + kind + ")");
                 foreach (var gained in ledger.Evaluate(pawn.thingIDNumber, def, SkillsOf(pawn)))
                 {
                     ledger.NoteQualified(pawn.thingIDNumber, gained, now);
+                    Note(pawn.LabelShort + " qualified: " + gained);
                     Messages.Message("WFL_Career_Qualified".Translate(pawn.LabelShort, Describe(gained)), pawn, MessageTypeDefOf.PositiveEvent, false);
                 }
                 return given;

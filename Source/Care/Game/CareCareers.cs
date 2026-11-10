@@ -21,6 +21,7 @@ namespace FamilyLife
                 CareerService.RegisterRole(new ProfessionRole { Id = spec.RoleId, ModuleId = moduleId, Career = CareRoles.Career, Level = 3, Specialty = spec.Key });
             }
             CareSpecialistWork.Register(moduleId);
+            CareerService.Registered(moduleId);
             FamilyFramework.OperationCompleted.Add(moduleId + ".surgery", moduleId, CareSpecialistWork.OnSurgery);
             FamilyFramework.Tended.Add(moduleId + ".tend", moduleId, CareSpecialistWork.OnTend);
             // Doctors sit in the old working seat; until the player has assigned one, the Healers carry on exactly as before.

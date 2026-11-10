@@ -107,6 +107,7 @@ namespace FamilyLife
             var r = c.Registry; var s = FamilyLifeMod.Settings;
             if (s != null && !s.holdClasses) return;
             EducationEvents.RunAssessments(c, now);
+            ClassSessions.EndStale(c, now);
             ClassSessions.RecruitAssistants(c, now);          // optional help from free subject specialists          // each teacher's own assessments
             var sched = r.TeacherSchedule(); var legacy = r.OfficeFor(OfficeKind.Teacher);
             bool adults = s != null && s.adultStudents;

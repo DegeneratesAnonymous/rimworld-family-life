@@ -132,6 +132,7 @@ namespace FamilyLife
             // 'Unable' here means unwell: the visit is exactly what they need, so it goes ahead
             if (PawnReadinessApi.StopReason(holder, now) != null) return;
             if (!Claims.TryClaim(patientId, holder.thingIDNumber, now)) return;          // someone else has this patient
+            CareerService.Event("care: " + holder.LabelShort + " claimed " + patient.LabelShort + " for a visit");
             if (!FrameworkServices.StartMeeting(holder, patient, CareDefOf.WFL_Checkup, 0)) { Claims.Release(patientId); AppointmentBook.Busy(patientId, now); }
         }
 
@@ -217,6 +218,8 @@ namespace FamilyLife
         /// </summary>
         internal static void CompleteCheckup(FamilyRegistry r, Pawn doctor, Pawn patient, int now, float talkSum = 0f, bool partial = false, Building_Bed bed = null, bool inClinic = false)
         {
+            Claims.Release(patient.thingIDNumber);          // whatever happens next (the round may have closed meanwhile), this visit no longer holds the patient or the worker
+            CareerService.Event("care: " + doctor.LabelShort + " finished seeing " + patient.LabelShort);
             if (!r.RecordCheckup(doctor.thingIDNumber, patient.thingIDNumber, now)) return;
             AppointmentBook.Seen(patient.thingIDNumber);
             r.NoteVisit(now, doctor.thingIDNumber);

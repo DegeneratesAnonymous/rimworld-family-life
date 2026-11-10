@@ -45,6 +45,22 @@ namespace FamilyLife
 
         internal static void Reset() { byTeacher.Clear(); backoff.Clear(); Board.Clear(); }
         internal static IEnumerable<ClassSession> RunningSessions => byTeacher.Values.ToList();
+
+        /// <summary>
+        /// A safety net: a session whose teacher is gone or never got onto the class job (so nothing would ever end it) is ended, freeing its pupils and room. A session still walking to its
+        /// place is left alone for a couple of game hours.
+        /// </summary>
+        internal static void EndStale(FamilyComponent c, int now)
+        {
+            foreach (var s in RunningSessions)
+            {
+                if (s.Finished || now - s.StartTick < 5000) continue;
+                var t = c.TryGetPawn(s.TeacherId);
+                if (t != null && t.Spawned && !t.Dead && t.CurJobDef == EducationDefOf.WFL_ClassTeacher) continue;
+                CareerService.Event("class: ending a stale class of " + (t?.LabelShort ?? s.TeacherId.ToString()) + " (the teacher is no longer on the class job)");
+                if (t != null) End(t, false, "stale"); else { byTeacher.Remove(s.TeacherId); Board.Close(s.TeacherId); }
+            }
+        }
         internal static ClassSession Of(int teacherId) => byTeacher.TryGetValue(teacherId, out var s) ? s : null;
         internal static bool Running(Pawn teacher) => teacher != null && byTeacher.ContainsKey(teacher.thingIDNumber);
 
@@ -137,6 +153,7 @@ namespace FamilyLife
             var seated = Board.Open(teacher.thingIDNumber, roster, subject, place, now);          // claims the instructor, the pupils and the room in one step
             if (seated == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " must wait, the room is already in use"); return BeginResult.Later; }
             roster = seated; if (roster.Count == 0) { Board.Close(teacher.thingIDNumber); return BeginResult.Cannot; }
+            CareerService.Event("class: " + teacher.LabelShort + " begins a class (" + subject + ", " + roster.Count + " pupil(s), place " + place + ")");
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0, ByPlayer = byPlayer, Subject = subject, Delivery = delivery };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count, teacher.Map);
             if (room != null) foreach (var rc in room.Cells) s.RoomCells.Add(rc);
@@ -233,6 +250,7 @@ namespace FamilyLife
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] The class could not be settled: " + ex.Message); }
+            CareerService.Event("class: " + teacher.LabelShort + " finished a class on " + s.Subject + " (" + (finishedNormally ? "completed" : "ended early: " + (reason ?? "interrupted")) + ", " + learned + " pupil(s) learned)");
             if (!finishedNormally && s.Teaching) ContinueWithAssistant(c, s, now);
         }
 

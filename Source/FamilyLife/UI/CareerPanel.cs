@@ -38,6 +38,7 @@ namespace FamilyLife
                 if (can && Widgets.ButtonText(new Rect(view.width - 100f, y, 96f, 22f), (assigned ? "WFL_Career_Unassign" : "WFL_Career_Assign").Translate()))
                 {
                     if (assigned) book.Unassign(id, role.Id); else book.Assign(id, role, ledger, Find.TickManager.TicksGame);
+                    CareerService.Event(pawn.LabelShort + (assigned ? " unassigned from " : " assigned to ") + role.Id);
                 }
                 y += 26f;
             }

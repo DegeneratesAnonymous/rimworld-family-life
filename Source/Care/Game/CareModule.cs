@@ -52,7 +52,7 @@ namespace FamilyLife
             });
             FamilyFramework.Handoffs.Add("wils.care.handoff", Id, CareDriver.OnHealerChanged);
             FamilyFramework.Reconcilers.Add("wils.care.reconcile", Id, CareDriver.Reconcile);
-            FamilyFramework.Resets.Add("wils.care.reset", Id, () => { ClinicVisits.Reset(); CareDemand.Reset(); CareDriver.Claims.Clear(); });
+            FamilyFramework.Resets.Add("wils.care.reset", Id, () => { ClinicVisits.Reset(); CareDemand.Reset(); CareDriver.Claims.Clear(); CareSpecialistWork.Reset(); });
         }
     }
 }

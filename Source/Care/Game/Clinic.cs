@@ -133,7 +133,7 @@ namespace FamilyLife
             return patient.CurJobDef == CareDefOf.WFL_ClinicPatient;
         }
 
-        internal static void Release(ClinicSession s) { if (s.PatientId != 0) CareDriver.Claims.Release(s.PatientId); s.PatientId = 0; s.Phase = ClinicPhase.Waiting; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; s.NextWander = 0; s.Quality = 0f; s.Exchanges = 0; }
+        internal static void Release(ClinicSession s) { if (s.PatientId != 0) { CareDriver.Claims.Release(s.PatientId); CareerService.Event("care: clinic claim on " + s.PatientId + " released"); } s.PatientId = 0; s.Phase = ClinicPhase.Waiting; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; s.NextWander = 0; s.Quality = 0f; s.Exchanges = 0; }
 
         /// <summary>
         /// The next person on the list who is able to come, unless it is outside the day's hours or the day's budget. A person who is busy is asked again later, one who declines is left
@@ -155,6 +155,7 @@ namespace FamilyLife
             }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None)) { AppointmentBook.NeedsVisit(id, now); return; }
             if (!CareDriver.Claims.TryClaim(id, me, now)) return;          // another care worker has this patient
+            CareerService.Event("care: " + doctor.LabelShort + " claimed " + patient.LabelShort + " for the clinic");
             s.Idle = 0;
             s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Quality = 0f; s.Exchanges = 0; s.Phase = ClinicPhase.Arriving;
             FrameworkServices.Trace("clinic: " + patient.LabelShort + " is asked in");

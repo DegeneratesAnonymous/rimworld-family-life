@@ -7,6 +7,9 @@ namespace FamilyLife
     // Two read-only hooks on vanilla medical work, owned by the framework (modules add listeners through the contribution lists, never a patch of their own). Each is a postfix: it never changes
     // the operation, its success chance, the tend or its quality, and it calls only listeners of modules that are running. Owner: the framework.
 
+    /// <summary>How many times each vanilla hook has fired this session, and how many produced experience. Shown by the careers status action: the way to see in a running game that the hooks attached.</summary>
+    public static class MedicalWorkHits { public static int Operations, Tends, OperationsCredited, AnimalTendsCredited; }
+
     [HarmonyLib.HarmonyPatch(typeof(Bill_Medical), nameof(Bill_Medical.Notify_IterationCompleted))]
     internal static class Patch_OperationCompleted
     {
@@ -15,6 +18,7 @@ namespace FamilyLife
             try
             {
                 if (__instance?.recipe == null || !__instance.recipe.IsSurgery) return;
+                MedicalWorkHits.Operations++;
                 int id = __instance.GetUniqueLoadID().GetHashCode();
                 foreach (var listener in FamilyFramework.OperationCompleted.Enabled()) listener(billDoer, __instance.GiverPawn, id);
             }
@@ -27,7 +31,7 @@ namespace FamilyLife
     {
         private static void Postfix(Pawn doctor, Pawn patient)
         {
-            try { foreach (var listener in FamilyFramework.Tended.Enabled()) listener(doctor, patient); }
+            try { MedicalWorkHits.Tends++; foreach (var listener in FamilyFramework.Tended.Enabled()) listener(doctor, patient); }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] A tend listener was skipped: " + ex.Message); }
         }
     }

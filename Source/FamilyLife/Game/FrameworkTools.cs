@@ -9,6 +9,13 @@ namespace FamilyLife
     {
         private const string Cat = "Wil's Family Life, testing";
 
+        [DebugAction(Cat, "Careers: show status (assignments, qualifications, hooks)", allowedGameStates = AllowedGameStates.Playing)]
+        private static void CareersStatus()
+        {
+            var c = FamilyComponent.Current; if (c == null) return;
+            Log.Message("[Wil's Family Life] Careers status:" + System.Environment.NewLine + string.Join(System.Environment.NewLine, CareerService.Status(c).Select(l => "  " + l)));
+        }
+
         [DebugAction(Cat, "Show module status (installed, running, prepared)", allowedGameStates = AllowedGameStates.Playing)]
         private static void ModuleStatus()
         {

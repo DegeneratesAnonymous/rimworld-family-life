@@ -90,6 +90,7 @@ namespace FamilyLife
                 return false;
             }
             var s = ledger.Begin(id, year, now, ids); if (s == null) return false;
+            CareerService.Event("assessment: " + teacher.LabelShort + " begins for " + s.Ids.Count + " pupil(s)");
             Messages.Message("WFL_Testing_Begins".Translate(teacher.LabelShort, s.Ids.Count), teacher, MessageTypeDefOf.NeutralEvent, false);
             return true;
         }
@@ -206,6 +207,7 @@ namespace FamilyLife
             education.LessonLog = education.LessonLog.Where(x => { var rec = LessonRecord.Parse(x); return rec != null && !spent.Contains(rec.Pupil + "|" + rec.Skill); }).ToList();
             if (judged > 0) r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, FrameworkServices.NextToken(), now, .4f + .6f * score / judged);
             ledger.End(a.Owner);
+            CareerService.Event("assessment: " + teacher.LabelShort + " finished; " + judged + " judged, " + spent.Count + " subject record(s) spent");
             if (lines.Count > 0)
                 Find.LetterStack.ReceiveLetter("WFL_Testing_ResultTitle".Translate(), "WFL_Testing_ResultText".Translate(teacher.LabelShort, string.Join("\n", lines)), LetterDefOf.NeutralEvent, teacher);
         }
