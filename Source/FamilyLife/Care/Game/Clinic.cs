@@ -163,7 +163,7 @@ namespace FamilyLife
 
         /// <summary>Daytime only, within the day's budget, spaced through the day. A developer test ignores all three.</summary>
         internal static bool Allowed(FamilyRegistry r, CommunityOffice office, Pawn doctor, int now) =>
-            OfficeDriver.Forced || WorkingHours.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.IllnessRound);
+            OfficeDriver.Forced || WorkingHours.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.Care().IllnessRound);
 
         private static IntVec3 WanderCell(Pawn doctor, ClinicSession s)
         {

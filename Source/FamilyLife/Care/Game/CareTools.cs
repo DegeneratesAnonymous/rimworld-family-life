@@ -14,11 +14,14 @@ namespace FamilyLife
         private static FamilyComponent Comp => FamilyComponent.Current;
         private static int Now => Find.TickManager.TicksGame;
 
+        [DebugAction(Cat, "Prepare Community Care for removal (report in the log)", allowedGameStates = AllowedGameStates.Playing)]
+        private static void PrepareRemoval() { var c = Comp; if (c == null) return; Log.Message("[FamilyLife] " + FamilyModules.PrepareForRemoval(CareModule.Id, c)); }
+
         [DebugAction(Cat, "Start a check-up round now (clears recent check-ups)", allowedGameStates = AllowedGameStates.Playing)]
         private static void CheckupNow()
         {
             var c = Comp; var r = c?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Healer)) { o.NextRoundTick = 0; o.RoundStartTick = 0; o.Examined.Clear(); }
+            foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Healer)) { o.Care().NextRoundTick = 0; o.Care().RoundStartTick = 0; o.Care().Examined.Clear(); }
             AppointmentBook.Reset();
             foreach (var p in Find.Maps.SelectMany(m => m.mapPawns.FreeColonistsSpawned))          // a test should not be skipped because someone was seen recently
             {

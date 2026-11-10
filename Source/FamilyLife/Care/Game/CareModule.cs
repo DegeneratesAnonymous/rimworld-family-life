@@ -35,6 +35,8 @@ namespace FamilyLife
             });
             FamilyModules.BuildingGizmos.Add("wils.care.buttons", Id, OfficeEvents.CareGizmos);
             FamilyModules.Diagnostics.Add("wils.care.diagnostics", Id, new FamilyModules.DiagnosticSection { Kind = OfficeKind.Healer, Lines = OfficeDriver.DiagnoseHealer });
+            FamilyModules.DueNow.Add("wils.care.duenow", Id, o => { if (o.Kind == OfficeKind.Healer) o.Care().NextRoundTick = 0; });
+            FamilyModules.Removal.Add("wils.care.removal", Id, CareRemoval.Prepare);
             FamilyModules.Resets.Add("wils.care.reset", Id, () => { ClinicVisits.Reset(); CareDemand.Reset(); });
         }
     }

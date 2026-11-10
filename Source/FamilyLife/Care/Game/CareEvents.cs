@@ -45,18 +45,18 @@ namespace FamilyLife
         }
 
         /// <summary>In an outbreak the sick are seen first.</summary>
-        internal static Func<int, int> Priority(FamilyComponent c, CommunityOffice o) => o != null && o.IllnessRound ? (id => IsSick(c.TryGetPawn(id)) ? 0 : 1) : (Func<int, int>)null;
+        internal static Func<int, int> Priority(FamilyComponent c, CommunityOffice o) => o != null && o.Care().IllnessRound ? (id => IsSick(c.TryGetPawn(id)) ? 0 : 1) : (Func<int, int>)null;
 
         private static int sickCheckedAt = -100000; private static bool sickRemaining;
         /// <summary>In an outbreak assessment the sick come before the rest: a well person is not seen while someone ill is still waiting. In any other round, everyone is on the list.</summary>
         internal static bool SickFirst(FamilyComponent c, FamilyRegistry r, CommunityOffice o, int id)
         {
-            if (o == null || !o.IllnessRound || IsSick(c.TryGetPawn(id))) return true;
+            if (o == null || !o.Care().IllnessRound || IsSick(c.TryGetPawn(id))) return true;
             int now = Activities.Now;
             if (now - sickCheckedAt > 600 || now < sickCheckedAt)
             {
                 sickCheckedAt = now;
-                sickRemaining = r.Persons.Any(p => p.InColony && p.Id != o.HolderId && !o.Examined.Contains(p.Id) && IsSick(c.TryGetPawn(p.Id)));
+                sickRemaining = r.Persons.Any(p => p.InColony && p.Id != o.HolderId && !o.Care().Examined.Contains(p.Id) && IsSick(c.TryGetPawn(p.Id)));
             }
             return !sickRemaining;
         }
@@ -65,7 +65,8 @@ namespace FamilyLife
 
         internal static void Healer(FamilyComponent c, FamilyRegistry r, CommunityOffice o, Pawn doctor, int now)
         {
-            if (!r.CheckupOpen(now)) o.IllnessRound = false;
+            var care = o.Care();
+            if (!r.CheckupOpen(now)) care.IllnessRound = false;
             if (o.PendingKind == PendingEvent.Checkups || o.PendingKind == PendingEvent.Illness)
             {
                 if (now >= o.PendingTick || o.PendingTick - now > 40 * Day) Begin(o.PendingKind);          // the planned time has come (a saved plan from before simply begins)
@@ -73,8 +74,8 @@ namespace FamilyLife
             }
             if (o.PendingKind != 0) return;
             // An outbreak: the doctor changes priorities at once (the sick first, tending always before this) and the player is told. Nothing waits for an answer.
-            if (!o.IllnessRound && now - o.LastIllnessTick > IllnessGap && MassIllness(doctor.Map)) { Begin(PendingEvent.Illness); return; }
-            if (!r.CheckupOpen(now) && now >= o.NextRoundTick) Plan(PendingEvent.Checkups, doctor, now);
+            if (!o.Care().IllnessRound && now - o.Care().LastIllnessTick > IllnessGap && MassIllness(doctor.Map)) { Begin(PendingEvent.Illness); return; }
+            if (!r.CheckupOpen(now) && now >= o.Care().NextRoundTick) Plan(PendingEvent.Checkups, doctor, now);
         }
 
         // ------------------------------------------------------------------ the teacher and the annual assessment
@@ -88,16 +89,16 @@ namespace FamilyLife
             var holder = c.TryGetPawn(o.HolderId); if (holder == null) return false;
             if (kind == PendingEvent.Illness)
             {
-                o.IllnessRound = true; o.LastIllnessTick = now;
+                o.Care().IllnessRound = true; o.Care().LastIllnessTick = now;
                 if (r.CheckupOpen(now))
                 {
-                    foreach (var id in o.Examined.ToList()) if (IsSick(c.TryGetPawn(id))) o.Examined.Remove(id);          // the sick are to be looked at again
-                    o.RoundStartTick = now;
-                    o.RoundWindow = CheckupWorkload.WindowDays(r.Persons.Count(p => p.InColony && p.Id != o.HolderId), true) * Day;
+                    foreach (var id in o.Care().Examined.ToList()) if (IsSick(c.TryGetPawn(id))) o.Care().Examined.Remove(id);          // the sick are to be looked at again
+                    o.Care().RoundStartTick = now;
+                    o.Care().RoundWindow = CheckupWorkload.WindowDays(r.Persons.Count(p => p.InColony && p.Id != o.HolderId), true) * Day;
                 }
-                else { o.NextRoundTick = 0; r.BeginCheckupRound(now, Interval()); }
+                else { o.Care().NextRoundTick = 0; r.BeginCheckupRound(now, Interval()); }
             }
-            else if (!r.CheckupOpen(now)) { o.NextRoundTick = 0; r.BeginCheckupRound(now, Interval()); }
+            else if (!r.CheckupOpen(now)) { o.Care().NextRoundTick = 0; r.BeginCheckupRound(now, Interval()); }
             AppointmentBook.Reset();
             Messages.Message((kind == PendingEvent.Illness ? "WFL_Checkup_Illness" : "WFL_Checkup_Round").Translate(holder.LabelShort), holder, MessageTypeDefOf.NeutralEvent, false);
             return true;
@@ -108,8 +109,8 @@ namespace FamilyLife
         {
             var o = Office(OfficeKind.Healer); if (o == null) return;
             int now = Activities.Now;
-            if (kind == PendingEvent.Illness) o.LastIllnessTick = now - 5 * Day;
-            else o.NextRoundTick = now + Interval() / 2;
+            if (kind == PendingEvent.Illness) o.Care().LastIllnessTick = now - 5 * Day;
+            else o.Care().NextRoundTick = now + Interval() / 2;
         }
 
         /// <summary>The "Begin check-ups" button on a medical bed.</summary>

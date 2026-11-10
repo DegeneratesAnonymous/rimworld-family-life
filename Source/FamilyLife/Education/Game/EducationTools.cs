@@ -14,6 +14,9 @@ namespace FamilyLife
         private static FamilyComponent Comp => FamilyComponent.Current;
         private static int Now => Find.TickManager.TicksGame;
 
+        [DebugAction("Wil's Family Life, testing", "Prepare Education for removal (report in the log)", allowedGameStates = AllowedGameStates.Playing)]
+        private static void PrepareRemoval() { var c = FamilyComponent.Current; if (c == null) return; Log.Message("[FamilyLife] " + FamilyModules.PrepareForRemoval(EducationModule.Id, c)); }
+
         [DebugAction(Cat, "Start a class now", allowedGameStates = AllowedGameStates.Playing)]
         private static void ClassNow()
         {
@@ -32,7 +35,7 @@ namespace FamilyLife
         private static void TestingNow()
         {
             var r = Comp?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.TestingStartTick = 0; }
+            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.Assessment().TestingStartTick = 0; }
             OfficeDriver.ForceUntil = Now + 6000;
             bool ok = OfficeEvents.Begin(PendingEvent.Testing);
             Messages.Message(ok ? "The testing has begun: each child sits a check every free hour for two days." : "The testing could not begin.", MessageTypeDefOf.TaskCompletion, false);

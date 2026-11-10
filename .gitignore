@@ -16,3 +16,5 @@ tools/**/obj/
 
 # Reproducible detailed calibration output; commit summary and frequency tables only.
 docs/calibration/history.csv
+
+obj-isolation/

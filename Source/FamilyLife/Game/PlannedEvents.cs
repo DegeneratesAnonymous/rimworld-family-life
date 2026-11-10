@@ -66,6 +66,14 @@ namespace FamilyLife
 
         internal static void Plan(int kind) { var c = FamilyComponent.Current; var o = OfficeFor(kind); var p = o != null && o.Held ? c?.TryGetPawn(o.HolderId) : null; if (p != null && p.Spawned) Plan(kind, p, Activities.Now); }
 
+        /// <summary>Removes the notices of the given planned events from the letter stack (a saved notice names a letter class the module owns). Returns a line saying so, if any were there.</summary>
+        internal static IEnumerable<string> RemoveNotices(params int[] kinds)
+        {
+            int n = 0;
+            foreach (var l in Find.LetterStack.LettersListForReading.OfType<ChoiceLetter_OfficeEvent>().Where(x => kinds.Contains(x.kind)).ToList()) { Find.LetterStack.RemoveLetter(l); n++; }
+            if (n > 0) yield return n + " notice(s) removed from the letter stack";
+        }
+
         private static void DropNotices(int kind)
         {
             foreach (var l in Find.LetterStack.LettersListForReading.OfType<ChoiceLetter_OfficeEvent>().Where(x => x.kind == kind).ToList()) Find.LetterStack.RemoveLetter(l);

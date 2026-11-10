@@ -51,11 +51,15 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
-        public void Every_saved_label_is_still_written()
+        public void Every_saved_label_is_still_written_or_read_for_migration()
         {
             var current = CurrentLabels();
-            var missing = Baseline().Where(b => b.StartsWith("label ") && !current.Contains(b)).ToList();
-            Assert.True(missing.Count == 0, "labels no longer written (an existing save would lose them): " + string.Join(", ", missing.Take(10)));
+            // The values module state used to be saved as are now read once, at load, from the legacy label lists and kept in the module's own payload; they are no longer written.
+            var legacy = new HashSet<string>(FamilyLife.Framework.LegacyOfficeLabels.Ints.Concat(FamilyLife.Framework.LegacyOfficeLabels.Bools).Concat(FamilyLife.Framework.LegacyOfficeLabels.Floats)
+                .Concat(FamilyLife.Framework.LegacyOfficeLabels.IntLists).Concat(FamilyLife.Framework.LegacyOfficeLabels.StringLists).Select(l => "label CommunityOffice." + l));
+            var missing = Baseline().Where(b => b.StartsWith("label ") && !current.Contains(b) && !legacy.Contains(b)).ToList();
+            Assert.True(missing.Count == 0, "labels no longer written or migrated (an existing save would lose them): " + string.Join(", ", missing.Take(10)));
+            Assert.Contains("ReadLegacyModuleFields", File.ReadAllText(Path.Combine(Root(), "Source", "FamilyLife", "Persistence", "PersistGovernance.cs")));          // and the code that reads them is there
         }
 
         [Fact]

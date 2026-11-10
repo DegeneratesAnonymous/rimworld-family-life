@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FamilyLife.Domain;
+using FamilyLife.Framework;
 using Verse;
 
 // Save/load for the planning, office, succession, crime and institution records. Ids and numbers only; every list recovers from null.
@@ -222,42 +223,45 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref UnmetSinceTick, "unmetSince"); Scribe_Values.Look(ref NextVoteTick, "nextVote"); Scribe_Values.Look(ref LastHolderId, "lastHolder");
             Scribe_Values.Look(ref BarredId, "barred"); Scribe_Values.Look(ref BarredUntil, "barredUntil"); Scribe_Values.Look(ref EndedTick, "ended");
             Scribe_Values.Look(ref Terms, "terms"); Scribe_Values.Look(ref QualityCount, "qualityCount"); Scribe_Values.Look(ref QualitySum, "qualitySum"); Scribe_Values.Look(ref LastGrade, "lastGrade");
-            Scribe_Values.Look(ref NextRoundTick, "nextRound"); Scribe_Values.Look(ref RoundStartTick, "roundStart");
             Scribe_Values.Look(ref NextSessionTick, "nextSession"); Scribe_Values.Look(ref SessionStartTick, "sessionStart");
-            Scribe_Values.Look(ref PendingKind, "pendingKind"); Scribe_Values.Look(ref PendingTick, "pendingTick"); Scribe_Values.Look(ref LastIllnessTick, "lastIllness");
-            Scribe_Values.Look(ref LastTestingYear, "lastTestingYear"); Scribe_Values.Look(ref IllnessRound, "illnessRound");
-            Scribe_Values.Look(ref TestingStartTick, "testingStart"); Scribe_Values.Look(ref TestingSlot, "testingSlot");
-            Scribe_Collections.Look(ref TestIds, "testIds", LookMode.Value); Scribe_Collections.Look(ref TestPass, "testPass", LookMode.Value); Scribe_Collections.Look(ref TestTry, "testTry", LookMode.Value);
+            Scribe_Values.Look(ref PendingKind, "pendingKind"); Scribe_Values.Look(ref PendingTick, "pendingTick");
             Scribe_Values.Look(ref CounterReady, "counterReady"); Scribe_Values.Look(ref Kind, "kind", OfficeKind.Healer); Scribe_Values.Look(ref EndReason, "endReason", OfficeEnd.None);
-            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref Examined, "examined", LookMode.Value); Scribe_Collections.Look(ref SessionQueue, "sessionQueue", LookMode.Value);
-            if (Tokens == null) Tokens = new List<int>();
-            if (Examined == null) Examined = new List<int>();
-            if (SessionQueue == null) SessionQueue = new List<int>();
-            if (TestIds == null) TestIds = new List<int>();
-            if (TestPass == null) TestPass = new List<int>();
-            if (TestTry == null) TestTry = new List<int>();
-            // care and teaching (added later: every one defaults safely when an older save has none)
-            Scribe_Values.Look(ref RoundWindow, "roundWindow"); Scribe_Collections.Look(ref Missed, "missed", LookMode.Value);
-            Scribe_Collections.Look(ref Refused, "refused", LookMode.Value); Scribe_Collections.Look(ref RefusedTick, "refusedTick", LookMode.Value);
-            Scribe_Values.Look(ref RoutineDay, "routineDay"); Scribe_Values.Look(ref RoutineUsed, "routineUsed"); Scribe_Values.Look(ref LastVisitTick, "lastVisit");
+            Scribe_Collections.Look(ref Tokens, "tokens", LookMode.Value); Scribe_Collections.Look(ref SessionQueue, "sessionQueue", LookMode.Value);
             Scribe_Values.Look(ref ContactDay, "contactDay"); Scribe_Collections.Look(ref ContactIds, "contactIds", LookMode.Value); Scribe_Collections.Look(ref ContactCounts, "contactCounts", LookMode.Value);
-            Scribe_Collections.Look(ref LessonLog, "lessonLog", LookMode.Value); Scribe_Collections.Look(ref BookUse, "bookUse", LookMode.Value); Scribe_Collections.Look(ref RecentSubjects, "recentSubjects", LookMode.Value);
-            Scribe_Collections.Look(ref TestScore, "testScore", LookMode.Value); Scribe_Collections.Look(ref TestExcused, "testExcused", LookMode.Value);
-            Scribe_Values.Look(ref KinQuality, "kinQuality"); Scribe_Values.Look(ref OtherQuality, "otherQuality"); Scribe_Values.Look(ref KinSeen, "kinSeen"); Scribe_Values.Look(ref OtherSeen, "otherSeen");
-            if (Missed == null) Missed = new List<int>();
-            if (Refused == null) Refused = new List<int>();
-            if (RefusedTick == null) RefusedTick = new List<int>();
+            // Module state: opaque, versioned payloads keyed by stable ids. The framework never reads inside one, and a module that is absent leaves its payload as it was.
+            if (Scribe.mode == LoadSaveMode.Saving) FlushState();
+            Scribe_Collections.Look(ref PayloadIds, "payloadIds", LookMode.Value); Scribe_Collections.Look(ref PayloadData, "payloadData", LookMode.Value);
+            Scribe_Collections.Look(ref PayloadHolders, "payloadHolders", LookMode.Value); Scribe_Collections.Look(ref PayloadVersions, "payloadVersions", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars) ReadLegacyModuleFields();
+            if (Tokens == null) Tokens = new List<int>();
+            if (SessionQueue == null) SessionQueue = new List<int>();
             if (ContactIds == null) ContactIds = new List<int>();
             if (ContactCounts == null) ContactCounts = new List<int>();
-            if (LessonLog == null) LessonLog = new List<string>();
-            if (BookUse == null) BookUse = new List<string>();
-            if (RecentSubjects == null) RecentSubjects = new List<string>();
-            if (TestScore == null) TestScore = new List<int>();
-            if (TestExcused == null) TestExcused = new List<int>();
-            while (RefusedTick.Count < Refused.Count) RefusedTick.Add(0);
+            if (PayloadIds == null) PayloadIds = new List<string>();
+            if (PayloadData == null) PayloadData = new List<string>();
+            if (PayloadHolders == null) PayloadHolders = new List<int>();
+            if (PayloadVersions == null) PayloadVersions = new List<int>();
             while (ContactCounts.Count < ContactIds.Count) ContactCounts.Add(1);
-            while (TestScore.Count < TestIds.Count) TestScore.Add(0);
-            while (TestExcused.Count < TestIds.Count) TestExcused.Add(0);
+            if (Scribe.mode == LoadSaveMode.LoadingVars) DropStateCache();
+        }
+
+        /// <summary>
+        /// Saves written before module state had its own place wrote those values straight onto the post. They are only ever read (never written again), gathered into one legacy payload,
+        /// and picked up by the module the first time it asks. See <see cref="LegacyOfficeMigration"/>.
+        /// </summary>
+        private void ReadLegacyModuleFields()
+        {
+            var v = new LegacyOfficeValues();
+            foreach (var label in LegacyOfficeLabels.Ints) { int x = 0; Scribe_Values.Look(ref x, label); if (x != 0) v.Ints[label] = x; }
+            foreach (var label in LegacyOfficeLabels.Bools) { bool x = false; Scribe_Values.Look(ref x, label); if (x) v.Bools[label] = x; }
+            foreach (var label in LegacyOfficeLabels.Floats) { float x = 0f; Scribe_Values.Look(ref x, label); if (x != 0f) v.Floats[label] = x; }
+            foreach (var label in LegacyOfficeLabels.IntLists) { List<int> x = null; Scribe_Collections.Look(ref x, label, LookMode.Value); if (x != null && x.Count > 0) v.IntLists[label] = x; }
+            foreach (var label in LegacyOfficeLabels.StringLists) { List<string> x = null; Scribe_Collections.Look(ref x, label, LookMode.Value); if (x != null && x.Count > 0) v.StringLists[label] = x; }
+            if (PayloadIds == null) PayloadIds = new List<string>();
+            if (PayloadData == null) PayloadData = new List<string>();
+            if (PayloadHolders == null) PayloadHolders = new List<int>();
+            if (PayloadVersions == null) PayloadVersions = new List<int>();
+            LegacyOfficeMigration.Capture(this, v);
         }
     }
 

@@ -117,7 +117,7 @@ namespace FamilyLife
             var office = c.Registry.OfficeFor(OfficeKind.Teacher);
             var teacherLevels = new Dictionary<string, int>(); var disabled = new HashSet<string>();
             if (teacher.skills != null) foreach (var sk in teacher.skills.skills) { teacherLevels[sk.def.defName] = sk.Level; if (sk.TotallyDisabled) disabled.Add(sk.def.defName); }
-            string subject = LessonSubjects.Choose(teacherLevels, disabled, pupils.Select(p => Snapshot(c, p)).ToList(), book == null ? null : BookSkill(book, pupils), office?.RecentSubjects, teacher.thingIDNumber + now / 60000);
+            string subject = LessonSubjects.Choose(teacherLevels, disabled, pupils.Select(p => Snapshot(c, p)).ToList(), book == null ? null : BookSkill(book, pupils), office?.Education().RecentSubjects, teacher.thingIDNumber + now / 60000);
             if (subject == null) { OfficeDriver.Trace("class: " + teacher.LabelShort + " has nothing the children could learn from them"); return BeginResult.Cannot; }
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
             if (book != null && !(BookValues(book).Keys.Any(k => k.defName == subject))) book = null;          // a book that is not about this subject is left on the shelf
@@ -193,7 +193,7 @@ namespace FamilyLife
                         if (possible <= 0) continue;
                         if (attended < LessonMath.MinShare * possible || attended < 600)
                         {
-                            if (excused < possibleBase) LessonRecord.Add(office?.LessonLog, LessonRecord.Absent(id, s.Subject, possible));          // they could have come and did not: it counts for the record, not for experience
+                            if (excused < possibleBase) LessonRecord.Add(office?.Education().LessonLog, LessonRecord.Absent(id, s.Subject, possible));          // they could have come and did not: it counts for the record, not for experience
                             continue;
                         }
                         s.Tiers.TryGetValue(id, out float tiers); s.Exchanged.TryGetValue(id, out int ex);
@@ -201,7 +201,7 @@ namespace FamilyLife
                         gapSum += grant.Gap; learned++;
                         if (ex >= 2) { if (tiers >= 2f) Activities.GainMemory(kid, "WFL_InspiringLesson", teacher); else if (tiers <= -2f) Activities.GainMemory(kid, "WFL_BoringLesson", teacher); }
                     }
-                if (office != null) { office.RecentSubjects.Add(s.Subject); while (office.RecentSubjects.Count > 6) office.RecentSubjects.RemoveAt(0); }
+                if (office != null) { office.Education().RecentSubjects.Add(s.Subject); while (office.Education().RecentSubjects.Count > 6) office.Education().RecentSubjects.RemoveAt(0); }
                 if (learned > 0)
                 {
                     r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, Math.Min(1f, .35f + .45f * Math.Min(1f, s.Delivery / 1.2f) + .2f * gapSum / learned));
@@ -259,13 +259,13 @@ namespace FamilyLife
             if (book != null && office != null)
             {
                 var values = ClassSessions.BookValues(book);
-                if (values.TryGetValue(skill, out float value) && LessonMath.BookReady(office.BookUse, pupil.thingIDNumber, book.thingIDNumber, now))
+                if (values.TryGetValue(skill, out float value) && LessonMath.BookReady(office.Education().BookUse, pupil.thingIDNumber, book.thingIDNumber, now))
                 {
                     bookXp = LessonMath.BookXp(value, xpShare, gap);
-                    if (bookXp > 0f) { psk.Learn(bookXp, true); office.BookUse.Add(pupil.thingIDNumber + "|" + book.thingIDNumber + "|" + now); while (office.BookUse.Count > 64) office.BookUse.RemoveAt(0); }
+                    if (bookXp > 0f) { psk.Learn(bookXp, true); office.Education().BookUse.Add(pupil.thingIDNumber + "|" + book.thingIDNumber + "|" + now); while (office.Education().BookUse.Count > 64) office.Education().BookUse.RemoveAt(0); }
                 }
             }
-            LessonRecord.Add(office?.LessonLog, new LessonRecord { Pupil = pupil.thingIDNumber, Skill = skill.defName, Xp = xp + bookXp, Effect = delivery * engage * attended, EngageSum = tierSum, Ticks = attended, Possible = possible, Exchanges = exchanges, Classes = 1 });
+            LessonRecord.Add(office?.Education().LessonLog, new LessonRecord { Pupil = pupil.thingIDNumber, Skill = skill.defName, Xp = xp + bookXp, Effect = delivery * engage * attended, EngageSum = tierSum, Ticks = attended, Possible = possible, Exchanges = exchanges, Classes = 1 });
             r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, .4f);
             OfficeDriver.Served(r, OfficeKind.Teacher, teacher, pupil, now);
             // a lesson in the skill the pupil's house is trying to build moves that ambition a very little

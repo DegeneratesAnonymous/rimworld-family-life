@@ -22,7 +22,9 @@ namespace FamilyLife.Tests
                 T.P(1, "Doc"), T.P(2, "Two", parents: new[] { 1 }), T.P(3, "Three", parents: new[] { 1 }), T.P(4, "Four", parents: new[] { 1 }),
                 T.P(20, "Solo", last: "Other"), T.P(21, "Mate", last: "Other", parents: new[] { 20 }), T.P(22, "Third", last: "Other")
             }, 1000);
-            r.Offices.Add(new CommunityOffice { Id = 1, Kind = OfficeKind.Healer, HolderId = doctor, HolderFamily = r.FamilyOf(doctor), RoundStartTick = 1000 });
+            var post = new CommunityOffice { Id = 1, Kind = OfficeKind.Healer, HolderId = doctor, HolderFamily = r.FamilyOf(doctor) };
+            post.Care().RoundStartTick = 1000;
+            r.Offices.Add(post);
             return r;
         }
 
@@ -228,9 +230,9 @@ namespace FamilyLife.Tests
             // the doctor's own house used to go first; now it is simply the order of the list
             int first = r.NextCheckupPatient(1500, id => id != 1);
             Assert.Equal(2, first);
-            o.Missed = new List<int> { 22 };
+            o.Care().Missed = new List<int> { 22 };
             Assert.Equal(22, r.NextCheckupPatient(1500, null));
-            o.Missed.Clear();
+            o.Care().Missed.Clear();
             Assert.NotEqual(22, r.NextCheckupPatient(1500, null));
         }
 
@@ -239,14 +241,14 @@ namespace FamilyLife.Tests
         {
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
-            o.Examined = new List<int> { 2, 3 };
-            o.Refused = new List<int> { 21 }; o.RefusedTick = new List<int> { 1500 };
-            o.RoundStartTick = 1000; o.NextRoundTick = 0;
+            o.Care().Examined = new List<int> { 2, 3 };
+            o.Care().Refused = new List<int> { 21 }; o.Care().RefusedTick = new List<int> { 1500 };
+            o.Care().RoundStartTick = 1000; o.Care().NextRoundTick = 0;
             Assert.True(r.BeginCheckupRound(1000 + 40 * Day, 30 * Day));
-            Assert.Contains(4, o.Missed); Assert.Contains(20, o.Missed); Assert.Contains(22, o.Missed);
-            Assert.DoesNotContain(2, o.Missed);           // they were seen
-            Assert.DoesNotContain(21, o.Missed);          // they declined: that is their right, not something to chase
-            Assert.Empty(o.Refused);
+            Assert.Contains(4, o.Care().Missed); Assert.Contains(20, o.Care().Missed); Assert.Contains(22, o.Care().Missed);
+            Assert.DoesNotContain(2, o.Care().Missed);           // they were seen
+            Assert.DoesNotContain(21, o.Care().Missed);          // they declined: that is their right, not something to chase
+            Assert.Empty(o.Care().Refused);
         }
 
         // ---------------------------------------------------------------- the benefit
@@ -313,7 +315,7 @@ namespace FamilyLife.Tests
             Assert.False(r.MayVisit(100000 + 5 * 3000, false));
             Assert.True(r.MayVisit(100000 + Day, false));
             var o = r.OfficeFor(OfficeKind.Healer);
-            o.RoundWindow = 0; o.RoundStartTick = 1000;
+            o.Care().RoundWindow = 0; o.Care().RoundStartTick = 1000;
             Assert.True(r.CheckupOpen(1000 + 13 * Day));
             Assert.False(r.CheckupOpen(1000 + 15 * Day));
         }
@@ -325,19 +327,19 @@ namespace FamilyLife.Tests
         {
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
-            r.NoteRefusal(2, 3000); o.Missed = new List<int> { 4 }; o.RoundWindow = 20 * Day; r.NoteVisit(5000);
+            r.NoteRefusal(2, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; r.NoteVisit(5000);
             r.ProfessionalExchange(OfficeKind.Healer, 1, 3, ExchangeTopic.Advice, EventTier.Good, 6000);
             r.NoteCareQuality(3, ResultQuality.Good);
-            o.LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
-            o.BookUse.Add("3|77|5000");
+            o.Education().LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
+            o.Education().BookUse.Add("3|77|5000");
             var back = SaveSim.Reload(r).OfficeFor(OfficeKind.Healer);
-            Assert.Equal(new[] { 2 }, back.Refused.ToArray());
-            Assert.Equal(new[] { 4 }, back.Missed.ToArray());
-            Assert.Equal(20 * Day, back.RoundWindow);
-            Assert.Equal(1, back.RoutineUsed);
+            Assert.Equal(new[] { 2 }, back.Care().Refused.ToArray());
+            Assert.Equal(new[] { 4 }, back.Care().Missed.ToArray());
+            Assert.Equal(20 * Day, back.Care().RoundWindow);
+            Assert.Equal(1, back.Care().RoutineUsed);
             Assert.Equal(new[] { 3 }, back.ContactIds.ToArray());
-            Assert.Single(back.LessonLog); Assert.Single(back.BookUse);
-            Assert.Equal(1, back.OtherSeen + back.KinSeen);
+            Assert.Single(back.Education().LessonLog); Assert.Single(back.Education().BookUse);
+            Assert.Equal(1, back.Care().OtherSeen + back.Care().KinSeen);
             // contact limits survive a reload too: the day's allowance is not reset by loading
             var reloaded = SaveSim.Reload(r);
             Assert.Equal(.5f, reloaded.ProfessionalExchange(OfficeKind.Healer, 1, 3, ExchangeTopic.Advice, EventTier.Good, 6001));
@@ -347,14 +349,14 @@ namespace FamilyLife.Tests
         public void A_new_holder_starts_their_own_record_and_a_brand_new_office_starts_empty()
         {
             var fresh = new CommunityOffice();
-            Assert.Empty(fresh.Missed); Assert.Empty(fresh.Refused); Assert.Empty(fresh.LessonLog); Assert.Equal(0, fresh.RoundWindow);
+            Assert.Empty(fresh.Care().Missed); Assert.Empty(fresh.Care().Refused); Assert.Empty(fresh.Education().LessonLog); Assert.Equal(0, fresh.Care().RoundWindow);
             var r = Colony();
             var o = r.OfficeFor(OfficeKind.Healer);
-            r.NoteRefusal(2, 3000); o.Missed = new List<int> { 4 }; o.RoundWindow = 20 * Day; o.KinSeen = 3; o.KinQuality = 9f;
-            o.LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
+            r.NoteRefusal(2, 3000); o.Care().Missed = new List<int> { 4 }; o.Care().RoundWindow = 20 * Day; o.Care().KinSeen = 3; o.Care().KinQuality = 9f;
+            o.Education().LessonLog.Add(new LessonRecord { Pupil = 3, Skill = "Cooking", Xp = 100f, Ticks = 4000, Possible = 5000, Classes = 1 }.Encode());
             Assert.True(r.ResignOffice(OfficeKind.Healer, 1, 9000));
-            Assert.Empty(o.Refused); Assert.Empty(o.Missed); Assert.Equal(0, o.RoundWindow); Assert.Equal(0, o.KinSeen);
-            Assert.Single(o.LessonLog);          // what the children studied is theirs, not the holder's
+            Assert.Empty(o.Care().Refused); Assert.Empty(o.Care().Missed); Assert.Equal(0, o.Care().RoundWindow); Assert.Equal(0, o.Care().KinSeen);
+            Assert.Single(o.Education().LessonLog);          // what the children studied is theirs, not the holder's
         }
 
         [Fact]

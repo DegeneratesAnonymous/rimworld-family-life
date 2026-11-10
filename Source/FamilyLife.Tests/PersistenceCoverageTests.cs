@@ -27,7 +27,7 @@ namespace FamilyLife.Tests
         }
 
         // Indexes and caches are rebuilt on load, so they are not saved.
-        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache" };
+        private static readonly string[] NotSaved = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache" };
 
         [Theory]
         [InlineData(typeof(FamilyEvent))]

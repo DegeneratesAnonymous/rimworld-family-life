@@ -95,11 +95,11 @@ namespace FamilyLife
             if (office == null || !r.CheckupOpen(now)) return;
             foreach (var person in r.Persons)
             {
-                if (!person.InColony || person.Id == office.HolderId || office.Examined.Contains(person.Id)) continue;
+                if (!person.InColony || person.Id == office.HolderId || office.Care().Examined.Contains(person.Id)) continue;
                 var p = c.TryGetPawn(person.Id);
-                if (p != null && RecentCheckup(p)) office.Examined.Add(person.Id);
+                if (p != null && RecentCheckup(p)) office.Care().Examined.Add(person.Id);
             }
-            if (r.Persons.Where(x => x.InColony && x.Id != office.HolderId).All(x => office.Examined.Contains(x.Id))) office.RoundStartTick = 0;
+            if (r.Persons.Where(x => x.InColony && x.Id != office.HolderId).All(x => office.Care().Examined.Contains(x.Id))) office.Care().RoundStartTick = 0;
         }
 
         internal static bool CanBeSeen(FamilyComponent c, Pawn doctor, int id) => !Skipped(id, Activities.Now) && PatientAvailable(c, doctor, id);
@@ -195,8 +195,8 @@ namespace FamilyLife
                     else lines.Add("  clinic: no free medical bed in an enclosed room the doctor can reach (visits will be one to one instead)");
                     int able = r.Persons.Count(p => p.InColony && p.Id != healer.HolderId && PatientAvailable(c, d, p.Id));
                     if (NeedsReason(d) != null) lines.Add("  the doctor should stop for: " + NeedsReason(d));
-                    lines.Add("  medical need on the map: " + CareDemand.MedicalNeed(d.Map, now) + (CareDemand.DoctorShouldTend(d, now) ? " (routine visits wait)" : "") + "; visits today " + r.RoutineVisitsToday(now) + " of " + CheckupWorkload.VisitsPerDay(healer.IllnessRound) + "; declined this round: " + healer.Refused.Count + ", missed last round: " + healer.Missed.Count);
-                    lines.Add("  patients able to come now: " + able + ", already seen this round: " + healer.Examined.Count);
+                    lines.Add("  medical need on the map: " + CareDemand.MedicalNeed(d.Map, now) + (CareDemand.DoctorShouldTend(d, now) ? " (routine visits wait)" : "") + "; visits today " + r.RoutineVisitsToday(now) + " of " + CheckupWorkload.VisitsPerDay(healer.Care().IllnessRound) + "; declined this round: " + healer.Care().Refused.Count + ", missed last round: " + healer.Care().Missed.Count);
+                    lines.Add("  patients able to come now: " + able + ", already seen this round: " + healer.Care().Examined.Count);
                 }
             }
             return lines;

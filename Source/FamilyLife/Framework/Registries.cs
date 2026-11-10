@@ -190,6 +190,8 @@ namespace FamilyLife.Framework
         }
 
         public IEnumerable<T> Enabled() { foreach (var e in entries) if (modules.IsEnabled(e.Key)) yield return e.Value; }
+        /// <summary>The first contribution of one module, whether or not the module is currently enabled (a preparation step must still be reachable).</summary>
+        public T EnabledFor(string moduleId) { foreach (var e in entries) if (e.Key == moduleId) return e.Value; return default(T); }
         public int Count => entries.Count;
     }
 }

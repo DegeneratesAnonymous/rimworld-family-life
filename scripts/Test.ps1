@@ -3,10 +3,15 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 dotnet test (Join-Path $repo "Source\FamilyLife.Tests\FamilyLife.Tests.csproj")
 if ($LASTEXITCODE -ne 0) { throw "Tests failed" }
+# Isolation proof: each module's pure code must build against the shared pure assembly alone (public members only).
+foreach ($m in "Education", "Care") {
+    dotnet build (Join-Path $repo "Source\Isolation\$m.Domain.csproj") -v q
+    if ($LASTEXITCODE -ne 0) { throw "$m.Domain no longer builds on its own: a module is using something internal to the shared code" }
+}
 foreach ($v in "1.7", "1.6") {
     dotnet build (Join-Path $repo "Source\FamilyLife\FamilyLife.csproj") -c Release -p:GameVersion=$v -v q
     if ($LASTEXITCODE -ne 0) { throw "Build failed for $v" }
 }
 & (Join-Path $PSScriptRoot "Check-Patches.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Patch check failed" }
-Write-Host "Tests passed, both versions build, and all patches match the game."
+Write-Host "Tests passed, the modules build in isolation, both versions build, and all patches match the game."

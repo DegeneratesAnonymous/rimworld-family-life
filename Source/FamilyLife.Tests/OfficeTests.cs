@@ -169,7 +169,7 @@ namespace FamilyLife.Tests
             var r = Teacher();
             Assert.True(r.BeginClass(2100, 3 * Day, new[] { 3, 30, 4, 20, 21, 1, 2, 5 }));
             Assert.DoesNotContain(3, r.OfficeFor(OfficeKind.Teacher).SessionQueue);
-            Assert.True(r.OfficeFor(OfficeKind.Teacher).SessionQueue.Count <= FamilyRegistry.MaxClassSize);
+            Assert.True(r.OfficeFor(OfficeKind.Teacher).SessionQueue.Count <= ClassRegistry.MaxClassSize);
             Assert.Equal(0, r.NextStudent(2100 + FamilyRegistry.ClassWindowTicks + 1));      // not finished within a day: over
             Assert.Empty(r.OfficeFor(OfficeKind.Teacher).SessionQueue);
         }
@@ -187,7 +187,7 @@ namespace FamilyLife.Tests
         public void A_round_of_checkups_opens_when_due_and_each_person_is_seen_once()
         {
             var r = Doctor();
-            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            int start = r.OfficeFor(OfficeKind.Healer).Care().NextRoundTick;
             Assert.False(r.BeginCheckupRound(start - 1, 30 * Day));
             Assert.True(r.BeginCheckupRound(start, 30 * Day));
             Assert.False(r.BeginCheckupRound(start + 10, 30 * Day));                          // already open
@@ -203,7 +203,7 @@ namespace FamilyLife.Tests
         public void Only_the_doctor_can_examine_and_only_people_who_are_free_are_called()
         {
             var r = Doctor();
-            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            int start = r.OfficeFor(OfficeKind.Healer).Care().NextRoundTick;
             r.BeginCheckupRound(start, 30 * Day);
             Assert.False(r.RecordCheckup(2, 1, start + 10));
             Assert.Equal(20, r.NextCheckupPatient(start + 10, id => id == 20));                // only the one who can come
@@ -215,13 +215,13 @@ namespace FamilyLife.Tests
         {
             var r = Doctor();
             var office = r.OfficeFor(OfficeKind.Healer);
-            int start = office.NextRoundTick;
+            int start = office.Care().NextRoundTick;
             r.BeginCheckupRound(start, 30 * Day);
             foreach (var p in r.Persons.Where(x => x.InColony && x.Id != 3).Select(x => x.Id).ToList()) r.RecordCheckup(3, p, start + 100);
             Assert.False(r.CheckupOpen(start + 200));
             Assert.False(r.BeginCheckupRound(start + 10 * Day, 30 * Day));
             Assert.True(r.BeginCheckupRound(start + 30 * Day, 30 * Day));
-            Assert.False(r.CheckupOpen(start + 30 * Day + FamilyRegistry.CheckupWindowTicks + 1));    // an unfinished round lapses
+            Assert.False(r.CheckupOpen(start + 30 * Day + CareRegistry.CheckupWindowTicks + 1));    // an unfinished round lapses
         }
 
         [Fact]
@@ -518,7 +518,7 @@ namespace FamilyLife.Tests
         {
             var r = Colony();
             r.ElectOffices(2000, Skilled(20, OfficeKind.Healer));                                   // a doctor from the other house
-            int start = r.OfficeFor(OfficeKind.Healer).NextRoundTick;
+            int start = r.OfficeFor(OfficeKind.Healer).Care().NextRoundTick;
             r.BeginCheckupRound(start, 30 * Day);
             // Seeing one's own kin first was favouritism built into the order of the list. The order is now neutral (those missed last round first), so the lowest id comes first.
             Assert.Equal(1, r.NextCheckupPatient(start + 5, id => true));

@@ -27,19 +27,14 @@ namespace FamilyLife.Domain
     {
         public int Id, HolderId, HolderFamily, ElectedTick, TermEndTick, LastWorkTick, Work, DayStamp, ActsToday, Counter, Backers, Opponents;
         public int UnmetSinceTick, NextVoteTick, LastHolderId, BarredId, BarredUntil, EndedTick, Terms, QualityCount;
-        public int NextRoundTick, RoundStartTick;          // the doctor's check-ups
-        public int NextSessionTick, SessionStartTick;      // the teacher's classes and the hall keeper's meals
+        public int NextSessionTick, SessionStartTick;      // shared by the teacher's classes and the hall keeper's meals
+        // What the doctor and the teacher remember is not here: it is each module's own payload (see StateOf), so this record needs no change when a module is added or removed.
         public int PendingKind, PendingTick;               // an event offered to the player and not yet answered (PendingEvent)
-        public int LastIllnessTick, LastTestingYear;       // when a round was last called for an outbreak; the year the children were last tested
-        public bool IllnessRound;                          // the current round was called for an outbreak: the sick are seen first
-        public int TestingStartTick, TestingSlot;          // the annual testing under way, and the hour it has reached
-        public List<int> TestIds = new List<int>(), TestPass = new List<int>(), TestTry = new List<int>();          // each child tested, and how many hourly checks they passed and sat
         public float QualitySum, LastGrade;
         public bool CounterReady;
         public OfficeKind Kind;
         public OfficeEnd EndReason;
         public List<int> Tokens = new List<int>();         // evidence already counted
-        public List<int> Examined = new List<int>();       // people the doctor has seen in the current round
         public List<int> SessionQueue = new List<int>();   // students or diners still to be seen to in the current session
         public bool Held => HolderId != 0;
     }
@@ -276,13 +271,9 @@ namespace FamilyLife.Domain
             office.HolderId = winner; office.HolderFamily = FamilyOf(winner); office.ElectedTick = now; office.TermEndTick = NextAssemblyTick;
             office.LastWorkTick = now; office.Work = 0; office.QualitySum = 0f; office.QualityCount = 0; office.UnmetSinceTick = 0; office.CounterReady = false;
             office.EndReason = OfficeEnd.None; office.EndedTick = 0; office.Backers = backers; office.Opponents = opponents; office.Terms++;
-            office.NextRoundTick = now + ActivityTuning.TicksPerDay; office.RoundStartTick = 0; office.Examined.Clear();
             office.NextSessionTick = now; office.SessionStartTick = 0; office.SessionQueue.Clear();
-            office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
-            office.TestScore = new List<int>(); office.TestExcused = new List<int>();
-            // a new holder starts their own record of rounds, refusals and how people were treated (what the children have studied belongs to the children and stays)
-            office.RoundWindow = 0; office.Missed = new List<int>(); office.Refused = new List<int>(); office.RefusedTick = new List<int>(); office.KinQuality = office.OtherQuality = 0f; office.KinSeen = office.OtherSeen = 0;
-            office.RoutineDay = office.RoutineUsed = office.LastVisitTick = 0; office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();
+            office.PendingKind = 0;
+            office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();          // a new holder's module state starts fresh by itself (per-holder payloads)
             NotePublicService(winner, office.HolderFamily, 1.5f, now);
             AdvanceRecognition(winner, .25f, now);
         }
@@ -301,11 +292,9 @@ namespace FamilyLife.Domain
         private void EndOffice(CommunityOffice office, OfficeEnd why, int now)
         {
             office.LastHolderId = office.HolderId; office.HolderId = 0; office.HolderFamily = 0; office.EndReason = why; office.EndedTick = now;
-            office.UnmetSinceTick = 0; office.CounterReady = false; office.RoundStartTick = 0; office.SessionStartTick = 0; office.SessionQueue.Clear();
-            office.PendingKind = 0; office.IllnessRound = false; office.TestingStartTick = 0; office.TestIds = new List<int>(); office.TestPass = new List<int>(); office.TestTry = new List<int>();
-            office.TestScore = new List<int>(); office.TestExcused = new List<int>();
-            office.RoundWindow = 0; office.Missed = new List<int>(); office.Refused = new List<int>(); office.RefusedTick = new List<int>(); office.KinQuality = office.OtherQuality = 0f; office.KinSeen = office.OtherSeen = 0;
-            office.RoutineDay = office.RoutineUsed = office.LastVisitTick = 0; office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();
+            office.UnmetSinceTick = 0; office.CounterReady = false; office.SessionStartTick = 0; office.SessionQueue.Clear();
+            office.PendingKind = 0;
+            office.ContactIds = new List<int>(); office.ContactCounts = new List<int>();          // module state stamped with the old holder is discarded the next time it is read
             if (why == OfficeEnd.Neglected) { office.BarredId = office.LastHolderId; office.BarredUntil = now + AssemblyYearTicks / 2; }
         }
 

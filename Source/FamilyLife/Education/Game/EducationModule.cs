@@ -30,6 +30,7 @@ namespace FamilyLife
             });
             FamilyModules.BuildingGizmos.Add("wils.education.buttons", Id, LecternButtons);
             FamilyModules.Diagnostics.Add("wils.education.diagnostics", Id, new FamilyModules.DiagnosticSection { Kind = OfficeKind.Teacher, Lines = OfficeDriver.DiagnoseTeacher });
+            FamilyModules.Removal.Add("wils.education.removal", Id, EducationRemoval.Prepare);
             FamilyModules.Resets.Add("wils.education.reset", Id, ClassSessions.Reset);
         }
 

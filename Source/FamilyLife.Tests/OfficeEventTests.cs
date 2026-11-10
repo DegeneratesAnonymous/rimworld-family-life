@@ -41,7 +41,8 @@ namespace FamilyLife.Tests
         {
             var r = new FamilyRegistry();
             r.Apply(new[] { T.P(1, "Doc"), T.P(2, "Two", parents: new[] { 1 }), T.P(3, "Three", parents: new[] { 1 }), T.P(4, "Four", parents: new[] { 1 }), T.P(5, "Five", parents: new[] { 1 }) }, 1000);
-            var o = new CommunityOffice { Kind = OfficeKind.Healer, HolderId = 1, HolderFamily = r.FamilyOf(1), RoundStartTick = 1000 };
+            var o = new CommunityOffice { Kind = OfficeKind.Healer, HolderId = 1, HolderFamily = r.FamilyOf(1) };
+            o.Care().RoundStartTick = 1000;
             r.Offices.Add(o);
             int first = r.NextCheckupPatient(1500, null, id => id == 4 ? 0 : 1);
             Assert.Equal(4, first);

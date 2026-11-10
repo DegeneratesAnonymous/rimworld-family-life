@@ -17,10 +17,11 @@ namespace FamilyLife.Tests
     internal static class SaveSim
     {
         // Indexes and caches that the real load rebuilds.
-        private static readonly string[] Skip = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache" };
+        private static readonly string[] Skip = { "personById", "lineageById", "householdById", "childrenByParent", "indexed", "bondByPair", "timeByPerson", "deadThisSweep", "claimByThing", "agencyByPerson", "kinshipCache", "stateCache" };
 
         public static FamilyRegistry Reload(FamilyRegistry original)
         {
+            original.FlushAllState();          // what the game does when it saves: module state is written back into its payloads
             var copy = (FamilyRegistry)Copy(original);
             copy.RebuildIndexes();
             return copy;

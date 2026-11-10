@@ -121,6 +121,36 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Modules_hold_no_members_of_the_shared_records_their_state_is_a_payload()
+        {
+            string src = Path.Combine(Root(), "Source", "FamilyLife");
+            foreach (var module in new[] { "Education", "Care" })
+                foreach (var file in Directory.GetFiles(Path.Combine(src, module), "*.cs", SearchOption.AllDirectories))
+                {
+                    string text = Strip(File.ReadAllText(file));
+                    Assert.DoesNotMatch(@"partial\s+class\s+(FamilyRegistry|CommunityOffice)", text);          // a partial class cannot leave its assembly; module state lives in payloads instead
+                }
+        }
+
+        [Fact]
+        public void The_modules_pure_code_builds_against_the_shared_pure_code_alone()
+        {
+            // the isolation projects are the proof (scripts/Test.ps1 builds them); this checks they exist and compile exactly the module's own folder and nothing else
+            string iso = Path.Combine(Root(), "Source", "Isolation");
+            foreach (var module in new[] { "Education", "Care" })
+            {
+                string proj = File.ReadAllText(Path.Combine(iso, module + ".Domain.csproj"));
+                Assert.Contains(@"..\FamilyLife\" + module + @"\Domain\**\*.cs", proj);
+                Assert.Contains("Shared.Domain.csproj", proj);
+                Assert.Equal(1, Regex.Matches(proj, @"<Compile Include=").Count);
+            }
+            string shared = File.ReadAllText(Path.Combine(iso, "Shared.Domain.csproj"));
+            Assert.Contains(@"..\FamilyLife\Domain\**\*.cs", shared); Assert.Contains(@"..\FamilyLife\Framework\**\*.cs", shared);
+            Assert.Equal(2, Regex.Matches(shared, @"<Compile Include=").Count);          // the shared assembly compiles the shared folders and nothing of any module
+            Assert.DoesNotContain("ProjectReference", shared);
+        }
+
+        [Fact]
         public void Every_module_registers_itself_once_and_the_framework_is_not_a_module_of_its_own()
         {
             string game = Path.Combine(Root(), "Source", "FamilyLife");

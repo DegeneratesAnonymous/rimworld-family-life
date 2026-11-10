@@ -23,38 +23,38 @@ namespace FamilyLife
 
         internal static void Teacher(FamilyComponent c, FamilyRegistry r, CommunityOffice o, Pawn teacher, int now)
         {
-            if (o.TestingStartTick != 0) { RunTesting(c, r, o, teacher, now); return; }
+            if (o.Assessment().TestingStartTick != 0) { RunTesting(c, r, o, teacher, now); return; }
             if (o.PendingKind == PendingEvent.Testing)
             {
                 if (now >= o.PendingTick || o.PendingTick - now > 40 * Day) Begin(PendingEvent.Testing);
                 return;
             }
             if (o.PendingKind != 0) return;
-            if (IsAprimay(teacher.Map) && o.LastTestingYear != Year(teacher.Map) && Children(c, r, o.HolderId).Count > 0) Plan(PendingEvent.Testing, teacher, now);
+            if (IsAprimay(teacher.Map) && o.Education().LastTestingYear != Year(teacher.Map) && Children(c, r, o.HolderId).Count > 0) Plan(PendingEvent.Testing, teacher, now);
         }
 
         private static bool BeginTesting(FamilyComponent c, FamilyRegistry r, CommunityOffice o, Pawn teacher, int now)
         {
-            if (o.TestingStartTick != 0) return false;
+            if (o.Assessment().TestingStartTick != 0) return false;
             var ids = Children(c, r, o.HolderId);
             if (ids.Count == 0) { Messages.Message("WFL_Event_NoPupils".Translate(), MessageTypeDefOf.RejectInput, false); return false; }
-            o.TestingStartTick = now; o.TestingSlot = 0; o.LastTestingYear = Year(teacher.Map);
-            o.TestIds = ids; o.TestPass = ids.Select(_ => 0).ToList(); o.TestTry = ids.Select(_ => 0).ToList(); o.TestScore = ids.Select(_ => 0).ToList(); o.TestExcused = ids.Select(_ => 0).ToList();
+            o.Assessment().TestingStartTick = now; o.Assessment().TestingSlot = 0; o.Education().LastTestingYear = Year(teacher.Map);
+            o.Assessment().TestIds = ids; o.Assessment().TestPass = ids.Select(_ => 0).ToList(); o.Assessment().TestTry = ids.Select(_ => 0).ToList(); o.Assessment().TestScore = ids.Select(_ => 0).ToList(); o.Assessment().TestExcused = ids.Select(_ => 0).ToList();
             Messages.Message("WFL_Testing_Begins".Translate(teacher.LabelShort, ids.Count), teacher, MessageTypeDefOf.NeutralEvent, false);
             return true;
         }
 
         private static void EnsureLists(CommunityOffice o)
         {
-            while (o.TestPass.Count < o.TestIds.Count) o.TestPass.Add(0);
-            while (o.TestTry.Count < o.TestIds.Count) o.TestTry.Add(0);
-            while (o.TestScore.Count < o.TestIds.Count) o.TestScore.Add(0);
-            while (o.TestExcused.Count < o.TestIds.Count) o.TestExcused.Add(0);
+            while (o.Assessment().TestPass.Count < o.Assessment().TestIds.Count) o.Assessment().TestPass.Add(0);
+            while (o.Assessment().TestTry.Count < o.Assessment().TestIds.Count) o.Assessment().TestTry.Add(0);
+            while (o.Assessment().TestScore.Count < o.Assessment().TestIds.Count) o.Assessment().TestScore.Add(0);
+            while (o.Assessment().TestExcused.Count < o.Assessment().TestIds.Count) o.Assessment().TestExcused.Add(0);
         }
 
         private static bool SomeoneNeedsAMakeUp(CommunityOffice o)
         {
-            for (int i = 0; i < o.TestIds.Count && i < o.TestTry.Count && i < o.TestExcused.Count; i++) if (o.TestTry[i] < 2 && o.TestExcused[i] > 0) return true;
+            for (int i = 0; i < o.Assessment().TestIds.Count && i < o.Assessment().TestTry.Count && i < o.Assessment().TestExcused.Count; i++) if (o.Assessment().TestTry[i] < 2 && o.Assessment().TestExcused[i] > 0) return true;
             return false;
         }
 
@@ -64,25 +64,25 @@ namespace FamilyLife
         /// </summary>
         private static void RunTesting(FamilyComponent c, FamilyRegistry r, CommunityOffice o, Pawn teacher, int now)
         {
-            if (now < o.TestingStartTick) o.TestingStartTick = now;
+            if (now < o.Assessment().TestingStartTick) o.Assessment().TestingStartTick = now;
             EnsureLists(o);
-            int elapsed = now - o.TestingStartTick;
+            int elapsed = now - o.Assessment().TestingStartTick;
             bool makeUp = SomeoneNeedsAMakeUp(o);
-            if (TestingMath.Over(o.TestingSlot, elapsed, makeUp)) { FinishTesting(c, r, o, teacher, now); return; }
-            bool due = TestingMath.Due(o.TestingSlot, elapsed) || TestingMath.MakeUpDue(o.TestingSlot, elapsed, makeUp);
+            if (TestingMath.Over(o.Assessment().TestingSlot, elapsed, makeUp)) { FinishTesting(c, r, o, teacher, now); return; }
+            bool due = TestingMath.Due(o.Assessment().TestingSlot, elapsed) || TestingMath.MakeUpDue(o.Assessment().TestingSlot, elapsed, makeUp);
             if (!due || !TestingMath.Daytime(GenLocalDate.HourOfDay(teacher))) return;
             if (PawnReadiness.StopReason(teacher, now) != null) return;          // the teacher must be fit to hold it; it waits
-            o.TestingSlot++;
+            o.Assessment().TestingSlot++;
             bool room = ClassRooms.TeachingSpot(teacher, out var cell, out var area, out _);
-            var seats = room ? ClassRooms.Seats(area, cell, o.TestIds.Count, teacher.Map) : new List<IntVec3>();
-            bool makeUpOnly = o.TestingSlot > TestingMath.Offsets.Length;
-            for (int i = 0; i < o.TestIds.Count; i++)
+            var seats = room ? ClassRooms.Seats(area, cell, o.Assessment().TestIds.Count, teacher.Map) : new List<IntVec3>();
+            bool makeUpOnly = o.Assessment().TestingSlot > TestingMath.Offsets.Length;
+            for (int i = 0; i < o.Assessment().TestIds.Count; i++)
             {
-                if (makeUpOnly && o.TestTry[i] >= 2) continue;
-                var kid = c.TryGetPawn(o.TestIds[i]);
+                if (makeUpOnly && o.Assessment().TestTry[i] >= 2) continue;
+                var kid = c.TryGetPawn(o.Assessment().TestIds[i]);
                 if (kid == null || !kid.Spawned || kid.Dead) continue;
                 string reason = PawnReadiness.StopReason(kid, now);
-                if (reason != null || !kid.Awake() || !OfficeDriver.Available(kid)) { o.TestExcused[i]++; continue; }          // ill, hungry, down or asleep: excused, and may sit the make-up
+                if (reason != null || !kid.Awake() || !OfficeDriver.Available(kid)) { o.Assessment().TestExcused[i]++; continue; }          // ill, hungry, down or asleep: excused, and may sit the make-up
                 if (!OfficeDriver.Ready(kid)) continue;          // busy at something else just now: no sitting this time, and no mark
                 if (seats.Count > 0)
                 {
@@ -99,11 +99,11 @@ namespace FamilyLife
         /// <summary>One completed sitting for this child. Its only effect on the result is a small bounded variation: the result comes from what they studied.</summary>
         internal static void Sat(Pawn kid)
         {
-            var c = FamilyComponent.Current; var o = Office(OfficeKind.Teacher); if (c == null || o == null || o.TestingStartTick == 0) return;
-            int i = o.TestIds.IndexOf(kid.thingIDNumber); if (i < 0) return;
+            var c = FamilyComponent.Current; var o = Office(OfficeKind.Teacher); if (c == null || o == null || o.Assessment().TestingStartTick == 0) return;
+            int i = o.Assessment().TestIds.IndexOf(kid.thingIDNumber); if (i < 0) return;
             EnsureLists(o);
-            o.TestTry[i]++;
-            o.TestScore[i] += Rand.RangeInclusive(-6, 6);          // hundredths: at most a few points either way, summed over the sittings
+            o.Assessment().TestTry[i]++;
+            o.Assessment().TestScore[i] += Rand.RangeInclusive(-6, 6);          // hundredths: at most a few points either way, summed over the sittings
             MoteMaker.ThrowText(kid.DrawPos, kid.Map, "WFL_Testing_Sat".Translate(), Color.white);
         }
 
@@ -114,19 +114,19 @@ namespace FamilyLife
             var lines = new List<string>(); int judged = 0; float score = 0f;
             EnsureLists(o);
             int teacherLevel = PawnReadiness.Level(teacher, SkillDefOf.Intellectual);
-            for (int i = 0; i < o.TestIds.Count; i++)
+            for (int i = 0; i < o.Assessment().TestIds.Count; i++)
             {
-                var kid = c.TryGetPawn(o.TestIds[i]);
+                var kid = c.TryGetPawn(o.Assessment().TestIds[i]);
                 if (kid == null || kid.Dead || kid.skills == null) continue;
-                var recs = LessonRecord.For(o.LessonLog, kid.thingIDNumber).OrderByDescending(x => x.Xp).Take(3).ToList();
+                var recs = LessonRecord.For(o.Education().LessonLog, kid.thingIDNumber).OrderByDescending(x => x.Xp).Take(3).ToList();
                 if (recs.Count == 0) { lines.Add("WFL_Testing_LineNothing".Translate(kid.LabelShort)); continue; }          // nothing studied since the last assessment: nothing to assess
-                float noise = o.TestTry[i] > 0 ? o.TestScore[i] / 100f / o.TestTry[i] : 0f;
+                float noise = o.Assessment().TestTry[i] > 0 ? o.Assessment().TestScore[i] / 100f / o.Assessment().TestTry[i] : 0f;
                 float support = Math.Min(1f, LessonMath.Delivery(teacherLevel, PawnReadiness.Level(teacher, SkillDefOf.Social), 0f, 0f, 0f) / 1.2f);
-                var results = recs.Select(rec => new { rec, res = Assessments.Assess(rec, o.TestTry[i], TestingMath.Offsets.Length, o.TestExcused[i], kid.skills.GetSkill(DefDatabase<SkillDef>.GetNamedSilentFail(rec.Skill) ?? SkillDefOf.Intellectual)?.Level ?? 0, support, noise) }).ToList();
+                var results = recs.Select(rec => new { rec, res = Assessments.Assess(rec, o.Assessment().TestTry[i], TestingMath.Offsets.Length, o.Assessment().TestExcused[i], kid.skills.GetSkill(DefDatabase<SkillDef>.GetNamedSilentFail(rec.Skill) ?? SkillDefOf.Intellectual)?.Level ?? 0, support, noise) }).ToList();
                 var main = results[0];
                 if (main.res.Completion == Completion.Incomplete)
                 {
-                    bool excused = o.TestExcused[i] > 0;
+                    bool excused = o.Assessment().TestExcused[i] > 0;
                     lines.Add("WFL_Testing_LineIncomplete".Translate(kid.LabelShort, (excused ? "WFL_Testing_Why_Excused" : "WFL_Testing_Why_Little").Translate().Resolve()));
                     if (excused) lines.Add("  " + Support("Recover", kid));
                     continue;
@@ -150,10 +150,10 @@ namespace FamilyLife
                 score += (int)level / 3f; judged++;
             }
             // the period's records for the children assessed are spent; the next assessment looks at what is studied from now on
-            var assessed = new HashSet<int>(o.TestIds);
-            o.LessonLog = o.LessonLog.Where(x => { var rec = LessonRecord.Parse(x); return rec != null && !assessed.Contains(rec.Pupil); }).ToList();
+            var assessed = new HashSet<int>(o.Assessment().TestIds);
+            o.Education().LessonLog = o.Education().LessonLog.Where(x => { var rec = LessonRecord.Parse(x); return rec != null && !assessed.Contains(rec.Pupil); }).ToList();
             if (judged > 0) r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, GovernanceMeetings.NextToken(), now, .4f + .6f * score / judged);
-            o.TestingStartTick = 0; o.TestingSlot = 0; o.TestIds = new List<int>(); o.TestPass = new List<int>(); o.TestTry = new List<int>(); o.TestScore = new List<int>(); o.TestExcused = new List<int>();
+            o.Assessment().TestingStartTick = 0; o.Assessment().TestingSlot = 0; o.Assessment().TestIds = new List<int>(); o.Assessment().TestPass = new List<int>(); o.Assessment().TestTry = new List<int>(); o.Assessment().TestScore = new List<int>(); o.Assessment().TestExcused = new List<int>();
             if (lines.Count > 0)
                 Find.LetterStack.ReceiveLetter("WFL_Testing_ResultTitle".Translate(), "WFL_Testing_ResultText".Translate(teacher.LabelShort, string.Join("\n", lines)), LetterDefOf.NeutralEvent, teacher);
         }
@@ -164,7 +164,7 @@ namespace FamilyLife
         internal static void PassTesting()
         {
             var c = FamilyComponent.Current; var o = Office(OfficeKind.Teacher); if (o == null || c == null) return;
-            var t = c.TryGetPawn(o.HolderId); if (t?.Map != null) o.LastTestingYear = Year(t.Map);
+            var t = c.TryGetPawn(o.HolderId); if (t?.Map != null) o.Education().LastTestingYear = Year(t.Map);
         }
 
         internal static bool BeginAssessment()
@@ -180,7 +180,7 @@ namespace FamilyLife
             var room = b.GetRoom();
             if (room == null || room.PsychologicallyOutdoors) yield break;
             var reg = FamilyComponent.Current?.Registry; if (reg == null) yield break;
-            if (ClassRooms.IsLectern(b.def) && !ClassRooms.IsOtherRoom(room) && Office(OfficeKind.Teacher)?.Held == true && Office(OfficeKind.Teacher).TestingStartTick == 0 && OfficeAuthority.MayDirect(reg, PerspectiveShiftBridge.AvatarId, OfficeKind.Teacher))
+            if (ClassRooms.IsLectern(b.def) && !ClassRooms.IsOtherRoom(room) && Office(OfficeKind.Teacher)?.Held == true && Office(OfficeKind.Teacher).Assessment().TestingStartTick == 0 && OfficeAuthority.MayDirect(reg, PerspectiveShiftBridge.AvatarId, OfficeKind.Teacher))
                 yield return new Command_Action
                 {
                     defaultLabel = "WFL_Event_BeginTesting".Translate(),
@@ -200,7 +200,7 @@ namespace FamilyLife
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOn(() => PawnReadiness.StopReason(pawn, Activities.Now) != null || FamilyComponent.Current?.Registry.OfficeFor(OfficeKind.Teacher)?.TestingStartTick == 0);
+            this.FailOn(() => PawnReadiness.StopReason(pawn, Activities.Now) != null || FamilyComponent.Current?.Registry.OfficeFor(OfficeKind.Teacher)?.Assessment().TestingStartTick == 0);
             yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
             var sit = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
             sit.initAction = () => pawn.pather?.StopDead();
