@@ -4,6 +4,7 @@ using System.Linq;
 using FamilyLife.Domain;
 using FamilyLife.Framework;
 using RimWorld;
+using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -34,7 +35,28 @@ namespace FamilyLife
         public static List<int> Holders(FamilyRegistry r, string role) => r.Assignments().Holders(role).Where(id => r.GetPerson(id)?.InColony == true).ToList();
         public static int ActiveCollectors(FamilyRegistry r) => Holders(r, TreasuryRoles.TaxCollector).Count;
 
-        public static int PhysicalSilver(Map map) => map == null ? 0 : map.resourceCounter.GetCount(ThingDefOf.Silver);
+        /// <summary>
+        /// All the silver the colony physically has, wherever it is: on the ground and in storage on its home maps, in colonists' pockets and hands, and in its caravans. Counting only stored silver would make
+        /// a caravan trip look like theft. Silver held by anyone else, or in a transport pod in flight, is not counted (so a delivery in flight shows as a temporary shortfall, which is never written off
+        /// until it has lasted several days).
+        /// </summary>
+        public static int PhysicalSilver(Map unused = null)
+        {
+            long total = 0;
+            foreach (var m in Find.Maps)
+            {
+                if (!m.IsPlayerHome) continue;
+                foreach (var t in m.listerThings.ThingsOfDef(ThingDefOf.Silver)) total += t.stackCount;
+                foreach (var p in m.mapPawns.PawnsInFaction(Faction.OfPlayer))
+                {
+                    total += p.inventory?.innerContainer?.TotalStackCountOfDef(ThingDefOf.Silver) ?? 0;
+                    if (p.carryTracker?.CarriedThing?.def == ThingDefOf.Silver) total += p.carryTracker.CarriedThing.stackCount;
+                }
+            }
+            foreach (var caravan in Find.WorldObjects.Caravans)
+                if (caravan.IsPlayerControlled) foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) if (t.def == ThingDefOf.Silver) total += t.stackCount;
+            return (int)Math.Min(int.MaxValue, total);
+        }
 
         // ------------------------------------------------------------------ income
 

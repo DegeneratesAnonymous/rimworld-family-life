@@ -156,3 +156,23 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class PhysicalSilverGuardTests
+    {
+        [Fact] public void The_physical_silver_count_includes_pockets_hands_and_caravans_so_a_trip_is_never_mistaken_for_theft()
+        {
+            string s = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryService.cs"));
+            int start = s.IndexOf("public static int PhysicalSilver", StringComparison.Ordinal), end = s.IndexOf("public static void OnSilver", StringComparison.Ordinal);
+            string body = s.Substring(start, end - start);
+            foreach (var needle in new[] { "listerThings.ThingsOfDef(ThingDefOf.Silver)", "inventory", "carryTracker", "Find.WorldObjects.Caravans", "CaravanInventoryUtility.AllInventoryItems" }) Assert.Contains(needle, body);
+        }
+
+        [Fact] public void A_loss_is_only_written_off_by_the_reconciler_after_the_grace_period_never_inline()
+        {
+            string s = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryService.cs"));
+            Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(s, @"RecordLoss\(").Count); Assert.Contains("SilverReconciler.Decide", s);
+        }
+    }
+}
