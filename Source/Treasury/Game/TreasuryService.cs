@@ -93,7 +93,8 @@ namespace FamilyLife
             var r = c.Registry; int id = pawn.thingIDNumber; var book = r.Assignments();
             var role = CareerService.Professions.All.Where(x => x.Career == career && book.IsAssigned(id, x.Id)).OrderByDescending(x => x.Specialty == specialty ? 1 : 0).ThenByDescending(x => x.Level).FirstOrDefault();
             if (role == null) return;
-            r.Payroll().Accrue(id, role.Id, 1, Today(), key ?? (career + "|" + id + "|" + now));
+            var book2 = r.Payroll(); if (!book2.Policy.Rates.ContainsKey(role.Id)) book2.Policy.Rates[role.Id] = WagePolicy.DefaultRateForLevel(role.Level);          // differentiated by level the first time a role earns
+            book2.Accrue(id, role.Id, 1, Today(), key ?? (career + "|" + id + "|" + now));
         }
 
         // ------------------------------------------------------------------ ordinary labour

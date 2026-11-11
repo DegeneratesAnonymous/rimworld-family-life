@@ -533,7 +533,7 @@ namespace FamilyLife.Tests
     {
         [Fact] public void The_framework_attributes_the_treasury_payloads_to_the_absent_module_and_keeps_them()
         {
-            var r = new FamilyRegistry(); r.Ledger().Receive(Ledger.CommunityId, 55, TxKind.Income, "k", 1); r.Payroll().Accrue(3, "x", 1, 1, "w"); r.Tax().RatePercent = 9;
+            var r = new FamilyRegistry(); r.Ledger().Receive(Ledger.CommunityId, 55, TxKind.Income, "k", 1); r.Payroll().Policy.Rates["x"] = 4; r.Payroll().Accrue(3, "x", 1, 1, "w"); r.Tax().RatePercent = 9;
             var back = SaveSim.Reload(r);
             var absent = AbsentModules.Find(back, id => id == ModuleCatalog.FrameworkId).FirstOrDefault(m => m.ModuleId == "wils.treasury");
             Assert.NotNull(absent); Assert.True(absent.Payloads.Count >= 3);
@@ -592,7 +592,7 @@ namespace FamilyLife.Tests
 
         [Fact] public void Mixed_professional_and_ordinary_work_share_one_daily_total_and_each_role_keeps_its_own_rate()
         {
-            var b = new PayrollBook(); b.Policy.Rates["wils.care.doctor"] = 5; b.Policy.DailyUnits["wils.care.doctor"] = 4; b.Policy.PawnDailyCap = 24;
+            var b = new PayrollBook(); b.Policy.Rates["wils.care.doctor"] = 5; b.Policy.DailyUnits["wils.care.doctor"] = 4; b.Policy.PawnDailyCap = 24; b.Policy.OrdinaryDailyCap = 8; b.Policy.DailyUnits[Labour.Role("cooking")] = 3; b.Policy.DailyUnits[Labour.Role("hauling")] = 3;
             int doctor = b.Accrue(1, "wils.care.doctor", 4, 2, "c1"); int cook = b.Accrue(1, Labour.Role("cooking"), 3, 2, "j1"); int haul = b.Accrue(1, Labour.Role("hauling"), 3, 2, "h1");
             Assert.Equal(20, doctor); Assert.Equal(3, cook); Assert.Equal(1, haul);          // the day's total of 24 is full: the last unit that fits is the only one paid
             Assert.Equal(24, b.PendingFor(1)); Assert.Equal(0, b.Accrue(1, "wils.care.doctor", 1, 2, "c2"));
@@ -600,7 +600,7 @@ namespace FamilyLife.Tests
 
         [Fact] public void Ordinary_wages_settle_on_payday_and_unpaid_ones_stay_owed_to_the_worker()
         {
-            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 3)); var b = new PayrollBook(); b.SettleDue(l, 0, 999);
+            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 3)); var b = new PayrollBook(); b.Policy.OrdinaryDailyCap = 8; b.Policy.DailyUnits[Labour.Role("mining")] = 3; b.Policy.DailyUnits[Labour.Role("cleaning")] = 3; b.SettleDue(l, 0, 999);
             b.Accrue(1, Labour.Role("mining"), 3, 1, "a"); b.Accrue(2, Labour.Role("cleaning"), 3, 1, "b");          // 3 silver each earned, 3 in the treasury
             var rep = b.SettleDue(l, 7, 999)[0];
             Assert.Equal(3, rep.TotalPaid); Assert.Equal(3, rep.Shortfall); Assert.Equal(2, l.Debts.Count(d => d.Kind == DebtKind.Wage && d.Active)); Assert.True(l.Conserved);

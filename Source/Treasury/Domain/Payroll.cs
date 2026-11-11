@@ -24,14 +24,29 @@ namespace FamilyLife.Domain
     }
 
     /// <summary>What each role pays and how much one pawn can be paid in a day. Roles are named by the career registry, never listed here, so a new profession needs no change.</summary>
+    public enum PayrollFunding : byte { Proportional, EssentialFirst, Manual }
+
     public sealed class WagePolicy
     {
-        public const int DefaultRate = 4, DefaultDailyUnits = 4, DefaultPawnDailyCap = 24, OrdinaryRate = 1, OrdinaryDailyUnits = 3, DefaultOrdinaryDailyCap = 8;
-        /// <summary>Most unpaid ordinary wages one worker can be owed at once (about two quadrums of the daily cap is far too much; this is one quadrum). Work beyond it is still done but earns no further claim until arrears are paid down, so a colony with weak income cannot pile up unlimited debt.</summary>
-        public int OrdinaryArrearsCap = DefaultOrdinaryDailyCap * 15, ProfessionalArrearsCap = DefaultRate * DefaultDailyUnits * 15;          // professionals: one quadrum of a full working day
+        public const int DefaultRate = 3, DefaultDailyUnits = 2, DefaultPawnDailyCap = 10, OrdinaryRate = 1, OrdinaryDailyUnits = 1, DefaultOrdinaryDailyCap = 1;
+        /// <summary>How a payroll shortfall is shared. Chosen by the player; the default shares the money that exists equally.</summary>
+        public PayrollFunding Funding = PayrollFunding.Proportional;
+        /// <summary>Roles paid first under <see cref="PayrollFunding.EssentialFirst"/>.</summary>
+        public readonly HashSet<string> Essential = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>Roles in the order they are paid under <see cref="PayrollFunding.Manual"/>; roles not listed come last.</summary>
+        public readonly List<string> Order = new List<string>();
+        /// <summary>The payment tier of a role: 0 is paid first. Everything is one tier under proportional funding.</summary>
+        public int TierOf(string role)
+        {
+            if (Funding == PayrollFunding.EssentialFirst) return role != null && Essential.Contains(role) ? 0 : 1;
+            if (Funding == PayrollFunding.Manual) { int i = Order.IndexOf(role ?? ""); return i >= 0 ? i : Order.Count; }
+            return 0;
+        }
         public readonly Dictionary<string, int> Rates = new Dictionary<string, int>(StringComparer.Ordinal);
         public readonly Dictionary<string, int> DailyUnits = new Dictionary<string, int>(StringComparer.Ordinal);
         /// <summary>Silver paid per unit of finished work in this role (0 = unpaid).</summary>
+        /// <summary>Default silver per unit for an appointed profession by its level in the career ladder: entry 2, mid 3, specialist 4. Set when a role first earns, so the player can then change it.</summary>
+        public static int DefaultRateForLevel(int level) => Math.Max(1, Math.Min(6, 1 + level));
         public int RateOf(string role) => Rates.TryGetValue(role, out var r) ? Math.Max(0, r) : Labour.IsOrdinary(role) ? OrdinaryRate : DefaultRate;
         /// <summary>Most units of one role's work that count in a single day, so quick repeatable jobs cannot be farmed.</summary>
         public int UnitsPerDay(string role) => DailyUnits.TryGetValue(role, out var u) ? Math.Max(0, u) : Labour.IsOrdinary(role) ? OrdinaryDailyUnits : DefaultDailyUnits;
@@ -99,26 +114,28 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>
-        /// Settles one payday. Everything earned before it, plus wages still owed from earlier shortfalls, is what is due. Wages are claims that exist whether or not the treasury can pay: the payment
-        /// is limited to the spendable (backed) silver in the treasury, and what is not paid stays owed to the worker as a wage debt. When money is short, appointed professionals are served first,
-        /// but ordinary workers always keep a floor of a quarter of what is available, so neither group starves; within a group everyone gets the same fraction. Payroll only moves silver from the treasury.
+        /// Settles one payday. Everything earned before it, plus wages still owed from earlier shortfalls, is what is due. Wages are claims that exist whether or not the treasury can pay: payment is
+        /// limited to the spendable (backed) silver in the community treasury, and whatever is not paid stays owed to the worker as a wage debt, however large it grows. How a shortfall is shared is
+        /// the player's <see cref="PayrollFunding"/> policy: the same fraction for everyone, essential roles first, or a manual priority order; within one tier everyone gets the same fraction.
+        /// Payroll only ever moves silver out of the community treasury: household and personal accounts are never touched to cover it.
         /// </summary>
         private PayrollReport Settle(Ledger ledger, int payday, int funds)
         {
             var report = new PayrollReport { Payday = payday };
             string key = "payroll:" + payday;
             var due = earned.Where(e => e.Day < payday).ToList();
-            var dues = new Dictionary<(int pawn, bool ord), int>();
-            foreach (var e in due) { var k = (e.Pawn, Labour.IsOrdinary(e.Role)); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + e.Silver; }
-            foreach (var d in ledger.Debts.Where(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId)) { int p = AccountPawn(d.Creditor); if (p > 0) { var k = (p, d.Ordinary); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + d.Outstanding; } }
+            var dues = new Dictionary<(int pawn, int tier), int>(); var ordinaryOnly = new Dictionary<(int pawn, int tier), bool>();
+            foreach (var e in due) { var k = (e.Pawn, Policy.TierOf(e.Role)); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + e.Silver; ordinaryOnly[k] = (!ordinaryOnly.TryGetValue(k, out var o) || o) && Labour.IsOrdinary(e.Role); }
+            foreach (var d in ledger.Debts.Where(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId)) { int p = AccountPawn(d.Creditor); if (p > 0) { var k = (p, d.Tier); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + d.Outstanding; if (!ordinaryOnly.ContainsKey(k)) ordinaryOnly[k] = d.Ordinary; } }
             if (dues.Count == 0 || ledger.Applied(key)) { RemoveSettled(due); Remember(report); return report; }
 
-            long profTotal = dues.Where(kv => !kv.Key.ord).Sum(kv => (long)kv.Value), ordTotal = dues.Where(kv => kv.Key.ord).Sum(kv => (long)kv.Value);
-            int available = Math.Max(0, Math.Min(funds, ledger.Available(Ledger.CommunityId)));
-            int ordFloor = (int)Math.Min(ordTotal, available / 4L);
-            int profPool = (int)Math.Min(profTotal, available - ordFloor), ordPool = (int)Math.Min(ordTotal, available - profPool);
-            var pay = new Dictionary<(int pawn, bool ord), int>();
-            Share(dues.Where(kv => !kv.Key.ord).ToList(), profTotal, profPool, pay); Share(dues.Where(kv => kv.Key.ord).ToList(), ordTotal, ordPool, pay);
+            int remaining = Math.Max(0, Math.Min(funds, ledger.Available(Ledger.CommunityId)));
+            var pay = new Dictionary<(int pawn, int tier), int>();
+            foreach (var tier in dues.Keys.Select(k => k.tier).Distinct().OrderBy(t => t))
+            {
+                var members = dues.Where(kv => kv.Key.tier == tier).ToList(); long total = members.Sum(kv => (long)kv.Value);
+                int pool = (int)Math.Min(total, remaining); Share(members, total, pool, pay); remaining -= pool;
+            }
 
             var moves = new List<Move>();
             foreach (var g in pay.GroupBy(kv => kv.Key.pawn).OrderBy(g => g.Key)) { int amt = g.Sum(kv => kv.Value); if (amt > 0) { ledger.Ensure(AccountKind.Person, g.Key); moves.Add(new Move(Ledger.CommunityId, Payee(ledger, g.Key), amt, "wages")); } }
@@ -126,21 +143,32 @@ namespace FamilyLife.Domain
 
             foreach (var kv in dues)
             {
-                int paid = pay.TryGetValue(kv.Key, out var pp) ? pp : 0, forfeit = Math.Max(0, kv.Value - paid - (kv.Key.ord ? Policy.OrdinaryArrearsCap : Policy.ProfessionalArrearsCap)), unpaid = kv.Value - paid - forfeit;
+                int paid = pay.TryGetValue(kv.Key, out var pp) ? pp : 0, unpaid = kv.Value - paid;
                 string acct = Ledger.IdFor(AccountKind.Person, kv.Key.pawn);
-                var debt = ledger.Debts.FirstOrDefault(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId && x.Creditor == acct && x.Ordinary == kv.Key.ord);
-                int newlyEarned = Math.Max(0, due.Where(e => e.Pawn == kv.Key.pawn && Labour.IsOrdinary(e.Role) == kv.Key.ord).Sum(e => e.Silver) - forfeit);
-                if (debt != null) { ledger.Increase(debt, newlyEarned); ledger.RecordPayment(debt, paid, payday); }
-                else if (unpaid > 0) { ledger.Ensure(AccountKind.Person, kv.Key.pawn); var nd = ledger.OpenDebt(Ledger.CommunityId, acct, DebtKind.Wage, kv.Value - forfeit, payday, "payroll " + payday); if (nd != null) { nd.Ordinary = kv.Key.ord; ledger.RecordPayment(nd, paid, payday); } }
+                var existing = ledger.Debts.Where(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId && x.Creditor == acct && x.Tier == kv.Key.tier).OrderBy(x => x.Id).ToList();
+                int newlyEarned = due.Where(e => e.Pawn == kv.Key.pawn && Policy.TierOf(e.Role) == kv.Key.tier).Sum(e => e.Silver);
+                if (existing.Count > 0) { ledger.Increase(existing[0], newlyEarned); int left = paid; foreach (var dd in existing) { int part = Math.Min(left, dd.Outstanding); if (part > 0) { ledger.RecordPayment(dd, part, payday); left -= part; } } }          // a worker with an inherited wage debt of the same kind has several: the payment is applied to each in turn
+                else if (unpaid > 0) { ledger.Ensure(AccountKind.Person, kv.Key.pawn); var nd = ledger.OpenDebt(Ledger.CommunityId, acct, DebtKind.Wage, kv.Value, payday, "payroll " + payday); if (nd != null) { nd.Ordinary = ordinaryOnly[kv.Key]; nd.Tier = kv.Key.tier; ledger.RecordPayment(nd, paid, payday); } }
             }
-            foreach (var g in dues.GroupBy(kv => kv.Key.pawn).OrderBy(g => g.Key)) report.Lines.Add(new PayLine { Pawn = g.Key, Due = g.Sum(kv => kv.Value), Paid = g.Sum(kv => pay.TryGetValue(kv.Key, out var pp) ? pp : 0) });
-            report.TotalDue = (int)(profTotal + ordTotal); report.TotalPaid = pay.Values.Sum();
+            foreach (var g in dues.GroupBy(kv => kv.Key.pawn).OrderBy(g => g.Key))
+            {
+                int d = g.Sum(kv => kv.Value), p = g.Sum(kv => pay.TryGetValue(kv.Key, out var pp) ? pp : 0);
+                report.Lines.Add(new PayLine { Pawn = g.Key, Due = d, Paid = p });
+                if (p < d) missed[g.Key] = Missed(g.Key) + 1; else missed.Remove(g.Key);
+            }
+            report.TotalDue = (int)dues.Values.Sum(v => (long)v); report.TotalPaid = pay.Values.Sum();
             RemoveSettled(due); Remember(report);
             return report;
         }
 
-        /// <summary>Shares a pool among a class pro rata (largest remainder, never more than a worker is due).</summary>
-        private static void Share(List<KeyValuePair<(int pawn, bool ord), int>> members, long total, int pool, Dictionary<(int pawn, bool ord), int> into)
+        /// <summary>Consecutive paydays on which this worker was paid less than they were owed. The game layer turns this into consequences; here it is only a count.</summary>
+        public int Missed(int pawn) => missed.TryGetValue(pawn, out var n) ? n : 0;
+        private readonly Dictionary<int, int> missed = new Dictionary<int, int>();
+        /// <summary>Workers who have gone unpaid (in part or in full) for at least this many paydays in a row.</summary>
+        public IList<int> WorkersMissing(int paydays) => missed.Where(kv => kv.Value >= paydays).Select(kv => kv.Key).OrderBy(i => i).ToList();
+
+        /// <summary>Shares a pool among a tier pro rata (largest remainder, never more than a worker is due).</summary>
+        private static void Share(List<KeyValuePair<(int pawn, int tier), int>> members, long total, int pool, Dictionary<(int pawn, int tier), int> into)
         {
             if (total <= 0 || pool <= 0) return;
             if (pool >= total) { foreach (var kv in members) into[kv.Key] = kv.Value; return; }
@@ -164,7 +192,8 @@ namespace FamilyLife.Domain
 
         public string Encode()
         {
-            var w = new StateWriter().Int("last", LastSettledPayday + 1).Int("cap", Policy.PawnDailyCap).Int("ocap", Policy.OrdinaryDailyCap + 1);
+            var w = new StateWriter().Int("last", LastSettledPayday + 1).Int("cap", Policy.PawnDailyCap).Int("ocap", Policy.OrdinaryDailyCap + 1).Int("fund", (int)Policy.Funding);
+            w.Strings("ess", Policy.Essential.OrderBy(x => x, StringComparer.Ordinal).ToList()); w.Strings("ord", Policy.Order.ToList()); w.Strings("miss", missed.OrderBy(k => k.Key).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("rate", Policy.Rates.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("units", Policy.DailyUnits.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("earn", earned.Select(e => string.Join("|", e.Pawn, e.Day, e.Silver, e.Role, (e.Key ?? "").Replace('|', '/'))).ToList());
@@ -176,6 +205,9 @@ namespace FamilyLife.Domain
         public static PayrollBook Decode(StateReader r)
         {
             var b = new PayrollBook(); b.LastSettledPayday = r.Int("last") - 1; b.Policy.PawnDailyCap = r.Has("cap") ? r.Int("cap") : WagePolicy.DefaultPawnDailyCap; b.Policy.OrdinaryDailyCap = r.Has("ocap") ? r.Int("ocap") - 1 : WagePolicy.DefaultOrdinaryDailyCap;
+            b.Policy.Funding = r.Has("fund") ? (PayrollFunding)Math.Max(0, Math.Min(2, r.Int("fund"))) : PayrollFunding.Proportional;
+            foreach (var s in r.Strings("ess")) b.Policy.Essential.Add(s); foreach (var s in r.Strings("ord")) b.Policy.Order.Add(s);
+            foreach (var s in r.Strings("miss")) { var p = s.Split((char)124); if (p.Length == 2) b.missed[I(p[0])] = I(p[1]); }
             foreach (var s in r.Strings("rate")) { var p = s.Split('|'); if (p.Length == 2) b.Policy.Rates[p[0]] = I(p[1]); }
             foreach (var s in r.Strings("units")) { var p = s.Split('|'); if (p.Length == 2) b.Policy.DailyUnits[p[0]] = I(p[1]); }
             foreach (var s in r.Strings("earn")) { var p = s.Split('|'); if (p.Length >= 5) b.earned.Add(new Earning { Pawn = I(p[0]), Day = I(p[1]), Silver = I(p[2]), Role = p[3], Key = p[4].Length == 0 ? null : p[4] }); }

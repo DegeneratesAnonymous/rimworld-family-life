@@ -14,7 +14,7 @@ namespace FamilyLife.Domain
     public sealed class IncomePolicy
     {
         /// <summary>Percent of a reward the community treasury keeps. The rest is shared equally per resident.</summary>
-        public int CommunityPercent = 25;
+        public int CommunityPercent = 50;
         /// <summary>Percent of an owner's own sale the community keeps (0 by default: what is yours is yours).</summary>
         public int OwnerFeePercent = 0;
     }

@@ -70,7 +70,7 @@ namespace FamilyLife.Domain
     public sealed class TreasuryState : IModuleState
     {
         public const string StateId = "wils.treasury.state";
-        public int PrimaryZoneId, MapId, LastZoneDay, CommunityPercent = 25, OwnerFeePercent;
+        public int PrimaryZoneId, MapId, LastZoneDay, CommunityPercent = 50, OwnerFeePercent;
         public bool AdoptSurplus = true, Initialized;
         public int SurplusSinceDay, LastSurplus, LastIncomeDay, NoticeDay;
         public readonly ValuablesRegistry Valuables = new ValuablesRegistry();
