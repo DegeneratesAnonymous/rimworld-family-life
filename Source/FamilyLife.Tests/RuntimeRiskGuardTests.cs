@@ -44,6 +44,13 @@ namespace FamilyLife.Tests
             Assert.Contains("ClassSessions.EndStale(c, now);", Src("Education/Game/EducationDriver.cs"));
         }
 
+        [Fact] public void No_def_uses_an_empty_requiredCapacities_element_that_1_7_rejects()
+        {
+            // Observed in a real 1.7.5005 log: "<requiredCapacities /> doesn't correspond to any field in type ThoughtDef" (WFL_BabyCloseBy).
+            foreach (var f in RepoPaths.DefAndPatchFiles())
+                Assert.DoesNotContain("<requiredCapacities", System.IO.File.ReadAllText(f));
+        }
+
         [Fact] public void The_vanilla_hooks_target_the_two_methods_by_name_and_live_in_the_framework_only()
         {
             string h = Src("Game/MedicalWorkHooks.cs");

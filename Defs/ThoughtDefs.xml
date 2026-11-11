@@ -477,7 +477,6 @@
   <ThoughtDef>
     <defName>WFL_BabyCloseBy</defName>
     <workerClass>FamilyLife.ThoughtWorker_BabyCloseBy</workerClass>
-    <requiredCapacities />
     <stages>
       <li>
         <label>baby in my room</label>
