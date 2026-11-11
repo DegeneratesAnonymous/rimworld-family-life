@@ -86,7 +86,7 @@ namespace FamilyLife.Tests
             var l = Funded((AccountKind.Person, 1, 100), (AccountKind.Person, 2, 0), (AccountKind.Person, 3, 0));
             var d1 = l.OpenDebt(P(1), Ledger.CommunityId, DebtKind.Tax, 30, 5, "t"); var d2 = l.OpenDebt(P(1), P(3), DebtKind.Loan, 500, 8, "loan");
             Assert.Equal(LedgerResult.Ok, l.SettleEstate(P(1), new[] { P(2), P(3) }, "die1", 10));
-            Assert.Equal(DebtStatus.Paid, l.DebtById(d1.Id).Status); Assert.True(l.DebtById(d2.Id).Active); Assert.Equal(P(2), l.DebtById(d2.Id).Debtor); Assert.Equal(430, l.DebtById(d2.Id).Outstanding);          // the unpaid part of the loan passes to the first heir; it is never erased
+            Assert.Equal(DebtStatus.Paid, l.DebtById(d1.Id).Status); Assert.Equal(DebtStatus.WrittenOff, l.DebtById(d2.Id).Status); Assert.Equal(P(1), l.DebtById(d2.Id).Debtor); Assert.Equal(430, l.DebtById(d2.Id).Outstanding); Assert.Equal(70, l.Balance(P(3))); Assert.Equal(0, l.Balance(P(2)));          // creditors are paid from the estate; the shortfall stays visible and the heirs inherit no liability
             Assert.True(l.Get(P(1)).Closed); Assert.Equal(0, l.Balance(P(1))); Assert.True(l.Conserved);
             Assert.Equal(LedgerResult.Duplicate, l.SettleEstate(P(1), new[] { P(2) }, "die1", 10));
         }
@@ -469,14 +469,14 @@ namespace FamilyLife.Tests
             var l = TreasuryLedgerTests.Funded((AccountKind.Person, 1, 50), (AccountKind.Household, 7, 0)); var debt = l.OpenDebt(P(1), Ledger.CommunityId, DebtKind.Loan, 200, 9, "loan");
             Assert.Equal(LedgerResult.Ok, l.SettleEstate(P(1), new[] { H(7) }, "e", 5)); Assert.Equal(LedgerResult.Duplicate, l.SettleEstate(P(1), new[] { H(7) }, "e", 5));
             Assert.Equal(0, l.Balance(H(7)));                                                    // the 50 went to the creditor first
-            Assert.Equal(H(7), l.DebtById(debt.Id).Debtor); Assert.Equal(150, l.DebtById(debt.Id).Outstanding); Assert.True(l.Conserved);
+            Assert.Equal(P(1), l.DebtById(debt.Id).Debtor); Assert.Equal(DebtStatus.WrittenOff, l.DebtById(debt.Id).Status); Assert.Equal(150, l.DebtById(debt.Id).Outstanding); Assert.True(l.Conserved);
         }
 
         [Fact] public void Money_with_no_heir_goes_to_the_community_and_a_private_debt_with_no_heir_falls_to_it_too()
         {
             var l = TreasuryLedgerTests.Funded((AccountKind.Person, 1, 40), (AccountKind.Person, 2, 0)); var d = l.OpenDebt(P(1), P(2), DebtKind.Loan, 100, 9, "loan");
             l.SettleEstate(P(1), new string[0], "e", 3);
-            Assert.Equal(0, l.Balance(Ledger.CommunityId)); Assert.Equal(40, l.Balance(P(2))); Assert.Equal(Ledger.CommunityId, l.DebtById(d.Id).Debtor); Assert.Equal(60, l.DebtById(d.Id).Outstanding);
+            Assert.Equal(0, l.Balance(Ledger.CommunityId)); Assert.Equal(40, l.Balance(P(2))); Assert.Equal(DebtStatus.WrittenOff, l.DebtById(d.Id).Status); Assert.Equal(60, l.DebtById(d.Id).Outstanding);
         }
     }
 
@@ -484,33 +484,48 @@ namespace FamilyLife.Tests
     {
         [Fact] public void An_existing_colonys_silver_is_recorded_once_for_the_community_and_never_distributed()
         {
-            var st = new TreasuryState(); var d = SilverReconciler.Decide(st, 0, 800, 0, 100, true);
+            var st = new TreasuryState(); var d = SilverReconciler.Decide(st, 0, 800, 100, true);
             Assert.Equal(ReconcileAction.AdoptSurplus, d.Action); Assert.Equal(800, d.Amount); Assert.True(d.Initial);
-            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 800, 800, 800, 101, true).Action);
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 800, 800, 101, true).Action);
         }
 
-        [Fact] public void Later_unclaimed_silver_is_adopted_only_after_it_has_stayed_a_day_and_only_the_part_that_stayed()
+        [Fact] public void Later_unclaimed_silver_is_adopted_only_after_it_has_stayed_and_only_the_part_that_stayed()
         {
             var st = new TreasuryState { Initialized = true };
-            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 160, 100, 10, true).Action);          // just appeared: maybe a quest drop landing
-            var d = SilverReconciler.Decide(st, 100, 140, 100, 11, true);                                              // 40 of it stayed
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 160, 10, true).Action);          // just appeared: maybe a quest drop landing
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 140, 11, true).Action);
+            var d = SilverReconciler.Decide(st, 100, 140, 12, true);                                              // 40 of it stayed
             Assert.Equal(ReconcileAction.AdoptSurplus, d.Action); Assert.Equal(40, d.Amount);
         }
 
-        [Fact] public void A_shortfall_is_written_off_only_after_days_only_from_the_community_and_never_from_personal_accounts()
+        [Fact] public void Silver_arriving_through_a_reward_or_trade_is_not_adopted_as_unrelated_income()
         {
-            var st = new TreasuryState { Initialized = true };
-            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 300, 150, 10, true).Action);
-            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 300, 150, 12, true).Action);
-            var d = SilverReconciler.Decide(st, 500, 300, 150, 13, true);
-            Assert.Equal(ReconcileAction.WriteOffLoss, d.Action); Assert.Equal(150, d.Amount); Assert.Equal(50, d.Discrepancy);          // 50 stays visible: personal claims are not erased to hide it
+            var st = new TreasuryState { Initialized = true, LastIncomeDay = 10 };
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 160, 10, true).Action);
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 160, 11, true).Action);          // still settling
+            Assert.Equal(0, st.SurplusSinceDay);
         }
 
-        [Fact] public void A_recovered_shortfall_is_forgotten_and_a_written_off_loss_conserves_the_ledger()
+        [Fact] public void A_shortage_is_reported_as_unbacked_and_never_written_off_by_the_reconciler()
         {
-            var st = new TreasuryState { Initialized = true }; SilverReconciler.Decide(st, 500, 300, 150, 10, true);
-            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 500, 150, 11, true).Action); Assert.Equal(0, st.ShortSinceDay);
-            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 150), (AccountKind.Person, 1, 350)); Assert.Equal(LedgerResult.Ok, l.RecordLoss(Ledger.CommunityId, 150, "loss", 20, "stolen")); Assert.True(l.Conserved); Assert.Equal(350, l.TotalClaims);
+            var st = new TreasuryState { Initialized = true };
+            var d = SilverReconciler.Decide(st, 500, 300, 10, true);
+            Assert.Equal(ReconcileAction.None, d.Action); Assert.Equal(200, d.Unbacked);
+            Assert.Equal(0, SilverReconciler.Decide(st, 500, 500, 11, true).Unbacked);          // found again: nothing was lost from anyone
+        }
+
+        [Fact] public void Missing_silver_impairs_spending_pro_rata_keeps_ownership_and_recovers_when_found()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 150), (AccountKind.Person, 1, 350));
+            l.SetPhysical(300);                                                                   // 200 of 500 is gone
+            Assert.Equal(200, l.Unbacked); Assert.Equal(350, l.Balance(Ledger.IdFor(AccountKind.Person, 1))); Assert.Equal(150, l.Balance(Ledger.CommunityId));
+            Assert.True(l.Available(Ledger.IdFor(AccountKind.Person, 1)) < 350 && l.Available(Ledger.CommunityId) < 150); Assert.Equal(300, l.TotalAvailable); Assert.True(l.Conserved);
+            l.SetPhysical(500); Assert.Equal(0, l.Unbacked); Assert.Equal(350, l.Available(Ledger.IdFor(AccountKind.Person, 1)));
+        }
+
+        [Fact] public void Silver_held_by_pawns_and_caravans_counts_as_physical_so_nothing_is_missing()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 100)); l.SetPhysical(100); Assert.Equal(0, l.Unbacked);
         }
     }
 

@@ -27,6 +27,8 @@ namespace FamilyLife.Domain
     public sealed class WagePolicy
     {
         public const int DefaultRate = 4, DefaultDailyUnits = 4, DefaultPawnDailyCap = 24, OrdinaryRate = 1, OrdinaryDailyUnits = 3, DefaultOrdinaryDailyCap = 8;
+        /// <summary>Most unpaid ordinary wages one worker can be owed at once (about two quadrums of the daily cap is far too much; this is one quadrum). Work beyond it is still done but earns no further claim until arrears are paid down, so a colony with weak income cannot pile up unlimited debt.</summary>
+        public int OrdinaryArrearsCap = DefaultOrdinaryDailyCap * 15, ProfessionalArrearsCap = DefaultRate * DefaultDailyUnits * 15;          // professionals: one quadrum of a full working day
         public readonly Dictionary<string, int> Rates = new Dictionary<string, int>(StringComparer.Ordinal);
         public readonly Dictionary<string, int> DailyUnits = new Dictionary<string, int>(StringComparer.Ordinal);
         /// <summary>Silver paid per unit of finished work in this role (0 = unpaid).</summary>
@@ -96,45 +98,67 @@ namespace FamilyLife.Domain
             return done;
         }
 
+        /// <summary>
+        /// Settles one payday. Everything earned before it, plus wages still owed from earlier shortfalls, is what is due. Wages are claims that exist whether or not the treasury can pay: the payment
+        /// is limited to the spendable (backed) silver in the treasury, and what is not paid stays owed to the worker as a wage debt. When money is short, appointed professionals are served first,
+        /// but ordinary workers always keep a floor of a quarter of what is available, so neither group starves; within a group everyone gets the same fraction. Payroll only moves silver from the treasury.
+        /// </summary>
         private PayrollReport Settle(Ledger ledger, int payday, int funds)
         {
             var report = new PayrollReport { Payday = payday };
             string key = "payroll:" + payday;
             var due = earned.Where(e => e.Day < payday).ToList();
-            var perPawn = due.GroupBy(e => e.Pawn).ToDictionary(g => g.Key, g => g.Sum(e => e.Silver));
-            foreach (var d in ledger.Debts.Where(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId)) { int p = AccountPawn(d.Creditor); if (p > 0) perPawn[p] = (perPawn.TryGetValue(p, out var v) ? v : 0) + d.Outstanding; }
-            if (perPawn.Count == 0 || ledger.Applied(key)) { RemoveSettled(due); Remember(report); return report; }
-            long total = perPawn.Values.Sum(v => (long)v);
-            int available = Math.Max(0, Math.Min(funds, ledger.Balance(Ledger.CommunityId)));
-            var pay = new Dictionary<int, int>();
-            if (total <= available) foreach (var kv in perPawn) pay[kv.Key] = kv.Value;
-            else
-            {
-                var order = perPawn.OrderBy(kv => kv.Key).ToList();
-                foreach (var kv in order) pay[kv.Key] = (int)((long)available * kv.Value / total);
-                int left = available - pay.Values.Sum();
-                foreach (var kv in order.OrderByDescending(kv => (long)available * kv.Value - (long)pay[kv.Key] * total).ThenBy(kv => kv.Key).Take(left)) pay[kv.Key]++;
-            }
+            var dues = new Dictionary<(int pawn, bool ord), int>();
+            foreach (var e in due) { var k = (e.Pawn, Labour.IsOrdinary(e.Role)); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + e.Silver; }
+            foreach (var d in ledger.Debts.Where(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId)) { int p = AccountPawn(d.Creditor); if (p > 0) { var k = (p, d.Ordinary); dues[k] = (dues.TryGetValue(k, out var v) ? v : 0) + d.Outstanding; } }
+            if (dues.Count == 0 || ledger.Applied(key)) { RemoveSettled(due); Remember(report); return report; }
+
+            long profTotal = dues.Where(kv => !kv.Key.ord).Sum(kv => (long)kv.Value), ordTotal = dues.Where(kv => kv.Key.ord).Sum(kv => (long)kv.Value);
+            int available = Math.Max(0, Math.Min(funds, ledger.Available(Ledger.CommunityId)));
+            int ordFloor = (int)Math.Min(ordTotal, available / 4L);
+            int profPool = (int)Math.Min(profTotal, available - ordFloor), ordPool = (int)Math.Min(ordTotal, available - profPool);
+            var pay = new Dictionary<(int pawn, bool ord), int>();
+            Share(dues.Where(kv => !kv.Key.ord).ToList(), profTotal, profPool, pay); Share(dues.Where(kv => kv.Key.ord).ToList(), ordTotal, ordPool, pay);
+
             var moves = new List<Move>();
-            foreach (var kv in pay.OrderBy(k => k.Key)) { if (kv.Value > 0) { ledger.Ensure(AccountKind.Person, kv.Key); moves.Add(new Move(Ledger.CommunityId, Ledger.IdFor(AccountKind.Person, kv.Key), kv.Value, "wages")); } }
-            if (moves.Count > 0 && ledger.Apply(key, payday, TxKind.Payroll, moves) != LedgerResult.Ok) { return report; }          // nothing moved, nothing marked settled: it is tried again, never doubled
-            // Wages still owed carry over as one wage debt per person: what they were due, less what they were paid.
-            foreach (var kv in perPawn)
+            foreach (var g in pay.GroupBy(kv => kv.Key.pawn).OrderBy(g => g.Key)) { int amt = g.Sum(kv => kv.Value); if (amt > 0) { ledger.Ensure(AccountKind.Person, g.Key); moves.Add(new Move(Ledger.CommunityId, Payee(ledger, g.Key), amt, "wages")); } }
+            if (moves.Count > 0 && ledger.Apply(key, payday, TxKind.Payroll, moves) != LedgerResult.Ok) return report;          // nothing moved, nothing marked settled: it is tried again, never doubled
+
+            foreach (var kv in dues)
             {
-                int paid = pay.TryGetValue(kv.Key, out var pp) ? pp : 0, unpaid = kv.Value - paid;
-                string acct = Ledger.IdFor(AccountKind.Person, kv.Key);
-                var debt = ledger.Debts.FirstOrDefault(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId && x.Creditor == acct);
-                int newlyEarned = due.Where(e => e.Pawn == kv.Key).Sum(e => e.Silver);
+                int paid = pay.TryGetValue(kv.Key, out var pp) ? pp : 0, forfeit = Math.Max(0, kv.Value - paid - (kv.Key.ord ? Policy.OrdinaryArrearsCap : Policy.ProfessionalArrearsCap)), unpaid = kv.Value - paid - forfeit;
+                string acct = Ledger.IdFor(AccountKind.Person, kv.Key.pawn);
+                var debt = ledger.Debts.FirstOrDefault(x => x.Active && x.Kind == DebtKind.Wage && x.Debtor == Ledger.CommunityId && x.Creditor == acct && x.Ordinary == kv.Key.ord);
+                int newlyEarned = Math.Max(0, due.Where(e => e.Pawn == kv.Key.pawn && Labour.IsOrdinary(e.Role) == kv.Key.ord).Sum(e => e.Silver) - forfeit);
                 if (debt != null) { ledger.Increase(debt, newlyEarned); ledger.RecordPayment(debt, paid, payday); }
-                else if (unpaid > 0) { ledger.Ensure(AccountKind.Person, kv.Key); var nd = ledger.OpenDebt(Ledger.CommunityId, acct, DebtKind.Wage, kv.Value, payday, "payroll " + payday); if (nd != null) ledger.RecordPayment(nd, paid, payday); }
-                report.Lines.Add(new PayLine { Pawn = kv.Key, Due = kv.Value, Paid = paid });
+                else if (unpaid > 0) { ledger.Ensure(AccountKind.Person, kv.Key.pawn); var nd = ledger.OpenDebt(Ledger.CommunityId, acct, DebtKind.Wage, kv.Value - forfeit, payday, "payroll " + payday); if (nd != null) { nd.Ordinary = kv.Key.ord; ledger.RecordPayment(nd, paid, payday); } }
             }
-            report.TotalDue = (int)total; report.TotalPaid = pay.Values.Sum();
+            foreach (var g in dues.GroupBy(kv => kv.Key.pawn).OrderBy(g => g.Key)) report.Lines.Add(new PayLine { Pawn = g.Key, Due = g.Sum(kv => kv.Value), Paid = g.Sum(kv => pay.TryGetValue(kv.Key, out var pp) ? pp : 0) });
+            report.TotalDue = (int)(profTotal + ordTotal); report.TotalPaid = pay.Values.Sum();
             RemoveSettled(due); Remember(report);
             return report;
         }
 
+        /// <summary>Shares a pool among a class pro rata (largest remainder, never more than a worker is due).</summary>
+        private static void Share(List<KeyValuePair<(int pawn, bool ord), int>> members, long total, int pool, Dictionary<(int pawn, bool ord), int> into)
+        {
+            if (total <= 0 || pool <= 0) return;
+            if (pool >= total) { foreach (var kv in members) into[kv.Key] = kv.Value; return; }
+            var order = members.OrderBy(kv => kv.Key.pawn).ToList();
+            foreach (var kv in order) into[kv.Key] = (int)((long)pool * kv.Value / total);
+            int left = pool - order.Sum(kv => into[kv.Key]);
+            foreach (var kv in order.OrderByDescending(kv => (long)pool * kv.Value - (long)into[kv.Key] * total).ThenBy(kv => kv.Key.pawn).Take(left)) into[kv.Key] = Math.Min(kv.Value, into[kv.Key] + 1);
+        }
+
         private static int AccountPawn(string id) => id != null && id.StartsWith("p:", StringComparison.Ordinal) && int.TryParse(id.Substring(2), out var n) ? n : 0;
+        /// <summary>Wages go to the worker's account; if that account was closed (the worker died and the estate was settled) they go to the account that inherited it, so one closed account never blocks the whole payroll.</summary>
+        private static string Payee(Ledger ledger, int pawn)
+        {
+            string id = Ledger.IdFor(AccountKind.Person, pawn); var a = ledger.Get(id);
+            for (int i = 0; i < 4 && a != null && a.Closed && !string.IsNullOrEmpty(a.Successor); i++) { id = a.Successor; a = ledger.Get(id); }
+            return a == null || a.Closed ? Ledger.CommunityId : id;
+        }
+
         private void RemoveSettled(List<Earning> settled) { foreach (var e in settled) earned.Remove(e); }
         private void Remember(PayrollReport r) { Reports.Add(r); while (Reports.Count > MaxReports) Reports.RemoveAt(0); }
 

@@ -34,7 +34,9 @@
   <WFL_Tr_Transactions>Transactions</WFL_Tr_Transactions>
   <WFL_Tr_CommunityFunds>Community funds: {0} silver</WFL_Tr_CommunityFunds>
   <WFL_Tr_Claims>All accounts together hold {0} silver of claims; {1} silver is physically in storage.</WFL_Tr_Claims>
-  <WFL_Tr_Discrepancy>The claims and the silver in storage differ by {0}. Nothing is created or removed to hide it.</WFL_Tr_Discrepancy>
+  <WFL_Tr_Discrepancy>{0} silver of the accounts is not backed by silver that can be found (usable now: {1}). Everyone keeps what they own, but spending is limited until it is found or the loss is accepted.</WFL_Tr_Discrepancy>
+  <WFL_Tr_Surplus>{0} silver in storage belongs to nobody yet. It becomes community funds if it stays unclaimed.</WFL_Tr_Surplus>
+  <WFL_Tr_Unbacked>{0} silver that accounts own cannot be found. Nobody loses their balance, but spending is reduced until it is recovered.</WFL_Tr_Unbacked>
   <WFL_Tr_Wealth>Personal and household wealth: {0} silver in {1} accounts.</WFL_Tr_Wealth>
   <WFL_Tr_NextPayday>Next payday: {0} days away. Wages earned and waiting: {1} silver.</WFL_Tr_NextPayday>
   <WFL_Tr_DebtsTotal>Outstanding debts: {0} silver in {1} obligations.</WFL_Tr_DebtsTotal>

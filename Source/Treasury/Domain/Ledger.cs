@@ -37,7 +37,8 @@ namespace FamilyLife.Domain
 
     public sealed class Debt
     {
-        public int Id, Original, Outstanding, DueDay, Installment, EveryDays, FamilyRef, NextDueDay;
+        public int Id, Original, Outstanding, DueDay, Installment, EveryDays, FamilyRef, NextDueDay, Waived;          // Waived: part given up by decision, never paid
+        public bool Ordinary;          // a wage debt for ordinary labour (paid after professional wages when money is short)
         public string Debtor, Creditor, Origin;
         public DebtKind Kind;
         public DebtStatus Status;
@@ -86,6 +87,52 @@ namespace FamilyLife.Domain
         public bool Conserved => accounts.Values.Sum(a => (long)a.Balance) == ExternalIn - ExternalOut;
         public long TotalClaims => accounts.Values.Sum(a => (long)a.Balance);
 
+        // ------------------------------------------------------------------ backing and liquidity
+        // Five different things are kept apart: the silver that physically exists (told to the ledger by the game), who owns it (balances, never reduced by a loss), what may be spent now
+        // (Available), what is owed (debts, never netted against balances) and the part of the claims that has no silver behind it (Unbacked). A theft never erases ownership, but it does take
+        // spending power away from every account in proportion until the silver is found again or the owners accept the loss (WriteDown).
+
+        /// <summary>Claims that currently have no physical silver behind them. Set by the reconciliation from the silver the colony really holds; zero means every claim is backed.</summary>
+        public int Unbacked;
+
+        /// <summary>Tells the ledger how much silver physically exists. Claims above it become <see cref="Unbacked"/>; nothing is credited or removed.</summary>
+        public void SetPhysical(long physical) { Unbacked = (int)Math.Max(0, Math.Min(int.MaxValue, TotalClaims - Math.Max(0, physical))); }
+
+        /// <summary>
+        /// What an account can spend right now: its balance less its proportional share (rounded up, so the total can never exceed the silver that exists) of the unbacked claims. The balance itself
+        /// is untouched, so the account regains its spending power if the silver comes back.
+        /// </summary>
+        public int Available(string id)
+        {
+            var a = Get(id); if (a == null || a.Closed) return 0;
+            long claims = TotalClaims; if (Unbacked <= 0 || claims <= 0) return a.Balance;
+            long impaired = ((long)a.Balance * Math.Min(Unbacked, claims) + claims - 1) / claims;
+            return (int)Math.Max(0, a.Balance - impaired);
+        }
+        public long TotalAvailable => accounts.Values.Where(a => !a.Closed).Sum(a => (long)Available(a.Id));
+
+        /// <summary>
+        /// The owners accept that unbacked silver is gone: every account loses its proportional share (largest-remainder, exactly the unbacked total) as a recorded <see cref="TxKind.Correction"/>, after
+        /// which the claims equal the silver that exists. Only ever called by an explicit decision, never automatically. Returns the amount written down.
+        /// </summary>
+        public int WriteDown(string key, int day)
+        {
+            if (Unbacked <= 0 || (key != null && keys.ContainsKey(key))) return 0;
+            long claims = TotalClaims; int loss = (int)Math.Min(Unbacked, claims);
+            var holders = accounts.Values.Where(a => !a.Closed && a.Balance > 0).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+            var share = holders.ToDictionary(a => a.Id, a => (int)((long)a.Balance * loss / claims));
+            int left = loss - share.Values.Sum();
+            foreach (var a in holders.OrderByDescending(a => (long)a.Balance * loss - (long)share[a.Id] * claims).ThenBy(a => a.Id, StringComparer.Ordinal).Take(left)) share[a.Id]++;
+            var moves = holders.Where(a => share[a.Id] > 0).Select(a => new Move(a.Id, null, Math.Min(a.Balance, share[a.Id]), "accepted loss of unbacked silver")).ToList();
+            if (moves.Count == 0 || Apply(key, day, TxKind.Correction, moves) != LedgerResult.Ok) return 0;
+            int taken = moves.Sum(m => m.Amount); Unbacked = Math.Max(0, Unbacked - taken); return taken;
+        }
+
+        // Income received since an account was last assessed for tax (rewards, wages, trade proceeds). Kept here, not read back from the bounded history, so a busy colony cannot lose income to trimming.
+        private readonly Dictionary<string, int> incomeSince = new Dictionary<string, int>();
+        public int IncomeSince(string account) => incomeSince.TryGetValue(account, out var v) ? v : 0;
+        public int TakeIncome(string account) { int v = IncomeSince(account); incomeSince.Remove(account); return v; }
+
         /// <summary>Applies the legs together or not at all. A leg with a null side is silver entering or leaving the community; both sides null, a non-positive amount, a closed or unknown account, or an account that would go negative refuses the whole batch.</summary>
         public LedgerResult Apply(string key, int day, TxKind kind, IList<Move> moves, string tag = null)
         {
@@ -104,6 +151,7 @@ namespace FamilyLife.Domain
             {
                 if (m.From != null) accounts[m.From].Balance -= m.Amount; else ExternalIn += m.Amount;
                 if (m.To != null) accounts[m.To].Balance += m.Amount; else ExternalOut += m.Amount;
+                if (m.To != null && (kind == TxKind.Reward || kind == TxKind.Payroll || kind == TxKind.Trade)) incomeSince[m.To] = IncomeSince(m.To) + m.Amount;
                 history.Add(new Transaction { Id = NextTxId++, Day = day, Kind = kind, From = m.From, To = m.To, Amount = m.Amount, Key = key, Memo = m.Memo, Tag = tag });
             }
             if (key != null) keys[key] = day;
@@ -144,7 +192,7 @@ namespace FamilyLife.Domain
         public int Pay(int debtId, int amount, string key, int day)
         {
             var d = DebtById(debtId); if (d == null || !d.Active || amount <= 0) return 0;
-            int pay = Math.Min(Math.Min(amount, d.Outstanding), Balance(d.Debtor));
+            int pay = Math.Min(Math.Min(amount, d.Outstanding), Available(d.Debtor));          // only silver that is backed can pay a debt
             if (pay <= 0) return 0;
             if (Transfer(d.Debtor, d.Creditor, pay, d.Kind == DebtKind.Tax ? TxKind.Tax : d.Kind == DebtKind.Wage ? TxKind.Payroll : TxKind.Debt, key, day, "debt " + d.Id) != LedgerResult.Ok) return 0;
             d.Outstanding -= pay; d.Payments.Add(day + ":" + pay); if (d.Payments.Count > 12) d.Payments.RemoveAt(0);
@@ -156,7 +204,16 @@ namespace FamilyLife.Domain
         public void Increase(Debt d, int amount) { if (d == null || amount <= 0) return; d.Original += amount; d.Outstanding += amount; if (d.Status == DebtStatus.Paid) d.Status = DebtStatus.Open; }
         public void RecordPayment(Debt d, int paid, int day) { if (d == null || paid <= 0) return; d.Outstanding = Math.Max(0, d.Outstanding - paid); d.Payments.Add(day + ":" + paid); if (d.Payments.Count > 12) d.Payments.RemoveAt(0); if (d.Outstanding == 0 && d.Active) d.Status = DebtStatus.Paid; }
 
-        public bool Forgive(int debtId) { var d = DebtById(debtId); if (d == null || !d.Active) return false; d.Status = DebtStatus.Forgiven; d.Outstanding = 0; return true; }
+        /// <summary>Gives up part of what is owed by decision (a favour, a bribe, forgiveness). It is recorded as <see cref="Debt.Waived"/>, never as a payment, so a waived obligation can be told apart from a paid one.</summary>
+        public int Waive(Debt d, int amount, int day)
+        {
+            if (d == null || !d.Active || amount <= 0) return 0;
+            int w = Math.Min(amount, d.Outstanding); d.Outstanding -= w; d.Waived += w;
+            if (d.Outstanding == 0) d.Status = d.Waived >= d.Original ? DebtStatus.Forgiven : DebtStatus.Paid;
+            return w;
+        }
+
+        public bool Forgive(int debtId) { var d = DebtById(debtId); if (d == null || !d.Active) return false; Waive(d, d.Outstanding, 0); d.Status = DebtStatus.Forgiven; return true; }
         public bool Dispute(int debtId, bool disputed) { var d = DebtById(debtId); if (d == null || (d.Status != DebtStatus.Open && d.Status != DebtStatus.Disputed)) return false; d.Status = disputed ? DebtStatus.Disputed : DebtStatus.Open; return true; }
 
         // ------------------------------------------------------------------ household changes and death
@@ -189,7 +246,7 @@ namespace FamilyLife.Domain
             {
                 int part = num == den ? d.Outstanding : (int)((long)d.Outstanding * num / den);
                 if (part <= 0) continue;
-                var moved = new Debt { Id = NextDebtId++, Debtor = d.Debtor == from ? to : d.Debtor, Creditor = d.Creditor == from ? to : d.Creditor, Kind = d.Kind, Original = part, Outstanding = part, DueDay = d.DueDay, NextDueDay = d.NextDueDay, Installment = d.Installment, EveryDays = d.EveryDays, FamilyRef = d.FamilyRef, Origin = (d.Origin ?? "") + " (share)", Status = d.Status };
+                var moved = new Debt { Id = NextDebtId++, Debtor = d.Debtor == from ? to : d.Debtor, Creditor = d.Creditor == from ? to : d.Creditor, Kind = d.Kind, Ordinary = d.Ordinary, Original = part, Outstanding = part, DueDay = d.DueDay, NextDueDay = d.NextDueDay, Installment = d.Installment, EveryDays = d.EveryDays, FamilyRef = d.FamilyRef, Origin = (d.Origin ?? "") + " (share)", Status = d.Status };
                 d.Outstanding -= part; if (d.Outstanding == 0) d.Status = DebtStatus.Paid;
                 if (moved.Debtor == moved.Creditor) continue;          // both sides ended up the same account: the obligation cancels itself
                 debts.Add(moved);
@@ -201,31 +258,43 @@ namespace FamilyLife.Domain
         public LedgerResult RecordLoss(string account, int amount, string key, int day, string memo) => Spend(account, amount, TxKind.Correction, key, day, memo);
 
         /// <summary>
-        /// A person dies. Their debts are paid from what they had, oldest first; whatever cannot be paid is written off (a debt does not pass to heirs unless the estate system makes a separate
-        /// obligation); what remains is shared equally among the heirs, the odd silver going to the first. The account is closed and points at its first heir.
+        /// A person dies. The estate is settled from the estate's own assets first: creditors are paid in order of standing (public obligations - tax, restitution, damage - before private debts), and within a
+        /// class pro rata when the assets fall short, so no creditor is favoured by being first on a list. What cannot be paid is recorded as an unrecovered estate shortfall (status written off, the unpaid
+        /// amount kept visible); it does <b>not</b> pass to the heirs unless <paramref name="heirsLiable"/> is set by an explicit gameplay policy. What remains is shared equally among the heirs, the odd silver
+        /// to the first, or goes to the community if there are none. Debts owed to the deceased pass to the first heir (or the community). The account closes. Applied once per key.
         /// </summary>
-        public LedgerResult SettleEstate(string deceased, IList<string> heirs, string key, int day)
+        public LedgerResult SettleEstate(string deceased, IList<string> heirs, string key, int day, bool heirsLiable = false)
         {
             var acct = Get(deceased); if (acct == null) return LedgerResult.UnknownAccount;
             if (key != null && keys.ContainsKey(key)) return LedgerResult.Duplicate;
             var live = (heirs ?? new string[0]).Where(h => h != deceased && Get(h) != null && !Get(h).Closed).Distinct().ToList();
             var moves = new List<Move>(); int left = acct.Balance;
-            foreach (var d in debts.Where(x => x.Active && x.Debtor == deceased).OrderBy(x => x.DueDay).ThenBy(x => x.Id).ToList())
+            var owed = debts.Where(x => x.Active && x.Debtor == deceased).OrderBy(x => x.DueDay).ThenBy(x => x.Id).ToList();
+            foreach (var cls in new[] { owed.Where(x => x.Kind == DebtKind.Tax || x.Kind == DebtKind.Restitution || x.Kind == DebtKind.Damage).ToList(), owed.Where(x => !(x.Kind == DebtKind.Tax || x.Kind == DebtKind.Restitution || x.Kind == DebtKind.Damage)).ToList() })
             {
-                int pay = Math.Min(left, d.Outstanding);
-                if (pay > 0) { moves.Add(new Move(deceased, d.Creditor, pay, "estate debt " + d.Id)); left -= pay; d.Outstanding -= pay; d.Payments.Add(day + ":" + pay); }
-                if (d.Outstanding == 0) d.Status = DebtStatus.Paid;
-                else if (live.Count > 0) { d.Debtor = live[0]; d.Origin = (d.Origin ?? "") + " (inherited)"; if (d.Creditor == d.Debtor) { d.Status = DebtStatus.Forgiven; d.Outstanding = 0; } }          // an unpaid obligation passes to the first heir; it is never erased
-                else if (d.Creditor == CommunityId) { d.Status = DebtStatus.Forgiven; d.Outstanding = 0; }          // nobody to inherit and the community is the creditor: it forgives
-                else { d.Debtor = CommunityId; d.Origin = (d.Origin ?? "") + " (estate with no heir)"; }          // an unpaid private debt with no heir falls to the community, so the creditor is not silently wronged
+                long total = cls.Sum(x => (long)x.Outstanding); if (total <= 0 || left <= 0) continue;
+                int pool = (int)Math.Min(left, total);
+                var pay = cls.ToDictionary(x => x.Id, x => (int)((long)pool * x.Outstanding / total));
+                int rest = pool - pay.Values.Sum();
+                foreach (var x in cls.OrderByDescending(x => (long)pool * x.Outstanding - (long)pay[x.Id] * total).ThenBy(x => x.Id).Take(rest)) pay[x.Id]++;
+                foreach (var x in cls)
+                {
+                    int p = Math.Min(pay[x.Id], x.Outstanding); if (p <= 0) continue;
+                    moves.Add(new Move(deceased, x.Creditor, p, "estate debt " + x.Id)); x.Outstanding -= p; x.Payments.Add(day + ":" + p); left -= p;
+                    if (x.Outstanding == 0) x.Status = DebtStatus.Paid;
+                }
+            }
+            foreach (var d in owed.Where(x => x.Outstanding > 0))
+            {
+                if (heirsLiable && live.Count > 0) { d.Debtor = live[0]; d.Origin = (d.Origin ?? "") + " (inherited by policy)"; if (d.Creditor == d.Debtor) Waive(d, d.Outstanding, day); }
+                else { d.Status = DebtStatus.WrittenOff; d.Origin = (d.Origin ?? "") + " (estate shortfall)"; }          // the unpaid amount stays on the record; it is no longer a live liability of anyone
             }
             if (left > 0)
             {
-                string sink = live.Count > 0 ? null : CommunityId;          // no heir: the community inherits
-                if (live.Count == 0) moves.Add(new Move(deceased, sink, left, "estate to community"));
+                if (live.Count == 0) moves.Add(new Move(deceased, CommunityId, left, "estate to community"));
                 else { int share = left / live.Count, odd = left - share * live.Count; for (int i = 0; i < live.Count; i++) { int part = share + (i == 0 ? odd : 0); if (part > 0) moves.Add(new Move(deceased, live[i], part, "inheritance")); } }
             }
-            foreach (var d in debts.Where(x => x.Active && x.Creditor == deceased).ToList()) { d.Creditor = live.Count > 0 ? live[0] : CommunityId; }
+            foreach (var d in debts.Where(x => x.Active && x.Creditor == deceased).ToList()) d.Creditor = live.Count > 0 ? live[0] : CommunityId;
             if (moves.Count > 0) { var r = Apply(key, day, TxKind.Estate, moves); if (r != LedgerResult.Ok) return r; } else if (key != null) keys[key] = day;
             acct.Closed = true; acct.Successor = live.Count > 0 ? live[0] : CommunityId;
             return LedgerResult.Ok;
@@ -240,7 +309,8 @@ namespace FamilyLife.Domain
             w.Strings("acct", accounts.Values.OrderBy(a => a.Id, StringComparer.Ordinal).Select(a => string.Join("|", S(a.Id), (int)a.Kind, a.Owner, a.Balance, a.Closed ? 1 : 0, S(a.Successor))).ToList());
             w.Strings("tx", history.Select(t => string.Join("|", t.Id, t.Day, (int)t.Kind, S(t.From), S(t.To), t.Amount, S(t.Key), S(t.Memo), S(t.Tag))).ToList());
             w.Strings("key", keys.OrderBy(k => k.Value).ThenBy(k => k.Key, StringComparer.Ordinal).Select(k => S(k.Key) + "|" + k.Value).ToList());
-            w.Strings("debt", debts.Select(d => string.Join("|", d.Id, S(d.Debtor), S(d.Creditor), (int)d.Kind, d.Original, d.Outstanding, d.DueDay, d.Installment, d.EveryDays, d.FamilyRef, d.NextDueDay, (int)d.Status, S(d.Origin), string.Join(";", d.Payments))).ToList());
+            w.Strings("debt", debts.Select(d => string.Join("|", d.Id, S(d.Debtor), S(d.Creditor), (int)d.Kind, d.Original, d.Outstanding, d.DueDay, d.Installment, d.EveryDays, d.FamilyRef, d.NextDueDay, (int)d.Status, S(d.Origin), string.Join(";", d.Payments), d.Waived, d.Ordinary ? 1 : 0)).ToList());
+            w.Int("unb", Unbacked); w.Strings("inc", incomeSince.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => S(k.Key) + "|" + k.Value).ToList());
             return w.ToString();
         }
 
@@ -248,6 +318,7 @@ namespace FamilyLife.Domain
         {
             var l = new Ledger(); l.accounts.Clear();
             l.NextTxId = Math.Max(1, r.Int("ntx", 1)); l.NextDebtId = Math.Max(1, r.Int("ndebt", 1));
+            l.Unbacked = r.Int("unb"); foreach (var s in r.Strings("inc")) { var p = s.Split('|'); if (p.Length == 2 && p[0].Length > 0) l.incomeSince[p[0]] = I(p[1]); }
             long.TryParse(r.Strings("xin").FirstOrDefault() ?? "0", System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out l.ExternalIn);
             long.TryParse(r.Strings("xout").FirstOrDefault() ?? "0", System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out l.ExternalOut);
             foreach (var s in r.Strings("acct")) { var p = s.Split('|'); if (p.Length < 6 || string.IsNullOrEmpty(p[0])) continue; l.accounts[p[0]] = new Account { Id = p[0], Kind = (AccountKind)I(p[1]), Owner = I(p[2]), Balance = I(p[3]), Closed = p[4] == "1", Successor = p[5].Length == 0 ? null : p[5] }; }
@@ -259,6 +330,7 @@ namespace FamilyLife.Domain
                 var p = s.Split('|'); if (p.Length < 14) continue;
                 var d = new Debt { Id = I(p[0]), Debtor = p[1], Creditor = p[2], Kind = (DebtKind)I(p[3]), Original = I(p[4]), Outstanding = I(p[5]), DueDay = I(p[6]), Installment = I(p[7]), EveryDays = I(p[8]), FamilyRef = I(p[9]), NextDueDay = I(p[10]), Status = (DebtStatus)I(p[11]), Origin = p[12] };
                 if (p[13].Length > 0) d.Payments.AddRange(p[13].Split(';'));
+                if (p.Length >= 16) { d.Waived = I(p[14]); d.Ordinary = p[15] == "1"; }
                 l.debts.Add(d);
             }
             return l;

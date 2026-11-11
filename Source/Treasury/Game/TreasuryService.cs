@@ -65,6 +65,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current; if (c == null || amount <= 0) return;
             var r = c.Registry; var st = r.Treasury();
+            st.LastIncomeDay = Today();
             var result = Income.DistributeReward(r.Ledger(), amount, Residents(r), new IncomePolicy { CommunityPercent = st.CommunityPercent }, key, Today());
             if (result == LedgerResult.Ok) { Messages.Message("WFL_Tr_RewardShared".Translate(amount, r.Ledger().Balance(Ledger.CommunityId)), MessageTypeDefOf.NeutralEvent, false); TreasuryOffice.Add(c, "reward|" + key, FinancialOp.RewardDistribution); }
         }
@@ -77,6 +78,7 @@ namespace FamilyLife
             int cost = report.Lines.Where(x => !x.Sold).Sum(x => x.Count * x.UnitPrice);
             var plan = cost > 0 ? Trade.Plan(l, cost, report.ColonySilverBefore) : null;
             var sales = report.Lines.Where(x => x.Sold).Select(x => new Income.Sale { Proceeds = x.Count * x.UnitPrice, OwnerAccount = x.OwnerPawn != null && r.GetPerson(x.OwnerPawn.thingIDNumber)?.InColony == true ? PersonAccount(r, x.OwnerPawn.thingIDNumber) : null }).ToList();
+            st.LastIncomeDay = Today();
             var res = Trade.Settle(l, report.Id, Today(), plan, sales, Residents(r), new IncomePolicy { CommunityPercent = st.CommunityPercent, OwnerFeePercent = st.OwnerFeePercent });
             if (res == LedgerResult.Ok && plan != null && plan.Legs.Count > 0) TreasuryOffice.Add(c, "trade|" + report.Id, FinancialOp.PooledTrade);
             if (res != LedgerResult.Ok && res != LedgerResult.Duplicate) Log.Warning("[Wil's Treasury] A trade could not be recorded (" + res + ").");
@@ -96,19 +98,13 @@ namespace FamilyLife
 
         // ------------------------------------------------------------------ ordinary labour
 
-        /// <summary>
-        /// Ordinary labour is paid only while the treasury could actually cover it: when what is already waiting or owed exceeds the treasury's balance, further ordinary work still gets done but earns
-        /// nothing, so ordinary wages can never pile up into debt the colony's real income cannot meet. (Appointed professionals are paid regardless and can become wage debts.)
-        /// </summary>
-        private static bool CanFundOrdinary(FamilyRegistry r) { var l = r.Ledger(); return r.Payroll().PendingTotal + l.Liabilities(Ledger.CommunityId) <= l.Balance(Ledger.CommunityId); }
-
         public static void OnLabour(LabourReport rep)
         {
             var c = FamilyComponent.Current; if (c == null || rep?.Pawn == null) return;
             TreasuryOffice.OnJobFinished(rep);
             var r = c.Registry; var person = r.GetPerson(rep.Pawn.thingIDNumber); if (person == null || !person.InColony) return;
             var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, WorkAmount = rep.WorkAmount };
-            string cat = Labour.CategoryOf(facts); if (cat == null || !CanFundOrdinary(r)) return;
+            string cat = Labour.CategoryOf(facts); if (cat == null) return;
             int day = Today();
             r.Payroll().Accrue(rep.Pawn.thingIDNumber, Labour.Role(cat), Labour.Units(facts, cat), day, Labour.Key(facts, cat, day));
         }
@@ -123,7 +119,7 @@ namespace FamilyLife
             var r = c.Registry; if (r.GetPerson(pawn.thingIDNumber)?.InColony != true) return;
             researchCarry.TryGetValue(pawn.thingIDNumber, out float carry);
             int units = Labour.ResearchUnits(ref carry, performed); researchCarry[pawn.thingIDNumber] = carry;
-            if (units <= 0 || !CanFundOrdinary(r)) return;
+            if (units <= 0) return;
             int day = Today(); researchUnits.TryGetValue(pawn.thingIDNumber, out int n);
             for (int i = 0; i < units; i++) r.Payroll().Accrue(pawn.thingIDNumber, Labour.Role("research"), 1, day, "r:" + pawn.thingIDNumber + ":" + day + ":" + (++n));
             researchUnits[pawn.thingIDNumber] = n;
@@ -155,12 +151,12 @@ namespace FamilyLife
         /// </summary>
         private static void Reconcile(Ledger l, TreasuryState st, int physical, int now, int today)
         {
-            var d = SilverReconciler.Decide(st, l.TotalClaims, physical, l.Balance(Ledger.CommunityId), today, st.AdoptSurplus);
-            st.Discrepancy = d.Discrepancy;
+            var d = SilverReconciler.Decide(st, l.TotalClaims, physical, today, st.AdoptSurplus);
             if (d.Action == ReconcileAction.AdoptSurplus && d.Amount > 0 && l.Receive(Ledger.CommunityId, d.Amount, TxKind.Correction, "recon:" + now, today, d.Initial ? "silver already in storage when the treasury began" : "unclaimed silver in storage") == LedgerResult.Ok && d.Initial)
                 Messages.Message("WFL_Tr_Adopted".Translate(d.Amount), MessageTypeDefOf.NeutralEvent, false);
-            else if (d.Action == ReconcileAction.WriteOffLoss && d.Amount > 0 && l.RecordLoss(Ledger.CommunityId, d.Amount, "loss:" + now, today, "silver missing from storage") == LedgerResult.Ok)
-                Messages.Message("WFL_Tr_Lost".Translate(d.Amount), MessageTypeDefOf.NegativeEvent, false);
+            l.SetPhysical(physical);          // claims above the silver that exists are unbacked: ownership is kept, spending power is reduced pro rata
+            if (l.Unbacked > 0 && today - st.NoticeDay >= 5) { st.NoticeDay = today; Messages.Message("WFL_Tr_Unbacked".Translate(l.Unbacked), MessageTypeDefOf.NegativeEvent, false); }
+            else if (l.Unbacked == 0) st.NoticeDay = 0;
         }
 
         // ------------------------------------------------------------------ Family Life: households and death
@@ -174,18 +170,19 @@ namespace FamilyLife
         {
             var r = c.Registry; var l = r.Ledger(); int today = Today();
             var died = new HashSet<int>(events.Where(e => e.Kind == FamilyEventKind.Died).Select(e => e.A));
-            var leaves = events.Where(e => e.Kind == FamilyEventKind.HouseholdLeft && !died.Contains(e.A) && r.GetPerson(e.A)?.Presence != Presence.Dead).ToList();
-            for (int i = 0; i < leaves.Count; i++)
+            var left = events.Where(e => e.Kind == FamilyEventKind.HouseholdLeft && !died.Contains(e.A) && r.GetPerson(e.A)?.Presence != Presence.Dead).ToList();
+            foreach (var group in left.GroupBy(e => e.B))
             {
-                var e = leaves[i]; string from = Ledger.IdFor(AccountKind.Household, e.B);
-                if (l.Get(from) == null || l.Get(from).Closed) continue;
-                int remaining = r.GetHousehold(e.B)?.ResidentIds.Count(id => r.GetPerson(id)?.Presence != Presence.Dead) ?? 0;
-                int den = remaining + leaves.Skip(i).Count(x => x.B == e.B);
-                var joined = events.FirstOrDefault(x => x.Kind == FamilyEventKind.HouseholdJoined && x.A == e.A);
-                string to = joined != null ? Ledger.IdFor(AccountKind.Household, joined.B) : PersonAccount(r, e.A);
-                if (joined != null) l.Ensure(AccountKind.Household, joined.B);
-                if (to == from) continue;
-                l.TransferShare(from, to, 1, Math.Max(1, den), "hl:" + e.A + ":" + e.B + ":" + e.Tick, today);
+                int oldH = group.Key; var house = r.GetHousehold(oldH);
+                var residents = house?.ResidentIds.Where(id => r.GetPerson(id)?.Presence != Presence.Dead).ToList() ?? new List<int>();
+                var leavers = group.Select(e => new Leaver { Pawn = e.A, DestHousehold = events.FirstOrDefault(x => x.Kind == FamilyEventKind.HouseholdJoined && x.A == e.A)?.B ?? 0, Away = r.GetPerson(e.A)?.InColony != true }).ToList();
+                bool divorce = leavers.Any(lv => events.Any(x => x.Kind == FamilyEventKind.PartnershipEnded && ((x.A == lv.Pawn && residents.Contains(x.B)) || (x.B == lv.Pawn && residents.Contains(x.A)))));
+                HouseholdRules.OnLeave(l, oldH, residents.Count, leavers, divorce, "hl:" + oldH + ":" + group.Min(e => e.Tick), today);
+            }
+            foreach (var e in events.Where(x => x.Kind == FamilyEventKind.HouseholdJoined && !left.Any(lv => lv.A == x.A)))          // someone who was away joins a household again
+            {
+                int old = r.GetPerson(e.A)?.LastHouseholdId ?? 0; if (old == 0) continue;
+                HouseholdRules.OnReturn(l, old, e.B, r.GetHousehold(old)?.ResidentIds.Count > 0, "hr:" + e.A + ":" + old + ":" + e.Tick, today);
             }
             foreach (int id in died) SettleDeath(r, l, id, today);
         }

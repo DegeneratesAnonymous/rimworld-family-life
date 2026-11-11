@@ -80,7 +80,8 @@ namespace FamilyLife
             y = Line(r, y, "WFL_Tr_CommunityFunds".Translate(l.Balance(Ledger.CommunityId)));
             int physical = TreasuryService.PhysicalSilver(map);
             y = Line(r, y, "WFL_Tr_Claims".Translate(l.TotalClaims, physical));
-            if (l.TotalClaims != physical) y = Line(r, y, "WFL_Tr_Discrepancy".Translate(Math.Abs(l.TotalClaims - physical)), true);
+            if (l.Unbacked > 0) y = Line(r, y, "WFL_Tr_Discrepancy".Translate(l.Unbacked, l.TotalAvailable), true);
+            else if (physical > l.TotalClaims + 3) y = Line(r, y, "WFL_Tr_Surplus".Translate(physical - l.TotalClaims));
             var personal = l.Accounts.Where(a => a.Kind != AccountKind.Community && !a.Closed).ToList();
             y = Line(r, y, "WFL_Tr_Wealth".Translate(personal.Sum(a => a.Balance), personal.Count));
             var zone = map?.zoneManager.AllZones.OfType<Zone_Treasury>().OrderBy(z => z.ID).FirstOrDefault();

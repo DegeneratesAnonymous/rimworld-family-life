@@ -100,22 +100,22 @@ namespace FamilyLife.Domain
             var plan = new FundingPlan { Cost = cost };
             if (cost < 0 || cost > physicalAvailable) return plan;
             if (cost == 0) { plan.Ok = true; return plan; }
-            int fromCommunity = Math.Min(cost, ledger.Balance(Ledger.CommunityId));
+            int fromCommunity = Math.Min(cost, ledger.Available(Ledger.CommunityId));          // only backed silver can be spent
             plan.FromCommunity = fromCommunity;
             if (fromCommunity > 0) plan.Legs.Add(new KeyValuePair<string, int>(Ledger.CommunityId, fromCommunity));
             int need = cost - fromCommunity;
             if (need > 0)
             {
-                var pool = ledger.Accounts.Where(a => !a.Closed && a.Kind != AccountKind.Community && a.Balance > 0).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
-                long total = pool.Sum(a => (long)a.Balance);
+                var pool = ledger.Accounts.Where(a => !a.Closed && a.Kind != AccountKind.Community && ledger.Available(a.Id) > 0).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+                long total = pool.Sum(a => (long)ledger.Available(a.Id));
                 int take = (int)Math.Min(need, total);
                 if (take > 0)
                 {
-                    var shares = pool.Select(a => new { a, exact = (long)take * a.Balance, floor = (int)((long)take * a.Balance / total) }).ToList();
+                    var shares = pool.Select(a => new { a, av = ledger.Available(a.Id), exact = (long)take * ledger.Available(a.Id), floor = (int)((long)take * ledger.Available(a.Id) / total) }).ToList();
                     int given = shares.Sum(s => s.floor), left = take - given;
                     var order = shares.OrderByDescending(s => s.exact - (long)s.floor * total).ThenBy(s => s.a.Id, StringComparer.Ordinal).ToList();
                     var extra = new HashSet<string>(order.Take(left).Select(s => s.a.Id));
-                    foreach (var s in shares) { int amt = Math.Min(s.a.Balance, s.floor + (extra.Contains(s.a.Id) ? 1 : 0)); if (amt > 0) plan.Legs.Add(new KeyValuePair<string, int>(s.a.Id, amt)); }
+                    foreach (var s in shares) { int amt = Math.Min(s.av, s.floor + (extra.Contains(s.a.Id) ? 1 : 0)); if (amt > 0) plan.Legs.Add(new KeyValuePair<string, int>(s.a.Id, amt)); }
                 }
                 plan.Unattributed = need - plan.Legs.Where(l => l.Key != Ledger.CommunityId).Sum(l => l.Value);
             }

@@ -72,18 +72,17 @@ namespace FamilyLife.Domain
         public const string StateId = "wils.treasury.state";
         public int PrimaryZoneId, MapId, LastZoneDay, CommunityPercent = 25, OwnerFeePercent;
         public bool AdoptSurplus = true, Initialized;
-        public int Discrepancy;          // claims above the silver in storage that nothing has yet explained (never saved: recomputed every pass)
-        public int SurplusSinceDay, LastSurplus, ShortSinceDay;
+        public int SurplusSinceDay, LastSurplus, LastIncomeDay, NoticeDay;
         public readonly ValuablesRegistry Valuables = new ValuablesRegistry();
         public string Encode()
         {
-            var w = new StateWriter().Int("zone", PrimaryZoneId).Int("map", MapId).Int("zday", LastZoneDay).Int("cpct", CommunityPercent + 1).Int("fee", OwnerFeePercent).Bool("noadopt", !AdoptSurplus).Bool("init", Initialized).Int("ssd", SurplusSinceDay).Int("ls", LastSurplus).Int("shd", ShortSinceDay);
+            var w = new StateWriter().Int("zone", PrimaryZoneId).Int("map", MapId).Int("zday", LastZoneDay).Int("cpct", CommunityPercent + 1).Int("fee", OwnerFeePercent).Bool("noadopt", !AdoptSurplus).Bool("init", Initialized).Int("ssd", SurplusSinceDay).Int("ls", LastSurplus).Int("lid", LastIncomeDay).Int("nd", NoticeDay);
             w.Strings("val", Valuables.All.Select(v => v.DefName + "|" + (v.Liquid ? 1 : 0)).ToList());
             return w.ToString();
         }
         public static TreasuryState Decode(StateReader r)
         {
-            var s = new TreasuryState { PrimaryZoneId = r.Int("zone"), MapId = r.Int("map"), LastZoneDay = r.Int("zday"), CommunityPercent = r.Has("cpct") ? r.Int("cpct") - 1 : 25, OwnerFeePercent = r.Int("fee"), AdoptSurplus = !r.Bool("noadopt"), Initialized = r.Bool("init"), SurplusSinceDay = r.Int("ssd"), LastSurplus = r.Int("ls"), ShortSinceDay = r.Int("shd") };
+            var s = new TreasuryState { PrimaryZoneId = r.Int("zone"), MapId = r.Int("map"), LastZoneDay = r.Int("zday"), CommunityPercent = r.Has("cpct") ? r.Int("cpct") - 1 : 25, OwnerFeePercent = r.Int("fee"), AdoptSurplus = !r.Bool("noadopt"), Initialized = r.Bool("init"), SurplusSinceDay = r.Int("ssd"), LastSurplus = r.Int("ls"), LastIncomeDay = r.Int("lid"), NoticeDay = r.Int("nd") };
             var list = r.Strings("val");
             if (list.Count > 0) { foreach (var v in s.Valuables.All.ToList()) s.Valuables.Remove(v.DefName); foreach (var x in list) { var p = x.Split('|'); if (p.Length == 2) s.Valuables.Set(p[0], p[1] == "1"); } }
             return s;

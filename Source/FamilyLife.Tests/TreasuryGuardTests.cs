@@ -79,10 +79,10 @@ namespace FamilyLife.Tests
             Assert.Contains("typeof(ResearchManager), nameof(ResearchManager.ResearchPerformed)", h);
         }
 
-        [Fact] public void Ordinary_labour_is_gated_on_the_treasury_being_able_to_pay()
+        [Fact] public void Ordinary_labour_accrues_even_when_the_treasury_cannot_pay_it_so_arrears_become_claims()
         {
             string s = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryService.cs"));
-            Assert.Contains("CanFundOrdinary(r)", s); Assert.Contains("Labour.CategoryOf(facts)", s);
+            Assert.DoesNotContain("CanFundOrdinary", s); Assert.Contains("Labour.CategoryOf(facts)", s);
         }
     }
 }
@@ -172,7 +172,7 @@ namespace FamilyLife.Tests
         [Fact] public void A_loss_is_only_written_off_by_the_reconciler_after_the_grace_period_never_inline()
         {
             string s = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryService.cs"));
-            Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(s, @"RecordLoss\(").Count); Assert.Contains("SilverReconciler.Decide", s);
+            Assert.DoesNotContain("RecordLoss(", s); Assert.Contains("SilverReconciler.Decide", s); Assert.Contains("SetPhysical", s);          // missing silver impairs spending; it is never written off automatically
         }
     }
 }
