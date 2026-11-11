@@ -38,6 +38,9 @@ namespace FamilyLife
             FamilyFramework.SilverReceived.Add("wils.treasury.reward", Id, TreasuryService.OnSilver);
             FamilyFramework.FamilyEventsApplied.Add("wils.treasury.family", Id, TreasuryService.OnFamilyEvents);
             FamilyFramework.WorkReported.Add("wils.treasury.work", Id, TreasuryService.OnWork);
+            FamilyFramework.LabourDone.Add("wils.treasury.labour", Id, TreasuryService.OnLabour);
+            FamilyFramework.ResearchDone.Add("wils.treasury.research", Id, TreasuryService.OnResearch);
+            FamilyFramework.Resets.Add("wils.treasury.reset", Id, TreasuryService.ResetLabour);
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.periodic", ModuleId = Id, Interval = 2500, Run = TreasuryService.Periodic });
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.tax", ModuleId = Id, Interval = 1500, Run = TreasuryService.TaxPass });
             FamilyFramework.Meetings.Register(new MeetingDefinition { Id = "wils.treasury.collection", ModuleId = Id, JobDefName = "WFL_TaxVisit", Ticks = 240, ListenerSlackTicks = 900, Complete = (speaker, other, id, now) => TreasuryService.OnCollectionVisit(speaker, other, id, now) });

@@ -212,11 +212,12 @@ namespace FamilyLife.Tests
             Assert.Equal(1, PayCalendar.Year(60)); Assert.Equal(0, PayCalendar.Quadrum(60)); Assert.Equal(1, PayCalendar.DayOfQuadrum(60));
         }
 
-        private static (Ledger, PayrollBook) Set(int treasury = 1000) { var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, treasury)); return (l, new PayrollBook()); }
+        private static (Ledger, PayrollBook) Set(int treasury = 1000) { var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, treasury)); var b = new PayrollBook(); b.Policy.Rates["r"] = 6; b.Policy.DailyUnits["r"] = 6; b.Policy.PawnDailyCap = 60; return (l, b); }
 
         [Fact] public void Work_is_paid_on_payday_from_actual_treasury_funds_and_never_twice()
         {
             var (l, b) = Set(); b.SettleDue(l, 0, 10000);          // a payroll that starts now
+            foreach (var role in new[] { "wils.care.doctor", "wils.education.teacher" }) { b.Policy.Rates[role] = 6; b.Policy.DailyUnits[role] = 6; }
             b.Accrue(1, "wils.care.doctor", 3, 2, "c1"); b.Accrue(2, "wils.education.teacher", 2, 5, "c2");
             var reports = b.SettleDue(l, 7, 10000);
             Assert.Single(reports); Assert.Equal(30, reports[0].TotalPaid); Assert.Equal(18, l.Balance("p:1")); Assert.Equal(12, l.Balance("p:2"));
@@ -245,7 +246,7 @@ namespace FamilyLife.Tests
 
         [Fact] public void A_pawn_with_several_qualifications_is_not_paid_beyond_one_daily_total()
         {
-            var b = new PayrollBook(); b.Policy.PawnDailyCap = 30;
+            var b = new PayrollBook(); b.Policy.PawnDailyCap = 30; b.Policy.Rates["a"] = 6; b.Policy.Rates["b"] = 6; b.Policy.DailyUnits["a"] = 6; b.Policy.DailyUnits["b"] = 6;
             b.Accrue(1, "a", 6, 1, "x"); b.Accrue(1, "b", 6, 1, "y");
             Assert.Equal(30, b.PendingFor(1));
         }
@@ -521,7 +522,80 @@ namespace FamilyLife.Tests
             var back = SaveSim.Reload(r);
             var absent = AbsentModules.Find(back, id => id == ModuleCatalog.FrameworkId).FirstOrDefault(m => m.ModuleId == "wils.treasury");
             Assert.NotNull(absent); Assert.True(absent.Payloads.Count >= 3);
-            var once = SaveSim.Reload(back); Assert.Equal(55, once.Ledger().Balance(Ledger.CommunityId)); Assert.Equal(9, once.Tax().RatePercent); Assert.Equal(6, once.Payroll().PendingFor(3));
+            var once = SaveSim.Reload(back); Assert.Equal(55, once.Ledger().Balance(Ledger.CommunityId)); Assert.Equal(9, once.Tax().RatePercent); Assert.Equal(4, once.Payroll().PendingFor(3));
+        }
+    }
+}
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryLabourTests
+    {
+        private static JobFacts Job(string type, int id = 1, string def = "Job", int thing = 5, bool storage = true, string skill = null, float work = 0) => new JobFacts { WorkType = type, JobId = id, JobDef = def, ThingId = thing, HaulToStorage = storage, RecipeSkill = skill, WorkAmount = work };
+
+        [Fact] public void Finished_productive_work_maps_to_a_category_and_everything_else_is_unpaid()
+        {
+            Assert.Equal("growing", Labour.CategoryOf(Job("Growing"))); Assert.Equal("growing", Labour.CategoryOf(Job("PlantCutting"))); Assert.Equal("mining", Labour.CategoryOf(Job("Mining")));
+            Assert.Equal("construction", Labour.CategoryOf(Job("Construction"))); Assert.Equal("cleaning", Labour.CategoryOf(Job("Cleaning"))); Assert.Equal("animals", Labour.CategoryOf(Job("Handling")));
+            Assert.Equal("crafting", Labour.CategoryOf(Job("Smithing"))); Assert.Equal("cooking", Labour.CategoryOf(Job("Cooking"))); Assert.Equal("cooking", Labour.CategoryOf(Job("Crafting", skill: "Cooking")));
+            Assert.Null(Labour.CategoryOf(Job("Doctor"))); Assert.Null(Labour.CategoryOf(Job("Basic"))); Assert.Null(Labour.CategoryOf(Job("Warden"))); Assert.Null(Labour.CategoryOf(null));
+        }
+
+        [Fact] public void A_modules_own_professional_job_is_never_paid_as_ordinary_labour_so_nothing_stacks()
+        {
+            Assert.Null(Labour.CategoryOf(Job("Cooking", def: "WFL_Checkup"))); Assert.Null(Labour.CategoryOf(Job("Cleaning", def: "WFL_TaxVisit")));
+        }
+
+        [Fact] public void Hauling_pays_only_into_storage_and_the_same_thing_pays_once_a_day()
+        {
+            Assert.Null(Labour.CategoryOf(Job("Hauling", storage: false)));
+            var a = Job("Hauling", id: 1, thing: 77); var b = Job("Hauling", id: 2, thing: 77); var c = Job("Hauling", id: 3, thing: 78);
+            Assert.Equal(Labour.Key(a, "hauling", 4), Labour.Key(b, "hauling", 4)); Assert.NotEqual(Labour.Key(a, "hauling", 4), Labour.Key(c, "hauling", 4)); Assert.NotEqual(Labour.Key(a, "hauling", 4), Labour.Key(a, "hauling", 5));
+        }
+
+        [Fact] public void A_long_recipe_counts_for_more_than_a_quick_one_up_to_a_limit()
+        {
+            Assert.Equal(1, Labour.Units(Job("Crafting", work: 300), "crafting")); Assert.Equal(3, Labour.Units(Job("Crafting", work: 3200), "crafting")); Assert.Equal(4, Labour.Units(Job("Crafting", work: 90000), "crafting")); Assert.Equal(1, Labour.Units(Job("Mining"), "mining"));
+        }
+
+        [Fact] public void Research_pays_per_work_performed_with_the_remainder_carried_and_nothing_for_a_start()
+        {
+            float carry = 0; Assert.Equal(0, Labour.ResearchUnits(ref carry, 0f)); Assert.Equal(0, Labour.ResearchUnits(ref carry, 399f)); Assert.Equal(1, Labour.ResearchUnits(ref carry, 2f)); Assert.Equal(2, Labour.ResearchUnits(ref carry, 800f));
+        }
+
+        [Fact] public void Ordinary_labour_has_its_own_small_daily_limit_and_cannot_be_farmed_by_switching_work_types()
+        {
+            var b = new PayrollBook(); int paid = 0;
+            foreach (var cat in Labour.Categories) for (int i = 0; i < 20; i++) paid += b.Accrue(1, Labour.Role(cat), 1, 3, "j:" + cat + i);          // every category, twenty finished jobs each
+            Assert.Equal(WagePolicy.DefaultOrdinaryDailyCap, paid); Assert.Equal(paid, b.PendingFor(1));
+        }
+
+        [Fact] public void The_same_finished_job_pays_once_even_if_reported_twice()
+        {
+            var b = new PayrollBook(); Assert.Equal(1, b.Accrue(1, Labour.Role("mining"), 1, 3, "j:9")); Assert.Equal(0, b.Accrue(1, Labour.Role("mining"), 1, 3, "j:9"));
+        }
+
+        [Fact] public void Mixed_professional_and_ordinary_work_share_one_daily_total_and_each_role_keeps_its_own_rate()
+        {
+            var b = new PayrollBook(); b.Policy.Rates["wils.care.doctor"] = 5; b.Policy.DailyUnits["wils.care.doctor"] = 4; b.Policy.PawnDailyCap = 24;
+            int doctor = b.Accrue(1, "wils.care.doctor", 4, 2, "c1"); int cook = b.Accrue(1, Labour.Role("cooking"), 3, 2, "j1"); int haul = b.Accrue(1, Labour.Role("hauling"), 3, 2, "h1");
+            Assert.Equal(20, doctor); Assert.Equal(3, cook); Assert.Equal(1, haul);          // the day's total of 24 is full: the last unit that fits is the only one paid
+            Assert.Equal(24, b.PendingFor(1)); Assert.Equal(0, b.Accrue(1, "wils.care.doctor", 1, 2, "c2"));
+        }
+
+        [Fact] public void Ordinary_wages_settle_on_payday_and_unpaid_ones_stay_owed_to_the_worker()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 3)); var b = new PayrollBook(); b.SettleDue(l, 0, 999);
+            b.Accrue(1, Labour.Role("mining"), 3, 1, "a"); b.Accrue(2, Labour.Role("cleaning"), 3, 1, "b");          // 3 silver each earned, 3 in the treasury
+            var rep = b.SettleDue(l, 7, 999)[0];
+            Assert.Equal(3, rep.TotalPaid); Assert.Equal(3, rep.Shortfall); Assert.Equal(2, l.Debts.Count(d => d.Kind == DebtKind.Wage && d.Active)); Assert.True(l.Conserved);
+        }
+
+        [Fact] public void Wages_follow_the_treasury_the_economy_only_ever_pays_out_what_came_in()
+        {
+            var l = new Ledger(); var b = new PayrollBook(); l.Receive(Ledger.CommunityId, 100, TxKind.Income, "seed", 0); b.SettleDue(l, 0, 9999); var rng = new Random(3); long paidOut = 0;
+            for (int day = 1; day <= 120; day++) { for (int p = 1; p <= 20; p++) foreach (var cat in Labour.Categories.Take(4)) b.Accrue(p, Labour.Role(cat), 1, day, "j" + day + p + cat); foreach (var r in b.SettleDue(l, day, 9999)) paidOut += r.TotalPaid; if (day % 15 == 0) l.Receive(Ledger.CommunityId, 300, TxKind.Income, "in" + day, day); }
+            Assert.True(paidOut <= 100 + 8 * 300); Assert.True(l.Conserved); Assert.True(l.Balance(Ledger.CommunityId) >= 0);
         }
     }
 }

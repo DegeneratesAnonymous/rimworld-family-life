@@ -26,16 +26,16 @@ namespace FamilyLife.Domain
     /// <summary>What each role pays and how much one pawn can be paid in a day. Roles are named by the career registry, never listed here, so a new profession needs no change.</summary>
     public sealed class WagePolicy
     {
-        public const int DefaultRate = 6, DefaultDailyUnits = 6, DefaultPawnDailyCap = 60;
+        public const int DefaultRate = 4, DefaultDailyUnits = 4, DefaultPawnDailyCap = 24, OrdinaryRate = 1, OrdinaryDailyUnits = 3, DefaultOrdinaryDailyCap = 8;
         public readonly Dictionary<string, int> Rates = new Dictionary<string, int>(StringComparer.Ordinal);
         public readonly Dictionary<string, int> DailyUnits = new Dictionary<string, int>(StringComparer.Ordinal);
         /// <summary>Silver paid per unit of finished work in this role (0 = unpaid).</summary>
-        public int RateOf(string role) => Rates.TryGetValue(role, out var r) ? Math.Max(0, r) : DefaultRate;
+        public int RateOf(string role) => Rates.TryGetValue(role, out var r) ? Math.Max(0, r) : Labour.IsOrdinary(role) ? OrdinaryRate : DefaultRate;
         /// <summary>Most units of one role's work that count in a single day, so quick repeatable jobs cannot be farmed.</summary>
-        public int UnitsPerDay(string role) => DailyUnits.TryGetValue(role, out var u) ? Math.Max(0, u) : DefaultDailyUnits;
-        public int PawnDailyCap = DefaultPawnDailyCap;
+        public int UnitsPerDay(string role) => DailyUnits.TryGetValue(role, out var u) ? Math.Max(0, u) : Labour.IsOrdinary(role) ? OrdinaryDailyUnits : DefaultDailyUnits;
+        public int PawnDailyCap = DefaultPawnDailyCap, OrdinaryDailyCap = DefaultOrdinaryDailyCap;          // one pawn over all roles, and the part of it that ordinary labour may fill
         /// <summary>Vanilla labour (farming, cooking...) is only paid if the player turns a rate on for it; the key is "vanilla.&lt;worktype&gt;".</summary>
-        public static string VanillaRole(string workType) => "vanilla." + workType.ToLowerInvariant();
+        public static string VanillaRole(string category) => Labour.Role(category.ToLowerInvariant());
     }
 
     public sealed class Earning { public int Pawn, Day, Silver; public string Role, Key; }
@@ -66,6 +66,7 @@ namespace FamilyLife.Domain
             int usedUnits = earned.Where(e => e.Pawn == pawn && e.Day == day && e.Role == role).Sum(e => e.Silver) / rate;
             int allow = Math.Min(units, Policy.UnitsPerDay(role) - usedUnits); if (allow <= 0) return 0;
             int silver = allow * rate, paidToday = earned.Where(e => e.Pawn == pawn && e.Day == day).Sum(e => e.Silver);
+            if (Labour.IsOrdinary(role)) silver = Math.Min(silver, Policy.OrdinaryDailyCap - earned.Where(e => e.Pawn == pawn && e.Day == day && Labour.IsOrdinary(e.Role)).Sum(e => e.Silver));
             silver = Math.Min(silver, Policy.PawnDailyCap - paidToday); if (silver <= 0) return 0;
             earned.Add(new Earning { Pawn = pawn, Role = role, Silver = silver, Day = day, Key = key });
             if (key != null) keys[key] = day;
@@ -139,7 +140,7 @@ namespace FamilyLife.Domain
 
         public string Encode()
         {
-            var w = new StateWriter().Int("last", LastSettledPayday + 1).Int("cap", Policy.PawnDailyCap);
+            var w = new StateWriter().Int("last", LastSettledPayday + 1).Int("cap", Policy.PawnDailyCap).Int("ocap", Policy.OrdinaryDailyCap + 1);
             w.Strings("rate", Policy.Rates.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("units", Policy.DailyUnits.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("earn", earned.Select(e => string.Join("|", e.Pawn, e.Day, e.Silver, e.Role, (e.Key ?? "").Replace('|', '/'))).ToList());
@@ -150,7 +151,7 @@ namespace FamilyLife.Domain
 
         public static PayrollBook Decode(StateReader r)
         {
-            var b = new PayrollBook(); b.LastSettledPayday = r.Int("last") - 1; b.Policy.PawnDailyCap = r.Has("cap") ? r.Int("cap") : WagePolicy.DefaultPawnDailyCap;
+            var b = new PayrollBook(); b.LastSettledPayday = r.Int("last") - 1; b.Policy.PawnDailyCap = r.Has("cap") ? r.Int("cap") : WagePolicy.DefaultPawnDailyCap; b.Policy.OrdinaryDailyCap = r.Has("ocap") ? r.Int("ocap") - 1 : WagePolicy.DefaultOrdinaryDailyCap;
             foreach (var s in r.Strings("rate")) { var p = s.Split('|'); if (p.Length == 2) b.Policy.Rates[p[0]] = I(p[1]); }
             foreach (var s in r.Strings("units")) { var p = s.Split('|'); if (p.Length == 2) b.Policy.DailyUnits[p[0]] = I(p[1]); }
             foreach (var s in r.Strings("earn")) { var p = s.Split('|'); if (p.Length >= 5) b.earned.Add(new Earning { Pawn = I(p[0]), Day = I(p[1]), Silver = I(p[2]), Role = p[3], Key = p[4].Length == 0 ? null : p[4] }); }

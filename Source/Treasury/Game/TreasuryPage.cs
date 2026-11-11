@@ -127,7 +127,9 @@ namespace FamilyLife
             foreach (var role in CareerService.Professions.All.Where(x => FamilyFramework.Catalog.IsEnabled(x.ModuleId)).OrderBy(x => x.Career, StringComparer.Ordinal).ThenBy(x => x.Level).ThenBy(x => x.Id, StringComparer.Ordinal))
                 y = RateRow(r, y, role.Id, CareerService.TitleOf(role, reg));
             y = Heading(r, y + 6f, "WFL_Tr_VanillaWork".Translate());
-            foreach (var work in new[] { "Growing", "Cooking", "Mining", "Hauling", "Cleaning", "Construction" }) y = RateRow(r, y, WagePolicy.VanillaRole(work), work, 0);
+            foreach (var cat in Labour.Categories) y = RateRow(r, y, Labour.Role(cat), cat, WagePolicy.OrdinaryRate);
+            int ocap = pol.OrdinaryDailyCap; string obuf = ocap.ToString();
+            Widgets.Label(new Rect(4f, y, 300f, 24f), "WFL_Tr_OrdinaryCap".Translate()); Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref ocap, ref obuf, 0f, 100000f); pol.OrdinaryDailyCap = ocap; y += 28f;
             int cap = pol.PawnDailyCap; string buf = cap.ToString();
             Widgets.Label(new Rect(4f, y, 300f, 24f), "WFL_Tr_DailyCap".Translate()); Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref cap, ref buf, 0f, 100000f); pol.PawnDailyCap = cap; y += 32f;
             y = Heading(r, y, "WFL_Tr_PastPayments".Translate());

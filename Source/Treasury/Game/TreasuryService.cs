@@ -71,6 +71,42 @@ namespace FamilyLife
             r.Payroll().Accrue(id, role.Id, 1, Today(), key ?? (career + "|" + id + "|" + now));
         }
 
+        // ------------------------------------------------------------------ ordinary labour
+
+        /// <summary>
+        /// Ordinary labour is paid only while the treasury could actually cover it: when what is already waiting or owed exceeds the treasury's balance, further ordinary work still gets done but earns
+        /// nothing, so ordinary wages can never pile up into debt the colony's real income cannot meet. (Appointed professionals are paid regardless and can become wage debts.)
+        /// </summary>
+        private static bool CanFundOrdinary(FamilyRegistry r) { var l = r.Ledger(); return r.Payroll().PendingTotal + l.Liabilities(Ledger.CommunityId) <= l.Balance(Ledger.CommunityId); }
+
+        public static void OnLabour(LabourReport rep)
+        {
+            var c = FamilyComponent.Current; if (c == null || rep?.Pawn == null) return;
+            var r = c.Registry; var person = r.GetPerson(rep.Pawn.thingIDNumber); if (person == null || !person.InColony) return;
+            var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, WorkAmount = rep.WorkAmount };
+            string cat = Labour.CategoryOf(facts); if (cat == null || !CanFundOrdinary(r)) return;
+            int day = Today();
+            r.Payroll().Accrue(rep.Pawn.thingIDNumber, Labour.Role(cat), Labour.Units(facts, cat), day, Labour.Key(facts, cat, day));
+        }
+
+        private static readonly Dictionary<int, float> researchCarry = new Dictionary<int, float>();
+        private static readonly Dictionary<int, int> researchUnits = new Dictionary<int, int>();
+
+        /// <summary>Research is continuous, so it pays per amount actually performed (one unit per <see cref="Labour.ResearchPointsPerUnit"/> points), never for starting or for time spent not researching.</summary>
+        public static void OnResearch(Pawn pawn, float performed)
+        {
+            var c = FamilyComponent.Current; if (c == null || pawn == null) return;
+            var r = c.Registry; if (r.GetPerson(pawn.thingIDNumber)?.InColony != true) return;
+            researchCarry.TryGetValue(pawn.thingIDNumber, out float carry);
+            int units = Labour.ResearchUnits(ref carry, performed); researchCarry[pawn.thingIDNumber] = carry;
+            if (units <= 0 || !CanFundOrdinary(r)) return;
+            int day = Today(); researchUnits.TryGetValue(pawn.thingIDNumber, out int n);
+            for (int i = 0; i < units; i++) r.Payroll().Accrue(pawn.thingIDNumber, Labour.Role("research"), 1, day, "r:" + pawn.thingIDNumber + ":" + day + ":" + (++n));
+            researchUnits[pawn.thingIDNumber] = n;
+        }
+
+        internal static void ResetLabour() { researchCarry.Clear(); researchUnits.Clear(); }
+
         // ------------------------------------------------------------------ the periodic pass (payroll, silver reconciliation, estates)
 
         public static void Periodic(int now)

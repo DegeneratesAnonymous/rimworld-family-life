@@ -49,7 +49,8 @@
   <WFL_Tr_PayrollHelp>Wages are paid on the 1st and 8th of every quadrum from the treasury, for finished work by people assigned to a profession. If the money is short everyone receives the same share and the rest stays owed. Payroll never creates silver.</WFL_Tr_PayrollHelp>
   <WFL_Tr_RatePerUnit>{0}: silver per finished task</WFL_Tr_RatePerUnit>
   <WFL_Tr_DailyCap>Most any one person can earn in a day</WFL_Tr_DailyCap>
-  <WFL_Tr_VanillaWork>Ordinary labour (paid only if you set a rate)</WFL_Tr_VanillaWork>
+  <WFL_Tr_VanillaWork>Ordinary labour: paid for finished work only, and only while the treasury can cover what is already owed</WFL_Tr_VanillaWork>
+  <WFL_Tr_OrdinaryCap>Most ordinary labour can earn one person in a day</WFL_Tr_OrdinaryCap>
   <WFL_Tr_PastPayments>Recent paydays</WFL_Tr_PastPayments>
   <WFL_Tr_PaydayLine>Day {0}: {1} due, {2} paid{3}</WFL_Tr_PaydayLine>
   <WFL_Tr_ShortBy> (short by {0}, still owed)</WFL_Tr_ShortBy>

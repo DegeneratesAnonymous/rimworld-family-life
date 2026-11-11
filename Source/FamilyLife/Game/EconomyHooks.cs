@@ -10,7 +10,7 @@ namespace FamilyLife
     // reward or the work; each calls only listeners of modules that are running and never throws into the game. Owner: the framework.
 
     /// <summary>How often each economy hook fired this session. Shown by the Treasury diagnostics: the way to see in a running game that the hooks attached.</summary>
-    public static class EconomyHits { public static int Trades, TradesCompleted, SilverDrops, WorkReports; }
+    public static class EconomyHits { public static int Trades, TradesCompleted, SilverDrops, WorkReports, JobsFinished; }
 
     /// <summary>One line of a completed trade, from the colony's side. <see cref="Sold"/> is true when the colony sold it.</summary>
     public sealed class TradeLine { public string DefName; public int Count, UnitPrice; public bool Sold; public Pawn OwnerPawn; }
@@ -88,6 +88,51 @@ namespace FamilyLife
                 EconomyHooks.SilverDropped(__instance, silver);
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] A quest reward could not be read: " + ex.Message); }
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    /// <summary>A vanilla job that ended <i>successfully</i> (never one that was started, interrupted or cancelled), with the few facts a wage needs.</summary>
+    public sealed class LabourReport
+    {
+        public Pawn Pawn; public string JobDef, WorkType, RecipeSkill; public int JobId, ThingId; public bool HaulToStorage; public float WorkAmount;
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(Verse.AI.Pawn_JobTracker), nameof(Verse.AI.Pawn_JobTracker.EndCurrentJob))]
+    internal static class Patch_JobSucceeded
+    {
+        private static void Prefix(Verse.AI.Pawn_JobTracker __instance, Verse.AI.JobCondition condition, Pawn ___pawn)
+        {
+            try
+            {
+                if (condition != Verse.AI.JobCondition.Succeeded || FamilyFramework.LabourDone.Count == 0) return;
+                var pawn = ___pawn; var job = __instance?.curJob; if (pawn == null || job == null || job.def == null || pawn.Faction != Faction.OfPlayer) return;
+                var report = new LabourReport
+                {
+                    Pawn = pawn, JobDef = job.def.defName, JobId = job.loadID, ThingId = job.targetA.Thing?.thingIDNumber ?? 0,
+                    WorkType = job.workGiverDef?.workType?.defName, HaulToStorage = job.haulMode == Verse.AI.HaulMode.ToCellStorage,
+                    RecipeSkill = job.bill?.recipe?.workSkill?.defName, WorkAmount = job.bill?.recipe?.workAmount ?? 0f
+                };
+                EconomyHits.JobsFinished++;
+                foreach (var listener in FamilyFramework.LabourDone.Enabled()) { try { listener(report); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A labour listener was skipped: " + ex.Message); } }
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] A finished job could not be read: " + ex.Message); }
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(ResearchManager), nameof(ResearchManager.ResearchPerformed))]
+    internal static class Patch_ResearchPerformed
+    {
+        private static void Postfix(float amount, Pawn researcher)
+        {
+            try
+            {
+                if (amount <= 0f || researcher == null || FamilyFramework.ResearchDone.Count == 0) return;
+                foreach (var listener in FamilyFramework.ResearchDone.Enabled()) { try { listener(researcher, amount); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A research listener was skipped: " + ex.Message); } }
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Research work could not be read: " + ex.Message); }
         }
     }
 }

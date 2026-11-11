@@ -64,3 +64,25 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryLabourHookGuardTests
+    {
+        private static string Hooks() => System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.Framework, "Game/EconomyHooks.cs"));
+
+        [Fact] public void Wages_are_only_ever_considered_for_jobs_that_ended_successfully()
+        {
+            string h = Hooks();
+            Assert.Contains("typeof(Verse.AI.Pawn_JobTracker), nameof(Verse.AI.Pawn_JobTracker.EndCurrentJob)", h);
+            Assert.Contains("condition != Verse.AI.JobCondition.Succeeded", h);          // started, interrupted and cancelled jobs return before anything is reported
+            Assert.Contains("typeof(ResearchManager), nameof(ResearchManager.ResearchPerformed)", h);
+        }
+
+        [Fact] public void Ordinary_labour_is_gated_on_the_treasury_being_able_to_pay()
+        {
+            string s = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryService.cs"));
+            Assert.Contains("CanFundOrdinary(r)", s); Assert.Contains("Labour.CategoryOf(facts)", s);
+        }
+    }
+}

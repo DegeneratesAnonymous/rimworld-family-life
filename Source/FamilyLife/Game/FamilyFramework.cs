@@ -44,6 +44,8 @@ namespace FamilyLife
         public static readonly ContributionList<Action<Pawn, Pawn>> Tended;          // a vanilla tend was done: (doctor, patient). Read-only, as above
         public static readonly ContributionList<Action<TradeReport>> TradeCompleted;          // a vanilla trade was completed (read-only; the framework owns the patch)
         public static readonly ContributionList<Action<int, string>> SilverReceived;          // silver arrived from a quest reward: (amount, idempotency key)
+        public static readonly ContributionList<Action<LabourReport>> LabourDone;          // a vanilla job ended successfully (read-only)
+        public static readonly ContributionList<Action<Pawn, float>> ResearchDone;          // research work was performed: (researcher, points)
         public static readonly ContributionList<Action<FamilyComponent, IList<FamilyEvent>, int>> FamilyEventsApplied;          // after each reconciliation of the family records: (component, the events it produced, now)
         public static readonly ContributionList<Action<Pawn, string, string, string, string, int>> WorkReported;          // a module reported finished professional work: (pawn, career, specialty, kind, activity key, tick)
         public static readonly ContributionList<Action<CommunityOffice>> DueNow;          // developer menu: brings a module's timers on a post due
@@ -73,6 +75,8 @@ namespace FamilyLife
             Tended = new ContributionList<Action<Pawn, Pawn>>(Catalog);
             TradeCompleted = new ContributionList<Action<TradeReport>>(Catalog);
             SilverReceived = new ContributionList<Action<int, string>>(Catalog);
+            LabourDone = new ContributionList<Action<LabourReport>>(Catalog);
+            ResearchDone = new ContributionList<Action<Pawn, float>>(Catalog);
             FamilyEventsApplied = new ContributionList<Action<FamilyComponent, IList<FamilyEvent>, int>>(Catalog);
             WorkReported = new ContributionList<Action<Pawn, string, string, string, string, int>>(Catalog);
             Resets = new ContributionList<Action>(Catalog);
