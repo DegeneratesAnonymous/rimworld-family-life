@@ -86,3 +86,46 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryOfficeAndXpTests
+    {
+        private static string Src(string f) => System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), f));
+
+        [Fact] public void The_treasurers_physical_work_never_touches_a_balance()
+        {
+            string office = Src("Game/TreasuryOffice.cs");
+            foreach (var forbidden in new[] { ".Receive(", ".Spend(", ".Transfer(", ".Apply(", "Ledger()", "TransferShare", "RecordLoss" }) Assert.DoesNotContain(forbidden, office);          // hauling and sitting move nothing in the ledger
+            Assert.Contains("JobDefOf.HaulToCell", office); Assert.Contains("HaulMode.ToCellStorage", office);          // the carrying is the game's own haul job
+        }
+
+        [Fact] public void Experience_is_granted_per_operation_key_so_repeated_sitting_or_reconciliation_earns_nothing()
+        {
+            string office = Src("Game/TreasuryOffice.cs");
+            Assert.Contains("\"treasury.office\", item.Key", office); Assert.Contains("\"deposit|\" + thingId", office); Assert.Contains("items.Any(i => i.Key == key)", office);
+        }
+
+        [Fact] public void Away_from_the_office_counts_for_half()
+        {
+            Assert.Equal(4, TreasuryXp.AwayFromOffice(8)); Assert.Equal(1, TreasuryXp.AwayFromOffice(1));
+        }
+
+        private static double MonthsToCollector(int residents, int rewards, int trades, int deposits)
+        {
+            int perYear = 8 * TreasuryXp.Points(FinancialOp.Payday, residents) + rewards * TreasuryXp.Points(FinancialOp.RewardDistribution, residents) + trades * TreasuryXp.Points(FinancialOp.PooledTrade, residents) + deposits * TreasuryXp.Points(FinancialOp.Deposit, residents);
+            return TreasuryRoles.CollectorExperience / (double)perYear * 12.0;
+        }
+
+        [Fact] public void A_treasurer_can_qualify_in_roughly_a_year_in_a_small_colony_and_faster_in_larger_ones_from_real_operations_alone()
+        {
+            double small = MonthsToCollector(6, 5, 10, 10), ordinary = MonthsToCollector(15, 8, 20, 20), large = MonthsToCollector(40, 12, 40, 30);
+            Assert.InRange(small, 6.0, 12.0); Assert.InRange(ordinary, 3.0, 8.0); Assert.InRange(large, 1.5, 4.0); Assert.True(small > ordinary && ordinary > large);
+        }
+
+        [Fact] public void Even_a_colony_with_almost_no_trade_qualifies_within_two_years_without_any_invented_work()
+        {
+            Assert.True(MonthsToCollector(6, 2, 2, 2) < 24.0);          // paydays and a couple of rewards only
+        }
+    }
+}

@@ -40,8 +40,9 @@ namespace FamilyLife
             FamilyFramework.WorkReported.Add("wils.treasury.work", Id, TreasuryService.OnWork);
             FamilyFramework.LabourDone.Add("wils.treasury.labour", Id, TreasuryService.OnLabour);
             FamilyFramework.ResearchDone.Add("wils.treasury.research", Id, TreasuryService.OnResearch);
-            FamilyFramework.Resets.Add("wils.treasury.reset", Id, TreasuryService.ResetLabour);
+            FamilyFramework.Resets.Add("wils.treasury.reset", Id, () => { TreasuryService.ResetLabour(); TreasuryOffice.Reset(); });
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.periodic", ModuleId = Id, Interval = 2500, Run = TreasuryService.Periodic });
+            FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.office", ModuleId = Id, Interval = 600, Run = TreasuryOffice.Run });
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.tax", ModuleId = Id, Interval = 1500, Run = TreasuryService.TaxPass });
             FamilyFramework.Meetings.Register(new MeetingDefinition { Id = "wils.treasury.collection", ModuleId = Id, JobDefName = "WFL_TaxVisit", Ticks = 240, ListenerSlackTicks = 900, Complete = (speaker, other, id, now) => TreasuryService.OnCollectionVisit(speaker, other, id, now) });
             FamilyFramework.Removal.Add("wils.treasury.removal", Id, c =>

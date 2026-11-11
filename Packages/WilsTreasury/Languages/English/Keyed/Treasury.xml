@@ -17,9 +17,15 @@
   <WFL_TZ_Treasurer>Treasurer: {0}</WFL_TZ_Treasurer>
   <WFL_TZ_NoTreasurer>no Treasurer assigned (office duties unavailable)</WFL_TZ_NoTreasurer>
   <WFL_TZ_Reserves>Silver in storage: {0}. Other valuables: about {1} silver. Free storage slots: {2}.</WFL_TZ_Reserves>
+  <WFL_TZ_Deposits>Silver waiting to be deposited: {0} in {1} stack(s).</WFL_TZ_Deposits>
+  <WFL_TZ_Office>Business waiting at the office: {0}.</WFL_TZ_Office>
+  <WFL_TZ_MissingSilver>Accounts claim {0} more silver than is in storage.</WFL_TZ_MissingSilver>
   <WFL_TZ_Secondary>A treasury already exists on this map; this zone is not used.</WFL_TZ_Secondary>
   <WFL_TZ_Open>Open the Treasury</WFL_TZ_Open>
   <WFL_TZ_OpenDesc>Open the Treasury page of the Community window.</WFL_TZ_OpenDesc>
+  <WFL_Tr_Valuables>Recognised valuables (stored wealth, never spendable silver)</WFL_Tr_Valuables>
+  <WFL_Tr_AddValuable>Add a valuable...</WFL_Tr_AddValuable>
+  <WFL_Tr_Remove>Remove</WFL_Tr_Remove>
   <WFL_Tr_Overview>Overview</WFL_Tr_Overview>
   <WFL_Tr_Accounts>Accounts</WFL_Tr_Accounts>
   <WFL_Tr_Payroll>Payroll</WFL_Tr_Payroll>

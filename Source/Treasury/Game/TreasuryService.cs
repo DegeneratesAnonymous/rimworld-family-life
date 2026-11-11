@@ -44,7 +44,7 @@ namespace FamilyLife
             var c = FamilyComponent.Current; if (c == null || amount <= 0) return;
             var r = c.Registry; var st = r.Treasury();
             var result = Income.DistributeReward(r.Ledger(), amount, Residents(r), new IncomePolicy { CommunityPercent = st.CommunityPercent }, key, Today());
-            if (result == LedgerResult.Ok) Messages.Message("WFL_Tr_RewardShared".Translate(amount, r.Ledger().Balance(Ledger.CommunityId)), MessageTypeDefOf.NeutralEvent, false);
+            if (result == LedgerResult.Ok) { Messages.Message("WFL_Tr_RewardShared".Translate(amount, r.Ledger().Balance(Ledger.CommunityId)), MessageTypeDefOf.NeutralEvent, false); TreasuryOffice.Add(c, "reward|" + key, FinancialOp.RewardDistribution); }
         }
 
         /// <summary>A completed trade: purchases leave the accounts treasury-first, sales arrive by owner or by the community policy. Settled once under the trade's own id.</summary>
@@ -56,6 +56,7 @@ namespace FamilyLife
             var plan = cost > 0 ? Trade.Plan(l, cost, report.ColonySilverBefore) : null;
             var sales = report.Lines.Where(x => x.Sold).Select(x => new Income.Sale { Proceeds = x.Count * x.UnitPrice, OwnerAccount = x.OwnerPawn != null && r.GetPerson(x.OwnerPawn.thingIDNumber)?.InColony == true ? PersonAccount(r, x.OwnerPawn.thingIDNumber) : null }).ToList();
             var res = Trade.Settle(l, report.Id, Today(), plan, sales, Residents(r), new IncomePolicy { CommunityPercent = st.CommunityPercent, OwnerFeePercent = st.OwnerFeePercent });
+            if (res == LedgerResult.Ok && plan != null && plan.Legs.Count > 0) TreasuryOffice.Add(c, "trade|" + report.Id, FinancialOp.PooledTrade);
             if (res != LedgerResult.Ok && res != LedgerResult.Duplicate) Log.Warning("[Wil's Treasury] A trade could not be recorded (" + res + ").");
         }
 
@@ -82,6 +83,7 @@ namespace FamilyLife
         public static void OnLabour(LabourReport rep)
         {
             var c = FamilyComponent.Current; if (c == null || rep?.Pawn == null) return;
+            TreasuryOffice.OnJobFinished(rep);
             var r = c.Registry; var person = r.GetPerson(rep.Pawn.thingIDNumber); if (person == null || !person.InColony) return;
             var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, WorkAmount = rep.WorkAmount };
             string cat = Labour.CategoryOf(facts); if (cat == null || !CanFundOrdinary(r)) return;
@@ -119,8 +121,7 @@ namespace FamilyLife
             {
                 if (rep.TotalDue <= 0) continue;
                 Messages.Message("WFL_Tr_Payday".Translate(rep.TotalDue, rep.TotalPaid, rep.Shortfall > 0 ? (string)"WFL_Tr_ShortBy".Translate(rep.Shortfall) : ""), MessageTypeDefOf.NeutralEvent, false);
-                var treasurer = Holders(r, TreasuryRoles.Treasurer).Select(c.TryGetPawn).FirstOrDefault(p => p != null);
-                if (treasurer != null) CareerService.Report(c, treasurer, TreasuryRoles.Career, null, "treasury.payday", "payday|" + rep.Payday, TreasuryRoles.DutyPoints, now);
+                TreasuryOffice.Add(c, "payday|" + rep.Payday, FinancialOp.Payday);
             }
             Estates(r, l, today);
             l.Prune(today);

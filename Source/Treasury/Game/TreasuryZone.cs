@@ -13,7 +13,8 @@ namespace FamilyLife
     {
         public ZoneFacts Facts = new ZoneFacts();
         public ZoneNeeds Missing = ZoneNeeds.Enclosed | ZoneNeeds.Table | ZoneNeeds.Seat | ZoneNeeds.SilverStorage;
-        public int Silver, ValuablesValue, FreeSlots, Storages, Computed = -99999;
+        public int Silver, ValuablesValue, FreeSlots, Storages, LooseSilver, LooseStacks, Computed = -99999;
+        public Building Seat; public Thing DepositThing; public SlotGroup DepositGroup;
         public bool Valid => Missing == ZoneNeeds.None;
     }
 
@@ -51,7 +52,7 @@ namespace FamilyLife
                         {
                             if (!seen.Add(b)) continue;
                             if (b.def.surfaceType == SurfaceType.Eat) facts.Tables++;
-                            if (b.def.building != null && b.def.building.isSittable) facts.Seats++;
+                            if (b.def.building != null && b.def.building.isSittable) { facts.Seats++; if (s.Seat == null) s.Seat = b; }
                             if (b is IStoreSettingsParent parent && parent.GetStoreSettings() != null && parent.GetStoreSettings().AllowedToAccept(ThingDefOf.Silver)) { facts.SilverStorages++; s.Storages++; }
                         }
                         else if (thing.def.category == ThingCategory.Item)
@@ -67,6 +68,16 @@ namespace FamilyLife
                     s.Silver += group.HeldThings.Where(t => t.def == ThingDefOf.Silver).Sum(t => t.stackCount);
                     s.FreeSlots += group.CellsList.Count(c => !c.GetThingList(Map).Any(t => t.def.category == ThingCategory.Item));
                 }
+                // Silver that is not yet in the treasury's own storage (loose, or in a lower-priority store) and could be carried there: the outstanding deposits.
+                var groups = room.Cells.Select(c => c.GetSlotGroup(Map)).Where(g => g != null && g.Settings.AllowedToAccept(ThingDefOf.Silver)).Distinct().ToList();
+                var best = groups.OrderByDescending(g => (int)g.Settings.Priority).FirstOrDefault();
+                if (best != null && s.FreeSlots > 0)
+                    foreach (var t in Map.listerThings.ThingsOfDef(ThingDefOf.Silver))
+                    {
+                        if (t.Destroyed || t.IsForbidden(Faction.OfPlayer)) continue;
+                        var g = t.GetSlotGroup(); if (g != null && groups.Contains(g)) continue;
+                        if (g == null || (int)g.Settings.Priority < (int)best.Settings.Priority) { s.LooseSilver += t.stackCount; s.LooseStacks++; if (s.DepositThing == null) { s.DepositThing = t; s.DepositGroup = best; } }
+                    }
                 var sum = registry.Summarise(stacks); s.ValuablesValue = sum.EstimatedValuables;
             }
             s.Missing = TreasuryRoom.Missing(facts);
@@ -83,6 +94,10 @@ namespace FamilyLife
             var treasurer = c == null ? null : TreasuryService.Holders(c.Registry, TreasuryRoles.Treasurer).Select(c.TryGetPawn).FirstOrDefault(p => p != null);
             sb.Append('\n').Append("WFL_TZ_Treasurer".Translate(treasurer != null ? treasurer.LabelShort : "WFL_TZ_NoTreasurer".Translate().ToString()));
             sb.Append('\n').Append("WFL_TZ_Reserves".Translate(s.Silver, s.ValuablesValue, s.FreeSlots));
+            if (s.LooseStacks > 0) sb.Append('\n').Append("WFL_TZ_Deposits".Translate(s.LooseSilver, s.LooseStacks));
+            int waiting = TreasuryOffice.Pending(); if (waiting > 0) sb.Append('\n').Append("WFL_TZ_Office".Translate(waiting));
+            long claims = c == null ? 0 : c.Registry.Ledger().TotalClaims; int physical = TreasuryService.PhysicalSilver(Map);
+            if (claims > physical) sb.Append('\n').Append("WFL_TZ_MissingSilver".Translate(claims - physical));
             return sb.ToString();
         }
 
@@ -101,7 +116,7 @@ namespace FamilyLife
         public override void AddCell(IntVec3 c) { base.AddCell(c); Status.Computed = -99999; }
         public override void RemoveCell(IntVec3 c) { base.RemoveCell(c); Status.Computed = -99999; }
         /// <summary>Deleting the zone removes only the zone. Accounts, debts and payroll live in the ledger and are untouched.</summary>
-        public override void Delete(bool playSound) { base.Delete(playSound); }
+        public override void Delete(bool playSound) { var st = FamilyComponent.Current?.Registry.Treasury(); if (st != null && st.PrimaryZoneId == ID) st.PrimaryZoneId = 0; base.Delete(playSound); }
 
         private void NoteZone() { var st = FamilyComponent.Current?.Registry.Treasury(); if (st != null && IsPrimary) { st.PrimaryZoneId = ID; st.MapId = Map.uniqueID; } }
     }
