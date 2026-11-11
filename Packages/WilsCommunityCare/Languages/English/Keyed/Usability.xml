@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <wils.care.practice_career_label>Medical care</wils.care.practice_career_label>
+  <wils.care.practice_earn_help>Complete care work to earn career experience. Specialist work also builds experience in its own specialty.</wils.care.practice_earn_help>
+  <wils.care.healer_help>Provides routine community care. The entry role is called Nurse once the colony has assigned its first Doctor.</wils.care.healer_help>
+  <wils.care.doctor_help>Works as a qualified medical practitioner and continues routine community care.</wils.care.doctor_help>
+  <wils.care.specialist.counselor_help>Provides supportive counseling and can encourage reconciliation after a quarrel.</wils.care.specialist.counselor_help>
+  <wils.care.specialist.midwife_help>Provides specialist care during pregnancy and birth.</wils.care.specialist.midwife_help>
+  <wils.care.specialist.surgeon_help>Builds expertise through completed operations.</wils.care.specialist.surgeon_help>
+  <wils.care.specialist.veterinarian_help>Builds expertise through tending animals.</wils.care.specialist.veterinarian_help>
+  <WFL_UX_ManageCare>Choose care workers…</WFL_UX_ManageCare>
+  <WFL_UX_CareDisabled>Check-ups are switched off in mod settings.</WFL_UX_CareDisabled>
+  <WFL_UX_RoundActive>Check-up round in progress</WFL_UX_RoundActive>
+  <WFL_UX_RoundRequested>A check-up event is planned</WFL_UX_RoundRequested>
+  <WFL_UX_RoundIdle>No check-up round is running</WFL_UX_RoundIdle>
+  <WFL_UX_RoundProgress>Current/last round: {0} of {1} colonists examined</WFL_UX_RoundProgress>
+  <WFL_UX_Refusals>Active check-up refusals: {0}</WFL_UX_Refusals>
+  <WFL_UX_CareAuthority>Only the service holder or someone with authority over their house can direct these rounds from this perspective.</WFL_UX_CareAuthority>
+  <WFL_UX_CareStartFailed>The round could not start. Check that a care worker is still assigned and available.</WFL_UX_CareStartFailed>
+</LanguageData>

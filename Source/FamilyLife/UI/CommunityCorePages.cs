@@ -12,8 +12,41 @@ namespace FamilyLife
     /// <summary>Community summaries and links into the existing family, office and assignment systems.</summary>
     internal static class CommunityCorePages
     {
-        private static string selectedCareer;
-        private static string professionSearch = "";
+        private static FamilyRegistry alertRegistry;
+        private static int alertRevision, alertViewer, alertTick;
+        private static readonly Dictionary<int, List<FamilyAlert>> familyConcerns = new Dictionary<int, List<FamilyAlert>>();
+
+        private static List<FamilyAlert> Concerns(FamilyComponent c, Lineage family)
+        {
+            int now = Find.TickManager.TicksGame;
+            if (alertRegistry != c.Registry || alertRevision != c.Revision || alertViewer != c.PerspectivePawnId || now < alertTick || now - alertTick >= 300)
+            {
+                familyConcerns.Clear(); alertRegistry = c.Registry; alertRevision = c.Revision; alertViewer = c.PerspectivePawnId; alertTick = now;
+            }
+            if (!familyConcerns.TryGetValue(family.Id, out var list)) familyConcerns[family.Id] = list = FamilyAlerts.Build(c.Registry, family, c.PerspectivePawnId, now);
+            return list;
+        }
+
+        private static FamilyRegistry readyRegistry;
+        private static int readyRevision, readyTick, readyAssignments;
+        private static string readyRoles;
+        private static readonly List<KeyValuePair<int, List<ProfessionRole>>> readyPeople = new List<KeyValuePair<int, List<ProfessionRole>>>();
+
+        private static List<KeyValuePair<int, List<ProfessionRole>>> Ready(FamilyComponent c)
+        {
+            var reg = c.Registry; int now = Find.TickManager.TicksGame;
+            var roles = CareerService.Professions.All.Where(role => role.Level > 1 && FamilyFramework.Catalog.IsEnabled(role.ModuleId)).ToList();
+            string signature = string.Join("|", roles.Select(role => role.Id));
+            int assignments = reg.Assignments().Count;
+            if (readyRegistry == reg && readyRevision == c.Revision && readyAssignments == assignments && readyRoles == signature && now >= readyTick && now - readyTick < 300) return readyPeople;
+            readyPeople.Clear(); readyRegistry = reg; readyRevision = c.Revision; readyTick = now; readyAssignments = assignments; readyRoles = signature;
+            foreach (var p in reg.Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => p.Name))
+            {
+                var choices = roles.Where(role => !reg.Assignments().IsAssigned(p.Id, role.Id) && AssignmentBook.Check(role, reg.Careers(), p.Id) == AssignResult.Assigned).ToList();
+                if (choices.Count > 0) readyPeople.Add(new KeyValuePair<int, List<ProfessionRole>>(p.Id, choices));
+            }
+            return readyPeople;
+        }
 
         public static void Register(string moduleId)
         {
@@ -42,7 +75,7 @@ namespace FamilyLife
             float y = 0f;
             foreach (var d in FamilyFramework.Offices.All.OrderBy(o => o.Id, StringComparer.Ordinal))
             {
-                if (!FamilyFramework.Offices.Available(d.Kind)) continue;
+                if (!FamilyFramework.Offices.Available(d.Kind) || c.Registry.IsProfessional(d.Kind)) continue;
                 var office = c.Registry.OfficeFor(d.Kind);
                 y = Line(r, y, d.LabelKey.Translate() + ": " + (office != null && office.Held ? NameOf(c, office.HolderId) : "WFL_Hub_Vacant".Translate().ToString()));
             }
@@ -63,15 +96,26 @@ namespace FamilyLife
             float left = CommunityPageLayout.Section(r, 0f, 0f, w, "WFL_Hub_Residents".Translate(), a =>
             {
                 float y = Line(a, 0f, "WFL_Hub_ResidentsLine".Translate(c.Registry.Persons.Count(p => p.InColony), c.Registry.Lineages.Count(l => c.Registry.IsListedFamily(l.Id))));
-                return CommunityPageLayout.Button(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".families"));
+                return CommunityPageLayout.Action(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".families"));
             });
-            left = CommunityPageLayout.Section(r, 0f, left, w, "WFL_Hub_Modules".Translate(), a => Modules(a, c));
+            left = CommunityPageLayout.Section(r, 0f, left, w, "WFL_UX_ReadyTitle".Translate(), a =>
+            {
+                float y = 0f;
+                var candidates = Ready(c);
+                foreach (var candidate in candidates)
+                {
+                    y = Line(a, y, NameOf(c, candidate.Key) + ": " + string.Join(", ", candidate.Value.Select(role => CareerService.TitleOf(role, c.Registry))));
+                    int id = candidate.Key; string roleId = candidate.Value[0].Id;
+                    y = CommunityPageLayout.Action(a, y, "WFL_UX_ReviewCareer".Translate(), () => CommunityCareerPage.OpenRole(roleId, id));
+                }
+                return candidates.Count == 0 ? Line(a, y, "WFL_UX_NoReady".Translate(), true) : y;
+            });
             bool columns = CommunityPageLayout.TwoColumns(r);
             float right = CommunityPageLayout.Section(r, columns ? w + CommunityPageLayout.Gap : 0f, columns ? 0f : left, w, "WFL_Hub_Posts".Translate(), a =>
             {
                 float y = Posts(a, c);
                 if (c.Registry.NextAssemblyTick > 0) y = Line(a, y, "WFL_Assembly_Next".Translate(FamilyUi.Date(c.Registry.NextAssemblyTick)), true);
-                return CommunityPageLayout.Button(a, y, "WFL_Hub_Assembly".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".assembly"));
+                return CommunityPageLayout.Action(a, y, "WFL_Hub_Assembly".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".assembly"));
             });
             return Mathf.Max(left, right);
         }
@@ -79,6 +123,7 @@ namespace FamilyLife
         private static float Families(Rect r, FamilyComponent c)
         {
             float y = Line(r, 0f, "WFL_Hub_FamiliesHelp".Translate(), true);
+            PerspectiveShiftBridge.TrySync(c);
             var families = c.Registry.Lineages.Where(l => c.Registry.IsListedFamily(l.Id)).OrderBy(l => l.Name).ToList();
             if (families.Count == 0) y = Line(r, y, "WFL_NoFamilies".Translate(), true);
             float w = CommunityPageLayout.ColumnWidth(r), left = y, right = y;
@@ -87,69 +132,35 @@ namespace FamilyLife
             {
                 int id = family.Id;
                 bool second = CommunityPageLayout.TwoColumns(r) && index++ % 2 == 1;
+                float cardY = second ? right : left;
                 float end = CommunityPageLayout.Section(r, second ? w + CommunityPageLayout.Gap : 0f, second ? right : left, w, family.Name, a =>
                 {
-                    float h = Line(a, 0f, "WFL_Hub_FamilyResidents".Translate(c.Registry.LivingCount(id, Presence.Colony)));
-                    return CommunityPageLayout.Button(a, h, "WFL_Hub_OpenFamilies".Translate(), () =>
+                    FamilyCrest.Draw(new Rect(0f, 0f, 36f, 42f), family);
+                    var names = c.Registry.MembersOf(id).Where(person => person.InColony).Select(person => NameOf(c, person.Id)).ToList();
+                    string residents = "WFL_Hub_FamilyResidents".Translate(c.Registry.LivingCount(id, Presence.Colony));
+                    float summaryHeight = Mathf.Max(44f, Text.CalcHeight(residents, a.width - 46f));
+                    Widgets.Label(new Rect(46f, 0f, a.width - 46f, summaryHeight), residents);
+                    float h = Line(a, summaryHeight + 6f, string.Join(", ", names));
+                    foreach (var alert in Concerns(c, family).Take(2))
+                        h = Line(a, h, FamilyText.AlertText(c.Registry, alert));
+                    return CommunityPageLayout.Action(a, h, "WFL_UX_ViewFamily".Translate(family.Name), () =>
                     {
                         Window_Families.PendingLineageId = id;
                         if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
                     });
                 });
+                if (Widgets.ButtonInvisible(new Rect(second ? w + CommunityPageLayout.Gap : 0f, cardY, w, Mathf.Max(28f, Text.CalcHeight(family.Name, w - 16f) + 10f))))
+                {
+                    Window_Families.PendingLineageId = id;
+                    if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
+                }
                 if (second) right = end; else left = end;
             }
             y = Mathf.Max(left, right);
-            return CommunityPageLayout.Button(new Rect(0f, 0f, Mathf.Min(w, r.width), r.height), y, "WFL_Hub_AllFamilies".Translate(), () =>
-            {
-                if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
-            });
-        }
-
-        private static float Professions(Rect r, FamilyComponent c)
-        {
-            var reg = c.Registry; var book = reg.Assignments(); var ledger = reg.Careers();
-            var roles = CareerService.Professions.All.Where(x => FamilyFramework.Catalog.IsEnabled(x.ModuleId)).OrderBy(x => x.Career, StringComparer.Ordinal).ThenBy(x => x.Level).ThenBy(x => x.Id, StringComparer.Ordinal).ToList();
-            if (roles.Count == 0) return Line(r, 0f, "WFL_Hub_NoProfessions".Translate(), true);
-            float y = Line(r, 0f, "WFL_Hub_ProfessionsHelp".Translate(), true);
-            var careers = roles.Select(x => x.Career).Distinct().ToList();
-            if (!careers.Contains(selectedCareer)) selectedCareer = careers[0];
-            Func<string, string> careerName = id => CareerService.Career(id) != null ? CareerService.CareerName(CareerService.Career(id), reg) : id;
-            y = CommunityPageLayout.Button(r, y, careerName(selectedCareer), () => Find.WindowStack.Add(new FloatMenu(careers.Select(id => new FloatMenuOption(careerName(id), () => { selectedCareer = id; professionSearch = ""; })).ToList())));
-            Widgets.Label(new Rect(0f, y, 100f, 28f), "WFL_Hub_Search".Translate());
-            professionSearch = Widgets.TextField(new Rect(104f, y, r.width - 104f, 28f), professionSearch);
-            y += 38f;
-            var residents = reg.Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => NameOf(c, p.Id)).ToList();
-            var shown = roles.Where(role => role.Career == selectedCareer && (professionSearch.Length == 0 || CareerService.TitleOf(role, reg).IndexOf(professionSearch, StringComparison.OrdinalIgnoreCase) >= 0)).ToList();
-            if (shown.Count == 0) return Line(r, y, "WFL_Hub_NoMatches".Translate(), true);
-            foreach (var role in shown)
-            {
-                var holders = book.Holders(role.Id).Where(id => reg.GetPerson(id)?.InColony == true).ToList();
-                int qualified = residents.Count(p => !book.IsAssigned(p.Id, role.Id) && AssignmentBook.Check(role, ledger, p.Id) == AssignResult.Assigned);
-                float buttonW = Mathf.Min(150f, r.width * .3f), textW = r.width - buttonW - 24f;
-                string title = CareerService.TitleOf(role, reg);
-                string details = (holders.Count == 0 ? "WFL_Hub_Vacant".Translate().ToString() : string.Join(", ", holders.Select(id => NameOf(c, id)))) + "\n" + "WFL_Hub_Qualified".Translate(role.Level, qualified);
-                float titleH = Text.CalcHeight(title, textW), detailsH = Text.CalcHeight(details, textW);
-                float rowH = titleH + detailsH + 20f;
-                Widgets.DrawBoxSolid(new Rect(0f, y, r.width, rowH), new Color(.16f, .16f, .17f));
-                Widgets.Label(new Rect(8f, y + 6f, textW, titleH), title);
-                GUI.color = Color.gray; Widgets.Label(new Rect(8f, y + 8f + titleH, textW, detailsH), details); GUI.color = Color.white;
-                if (Widgets.ButtonText(new Rect(r.width - buttonW - 8f, y + 8f, buttonW, Mathf.Max(30f, Text.CalcHeight("WFL_Career_Assign".Translate(), buttonW - 16f) + 8f)), "WFL_Career_Assign".Translate()))
-                {
-                    var options = new List<FloatMenuOption>();
-                    foreach (var p in residents)
-                    {
-                        int id = p.Id; var rr = role;
-                        bool already = book.IsAssigned(id, rr.Id); var check = AssignmentBook.Check(rr, ledger, id);
-                        string label = NameOf(c, id) + (already ? " (" + "WFL_Career_Assigned".Translate() + ")" : check != AssignResult.Assigned ? " (" + "WFL_Career_Needs_Short".Translate() + ")" : "");
-                        options.Add(new FloatMenuOption(label, already ? (Action)(() => book.Unassign(id, rr.Id)) : check == AssignResult.Assigned ? () => book.Assign(id, rr, ledger, Find.TickManager.TicksGame) : (Action)null));
-                    }
-                    if (options.Count == 0) options.Add(new FloatMenuOption("WFL_ZoneNoFamilies".Translate(), null));
-                    Find.WindowStack.Add(new FloatMenu(options));
-                }
-                y += rowH + 8f;
-            }
             return y;
         }
+
+        private static float Professions(Rect r, FamilyComponent c) => CommunityCareerPage.Draw(r, c);
 
         private static float Assembly(Rect r, FamilyComponent c)
         {
@@ -161,7 +172,7 @@ namespace FamilyLife
                 float h = 0f; var reg = c.Registry;
                 if (reg.NextAssemblyTick > 0) h = Line(a, h, "WFL_Assembly_Next".Translate(FamilyUi.Date(reg.NextAssemblyTick)));
                 if (reg.NextAssemblyTick > 0 && reg.OpenAssembly == null)
-                    h = CommunityPageLayout.Button(a, h, "WFL_Assembly_Postpone".Translate(), () => reg.PostponeAssembly(Find.TickManager.TicksGame, 30));
+                    h = CommunityPageLayout.Action(a, h, "WFL_Assembly_Postpone".Translate(), () => reg.PostponeAssembly(Find.TickManager.TicksGame, 30));
                 if (reg.OpenAssembly != null)
                     foreach (var race in reg.OpenAssembly.Races)
                         h = Line(a, h, "WFL_Assembly_RaceLine".Translate(("WFL_OfficeKind_" + race.Kind).Translate(), ("WFL_AssemblyState_" + reg.OpenAssembly.State).Translate(), FamilyUi.NameList(reg, race.Candidates)));
@@ -172,7 +183,7 @@ namespace FamilyLife
 
         private static float Settings(Rect r, FamilyComponent c)
         {
-            float y = CommunityPageLayout.Button(r, 0f, "WFL_Hub_OpenSettings".Translate(), () =>
+            float y = CommunityPageLayout.Action(r, 0f, "WFL_Hub_OpenSettings".Translate(), () =>
             {
                 var mod = LoadedModManager.GetMod<FamilyLifeMod>();
                 if (mod != null) Find.WindowStack.Add(new Dialog_ModSettings(mod));

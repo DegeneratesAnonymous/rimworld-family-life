@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_UX_AssetsPolicies>Assets &amp; policies</WFL_UX_AssetsPolicies>
+  <WFL_UX_MoneySummary>Funds and payday</WFL_UX_MoneySummary>
+  <WFL_UX_AvailableFunds>Available community funds: {0} silver</WFL_UX_AvailableFunds>
+  <WFL_UX_PendingWages>Wages awaiting payday: {0} silver</WFL_UX_PendingWages>
+  <WFL_UX_PaydayIn>Next payday: in {0} days</WFL_UX_PaydayIn>
+  <WFL_UX_OverdueWages>Unpaid wages from previous paydays: {0} silver</WFL_UX_OverdueWages>
+  <WFL_UX_ShowAccounting>Show silver accounting</WFL_UX_ShowAccounting>
+  <WFL_UX_HideAccounting>Hide silver accounting</WFL_UX_HideAccounting>
+  <WFL_UX_AccountingHelp>Ownership is what each account holds. Available silver is the physically backed portion it can spend now. Debts are separate obligations.</WFL_UX_AccountingHelp>
+  <WFL_UX_CommunityOwned>Community ownership: {0} silver</WFL_UX_CommunityOwned>
+  <WFL_UX_PhysicalClaims>All accounts own {0} silver. Physical silver across colony maps, pockets and caravans: {1}.</WFL_UX_PhysicalClaims>
+  <WFL_UX_TreasuryStaff>Staffing</WFL_UX_TreasuryStaff>
+  <WFL_UX_ChooseTreasurer>Choose a Treasurer…</WFL_UX_ChooseTreasurer>
+  <WFL_UX_ChooseCollector>Choose a Tax Collector…</WFL_UX_ChooseCollector>
+  <WFL_UX_TreasurySpace>Treasury space</WFL_UX_TreasurySpace>
+  <WFL_UX_NoTreasuryZone>No Treasury Zone on this map. Accounts and payroll already work without one.</WFL_UX_NoTreasuryZone>
+  <WFL_UX_ZoneHelpButton>How to designate a Treasury Zone</WFL_UX_ZoneHelpButton>
+  <WFL_UX_ZoneHelp>Open Architect &gt; Zone &gt; Treasury Zone and paint the treasury area. A working treasury office needs a suitable room with a table, a seat and storage. The zone enables office work; balances and payroll do not require it. Select the zone to inspect its missing requirements.</WFL_UX_ZoneHelp>
+  <WFL_UX_RecentActivity>Recent activity</WFL_UX_RecentActivity>
+  <WFL_UX_ViewTransactions>View all transactions</WFL_UX_ViewTransactions>
+  <WFL_UX_IncomePolicy>Share of future income kept by the community</WFL_UX_IncomePolicy>
+  <WFL_UX_IncomeScope>Applies to future quest rewards and shared profit from community-owned trade goods. Trade cost recovery and proceeds belonging to an owner follow their existing rules. Existing balances, earned wages and debts are unchanged.</WFL_UX_IncomeScope>
+  <WFL_UX_IncomeCurrent>Current: {0}% · Proposed: {1}%</WFL_UX_IncomeCurrent>
+  <WFL_UX_ApplyPolicy>Apply income share</WFL_UX_ApplyPolicy>
+  <WFL_UX_PolicyApplied>The community income share has been updated for future transactions.</WFL_UX_PolicyApplied>
+  <WFL_UX_TrackedAssets>Tracked valuables</WFL_UX_TrackedAssets>
+  <WFL_UX_TrackingHelp>Track valuable materials as stored assets. Tracking creates no spendable silver. Stopping tracking leaves every physical item untouched.</WFL_UX_TrackingHelp>
+  <WFL_UX_AssetMap>Loose and stored stacks on {0}. Inventories and caravans are excluded from this asset list.</WFL_UX_AssetMap>
+  <WFL_UX_NoMap>no loaded map</WFL_UX_NoMap>
+  <WFL_UX_AssetLine>{0}: {1} · {2}</WFL_UX_AssetLine>
+  <WFL_UX_LiquidSilver>spendable currency</WFL_UX_LiquidSilver>
+  <WFL_UX_StoredAsset>stored asset, not spendable silver</WFL_UX_StoredAsset>
+  <WFL_UX_StopTracking>Stop tracking {0}</WFL_UX_StopTracking>
+  <WFL_UX_NoAssetsToAdd>No additional valuable materials are available to track.</WFL_UX_NoAssetsToAdd>
+  <WFL_UX_StartingBalance>Starting treasury balance recorded: {0} silver already in the colony.</WFL_UX_StartingBalance>
+  <WFL_UX_Tx_Income>Income</WFL_UX_Tx_Income>
+  <WFL_UX_Tx_Spend>Spending</WFL_UX_Tx_Spend>
+  <WFL_UX_Tx_Transfer>Transfer</WFL_UX_Tx_Transfer>
+  <WFL_UX_Tx_Reward>Reward received</WFL_UX_Tx_Reward>
+  <WFL_UX_Tx_Payroll>Wage payment</WFL_UX_Tx_Payroll>
+  <WFL_UX_Tx_Tax>Tax</WFL_UX_Tx_Tax>
+  <WFL_UX_Tx_Trade>Trade</WFL_UX_Tx_Trade>
+  <WFL_UX_Tx_Debt>Debt</WFL_UX_Tx_Debt>
+  <WFL_UX_Tx_Estate>Estate</WFL_UX_Tx_Estate>
+  <WFL_UX_Tx_Correction>Balance reconciliation</WFL_UX_Tx_Correction>
+  <WFL_UX_Tx_Misconduct>Misconduct</WFL_UX_Tx_Misconduct>
+  <wils.treasury_career_label>Treasury</wils.treasury_career_label>
+  <wils.treasury_earn_help>Earn career experience through treasury office work and tax collection duties.</wils.treasury_earn_help>
+  <wils.treasury.treasurer_help>Manages treasury office business. Financial settlement and payroll do not require an office visit.</wils.treasury.treasurer_help>
+  <wils.treasury.taxcollector_help>Carries out tax collection duties after earning the required qualification.</wils.treasury.taxcollector_help>
+  <WFL_UX_FundsLabel>Available community funds</WFL_UX_FundsLabel>
+  <WFL_UX_WagesLabel>Wages awaiting payday</WFL_UX_WagesLabel>
+  <WFL_UX_PaydayLabel>Next payday</WFL_UX_PaydayLabel>
+  <WFL_UX_SilverValue>{0} silver</WFL_UX_SilverValue>
+  <WFL_UX_DaysValue>In {0} days</WFL_UX_DaysValue>
+  <WFL_UX_UnclaimedSilver>Previously unallocated silver recorded in the treasury.</WFL_UX_UnclaimedSilver>
+</LanguageData>

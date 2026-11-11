@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_UX_NoColonists>No adult colonists are available for a professional assignment.</WFL_UX_NoColonists>
+  <WFL_UX_Colonist>Colonist: {0} ▾</WFL_UX_Colonist>
+  <WFL_UX_CurrentRoles>Current assignments: {0}</WFL_UX_CurrentRoles>
+  <WFL_UX_None>None</WFL_UX_None>
+  <WFL_UX_MapHelp>Select any role to inspect it. Earn qualifications through work, then choose an assignment.</WFL_UX_MapHelp>
+  <WFL_UX_Specialties>Specialties — branches from the qualified role</WFL_UX_Specialties>
+  <WFL_UX_Assigned>Assigned</WFL_UX_Assigned>
+  <WFL_UX_CanAssign>Qualified · can assign</WFL_UX_CanAssign>
+  <WFL_UX_Locked>Not yet qualified</WFL_UX_Locked>
+  <WFL_UX_EntryRole>Entry role: no career qualification required. The colonist must still be able and available to do the work.</WFL_UX_EntryRole>
+  <WFL_UX_Prerequisite>Requires {0} qualification: {1}</WFL_UX_Prerequisite>
+  <WFL_UX_Earned>Earned</WFL_UX_Earned>
+  <WFL_UX_EarnedQualification>Qualification earned. It is kept even if skills later decline or assignments change.</WFL_UX_EarnedQualification>
+  <WFL_UX_LegacyQualified>Qualification retained from a previous service post. No experience was invented during migration.</WFL_UX_LegacyQualified>
+  <WFL_UX_CareerExperience>Career experience</WFL_UX_CareerExperience>
+  <WFL_UX_SpecialtyExperience>Specialty experience</WFL_UX_SpecialtyExperience>
+  <WFL_UX_Requirement>{0}: {1} / {2}</WFL_UX_Requirement>
+  <WFL_UX_SkillsUnavailable>This colonist is not currently available for a skill inspection. Earned qualifications are still shown.</WFL_UX_SkillsUnavailable>
+  <WFL_UX_AssignRole>Assign {0} as {1}</WFL_UX_AssignRole>
+  <WFL_UX_RemoveRole>Remove {0} assignment</WFL_UX_RemoveRole>
+  <WFL_UX_NotQualified>Earn the missing qualifications before assigning this role.</WFL_UX_NotQualified>
+  <WFL_UX_AssignmentHelp>Multiple assignments are allowed. Removing a role keeps its qualification. Availability, needs and work settings still govern when work happens.</WFL_UX_AssignmentHelp>
+  <WFL_UX_ReadyTitle>Ready for a new assignment</WFL_UX_ReadyTitle>
+  <WFL_UX_NoReady>No unassigned advanced qualifications at the moment. Colonists build career experience through their work.</WFL_UX_NoReady>
+  <WFL_UX_ReviewCareer>Review career</WFL_UX_ReviewCareer>
+  <WFL_UX_ManageCareer>Manage careers…</WFL_UX_ManageCareer>
+  <WFL_UX_ViewFamily>View {0} family</WFL_UX_ViewFamily>
+  <WFL_UX_AwaitingEvaluation>These thresholds have been reached. Qualifications are recorded when completed career work is evaluated.</WFL_UX_AwaitingEvaluation>
+</LanguageData>

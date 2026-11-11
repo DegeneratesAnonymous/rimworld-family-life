@@ -38,6 +38,32 @@ namespace FamilyLife
             return y + height + 6f;
         }
 
+        public static float Metric(Rect r, string label, string value)
+        {
+            float y = Line(r, 0f, label);
+            Text.Font = GameFont.Medium;
+            float height = Text.CalcHeight(value, r.width);
+            GUI.color = FamilyKit.Gold;
+            Widgets.Label(new Rect(0f, y, r.width, height), value);
+            GUI.color = Color.white; Text.Font = GameFont.Small;
+            return y + height + 12f;
+        }
+
+        /// <summary>A content-sized action with translated text measured before drawing.</summary>
+        public static float Action(Rect r, float y, string text, Action action, bool enabled = true)
+        {
+            float width = Mathf.Min(r.width, Mathf.Max(110f, Text.CalcSize(text).x + 24f));
+            float height = Mathf.Max(30f, Text.CalcHeight(text, width - 20f) + 10f);
+            bool previous = GUI.enabled;
+            try
+            {
+                GUI.enabled = previous && enabled;
+                if (Widgets.ButtonText(new Rect(0f, y, width, height), text)) action();
+            }
+            finally { GUI.enabled = previous; }
+            return y + height + 8f;
+        }
+
         public static float Button(Rect r, float y, string text, Action action)
         {
             float height = Mathf.Max(30f, Text.CalcHeight(text, r.width - 20f) + 10f);

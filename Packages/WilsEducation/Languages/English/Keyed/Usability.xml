@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <wils.education.teaching_career_label>Teaching</wils.education.teaching_career_label>
+  <wils.education.teaching_earn_help>Teach lessons and classes to earn teaching experience. Teaching a subject also builds experience toward its specialty.</wils.education.teaching_earn_help>
+  <wils.education.tutor_help>Offers one-to-one lessons when a suitable pupil is available.</wils.education.tutor_help>
+  <wils.education.teacher_help>Teaches classes in a usable classroom, or individual lessons when no classroom is available.</wils.education.teacher_help>
+  <WFL_UX_ManageInstructors>Choose instructors…</WFL_UX_ManageInstructors>
+  <WFL_UX_ClassesDisabled>Classes are switched off in mod settings.</WFL_UX_ClassesDisabled>
+  <WFL_UX_ClassQueued>A requested class is waiting for the next suitable opportunity.</WFL_UX_ClassQueued>
+  <WFL_UX_NoInstructorHere>No assigned instructor is currently available on a map. Tutors can still provide individual lessons.</WFL_UX_NoInstructorHere>
+  <WFL_UX_NoSuitablePupils>No suitable pupils were found on the instructors’ maps. A lesson needs a pupil who can learn a skill the instructor knows better.</WFL_UX_NoSuitablePupils>
+  <WFL_UX_NoClassroom>No reachable classroom lectern was found for the current instructors. Individual lessons may still take place. An indoor lectern enables classes.</WFL_UX_NoClassroom>
+  <WFL_UX_ClassWaiting>Classes start when the instructor’s schedule, needs and suitable pupils allow. Select a classroom lectern to request a class.</WFL_UX_ClassWaiting>
+  <wils.education.specialist.shooting_help>Teaches focused classes in shooting. Continues to contribute as an instructor.</wils.education.specialist.shooting_help>
+  <wils.education.specialist.melee_help>Teaches focused classes in melee. Continues to contribute as an instructor.</wils.education.specialist.melee_help>
+  <wils.education.specialist.construction_help>Teaches focused classes in construction. Continues to contribute as an instructor.</wils.education.specialist.construction_help>
+  <wils.education.specialist.mining_help>Teaches focused classes in mining. Continues to contribute as an instructor.</wils.education.specialist.mining_help>
+  <wils.education.specialist.cooking_help>Teaches focused classes in cooking. Continues to contribute as an instructor.</wils.education.specialist.cooking_help>
+  <wils.education.specialist.plants_help>Teaches focused classes in growing. Continues to contribute as an instructor.</wils.education.specialist.plants_help>
+  <wils.education.specialist.animals_help>Teaches focused classes in animal handling. Continues to contribute as an instructor.</wils.education.specialist.animals_help>
+  <wils.education.specialist.crafting_help>Teaches focused classes in crafting. Continues to contribute as an instructor.</wils.education.specialist.crafting_help>
+  <wils.education.specialist.artistic_help>Teaches focused classes in art. Continues to contribute as an instructor.</wils.education.specialist.artistic_help>
+  <wils.education.specialist.medicine_help>Teaches focused classes in medicine. Continues to contribute as an instructor.</wils.education.specialist.medicine_help>
+  <wils.education.specialist.social_help>Teaches focused classes in social skills. Continues to contribute as an instructor.</wils.education.specialist.social_help>
+  <wils.education.specialist.intellectual_help>Teaches focused classes in research. Continues to contribute as an instructor.</wils.education.specialist.intellectual_help>
+</LanguageData>

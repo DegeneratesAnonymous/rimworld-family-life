@@ -17,6 +17,7 @@ namespace FamilyLife
     {
         private const float NavWidth = 224f;
         private static string selected;
+        private static readonly HashSet<string> resetScrolls = new HashSet<string>();
         private static readonly Dictionary<string, Vector2> scrolls = new Dictionary<string, Vector2>();
         private static readonly HashSet<string> failed = new HashSet<string>();
         private readonly Dictionary<string, float> heights = new Dictionary<string, float>();
@@ -28,6 +29,7 @@ namespace FamilyLife
         public static void Open(string pageId)
         {
             selected = pageId;
+            resetScrolls.Add(pageId);
             if (Find.MainTabsRoot != null && Find.WindowStack.WindowOfType<MainTabWindow_Community>() == null) Find.MainTabsRoot.SetCurrentTab(CommunityDefOf.WFL_Community, false);
         }
 
@@ -86,6 +88,7 @@ namespace FamilyLife
                 // A page that owns its scrolling is given the whole area; every other page is drawn into a scroll view sized to the height it reports.
                 if (page.OwnsScrolling) { page.Render(new Rect(area.x, area.y, area.width, area.height), c); return; }
                 scrolls.TryGetValue(page.Id, out var scroll);
+                if (resetScrolls.Remove(page.Id)) scroll = Vector2.zero;
                 heights.TryGetValue(page.Id, out float height);
                 var view = new Rect(0f, 0f, area.width - 18f, Mathf.Max(height, area.height));
                 Widgets.BeginScrollView(area, ref scroll, view);
