@@ -1,4 +1,5 @@
 # Community Management Hub and Wil's Treasury
+> **Superseded in part by `docs/TREASURY_STATUS.md`** (the completeness pass: audit fixes, physical treasury, ordinary-labour wages, Family Life integration, module pages). Read that first for what is real, what is only offline-tested and what needs RimWorld.
 
 Branch `feature/community-treasury` (cut from `feature/community-careers`; neither the careers branch, PR #7, nor any staged package was touched).
 Everything below is **offline evidence only**. Nothing has been run in RimWorld. Section 6 lists what is unverified and how to verify it.

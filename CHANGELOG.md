@@ -4,7 +4,9 @@
 - **Community window.** One window (main button "Community") with framework-owned navigation and pages registered through a generic page catalog: Overview, Families & Households (hosts the existing Families content), Professions, Community Assembly, Settings, and a page per installed module. Disabled or absent modules list nothing.
 - **Wil's Treasury (new optional package `SpacemanWil.WilsTreasury`).** A conserving ledger of personal, household, community and (future) business accounts; quest rewards and trade proceeds shared by policy; treasury-first proportional pooled trades; a Treasury Zone; wages and payday on the 1st and 8th of each quadrum; Treasurer and Tax Collector careers; taxation, collection visits, misconduct and debts. Accounts are claims on real silver: nothing creates silver.
 - **Framework additions.** Read-only economy hooks (`TradeDeal.TryExecute`, `QuestPart_DropPods`) and a work-reported listener list, owned by the framework like the medical hooks.
-- **Offline evidence only.** 1,294 tests; four assemblies build for 1.6 and 1.7. Nothing has been run in RimWorld; docs/TREASURY.md lists what is unverified and how to verify it.
+- **Offline evidence only.** 1,331 tests; four assemblies build for 1.6 and 1.7. Nothing has been run in RimWorld; docs/TREASURY.md lists what is unverified and how to verify it.
+
+- **Treasury completeness pass (docs/TREASURY_STATUS.md).** Audit fixes (reconciliation grace and loss recognition, estate debts, household shares, caravans counted as physical silver), a physical Treasury (office session, silver deposits), wages for ordinary labour, Family Life household/estate integration, richer tax collection with discoverable misconduct, and Education and Community Care pages in the Community window. Offline evidence only.
 
 
 ## Unreleased - Education and Community Care are separate mods (stage 3-5; see docs/MODULAR-ARCHITECTURE.md)
