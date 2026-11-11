@@ -56,4 +56,18 @@
   <WFL_UX_SilverValue>{0} silver</WFL_UX_SilverValue>
   <WFL_UX_DaysValue>In {0} days</WFL_UX_DaysValue>
   <WFL_UX_UnclaimedSilver>Previously unallocated silver recorded in the treasury.</WFL_UX_UnclaimedSilver>
+  <WFL_Flow_Account>{0} — owned: {1} silver · available: {2} silver</WFL_Flow_Account>
+  <WFL_Flow_TransferHelp>Move ownership between existing accounts. This does not create silver or move physical stacks.</WFL_Flow_TransferHelp>
+  <WFL_Flow_ChooseAccount>Choose an account…</WFL_Flow_ChooseAccount>
+  <WFL_Flow_Amount>Amount in silver</WFL_Flow_Amount>
+  <WFL_Flow_ChooseBoth>Choose both a source and a destination.</WFL_Flow_ChooseBoth>
+  <WFL_Flow_DifferentAccounts>Choose two different accounts.</WFL_Flow_DifferentAccounts>
+  <WFL_Flow_Insufficient>The source account does not have enough available silver.</WFL_Flow_Insufficient>
+  <WFL_Flow_TransferPreview>Transfer {0} silver from {1} to {2}.</WFL_Flow_TransferPreview>
+  <WFL_Flow_TransferSuccess>Transferred {0} silver.</WFL_Flow_TransferSuccess>
+  <WFL_Flow_EditRates>Manage wage rates and funding…</WFL_Flow_EditRates>
+  <WFL_Flow_HideRates>Hide wage settings</WFL_Flow_HideRates>
+  <WFL_Flow_NoPaydays>No payday has been recorded yet. Earned wages wait until payday.</WFL_Flow_NoPaydays>
+  <WFL_Flow_NoDebts>There are no outstanding debts. Wages earned before payday are shown under Payroll.</WFL_Flow_NoDebts>
+  <WFL_Flow_NoTransactions>No transactions have been recorded yet.</WFL_Flow_NoTransactions>
 </LanguageData>

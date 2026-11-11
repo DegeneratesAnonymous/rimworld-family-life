@@ -37,4 +37,6 @@
   <WFL_Next_Winner>Elected: {0}</WFL_Next_Winner>
   <WFL_Next_Upgrade>Upgrade to {0}</WFL_Next_Upgrade>
   <WFL_Next_UpgradeHelp>Upgrading replaces lower-level assignments in this career. Earned qualifications, other careers and existing specialties are kept.</WFL_Next_UpgradeHelp>
+  <WFL_Flow_RoleRemoved>Removed the {0} assignment. Qualifications are kept.</WFL_Flow_RoleRemoved>
+  <WFL_Flow_RoleAssigned>Assigned as {0}.</WFL_Flow_RoleAssigned>
 </LanguageData>

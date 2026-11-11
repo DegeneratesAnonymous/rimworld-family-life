@@ -157,10 +157,15 @@ namespace FamilyLife
             {
                 // Revalidate the resident and module at the action boundary; qualification is never awarded by this page.
                 if (FamilyComponent.Current != c || reg.GetPerson(person)?.InColony != true || reg.GetPerson(person).Juvenile || !FamilyFramework.Catalog.IsEnabled(role.ModuleId)) return;
-                if (book.IsAssigned(person, role.Id)) book.Unassign(person, role.Id);
+                if (book.IsAssigned(person, role.Id))
+                {
+                    book.Unassign(person, role.Id);
+                    Messages.Message("WFL_Flow_RoleRemoved".Translate(CareerService.TitleOf(role, reg)), MessageTypeDefOf.NeutralEvent, false);
+                }
                 else
                 {
                     var result = book.Assign(person, role, ledger, Find.TickManager.TicksGame);
+                    Messages.Message((result == AssignResult.Assigned ? "WFL_Flow_RoleAssigned" : "WFL_UX_NotQualified").Translate(CareerService.TitleOf(role, reg)), result == AssignResult.Assigned ? MessageTypeDefOf.NeutralEvent : MessageTypeDefOf.RejectInput, false);
                     if (upgrade && result == AssignResult.Assigned)
                         foreach (var old in lower) book.Unassign(person, old.Id);
                 }

@@ -15,7 +15,7 @@ namespace FamilyLife
     internal static class TreasuryPage
     {
         private static int sub;
-        private static bool showAccounting;
+        private static bool showAccounting, editPayroll;
         private static TreasuryState policyOwner;
         private static int draftPercent, observedPercent;
         private static string transferFrom, transferTo; private static string amountText = "10"; private static int amount = 10;
@@ -201,25 +201,35 @@ namespace FamilyLife
         private static float Accounts(Rect r, FamilyComponent c, float y)
         {
             var l = c.Registry.Ledger();
-            foreach (var a in l.Accounts.Where(x => !x.Closed).OrderBy(x => x.Kind).ThenByDescending(x => x.Balance)) { y = Line(r, y, "WFL_Tr_AccountLine".Translate(NameOf(c, a.Id), a.Balance)); }
-            y += 8f; y = Heading(r, y, "WFL_Tr_Transfer".Translate());
-            var open = l.Accounts.Where(x => !x.Closed).OrderBy(x => x.Id, StringComparer.Ordinal).ToList();
-            if (Widgets.ButtonText(new Rect(4f, y, 200f, 24f), "WFL_Tr_TransferFrom".Translate() + ": " + (transferFrom == null ? "-" : NameOf(c, transferFrom)))) Find.WindowStack.Add(new FloatMenu(open.Select(a => { var id = a.Id; return new FloatMenuOption(NameOf(c, id), () => transferFrom = id); }).ToList()));
-            if (Widgets.ButtonText(new Rect(212f, y, 200f, 24f), "WFL_Tr_TransferTo".Translate() + ": " + (transferTo == null ? "-" : NameOf(c, transferTo)))) Find.WindowStack.Add(new FloatMenu(open.Select(a => { var id = a.Id; return new FloatMenuOption(NameOf(c, id), () => transferTo = id); }).ToList()));
-            Widgets.TextFieldNumeric(new Rect(420f, y, 70f, 24f), ref amount, ref amountText, 1f, 1000000f);
-            y += 30f;
-            if (transferFrom != null && transferTo != null && Widgets.ButtonText(new Rect(4f, y, 220f, 26f), "WFL_Tr_TransferDo".Translate(amount)))
+            var open = l.Accounts.Where(account => !account.Closed).OrderBy(account => account.Kind).ThenBy(account => account.Id).ToList();
+            foreach (var account in open)
+                y = Line(r, y, "WFL_Flow_Account".Translate(NameOf(c, account.Id), account.Balance, l.Available(account.Id)));
+            y = Heading(r, y + 8f, "WFL_Tr_Transfer".Translate());
+            y = Line(r, y, "WFL_Flow_TransferHelp".Translate());
+            if (!open.Any(account => account.Id == transferFrom)) transferFrom = null;
+            if (!open.Any(account => account.Id == transferTo)) transferTo = null;
+            y = CommunityPageLayout.Action(r, y, "WFL_Tr_TransferFrom".Translate() + ": " + (transferFrom == null ? "WFL_Flow_ChooseAccount".Translate().ToString() : NameOf(c, transferFrom)), () => Find.WindowStack.Add(new FloatMenu(open.Select(account => { string id = account.Id; return new FloatMenuOption(NameOf(c, id), () => transferFrom = id); }).ToList())));
+            y = CommunityPageLayout.Action(r, y, "WFL_Tr_TransferTo".Translate() + ": " + (transferTo == null ? "WFL_Flow_ChooseAccount".Translate().ToString() : NameOf(c, transferTo)), () => Find.WindowStack.Add(new FloatMenu(open.Select(account => { string id = account.Id; return new FloatMenuOption(NameOf(c, id), () => transferTo = id); }).ToList())));
+            y = Line(r, y, "WFL_Flow_Amount".Translate());
+            Widgets.TextFieldNumeric(new Rect(0f, y, Mathf.Min(160f, r.width), 30f), ref amount, ref amountText, 1f, 1000000f); y += 38f;
+            string reason = transferFrom == null || transferTo == null ? "WFL_Flow_ChooseBoth" : transferFrom == transferTo ? "WFL_Flow_DifferentAccounts" : amount > l.Available(transferFrom) ? "WFL_Flow_Insufficient" : null;
+            if (reason != null) y = Line(r, y, reason.Translate());
+            else y = Line(r, y, "WFL_Flow_TransferPreview".Translate(amount, NameOf(c, transferFrom), NameOf(c, transferTo)));
+            return CommunityPageLayout.Action(r, y, "WFL_Tr_TransferDo".Translate(amount), () =>
             {
                 var res = l.Transfer(transferFrom, transferTo, amount, TxKind.Transfer, "manual:" + Find.TickManager.TicksGame + ":" + transferFrom + ":" + transferTo, TreasuryService.Today(), "player transfer");
-                if (res != LedgerResult.Ok) Messages.Message("WFL_Tr_TransferFailed".Translate(res), MessageTypeDefOf.RejectInput, false);
-            }
-            return y + 32f;
+                Messages.Message(res == LedgerResult.Ok ? "WFL_Flow_TransferSuccess".Translate(amount) : "WFL_Tr_TransferFailed".Translate(res), res == LedgerResult.Ok ? MessageTypeDefOf.NeutralEvent : MessageTypeDefOf.RejectInput, false);
+            }, reason == null);
         }
 
         private static float Payroll(Rect r, FamilyComponent c, float y)
         {
             var reg = c.Registry; var pay = reg.Payroll(); var pol = pay.Policy;
             y = Line(r, y, "WFL_Tr_PayrollHelp".Translate(), true) + 4f;
+            y = Line(r, y, "WFL_UX_PendingWages".Translate(pay.PendingTotal));
+            y = CommunityPageLayout.Action(r, y, (editPayroll ? "WFL_Flow_HideRates" : "WFL_Flow_EditRates").Translate(), () => editPayroll = !editPayroll);
+            if (editPayroll)
+            {
             y = Heading(r, y + 4f, "WFL_Tr_FundingTitle".Translate());
             foreach (PayrollFunding f in Enum.GetValues(typeof(PayrollFunding))) { if (Widgets.RadioButtonLabeled(new Rect(4f, y, r.width - 16f, 24f), ("WFL_Tr_Funding_" + f).Translate(), pol.Funding == f)) pol.Funding = f; y += 26f; }
             y = Line(r, y, "WFL_Tr_FundingNote".Translate(), true);
@@ -250,26 +260,37 @@ namespace FamilyLife
             Widgets.Label(new Rect(4f, y, 300f, 24f), "WFL_Tr_OrdinaryCap".Translate()); Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref ocap, ref obuf, 0f, 100000f); pol.OrdinaryDailyCap = ocap; y += 28f;
             int cap = pol.PawnDailyCap; string buf = cap.ToString();
             Widgets.Label(new Rect(4f, y, 300f, 24f), "WFL_Tr_DailyCap".Translate()); Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref cap, ref buf, 0f, 100000f); pol.PawnDailyCap = cap; y += 32f;
+            }
             y = Heading(r, y, "WFL_Tr_PastPayments".Translate());
+            if (!pay.Reports.Any()) y = Line(r, y, "WFL_Flow_NoPaydays".Translate());
             foreach (var rep in pay.Reports.AsEnumerable().Reverse()) y = Line(r, y, "WFL_Tr_PaydayLine".Translate(rep.Payday % PayCalendar.DaysPerYear + 1, rep.TotalDue, rep.TotalPaid, rep.Shortfall > 0 ? (string)"WFL_Tr_ShortBy".Translate(rep.Shortfall) : ""), true);
             return y;
         }
 
+        private static WagePolicy rateOwner;
+        private static readonly Dictionary<string, int> observedRates = new Dictionary<string, int>();
         private static readonly Dictionary<string, string> rateBuffers = new Dictionary<string, string>();
         private static float RateRow(Rect r, float y, string role, string label, int fallback = -1)
         {
             var pol = FamilyComponent.Current.Registry.Payroll().Policy;
-            int rate = pol.Rates.TryGetValue(role, out var v) ? v : (fallback >= 0 ? fallback : WagePolicy.DefaultRate);
-            if (!rateBuffers.TryGetValue(role, out var buf)) buf = rate.ToString();
+            if (rateOwner != pol) { rateOwner = pol; rateBuffers.Clear(); observedRates.Clear(); }
+            var definition = CareerService.Professions.ById(role);
+            int rate = pol.Rates.TryGetValue(role, out var v) ? v : fallback >= 0 ? fallback : definition != null ? WagePolicy.DefaultRateForLevel(definition.Level) : WagePolicy.DefaultRate;
+            int original = rate;
+            if (!rateBuffers.TryGetValue(role, out var buf) || !observedRates.TryGetValue(role, out var prior) || prior != rate) buf = rate.ToString();
             Widgets.Label(new Rect(4f, y, 300f, 24f), "WFL_Tr_RatePerUnit".Translate(label));
-            Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref rate, ref buf, 0f, 100000f); rateBuffers[role] = buf; pol.Rates[role] = rate;
+            Widgets.TextFieldNumeric(new Rect(310f, y, 70f, 24f), ref rate, ref buf, 0f, 100000f); rateBuffers[role] = buf; observedRates[role] = rate; if (rate != original) pol.Rates[role] = rate;
             return y + 26f;
         }
 
         private static float Taxation(Rect r, FamilyComponent c, float y)
         {
             var reg = c.Registry; var l = reg.Ledger(); var tax = reg.Tax(); int today = TreasuryService.Today();
-            if (!TaxAuthority.Unlocked(TreasuryService.ActiveCollectors(reg))) return Line(r, y, "WFL_Tr_TaxLocked".Translate(), true);
+            if (!TaxAuthority.Unlocked(TreasuryService.ActiveCollectors(reg)))
+            {
+                y = Line(r, y, "WFL_Tr_TaxLocked".Translate());
+                return CommunityPageLayout.Action(r, y, "WFL_UX_ChooseCollector".Translate(), () => CommunityCareerPage.OpenRole(TreasuryRoles.TaxCollector));
+            }
             y = Line(r, y, "WFL_Tr_Collector".Translate(Names(c, TreasuryRoles.TaxCollector)));
             y = Line(r, y, "WFL_Tr_TaxRate".Translate(tax.RatePercent));
             float v = Widgets.HorizontalSlider(new Rect(4f, y, 240f, 20f), tax.RatePercent, 0f, 40f, true, null, null, null, 1f); tax.RatePercent = (int)v; y += 26f;
@@ -283,6 +304,7 @@ namespace FamilyLife
         private static float Debts(Rect r, FamilyComponent c, float y)
         {
             var l = c.Registry.Ledger();
+            if (!l.Debts.Any(d => d.Active)) y = Line(r, y, "WFL_Flow_NoDebts".Translate());
             foreach (var d in l.Debts.Where(x => x.Active).OrderBy(x => x.DueDay).ToList())
             {
                 y = Line(r, y, "WFL_Tr_DebtLine".Translate(NameOf(c, d.Debtor), NameOf(c, d.Creditor), d.Outstanding, d.Original, d.Kind + (d.Status == DebtStatus.Disputed ? ", disputed" : "")));
@@ -294,7 +316,13 @@ namespace FamilyLife
 
         private static float Transactions(Rect r, FamilyComponent c, float y)
         {
-            foreach (var t in c.Registry.Ledger().History.Reverse().Take(80)) y = Line(r, y, TxText(c, t) + (t.Tag != null ? "  [" + t.Tag + "]" : ""), t.Kind != TxKind.Misconduct);
+            if (c.Registry.Ledger().History.Count == 0) y = Line(r, y, "WFL_Flow_NoTransactions".Translate());
+            foreach (var t in c.Registry.Ledger().History.Reverse().Take(80))
+            {
+                float start = y;
+                y = Line(r, y, TxText(c, t));
+                if (!string.IsNullOrEmpty(t.Tag)) TooltipHandler.TipRegion(new Rect(0f, start, r.width, y - start), t.Tag);
+            }
             return y;
         }
     }
