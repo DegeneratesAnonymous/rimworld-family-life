@@ -53,7 +53,7 @@ namespace FamilyLife
                         {
                             int hidden = Math.Max(1, result.Pay * (ev.Id == "hides_funds" ? 50 : 30) / 100);
                             if (Rand.Value < Mathf.Clamp01(.10f + social * .04f)) { tax.Legitimacy = Mathf.Min(100, tax.Legitimacy + 1); Messages.Message("WFL_Tr_Caught".Translate(payer.LabelShort), payer, MessageTypeDefOf.NeutralEvent, false); }
-                            else { result.Pay -= hidden; result.Outcome = CollectionOutcome.Partial; tax.RecordDiversion(payerAccount, Ledger.CommunityId, hidden, today, "conceal"); }
+                            else { result.Pay -= hidden; result.Outcome = CollectionOutcome.Partial; }          // the hidden part simply stays owed: nothing was taken, so there is nothing to record as stolen
                             break;
                         }
                     case "favours_friends":
@@ -72,7 +72,7 @@ namespace FamilyLife
                 if (collected > 0 && Misconduct.Divert(l, debt, collected, Math.Min(diverted, collected), collectorAccount, key, today) == LedgerResult.Ok) { tax.RecordDiversion(collectorAccount, Ledger.CommunityId, Math.Min(diverted, collected), today, "embezzle"); paid = collected; } else paid = 0;
             }
             else paid = Collection.Apply(l, debt, result, key, today);
-            if (favourWaived > 0 && paid > 0) { l.RecordPayment(debt, favourWaived, today); tax.RecordDiversion(collectorAccount, Ledger.CommunityId, favourWaived, today, "favour"); }
+            if (favourWaived > 0 && paid > 0) { l.Waive(debt, favourWaived, today); tax.RecordDiversion(collectorAccount, Ledger.CommunityId, favourWaived, today, "favour"); }
             if (ev != null) ApplyEvent(c, tax, l, ev, collector, debt, collectorAccount, payerAccount, owed, today);
 
             if (result.Outcome == CollectionOutcome.Refused) tax.Refusals[debt.Debtor] = prior + 1; else if (result.Outcome == CollectionOutcome.Paid) tax.Refusals.Remove(debt.Debtor);
@@ -80,7 +80,7 @@ namespace FamilyLife
             GainMemory(payer, result.OpinionDelta < -4 ? "WFL_TaxPressured" : result.OpinionDelta > 0 ? "WFL_TaxPaidFairly" : null, collector);
             if (result.Outcome == CollectionOutcome.Refused) GainMemory(collector, "WFL_TaxRefusedAgainst", payer);
             CareerService.Report(c, collector, TreasuryRoles.Career, null, "treasury.collection", "collect|" + debt.Id + "|" + now, TreasuryXp.Points(FinancialOp.Collection, 0), now);
-            Messages.Message("WFL_Tr_CollectionNote".Translate(payer.LabelShort, ("WFL_Tr_Outcome_" + result.Outcome).Translate()), payer, result.Outcome == CollectionOutcome.Refused ? MessageTypeDefOf.NegativeEvent : MessageTypeDefOf.NeutralEvent, false);
+            if (result.Outcome != CollectionOutcome.Paid) Messages.Message("WFL_Tr_CollectionNote".Translate(payer.LabelShort, ("WFL_Tr_Outcome_" + result.Outcome).Translate()), payer, result.Outcome == CollectionOutcome.Refused ? MessageTypeDefOf.NegativeEvent : MessageTypeDefOf.NeutralEvent, false);
         }
 
         /// <summary>How the payer's household feels about the collector: the mean opinion its other members hold. A family that dislikes the collector makes a visit harder for everyone in it.</summary>
@@ -116,14 +116,14 @@ namespace FamilyLife
                         if (!takes) { tax.Legitimacy = Mathf.Min(100, tax.Legitimacy + 3); break; }          // a refused bribe is to the collector's credit
                         int bribe = Math.Max(1, owed / 10);
                         if (l.Transfer(payerAccount, collectorAccount, bribe, TxKind.Misconduct, k, today, "bribe") == LedgerResult.Ok)
-                        { int waived = Math.Min(debt.Outstanding, bribe * 2); l.RecordPayment(debt, waived, today); tax.RecordDiversion(collectorAccount, Ledger.CommunityId, waived, today, "bribe"); }
+                        { int waived = Math.Min(debt.Outstanding, bribe * 2); l.Waive(debt, waived, today); tax.RecordDiversion(collectorAccount, Ledger.CommunityId, waived, today, "bribe"); }
                         break;
                     }
                 case "reduces_own_taxes":
                     {
                         string house = Ledger.IdFor(AccountKind.Household, c.Registry.GetPerson(collector.thingIDNumber)?.HouseholdId ?? 0);
                         var own = l.Debts.FirstOrDefault(x => x.Active && x.Kind == DebtKind.Tax && (x.Debtor == collectorAccount || x.Debtor == house));
-                        if (own != null) { int cut = own.Outstanding / 2; l.RecordPayment(own, cut, today); tax.RecordDiversion(own.Debtor, Ledger.CommunityId, cut, today, "own taxes"); }
+                        if (own != null) { int cut = own.Outstanding / 2; l.Waive(own, cut, today); tax.RecordDiversion(own.Debtor, Ledger.CommunityId, cut, today, "own taxes"); }
                         break;
                     }
                 case "reports_missing_funds":

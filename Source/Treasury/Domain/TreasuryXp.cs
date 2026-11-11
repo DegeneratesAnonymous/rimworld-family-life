@@ -30,5 +30,5 @@ namespace FamilyLife.Domain
     }
 
     /// <summary>The business waiting for the Treasurer to deal with at the office. In memory only: if it is lost in a reload nothing financial is lost, because the operation itself already settled.</summary>
-    public sealed class OfficeItem { public string Key; public int Points, ExpiresDay; }
+    public sealed class OfficeItem { public string Key; public int Points, ExpiresDay; public bool Visit; }          // Visit: scheduled business (payroll) that is worth a trip to the desk; rewards and trades are credited when a visit happens anyway, or expire at half value
 }

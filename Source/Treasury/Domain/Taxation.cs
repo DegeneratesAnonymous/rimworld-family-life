@@ -201,7 +201,7 @@ namespace FamilyLife.Domain
             while (Diversions.Count > 0)
             {
                 var p = Diversions[0].Split('|'); Diversions.RemoveAt(0);
-                if (p.Length < 5 || !int.TryParse(p[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var amount) || amount <= 0 || l.Get(p[0]) == null || l.Get(p[1]) == null) continue;
+                if (p.Length < 5 || !int.TryParse(p[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var amount) || amount <= 0 || l.Get(p[0]) == null || l.Get(p[1]) == null || l.Get(p[0]).Closed || l.Get(p[1]).Closed) continue;
                 return p[4] == "conceal" ? l.OpenDebt(p[0], p[1], DebtKind.Tax, amount, day + 7, "income not declared") : Misconduct.Restitution(l, p[0], p[1], amount, "found: " + p[4], day);
             }
             return null;
@@ -217,7 +217,7 @@ namespace FamilyLife.Domain
         {
             if (!TaxAuthority.MayAssess(activeCollectors) || RatePercent <= 0 || ledger.Get(account) == null || account == Ledger.CommunityId) return null;
             int after = CursorOf(account);
-            int income = ledger.History.Where(t => t.Id > after && t.To == account && (t.Kind == TxKind.Reward || t.Kind == TxKind.Payroll || t.Kind == TxKind.Trade)).Sum(t => t.Amount);          // income only: transfers between accounts are not income
+            int income = ledger.TakeIncome(account);          // everything credited since the last assessment, however busy the colony (not a bounded history window)
             cursor[account] = ledger.NextTxId - 1;
             int tax = (int)((long)income * Math.Max(0, Math.Min(60, RatePercent)) / 100);
             return tax > 0 ? ledger.OpenDebt(account, Ledger.CommunityId, DebtKind.Tax, tax, day + 7, "tax " + day) : null;

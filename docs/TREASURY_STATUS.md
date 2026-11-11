@@ -67,3 +67,37 @@ See `docs/TREASURY.md` section 6 for the base run, then in addition:
 7. **Death:** kill a colonist with money and a debt; the heirs' accounts and the Debts page change once; reload and confirm nothing repeats.
 8. **Tax:** as in the base run; watch for stuck visits and message volume over a quadrum.
 9. **Pages:** disable Education, then Community Care, and confirm the window and navigation stay intact.
+
+## 8. Financial correctness review (second pass)
+
+Offline only: 1,348 tests pass; both 1.6 and 1.7 packages build. Nothing here was run in RimWorld.
+
+### Fixed
+* **Missing silver is an impairment, not a write-off.** The reconciler no longer deletes the community's share after a few days. It reports `Unbacked` (claims minus physical silver); `Ledger.SetPhysical` makes every account's spendable amount (`Available`) shrink pro rata, so ownership is untouched but nobody can spend silver that does not exist. Payroll, trade funding and debt payment use `Available`. `Ledger.WriteDown` is the explicit "accept the loss" operation (pro rata, conserved, keyed). There is **no UI button for it yet**; it is domain-only.
+* **Surplus adoption** needs the surplus to stay for two days, ignores differences of 3 or less, and is held back while a reward or trade settled recently (`LastIncomeDay`), so a delivery still being recognised is not adopted as unrelated income. The first-run adoption is unchanged.
+* **Wages accrue during insolvency.** The old `CanFundOrdinary` gate is gone (it silently discarded earned wages). Earned wages stay claims, pay only from backed silver, and the remainder becomes a wage debt (flagged professional/ordinary). When money is short, professionals are served first, but ordinary workers keep a floor of a quarter of what is available.
+* **Arrears are capped** per worker (ordinary: 120 silver, professional: 240). Work beyond the cap is still done but earns no further claim until arrears are paid down. This was found by simulation: without it a 42-pawn colony with weak income owed ~84,000 silver after 180 days.
+* **A closed account no longer blocks payroll.** Found by simulation: after a colonist died, wages to their closed account failed the whole payroll batch every payday, forever. Wages now go to the account that inherited it.
+* **Estates:** creditors are paid from the estate first, public debts (tax, restitution, damage) before private ones, pro rata within a class. Any shortfall is recorded as written off with origin "(estate shortfall)" and stays visible; heirs inherit no liability unless `heirsLiable` is set (no gameplay setting enables it). Remaining silver is split among heirs. Idempotent per key.
+* **Households (`HouseholdRules`):** being away moves nothing; moving out of a household that carries on takes nothing; divorce gives a per-person share; dissolution divides among those who joined other households (away members' shares stay for their return); a returning member brings the remaining old account along. All transfers are keyed and conserve value.
+* **Tax:** the "conceal" diversion is removed (it opened a second debt for money still owed on the first). Favour, bribe and own-tax reductions are now `Waive` (distinct from paid). Discovery ignores closed accounts. Tax assessment uses the per-account income accumulator, not a 600-row history window. Routine "paid" collection messages are suppressed.
+* **Labour signals:** a hunt pays only if the target is dead; a crafting or cooking job pays only with a real bill; resource delivery jobs are excluded; the same target pays once per day.
+* **Treasurer office:** only payroll items cause a desk visit; rewards and trades expire at half value if no visit happens.
+
+### Simulation results (deterministic, 180 days, real ledger/payroll code)
+All three keep `Conserved` every day and reconcile to zero. Wages paid never exceed external income. No currency is added to balance anything.
+
+| Colony | External in | Wages paid | Wage debt at end | Treasury at end |
+|---|---|---|---|---|
+| Tribal, 5 pawns, 1 pro | 3,630 | 1,964 | 826 | 0 |
+| Ordinary, 16 pawns, 4 pros | 9,400 | 5,853 | 2,840 | 0 |
+| Large, 42 pawns, 10 pros, 1 death | 6,600 | 2,181 | 7,492 | 0 |
+
+These scenarios give every pawn the daily ordinary maximum and each professional a full day, which is deliberately pessimistic. They show the defaults can outrun income for any colony that does not receive roughly 1.5-3 silver per pawn per day from outside. The caps stop the debt growing without limit; they do not make wages affordable.
+
+### Not done / unresolved
+* No UI for `WriteDown`; the unbacked notice and the page line are informational.
+* Tax Collector progression and tax collection volume are **not** in the simulations; tax outcomes are covered by unit tests only.
+* `LabourReport.TargetDead`, the delivery-job exclusion and the office visit change live in game code that the offline tests cannot execute; they compile on both versions but are unverified in the game.
+* Interrupted jobs are excluded by the existing `Succeeded` condition; partial construction and work whose effect happens before the job ends are only approximated by the per-target daily key.
+* Wage defaults are not tuned. Treat wage inflation as the main runtime risk and watch the "waiting" and debt totals in a real colony.

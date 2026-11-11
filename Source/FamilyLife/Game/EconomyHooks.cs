@@ -97,7 +97,7 @@ namespace FamilyLife
     /// <summary>A vanilla job that ended <i>successfully</i> (never one that was started, interrupted or cancelled), with the few facts a wage needs.</summary>
     public sealed class LabourReport
     {
-        public Pawn Pawn; public string JobDef, WorkType, RecipeSkill; public int JobId, ThingId; public bool HaulToStorage; public float WorkAmount;
+        public Pawn Pawn; public string JobDef, WorkType, RecipeSkill; public int JobId, ThingId; public bool TargetDead, HaulToStorage; public float WorkAmount;
     }
 
     [HarmonyLib.HarmonyPatch(typeof(Verse.AI.Pawn_JobTracker), nameof(Verse.AI.Pawn_JobTracker.EndCurrentJob))]
@@ -113,7 +113,7 @@ namespace FamilyLife
                 {
                     Pawn = pawn, JobDef = job.def.defName, JobId = job.loadID, ThingId = job.targetA.Thing?.thingIDNumber ?? 0,
                     WorkType = job.workGiverDef?.workType?.defName, HaulToStorage = job.haulMode == Verse.AI.HaulMode.ToCellStorage,
-                    RecipeSkill = job.bill?.recipe?.workSkill?.defName, WorkAmount = job.bill?.recipe?.workAmount ?? 0f
+                    TargetDead = job.targetA.Thing is Pawn prey && (prey.Dead || prey.Destroyed), RecipeSkill = job.bill?.recipe?.workSkill?.defName, WorkAmount = job.bill?.recipe?.workAmount ?? 0f
                 };
                 EconomyHits.JobsFinished++;
                 foreach (var listener in FamilyFramework.LabourDone.Enabled()) { try { listener(report); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A labour listener was skipped: " + ex.Message); } }

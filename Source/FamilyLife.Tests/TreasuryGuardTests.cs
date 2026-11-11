@@ -144,7 +144,8 @@ namespace FamilyLife.Tests
         [Fact] public void Every_waiver_or_diversion_is_remembered_so_it_can_be_found_and_recovered()
         {
             string v = Visit();
-            foreach (var kind in new[] { "\"embezzle\"", "\"favour\"", "\"bribe\"", "\"own taxes\"", "\"overcharge\"", "\"conceal\"" }) Assert.Contains(kind, v);
+            foreach (var kind in new[] { "\"embezzle\"", "\"favour\"", "\"bribe\"", "\"own taxes\"", "\"overcharge\"" }) Assert.Contains(kind, v);
+            Assert.DoesNotContain("\"conceal\"", v); Assert.Contains("l.Waive(", v); Assert.DoesNotContain("RecordPayment(debt, favourWaived", v);          // hidden income stays owed (never a second charge); waivers are not recorded as payments
             Assert.Contains("tax.DiscoverFirst(l, today)", v);
         }
 

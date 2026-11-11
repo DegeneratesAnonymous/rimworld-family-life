@@ -103,7 +103,7 @@ namespace FamilyLife
             var c = FamilyComponent.Current; if (c == null || rep?.Pawn == null) return;
             TreasuryOffice.OnJobFinished(rep);
             var r = c.Registry; var person = r.GetPerson(rep.Pawn.thingIDNumber); if (person == null || !person.InColony) return;
-            var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, WorkAmount = rep.WorkAmount };
+            var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, TargetDead = rep.TargetDead, WorkAmount = rep.WorkAmount };
             string cat = Labour.CategoryOf(facts); if (cat == null) return;
             int day = Today();
             r.Payroll().Accrue(rep.Pawn.thingIDNumber, Labour.Role(cat), Labour.Units(facts, cat), day, Labour.Key(facts, cat, day));
@@ -139,7 +139,7 @@ namespace FamilyLife
             {
                 if (rep.TotalDue <= 0) continue;
                 Messages.Message("WFL_Tr_Payday".Translate(rep.TotalDue, rep.TotalPaid, rep.Shortfall > 0 ? (string)"WFL_Tr_ShortBy".Translate(rep.Shortfall) : ""), MessageTypeDefOf.NeutralEvent, false);
-                TreasuryOffice.Add(c, "payday|" + rep.Payday, FinancialOp.Payday);
+                TreasuryOffice.Add(c, "payday|" + rep.Payday, FinancialOp.Payday, true);
             }
             Estates(r, l, today);
             l.Prune(today);

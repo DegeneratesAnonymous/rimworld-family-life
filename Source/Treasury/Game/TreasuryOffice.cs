@@ -25,10 +25,10 @@ namespace FamilyLife
         internal static void Reset() { items.Clear(); deposits.Clear(); nextDepositTick = 0; }
 
         /// <summary>A legitimate operation settled and a Treasurer is assigned: queue the office business. Without a Treasurer nothing is queued and no experience exists to grant.</summary>
-        public static void Add(FamilyComponent c, string key, FinancialOp op)
+        public static void Add(FamilyComponent c, string key, FinancialOp op, bool visit = false)
         {
             var r = c.Registry; if (TreasuryService.Holders(r, TreasuryRoles.Treasurer).Count == 0 || items.Any(i => i.Key == key)) return;
-            items.Add(new OfficeItem { Key = key, Points = TreasuryXp.Points(op, r.Persons.Count(p => p.InColony)), ExpiresDay = TreasuryService.Today() + 2 });
+            items.Add(new OfficeItem { Key = key, Points = TreasuryXp.Points(op, r.Persons.Count(p => p.InColony)), ExpiresDay = TreasuryService.Today() + 2, Visit = visit });
         }
 
         private static Pawn FreeTreasurer(FamilyComponent c, Map map, int now) =>
@@ -43,7 +43,7 @@ namespace FamilyLife
             var zone = map.zoneManager.AllZones.OfType<Zone_Treasury>().OrderBy(z => z.ID).FirstOrDefault(); if (zone == null) return;
             var status = zone.Evaluate(); if (!status.Valid) return;
             var treasurer = FreeTreasurer(c, map, now); if (treasurer == null) return;
-            if (items.Count > 0 && status.Seat != null && treasurer.CanReserveAndReach(status.Seat, PathEndMode.OnCell, Danger.None))
+            if (items.Any(i => i.Visit) && status.Seat != null && treasurer.CanReserveAndReach(status.Seat, PathEndMode.OnCell, Danger.None))
             { Start(treasurer, "WFL_TreasuryOffice", status.Seat, null); return; }
             if (status.DepositThing != null && now >= nextDepositTick) StartDeposit(treasurer, status, now);
         }

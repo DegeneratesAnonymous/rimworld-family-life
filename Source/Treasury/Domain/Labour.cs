@@ -9,7 +9,7 @@ namespace FamilyLife.Domain
     {
         public string JobDef, WorkType, RecipeSkill;
         public int JobId, ThingId;
-        public bool HaulToStorage;
+        public bool HaulToStorage, TargetDead;
         public float WorkAmount;
     }
 
@@ -38,7 +38,10 @@ namespace FamilyLife.Domain
         {
             if (f == null || string.IsNullOrEmpty(f.WorkType) || (f.JobDef ?? "").StartsWith("WFL_", StringComparison.Ordinal)) return null;
             if (!byWorkType.TryGetValue(f.WorkType, out var cat)) return null;
+            if ((f.JobDef ?? "").StartsWith("Deliver", StringComparison.Ordinal) || (f.JobDef ?? "").Contains("Blueprint") || (f.JobDef ?? "").Contains("Frame")) return null;          // delivering materials to a build is part of that build, not separate pay
+            if (cat == "hunting" && !f.TargetDead) return null;                       // a failed or abandoned hunt earns nothing; the kill does
             if (cat == "hauling" && !f.HaulToStorage) return null;                     // moving things around is not productive; putting them away is
+            if ((cat == "crafting" || cat == "cooking") && f.WorkAmount <= 0f) return null;          // only a real bill is paid; a cancelled or empty one has no recipe
             if (cat == "crafting" && f.RecipeSkill == "Cooking") return "cooking";          // a recipe's own skill beats the bench's work type
             return cat;
         }
@@ -47,7 +50,7 @@ namespace FamilyLife.Domain
         public static int Units(JobFacts f, string category) => category == "crafting" || category == "cooking" ? Math.Max(1, Math.Min(4, 1 + (int)(f.WorkAmount / 1500f))) : 1;
 
         /// <summary>The key that makes one piece of work pay once. Hauling is per thing per day (carrying the same stack back and forth earns nothing more); everything else is per job.</summary>
-        public static string Key(JobFacts f, string category, int day) => category == "hauling" ? "h:" + f.ThingId + ":" + day : "j:" + f.JobId;
+        public static string Key(JobFacts f, string category, int day) => category == "crafting" || category == "cooking" || f.ThingId == 0 ? "j:" + f.JobId : "t:" + category + ":" + f.ThingId + ":" + day;          // the same target pays once a day; a worked bill pays per job
 
         /// <summary>Continuous work (research) pays one unit for every <see cref="ResearchPointsPerUnit"/> points actually performed. The remainder carries over; nothing is paid for a start.</summary>
         public static int ResearchUnits(ref float carried, float performed)

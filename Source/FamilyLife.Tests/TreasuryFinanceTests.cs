@@ -138,3 +138,24 @@ namespace FamilyLife.Tests
         { var r = Run("large(42)", 42, 10, 15, 300, 20, 300, 180, 120); Assert.True(r.PaidWages <= r.ExternalIn); Assert.True(r.Debt >= 0); }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    using FamilyLife.Domain;
+    using Xunit;
+
+    public class TreasuryLabourSignalTests
+    {
+        private static JobFacts J(string type, string def = "Job", int id = 1, int thing = 5, float work = 1000, bool dead = false, bool storage = true) => new JobFacts { WorkType = type, JobDef = def, JobId = id, ThingId = thing, WorkAmount = work, TargetDead = dead, HaulToStorage = storage };
+
+        [Fact] public void A_failed_or_abandoned_hunt_earns_nothing_but_the_kill_does() { Assert.Null(Labour.CategoryOf(J("Hunting"))); Assert.Equal("hunting", Labour.CategoryOf(J("Hunting", dead: true))); }
+        [Fact] public void A_cancelled_or_empty_bill_earns_nothing() { Assert.Null(Labour.CategoryOf(J("Crafting", work: 0))); Assert.Null(Labour.CategoryOf(J("Cooking", work: 0))); }
+        [Fact] public void Delivering_materials_to_a_build_is_part_of_the_build_not_separate_pay() { Assert.Null(Labour.CategoryOf(J("Construction", def: "DeliverResourcesToBlueprints"))); Assert.Null(Labour.CategoryOf(J("Construction", def: "DeliverResourcesToFrame"))); }
+        [Fact] public void The_same_target_pays_once_a_day_across_repeated_jobs_but_a_bill_pays_per_job()
+        {
+            Assert.Equal(Labour.Key(J("Cleaning", id: 1), "cleaning", 4), Labour.Key(J("Cleaning", id: 2), "cleaning", 4));
+            Assert.NotEqual(Labour.Key(J("Cleaning"), "cleaning", 4), Labour.Key(J("Cleaning"), "cleaning", 5));
+            Assert.NotEqual(Labour.Key(J("Crafting", id: 1), "crafting", 4), Labour.Key(J("Crafting", id: 2), "crafting", 4));
+        }
+    }
+}

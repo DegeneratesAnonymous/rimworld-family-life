@@ -546,7 +546,7 @@ namespace FamilyLife.Tests
 {
     public class TreasuryLabourTests
     {
-        private static JobFacts Job(string type, int id = 1, string def = "Job", int thing = 5, bool storage = true, string skill = null, float work = 0) => new JobFacts { WorkType = type, JobId = id, JobDef = def, ThingId = thing, HaulToStorage = storage, RecipeSkill = skill, WorkAmount = work };
+        private static JobFacts Job(string type, int id = 1, string def = "Job", int thing = 5, bool storage = true, string skill = null, float work = 1000) => new JobFacts { WorkType = type, JobId = id, JobDef = def, ThingId = thing, HaulToStorage = storage, RecipeSkill = skill, WorkAmount = work };
 
         [Fact] public void Finished_productive_work_maps_to_a_category_and_everything_else_is_unpaid()
         {
