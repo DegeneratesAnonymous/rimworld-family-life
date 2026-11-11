@@ -23,6 +23,11 @@ namespace FamilyLife
         public List<IntVec3> Seats = new List<IntVec3>();
         public readonly Dictionary<int, int> Attended = new Dictionary<int, int>(), Excused = new Dictionary<int, int>(), Left = new Dictionary<int, int>(), Calls = new Dictionary<int, int>(), Exchanged = new Dictionary<int, int>();
         public readonly Dictionary<int, float> Tiers = new Dictionary<int, float>();
+        /// <summary>Ticks each assistant (a subject specialist) spent in the room helping. An assistant who was there for at least half the instruction gives the class one bounded delivery bonus.</summary>
+        public readonly Dictionary<int, int> AssistTicks = new Dictionary<int, int>();
+        /// <summary>Tutors helping with the room (engagement, not subject): separate from specialists, who never lead and never substitute unless they are Teachers or specialists.</summary>
+        public readonly HashSet<int> TutorIds = new HashSet<int>();
+        public readonly Dictionary<int, int> TutorTicks = new Dictionary<int, int>();
         public bool Teaching, Finished, ByPlayer;
         public int CallBlock = -1, Exchanges;
         public string EndReason;
@@ -33,10 +38,29 @@ namespace FamilyLife
 
     internal static class ClassSessions
     {
+        /// <summary>Who is in which class right now. Any number of classes run at once; nobody is in two.</summary>
+        internal static readonly ClassBoard Board = new ClassBoard();
         private static readonly Dictionary<int, ClassSession> byTeacher = new Dictionary<int, ClassSession>();
         private static readonly Dictionary<int, int[]> backoff = new Dictionary<int, int[]>();          // teacher -> [failed tries, next try]
 
-        internal static void Reset() { byTeacher.Clear(); backoff.Clear(); }
+        internal static void Reset() { byTeacher.Clear(); backoff.Clear(); Board.Clear(); }
+        internal static IEnumerable<ClassSession> RunningSessions => byTeacher.Values.ToList();
+
+        /// <summary>
+        /// A safety net: a session whose teacher is gone or never got onto the class job (so nothing would ever end it) is ended, freeing its pupils and room. A session still walking to its
+        /// place is left alone for a couple of game hours.
+        /// </summary>
+        internal static void EndStale(FamilyComponent c, int now)
+        {
+            foreach (var s in RunningSessions)
+            {
+                if (s.Finished || now - s.StartTick < 5000) continue;
+                var t = c.TryGetPawn(s.TeacherId);
+                if (t != null && t.Spawned && !t.Dead && t.CurJobDef == EducationDefOf.WFL_ClassTeacher) continue;
+                CareerService.Event("class: ending a stale class of " + (t?.LabelShort ?? s.TeacherId.ToString()) + " (the teacher is no longer on the class job)");
+                if (t != null) End(t, false, "stale"); else { byTeacher.Remove(s.TeacherId); Board.Close(s.TeacherId); }
+            }
+        }
         internal static ClassSession Of(int teacherId) => byTeacher.TryGetValue(teacherId, out var s) ? s : null;
         internal static bool Running(Pawn teacher) => teacher != null && byTeacher.ContainsKey(teacher.thingIDNumber);
 
@@ -99,9 +123,11 @@ namespace FamilyLife
         }
 
         /// <summary>Starts a class: the teacher goes to the front of the classroom (fetching a book first if one fits) and calls the children when they arrive.</summary>
-        internal static BeginResult TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false)
+        internal static BeginResult TryBegin(FamilyComponent c, Pawn teacher, List<int> roster, int now, Building lectern = null, bool byPlayer = false, string onlySubject = null)
         {
-            if (teacher == null || Running(teacher) || roster.Count == 0) return BeginResult.Cannot;
+            if (teacher == null || Running(teacher) || Board.IsBusy(teacher.thingIDNumber)) return BeginResult.Cannot;
+            roster = roster.Where(id => !Board.IsBusy(id)).ToList();          // someone already in another class stays there
+            if (roster.Count == 0) return BeginResult.Cannot;
             IntVec3 cell = IntVec3.Invalid; Room room = null; Thing front = lectern;
             bool found = lectern != null ? ClassRooms.SpotAt(lectern, teacher, out cell, out room) : ClassRooms.TeachingSpot(teacher, out cell, out room, out front);
             if (!found) { FrameworkServices.Trace("class: nowhere to hold a class for " + teacher.LabelShort); return BeginResult.Cannot; }
@@ -117,11 +143,17 @@ namespace FamilyLife
             var office = c.Registry.OfficeFor(OfficeKind.Teacher);
             var teacherLevels = new Dictionary<string, int>(); var disabled = new HashSet<string>();
             if (teacher.skills != null) foreach (var sk in teacher.skills.skills) { teacherLevels[sk.def.defName] = sk.Level; if (sk.TotallyDisabled) disabled.Add(sk.def.defName); }
-            string subject = LessonSubjects.Choose(teacherLevels, disabled, pupils.Select(p => Snapshot(c, p)).ToList(), book == null ? null : BookSkill(book, pupils), office?.Education().RecentSubjects, teacher.thingIDNumber + now / 60000);
+            if (onlySubject != null) foreach (var other in teacherLevels.Keys.Where(k => k != onlySubject).ToList()) teacherLevels.Remove(other);          // a specialist teaches their subject, nothing else
+            string subject = LessonSubjects.Choose(teacherLevels, disabled, pupils.Select(p => Snapshot(c, p)).ToList(), book == null ? null : BookSkill(book, pupils), c.Registry.EducationRecord().RecentSubjects, teacher.thingIDNumber + now / 60000);
             if (subject == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " has nothing the children could learn from them"); return BeginResult.Cannot; }
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
             if (book != null && !(BookValues(book).Keys.Any(k => k.defName == subject))) book = null;          // a book that is not about this subject is left on the shelf
             float delivery = LessonMath.Delivery(PawnReadinessApi.Level(teacher, skillDef), PawnReadinessApi.Level(teacher, SkillDefOf.Social), 0f, ClassRooms.Facility(room, front), PawnReadinessApi.Fatigue(teacher));
+            string place = front != null ? "t" + front.thingIDNumber : room != null ? "r" + room.ID : "c" + cell.x + "_" + cell.z;
+            var seated = Board.Open(teacher.thingIDNumber, roster, subject, place, now);          // claims the instructor, the pupils and the room in one step
+            if (seated == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " must wait, the room is already in use"); return BeginResult.Later; }
+            roster = seated; if (roster.Count == 0) { Board.Close(teacher.thingIDNumber); return BeginResult.Cannot; }
+            CareerService.Event("class: " + teacher.LabelShort + " begins a class (" + subject + ", " + roster.Count + " pupil(s), place " + place + ")");
             var s = new ClassSession { TeacherId = teacher.thingIDNumber, StartTick = now, TeacherCell = cell, Roster = roster.ToList(), BookId = book?.thingIDNumber ?? 0, ByPlayer = byPlayer, Subject = subject, Delivery = delivery };
             s.Seats = ClassRooms.Seats(room, cell, roster.Count, teacher.Map);
             if (room != null) foreach (var rc in room.Cells) s.RoomCells.Add(rc);
@@ -169,7 +201,7 @@ namespace FamilyLife
         internal static void End(Pawn teacher, bool finishedNormally, string reason = null)
         {
             if (teacher == null || !byTeacher.TryGetValue(teacher.thingIDNumber, out var s)) return;
-            byTeacher.Remove(teacher.thingIDNumber);
+            byTeacher.Remove(teacher.thingIDNumber); Board.Close(teacher.thingIDNumber);
             s.Finished = true; s.EndReason = reason;
             var c = FamilyComponent.Current; var r = c?.Registry;
             if (r == null) return;
@@ -183,6 +215,14 @@ namespace FamilyLife
                 var book = s.BookId == 0 ? null : FindBook(teacher, s.BookId);
                 var office = r.OfficeFor(OfficeKind.Teacher);
                 float gapSum = 0f;
+                int half = possibleBase / 2;
+                bool assisted = possibleBase > 0 && s.AssistTicks.Values.Any(t => t >= half);
+                float delivery = s.Delivery * (assisted ? EducationCareers.AssistBonus : 1f);          // one bounded bonus, however many specialists helped
+                bool tutored = possibleBase > 0 && s.TutorTicks.Values.Any(t => t >= half);
+                foreach (var tutor in s.TutorTicks.Where(kv => possibleBase > 0 && kv.Value >= half).Select(kv => c.TryGetPawn(kv.Key)).Where(p => p != null))
+                    CareerService.Report(c, tutor, EducationCareers.Career, s.Subject, "teach.assist.tutor", "tutorassist|" + s.StartTick + "|" + teacher.thingIDNumber + "|" + tutor.thingIDNumber, EducationCareers.AssistPoints, now);
+                foreach (var helper in s.AssistTicks.Where(kv => possibleBase > 0 && kv.Value >= half).Select(kv => c.TryGetPawn(kv.Key)).Where(p => p != null))
+                    CareerService.Report(c, helper, EducationCareers.Career, s.Subject, "teach.assist", "assist|" + s.StartTick + "|" + teacher.thingIDNumber + "|" + helper.thingIDNumber, EducationCareers.AssistPoints, now);
                 if (skill != null && possibleBase > 0)
                     foreach (int id in s.Roster)
                     {
@@ -193,15 +233,16 @@ namespace FamilyLife
                         if (possible <= 0) continue;
                         if (attended < LessonMath.MinShare * possible || attended < 600)
                         {
-                            if (excused < possibleBase) LessonRecord.Add(office?.Education().LessonLog, LessonRecord.Absent(id, s.Subject, possible));          // they could have come and did not: it counts for the record, not for experience
+                            if (excused < possibleBase) LessonRecord.Add(r.EducationRecord().LessonLog, WithTeacher(LessonRecord.Absent(id, s.Subject, possible), teacher.thingIDNumber));          // they could have come and did not: it counts for the record, not for experience
                             continue;
                         }
                         s.Tiers.TryGetValue(id, out float tiers); s.Exchanged.TryGetValue(id, out int ex);
-                        var grant = LessonGrant.Apply(c, r, teacher, kid, skill, attended / (float)ClassSchedule.InstructionTicks, attended, possible, s.Delivery, tiers, ex, book, now);
+                        if (tutored) tiers += EducationCareers.TutorEngagement;          // a tutor helping the room settles the pupils: one bounded lift, however many tutors
+                        var grant = LessonGrant.Apply(c, r, teacher, kid, skill, attended / (float)ClassSchedule.InstructionTicks, attended, possible, delivery, tiers, ex, book, now);
                         gapSum += grant.Gap; learned++;
                         if (ex >= 2) { if (tiers >= 2f) FrameworkServices.GainMemory(kid, "WFL_InspiringLesson", teacher); else if (tiers <= -2f) FrameworkServices.GainMemory(kid, "WFL_BoringLesson", teacher); }
                     }
-                if (office != null) { office.Education().RecentSubjects.Add(s.Subject); while (office.Education().RecentSubjects.Count > 6) office.Education().RecentSubjects.RemoveAt(0); }
+                { var recent = r.EducationRecord().RecentSubjects; recent.Add(s.Subject); while (recent.Count > 6) recent.RemoveAt(0); }
                 if (learned > 0)
                 {
                     r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, FrameworkServices.NextToken(), now, Math.Min(1f, .35f + .45f * Math.Min(1f, s.Delivery / 1.2f) + .2f * gapSum / learned));
@@ -209,7 +250,76 @@ namespace FamilyLife
                 }
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] The class could not be settled: " + ex.Message); }
-            foreach (int id in s.Roster) r.ClassDone(id);
+            CareerService.Event("class: " + teacher.LabelShort + " finished a class on " + s.Subject + " (" + (finishedNormally ? "completed" : "ended early: " + (reason ?? "interrupted")) + ", " + learned + " pupil(s) learned)");
+            if (!finishedNormally && s.Teaching) ContinueWithAssistant(c, s, now);
+        }
+
+        private static LessonRecord WithTeacher(LessonRecord rec, int teacher) { rec.Teacher = teacher; return rec; }
+
+        /// <summary>
+        /// The instructor could not carry on. If a subject specialist is helping in the room and most of the class is still to come, the specialist takes over with the pupils who are
+        /// still here, in the same subject. What the original teacher did is already settled; the new class is its own session with its own attendance.
+        /// </summary>
+        private static void ContinueWithAssistant(FamilyComponent c, ClassSession s, int now)
+        {
+            try
+            {
+                int elapsed = Math.Max(0, now - s.StudyingTick);
+                if (ClassSchedule.InstructionDone(elapsed) >= ClassSchedule.InstructionTicks * .6f) return;
+                foreach (var id in s.AssistTicks.Keys.ToList())
+                {
+                    var helper = c.TryGetPawn(id);
+                    if (helper == null || !helper.Spawned || helper.Dead || helper.CurJobDef != EducationDefOf.WFL_ClassAssist || Board.IsBusy(id) || s.TutorIds.Contains(id)) continue;          // only specialists take over
+                    var pupils = s.Roster.Where(p => c.TryGetPawn(p) is Pawn k && k.Spawned && !k.Dead && p != id).ToList();
+                    if (pupils.Count == 0) return;
+                    helper.jobs.EndCurrentJob(JobCondition.InterruptForced, false);
+                    if (TryBegin(c, helper, pupils, now, null, s.ByPlayer, s.Subject) == BeginResult.Started) FrameworkServices.Trace("class: " + helper.LabelShort + " takes over the class on " + s.Subject);
+                    return;
+                }
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] A specialist could not take over the class: " + ex.Message); }
+        }
+
+        /// <summary>
+        /// Invites a free subject specialist for the class's subject to help. Optional: only someone idle, in the colony, not in another class and not at a real need is asked, and the class
+        /// has at most <see cref="ClassBoard.MaxAssistants"/>.
+        /// </summary>
+        internal static void RecruitAssistants(FamilyComponent c, int now)
+        {
+            var r = c.Registry;
+            foreach (var s in RunningSessions.Where(x => !x.Finished && x.Teaching))
+            {
+                var teacher = c.TryGetPawn(s.TeacherId); if (teacher == null || !teacher.Spawned || Board.Of(s.TeacherId)?.Assistants.Count >= ClassBoard.MaxAssistants) continue;
+                string role = EducationCareers.SpecialistRole(s.Subject);
+                foreach (int id in r.Assignments().Holders(role).ToList())
+                {
+                    if (id == s.TeacherId || r.GetPerson(id)?.InColony != true || Board.IsBusy(id) || Running(c.TryGetPawn(id))) continue;
+                    var helper = c.TryGetPawn(id);
+                    if (helper == null || !helper.Spawned || helper.Dead || helper.Map != teacher.Map || !FrameworkServices.Ready(helper) || FrameworkServices.NeedsReason(helper) != null || FrameworkServices.IsAvatar(helper)) continue;
+                    var cell = GenRadial.RadialCellsAround(s.TeacherCell, 3f, true).FirstOrDefault(x => x != s.TeacherCell && x.InBounds(teacher.Map) && x.Standable(teacher.Map) && s.RoomCells.Contains(x) && !s.Seats.Contains(x) && helper.CanReach(x, PathEndMode.OnCell, Danger.None));
+                    if (!cell.IsValid || !Board.AddAssistant(s.TeacherId, id)) continue;
+                    var job = JobMaker.MakeJob(EducationDefOf.WFL_ClassAssist, teacher, cell);
+                    job.playerForced = true;
+                    helper.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+                    if (helper.CurJobDef != EducationDefOf.WFL_ClassAssist) Board.Release(id);
+                    if (Board.Of(s.TeacherId)?.Assistants.Count >= ClassBoard.MaxAssistants) break;
+                }
+                // Tutors help too, after any specialists: they settle the room and are counted for the time they are there, but never lead or take over.
+                var instructors = EducationCareers.Instructors(r);
+                foreach (int id in r.Assignments().Holders(EducationCareers.Tutor).ToList())
+                {
+                    if (Board.Of(s.TeacherId)?.Assistants.Count >= ClassBoard.MaxAssistants) break;
+                    if (instructors.Contains(id) || id == s.TeacherId || r.GetPerson(id)?.InColony != true || Board.IsBusy(id) || Running(c.TryGetPawn(id))) continue;
+                    var helper = c.TryGetPawn(id);
+                    if (helper == null || !helper.Spawned || helper.Dead || helper.Map != teacher.Map || !FrameworkServices.Ready(helper) || FrameworkServices.NeedsReason(helper) != null || FrameworkServices.IsAvatar(helper)) continue;
+                    var cell = GenRadial.RadialCellsAround(s.TeacherCell, 3f, true).FirstOrDefault(x => x != s.TeacherCell && x.InBounds(teacher.Map) && x.Standable(teacher.Map) && s.RoomCells.Contains(x) && !s.Seats.Contains(x) && helper.CanReach(x, PathEndMode.OnCell, Danger.None));
+                    if (!cell.IsValid || !Board.AddAssistant(s.TeacherId, id)) continue;
+                    s.TutorIds.Add(id);
+                    var job = JobMaker.MakeJob(EducationDefOf.WFL_ClassAssist, teacher, cell); job.playerForced = true;
+                    helper.jobs.StartJob(job, JobCondition.InterruptForced, null, false, tag: JobTag.Misc);
+                    if (helper.CurJobDef != EducationDefOf.WFL_ClassAssist) { Board.Release(id); s.TutorIds.Remove(id); }
+                }
+            }
         }
 
         /// <summary>The teacher says something to one pupil in the room, favouring whoever has had least attention: a question, an explanation, a quiz, a story, a word to settle them.</summary>
@@ -244,7 +354,7 @@ namespace FamilyLife
     /// </summary>
     internal static class LessonGrant
     {
-        internal static GrantResult Apply(FamilyComponent c, FamilyRegistry r, Pawn teacher, Pawn pupil, SkillDef skill, float xpShare, int attended, int possible, float delivery, float tierSum, int exchanges, Thing book, int now)
+        internal static GrantResult Apply(FamilyComponent c, FamilyRegistry r, Pawn teacher, Pawn pupil, SkillDef skill, float xpShare, int attended, int possible, float delivery, float tierSum, int exchanges, Thing book, int now, string kind = "class")
         {
             var rec = new GrantResult();
             var tsk = teacher.skills?.GetSkill(skill); var psk = pupil.skills?.GetSkill(skill);
@@ -256,16 +366,17 @@ namespace FamilyLife
             if (xp > 0f) psk.Learn(xp, true);
             float bookXp = 0f;
             var office = r.OfficeFor(OfficeKind.Teacher);
-            if (book != null && office != null)
+            if (book != null)
             {
+                var education = r.EducationRecord();
                 var values = ClassSessions.BookValues(book);
-                if (values.TryGetValue(skill, out float value) && LessonMath.BookReady(office.Education().BookUse, pupil.thingIDNumber, book.thingIDNumber, now))
+                if (values.TryGetValue(skill, out float value) && LessonMath.BookReady(education.BookUse, pupil.thingIDNumber, book.thingIDNumber, now))
                 {
                     bookXp = LessonMath.BookXp(value, xpShare, gap);
-                    if (bookXp > 0f) { psk.Learn(bookXp, true); office.Education().BookUse.Add(pupil.thingIDNumber + "|" + book.thingIDNumber + "|" + now); while (office.Education().BookUse.Count > 64) office.Education().BookUse.RemoveAt(0); }
+                    if (bookXp > 0f) { psk.Learn(bookXp, true); education.BookUse.Add(pupil.thingIDNumber + "|" + book.thingIDNumber + "|" + now); while (education.BookUse.Count > 64) education.BookUse.RemoveAt(0); }
                 }
             }
-            LessonRecord.Add(office?.Education().LessonLog, new LessonRecord { Pupil = pupil.thingIDNumber, Skill = skill.defName, Xp = xp + bookXp, Effect = delivery * engage * attended, EngageSum = tierSum, Ticks = attended, Possible = possible, Exchanges = exchanges, Classes = 1 });
+            LessonRecord.Add(r.EducationRecord().LessonLog, new LessonRecord { Teacher = teacher.thingIDNumber, Pupil = pupil.thingIDNumber, Skill = skill.defName, Xp = xp + bookXp, Effect = delivery * engage * attended, EngageSum = tierSum, Ticks = attended, Possible = possible, Exchanges = exchanges, Classes = 1 });
             r.RecordOfficeWork(OfficeKind.Teacher, teacher.thingIDNumber, FrameworkServices.NextToken(), now, .4f);
             FrameworkServices.Served(r, OfficeKind.Teacher, teacher, pupil, now);
             // a lesson in the skill the pupil's house is trying to build moves that ambition a very little
@@ -276,6 +387,7 @@ namespace FamilyLife
             }
             catch (Exception) { }
             rec.Xp = xp; rec.BookXp = bookXp; rec.Gap = gap;
+            EducationCareers.Report(c, teacher, pupil, skill, kind, xpShare, delivery, now);          // professional experience, once per pupil per class
             return rec;
         }
     }
@@ -376,6 +488,32 @@ namespace FamilyLife
                 pawn.rotationTracker?.FaceCell(s.TeacherCell);
             };
             yield return sit;
+        }
+    }
+
+    /// <summary>A subject specialist helping in someone else's class: they stand near the instructor and are counted for the time they are in the room. A need, an emergency or the class ending releases them.</summary>
+    public class JobDriver_ClassAssist : JobDriver
+    {
+        public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
+        private Pawn Teacher => job.targetA.Thing as Pawn;
+        private bool ClassGone() => Teacher == null || Teacher.Dead || Teacher.Destroyed || !Teacher.Spawned || Teacher.CurJobDef != EducationDefOf.WFL_ClassTeacher || ClassSessions.Of(Teacher.thingIDNumber) == null || ClassSessions.Of(Teacher.thingIDNumber).Finished;
+
+        protected override IEnumerable<Toil> MakeNewToils()
+        {
+            this.FailOn(() => ClassGone() || PawnReadinessApi.StopReason(pawn, FrameworkServices.Now) != null);
+            AddFinishAction(cond => { if (Teacher != null) { var s = ClassSessions.Of(Teacher.thingIDNumber); if (s == null || s.Finished) ClassSessions.Board.Release(pawn.thingIDNumber); else if (cond != JobCondition.Succeeded) ClassSessions.Board.Release(pawn.thingIDNumber); } });
+            yield return Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell);
+            var help = new Toil { defaultCompleteMode = ToilCompleteMode.Never };
+            help.initAction = () => pawn.pather?.StopDead();
+            help.tickAction = () =>
+            {
+                var s = ClassSessions.Of(Teacher.thingIDNumber); if (s == null) return;
+                int elapsed = FrameworkServices.Now - s.StudyingTick;
+                if (s.Teaching && ClassSchedule.InBreak(elapsed)) return;          // a break: nothing is counted
+                if (s.RoomCells.Contains(pawn.Position)) { var bucket = s.TutorIds.Contains(pawn.thingIDNumber) ? s.TutorTicks : s.AssistTicks; bucket[pawn.thingIDNumber] = (bucket.TryGetValue(pawn.thingIDNumber, out int n) ? n : 0) + 1; }
+                pawn.rotationTracker?.FaceCell(s.TeacherCell);
+            };
+            yield return help;
         }
     }
 }

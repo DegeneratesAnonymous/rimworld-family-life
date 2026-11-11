@@ -19,13 +19,14 @@ namespace FamilyLife
 
         public void Register()
         {
-            FamilyFramework.Catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Family Life", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            FamilyFramework.Catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Community Framework", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             FamilyFramework.Catalog.Provide(Id, "wils.familylife.meals");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.familylife.hallkeeper", ModuleId = Id, Kind = OfficeKind.HallKeeper, LabelKey = "WFL_OfficeKind_HallKeeper", PassionSkills = new[] { "Cooking", "Social" } });
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.familylife.chaplain", ModuleId = Id, Kind = OfficeKind.Chaplain, LabelKey = "WFL_OfficeKind_Chaplain" });
             FamilyFramework.RegisterFitness(OfficeKind.HallKeeper, FrameworkServices.SocialFitness);
             FamilyFramework.RegisterFitness(OfficeKind.Chaplain, FrameworkServices.SocialFitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.HallKeeper, OfficeDriver.HallWork);
+            CommunityCorePages.Register(Id);
         }
     }
 }

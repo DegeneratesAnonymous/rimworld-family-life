@@ -59,7 +59,7 @@ namespace FamilyLife
         internal const int TalkTicks = CheckupWorkload.VisitTicks, ArriveTicks = 2500;
         private static readonly Dictionary<int, ClinicSession> byDoctor = new Dictionary<int, ClinicSession>();
 
-        internal static void Reset() { byDoctor.Clear(); AppointmentBook.Reset(); }
+        internal static void Reset() { byDoctor.Clear(); AppointmentBook.Reset(); CareDriver.Claims.Clear(); }
         internal static ClinicSession Of(int doctorId) => byDoctor.TryGetValue(doctorId, out var s) ? s : null;
         internal static ClinicSession ForPatient(int patientId) => byDoctor.Values.FirstOrDefault(s => s.PatientId == patientId && !s.Done);
         internal static bool Running(Pawn doctor) => doctor != null && byDoctor.ContainsKey(doctor.thingIDNumber);
@@ -69,7 +69,7 @@ namespace FamilyLife
         {
             bed = null; cell = IntVec3.Invalid;
             var map = doctor?.Map; if (map == null) return false;
-            foreach (var b in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>().Where(x => !x.Destroyed && !x.ForPrisoners && (x.Medical || x.GetRoom()?.Role == RoomRoleDefOf.Hospital))
+            foreach (var b in map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>().Where(x => !x.Destroyed && !x.ForPrisoners && (x.Medical || x.GetRoom()?.Role == RoomRoleDefOf.Hospital) && !CareDriver.Claims.PlaceTaken("b" + x.thingIDNumber, doctor.thingIDNumber, FrameworkServices.Now))
                          .OrderBy(x => x.Medical ? 0 : 1).ThenBy(x => x.Position.DistanceToSquared(doctor.Position)).Take(10))
             {
                 var room = b.GetRoom();
@@ -93,6 +93,7 @@ namespace FamilyLife
             int now = FrameworkServices.Now;
             if (CareDemand.DoctorShouldTend(doctor, now) || PawnReadinessApi.StopReason(doctor, now) != null) return true;          // tending and the doctor's own needs come first
             if (!FrameworkServices.Ready(doctor) || doctor.CurJob?.playerForced == true || (Find.Selector.IsSelected(doctor) && !FrameworkServices.Forced) || FrameworkServices.IsAvatar(doctor)) return true;       // there is a clinic: wait until the doctor is free
+            if (!CareDriver.Claims.TryClaimPlace("b" + bed.thingIDNumber, doctor.thingIDNumber, now)) return true;          // another care worker has just taken this bed
             FrameworkServices.Trace("clinic: " + doctor.LabelShort + " goes to " + cell + " beside " + bed.LabelCap);
             byDoctor[doctor.thingIDNumber] = new ClinicSession { DoctorId = doctor.thingIDNumber, Bed = bed, DoctorCell = cell };
             var open = JobMaker.MakeJob(CareDefOf.WFL_ClinicDoctor, bed, cell);
@@ -110,7 +111,7 @@ namespace FamilyLife
                 var c = FamilyComponent.Current; var patient = c?.TryGetPawn(s.PatientId);
                 if (patient != null && !patient.Dead) Interrupted(c, s, doctor, patient, FrameworkServices.Now);
             }
-            s.Done = true; byDoctor.Remove(doctor.thingIDNumber);
+            s.Done = true; byDoctor.Remove(doctor.thingIDNumber); CareDriver.Claims.ReleaseAll(doctor.thingIDNumber);
         }
 
         /// <summary>
@@ -132,7 +133,7 @@ namespace FamilyLife
             return patient.CurJobDef == CareDefOf.WFL_ClinicPatient;
         }
 
-        internal static void Release(ClinicSession s) { s.PatientId = 0; s.Phase = ClinicPhase.Waiting; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; s.NextWander = 0; s.Quality = 0f; s.Exchanges = 0; }
+        internal static void Release(ClinicSession s) { if (s.PatientId != 0) { CareDriver.Claims.Release(s.PatientId); CareerService.Event("care: clinic claim on " + s.PatientId + " released"); } s.PatientId = 0; s.Phase = ClinicPhase.Waiting; s.PatientLying = false; s.PhaseTick = 0; s.Talked = 0; s.NextWander = 0; s.Quality = 0f; s.Exchanges = 0; }
 
         /// <summary>
         /// The next person on the list who is able to come, unless it is outside the day's hours or the day's budget. A person who is busy is asked again later, one who declines is left
@@ -142,16 +143,19 @@ namespace FamilyLife
         {
             var r = c.Registry; var office = r.OfficeFor(OfficeKind.Healer);
             if (office == null || !Allowed(r, office, doctor, now)) { s.Idle += 2; return; }
-            int id = r.NextCheckupPatient(now, x => CareDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && Askable(r, x, now) && CareEvents.SickFirst(c, r, office, x), CareEvents.Priority(c, office));
+            int me = doctor.thingIDNumber;
+            int id = r.NextCheckupPatient(now, x => CareDriver.CanBeSeen(c, doctor, x) && ForPatient(x) == null && !CareDriver.Taken(x, me, now) && Askable(r, x, now, me) && CareEvents.SickFirst(c, r, office, x), CareEvents.Priority(c, office), me);
             var patient = id == 0 ? null : c.TryGetPawn(id);
             if (patient == null || !patient.Spawned) { s.Idle++; return; }
             switch (CareRules.Assess(c, doctor, patient, now, out var why))
             {
                 case PatientResponse.Unable: AppointmentBook.NeedsVisit(id, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " is not fit to come; they will be visited"); return;
                 case PatientResponse.Busy: AppointmentBook.Busy(id, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " is busy just now"); return;
-                case PatientResponse.Refuses: r.NoteRefusal(id, why.Kind, why.Reason, now); FrameworkServices.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
+                case PatientResponse.Refuses: r.NoteRefusal(id, why.Kind, why.Reason, now, me); FrameworkServices.Trace("clinic: " + patient.LabelShort + " would rather not; they are left alone"); return;
             }
             if (!patient.CanReach(s.Bed, PathEndMode.OnCell, Danger.None)) { AppointmentBook.NeedsVisit(id, now); return; }
+            if (!CareDriver.Claims.TryClaim(id, me, now)) return;          // another care worker has this patient
+            CareerService.Event("care: " + doctor.LabelShort + " claimed " + patient.LabelShort + " for the clinic");
             s.Idle = 0;
             s.PatientId = id; s.PatientLying = false; s.Talked = 0; s.PhaseTick = 0; s.Quality = 0f; s.Exchanges = 0; s.Phase = ClinicPhase.Arriving;
             FrameworkServices.Trace("clinic: " + patient.LabelShort + " is asked in");
@@ -159,11 +163,11 @@ namespace FamilyLife
         }
 
         /// <summary>Whether a person is still on the list to be asked: not waiting out a gap, not carried over, not to be visited instead, not declined.</summary>
-        internal static bool Askable(FamilyRegistry r, int id, int now) => !AppointmentBook.Waiting(id, now) && !AppointmentBook.Deferred(id) && !AppointmentBook.Bedside(id) && !r.HasRefused(id, now);
+        internal static bool Askable(FamilyRegistry r, int id, int now, int practitioner = 0) => !AppointmentBook.Waiting(id, now) && !AppointmentBook.Deferred(id) && !AppointmentBook.Bedside(id) && !r.HasRefused(id, now, practitioner);
 
         /// <summary>Daytime only, within the day's budget, spaced through the day. A developer test ignores all three.</summary>
         internal static bool Allowed(FamilyRegistry r, CommunityOffice office, Pawn doctor, int now) =>
-            FrameworkServices.Forced || WorkingHours.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.Care().IllnessRound);
+            FrameworkServices.Forced || WorkingHours.Daytime(GenLocalDate.HourOfDay(doctor)) && r.MayVisit(now, office.Care().IllnessRound, doctor.thingIDNumber, CareCareers.CapacityOf(doctor));
 
         private static IntVec3 WanderCell(Pawn doctor, ClinicSession s)
         {

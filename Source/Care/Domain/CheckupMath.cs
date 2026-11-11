@@ -69,10 +69,26 @@ namespace FamilyLife.Domain
 
         public static int VisitsPerDay(bool outbreak) => (outbreak ? OutbreakBudgetTicks : RoutineBudgetTicks) / VisitCost;
 
+        /// <summary>
+        /// The combined working capacity of the care workers who can work now: 1 is one fully able worker. The game sets it from who is assigned and able; one worker (or none known) is 1, the
+        /// old single-healer budget. A hospital colony with many workers can therefore see many more people a day.
+        /// </summary>
+        public static float TotalCapacity = 1f;
+
+        /// <summary>Routine visits the whole community may make in a day: the one-worker budget for each unit of capacity.</summary>
+        public static int CommunityLimit(bool outbreak) => (int)Math.Ceiling(VisitsPerDay(outbreak) * Math.Max(1f, TotalCapacity));
+
+        /// <summary>One worker's own daily limit. Not more than the single-worker budget for a fully able worker, less for one who is hurt or slowed (never fewer than one).</summary>
+        public static int PersonalLimit(bool outbreak, float capacity) => Math.Max(1, (int)Math.Round(VisitsPerDay(outbreak) * Math.Max(.25f, Math.Min(1f, capacity))));
+
+        /// <summary>Whether this worker may start another routine visit: the community and the worker are each within their day's limit and the worker has had their gap since their last visit.</summary>
+        public static bool MayStartFor(int communityToday, int personalToday, bool outbreak, int sinceLastPersonal, float capacity) =>
+            communityToday < CommunityLimit(outbreak) && personalToday < PersonalLimit(outbreak, capacity) && sinceLastPersonal >= MinGapTicks;
+
         /// <summary>How long a round stays open for a colony of this size.</summary>
         public static int WindowDays(int patients, bool outbreak)
         {
-            int days = (int)Math.Ceiling(Math.Max(0, patients) / (double)VisitsPerDay(outbreak)) + 3;
+            int days = (int)Math.Ceiling(Math.Max(0, patients) / (double)CommunityLimit(outbreak)) + 3;
             return Math.Max(MinWindowDays, Math.Min(MaxWindowDays, days));
         }
 

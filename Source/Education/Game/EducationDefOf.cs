@@ -7,7 +7,7 @@ namespace FamilyLife
     [DefOf]
     public static class EducationDefOf
     {
-        public static JobDef WFL_ClassTeacher, WFL_ClassStudent, WFL_TestStudent, WFL_OfficeLesson;
+        public static JobDef WFL_ClassTeacher, WFL_ClassStudent, WFL_ClassAssist, WFL_TestStudent, WFL_OfficeLesson;
         static EducationDefOf() { DefOfHelper.EnsureInitializedInCtor(typeof(EducationDefOf)); }
     }
 }

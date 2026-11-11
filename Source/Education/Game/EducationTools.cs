@@ -25,6 +25,7 @@ namespace FamilyLife
         {
             var c = Comp; var r = c?.Registry; if (r == null) return;
             foreach (var o in r.Offices.Where(x => x.Held && x.Kind == OfficeKind.Teacher)) { o.NextSessionTick = 0; o.SessionQueue.Clear(); }
+            foreach (int t in r.TeacherSchedule().People.ToList()) r.TeacherSchedule().Set(t, 0);
             ClassSessions.ClearBackoff();          // earlier failed tries must not hold a test off
             FrameworkServices.ForceUntil = Now + 6000;
             HoldClass.Queue(null, Now);          // if the teacher cannot start now, the class is held at the next opportunity (for up to a day)
@@ -38,10 +39,12 @@ namespace FamilyLife
         private static void TestingNow()
         {
             var r = Comp?.Registry; if (r == null) return;
-            foreach (var o in r.Offices.Where(x => x.Kind == OfficeKind.Teacher)) { o.PendingKind = 0; o.Assessment().TestingStartTick = 0; }
+            var ledger = r.Assessments(); bool ok = false;
+            foreach (int id in EducationCareers.Instructors(r)) { ledger.End(id); ledger.SetLastYear(id, 0); ledger.Postpone(id, 0); }
+            ledger.NoticeTick = 0;
             FrameworkServices.ForceUntil = Now + 6000;
-            bool ok = FrameworkServices.BeginPlannedEvent(PendingEvent.Testing);
-            Messages.Message(ok ? "The testing has begun: each child sits a check every free hour for two days." : "The testing could not begin.", MessageTypeDefOf.TaskCompletion, false);
+            foreach (int id in EducationCareers.Instructors(r)) if (Comp.TryGetPawn(id) is Pawn t && t.Spawned) ok |= EducationEvents.BeginTesting(Comp, r, t, Now, true);
+            Messages.Message(ok ? "Each teacher's own testing has begun for their pupils: each child sits a check every free hour for two days." : "The testing could not begin (no teacher has lessons on record to assess).", MessageTypeDefOf.TaskCompletion, false);
         }
     }
 }

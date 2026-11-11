@@ -17,19 +17,15 @@ namespace FamilyLife
         public void Register()
         {
             var catalog = FamilyFramework.Catalog;
-            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Education", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Educators", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             catalog.Provide(Id, "wils.education.classes");
             catalog.Provide(Id, "wils.education.tutoring");
             catalog.Provide(Id, "wils.education.assessment");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.education.teacher", ModuleId = Id, Kind = OfficeKind.Teacher, LabelKey = "WFL_OfficeKind_Teacher", PassionSkills = new[] { "Intellectual", "Social" } });
+            EducationCareers.Register(Id);
+            EducationPage.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Teacher, EducationDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Teacher, EducationDriver.TeacherWork);
-            FamilyFramework.PlannedEvents.Register(new PlannedEventDefinition
-            {
-                Id = "wils.education.assessment", ModuleId = Id, SavedKind = PendingEvent.Testing, Post = OfficeKind.Teacher,
-                NoticeKey = "Testing", NoPostKey = "WFL_Event_NoPost_Teacher",
-                Begin = EducationEvents.BeginAssessment, Pass = EducationEvents.PassTesting
-            });
             FamilyFramework.BuildingGizmos.Add("wils.education.buttons", Id, LecternButtons);
             FamilyFramework.Diagnostics.Add("wils.education.diagnostics", Id, new FamilyFramework.DiagnosticSection { Kind = OfficeKind.Teacher, Lines = EducationDriver.DiagnoseTeacher });
             FamilyFramework.Removal.Add("wils.education.removal", Id, EducationRemoval.Prepare);
@@ -40,7 +36,9 @@ namespace FamilyLife
                 Complete = (speaker, other, id, now) =>
                 {
                     var r = FamilyComponent.Current?.Registry; if (r == null) return;
-                    if (r.GetPerson(other.thingIDNumber)?.Juvenile == true && r.OfficeFor(OfficeKind.Teacher)?.HolderId == speaker.thingIDNumber) EducationDriver.CompleteLesson(r, speaker, other, now);
+                    if (r.GetPerson(other.thingIDNumber)?.Juvenile != true && !(FamilyLifeMod.Settings?.adultStudents ?? false)) return;
+                    if (r.OfficeFor(OfficeKind.Teacher)?.HolderId == speaker.thingIDNumber && r.OfficeFor(OfficeKind.Teacher).SessionQueue.Contains(other.thingIDNumber)) EducationDriver.CompleteLesson(r, speaker, other, now);
+                    else if (r.Assignments().IsAssigned(speaker.thingIDNumber, EducationCareers.Tutor) || EducationCareers.Instructors(r).Contains(speaker.thingIDNumber)) EducationCareers.CompleteTutoring(r, speaker, other, now);
                 }
             });
             FamilyFramework.Handoffs.Add("wils.education.handoff", Id, EducationDriver.OnTeacherChanged);

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Wil's Treasury: personal and household accounts, the community treasury, wages and payday, taxation and the Treasurer. A separate assembly built against the framework's public surface only.
+      dotnet build Source/FamilyLife -c Release -p:GameVersion=1.6        (framework first)
+      dotnet build Source/Treasury  -c Release -p:GameVersion=1.6
+  -->
+  <PropertyGroup Condition="'$(GameVersion)' == '1.7'">
+    <TargetFramework>net10.0</TargetFramework>
+    <RimWorldRefVersion>1.7.4990-unstable</RimWorldRefVersion>
+    <HarmonyVersion>3.0.0-rc.3</HarmonyVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GameVersion)' == '1.6'">
+    <TargetFramework>net472</TargetFramework>
+    <RimWorldRefVersion>1.6.4871</RimWorldRefVersion>
+    <HarmonyVersion>2.4.3</HarmonyVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <RootNamespace>FamilyLife</RootNamespace>
+    <AssemblyName>WilsTreasury</AssemblyName>
+    <OutputPath>../../Packages/WilsTreasury/$(GameVersion)/Assemblies/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <DefineConstants>$(DefineConstants);RW_$(GameVersion.Replace('.', '_'))</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- the framework: referenced, never copied (it ships in its own package) -->
+    <ProjectReference Include="..\FamilyLife\FamilyLife.csproj" Private="false" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="$(RimWorldRefVersion)" />
+    <PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(GameVersion)' == '1.6'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

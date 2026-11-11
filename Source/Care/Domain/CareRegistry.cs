@@ -43,12 +43,12 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>The next person still to be seen this round, chosen from those the game says are free to go. The doctor is not their own patient.</summary>
-        public static int NextCheckupPatient(this FamilyRegistry r, int now, Func<int, bool> available, Func<int, int> priority = null)
+        public static int NextCheckupPatient(this FamilyRegistry r, int now, Func<int, bool> available, Func<int, int> priority = null, int self = 0)
         {
             var office = Post(r);
             if (office == null || !r.CheckupOpen(now)) return 0;
             var c = office.Care();
-            return r.Persons.Where(p => p.InColony && p.Id != office.HolderId && !c.Examined.Contains(p.Id) && (available == null || available(p.Id)))
+            return r.Persons.Where(p => p.InColony && p.Id != office.HolderId && p.Id != self && !c.Examined.Contains(p.Id) && (available == null || available(p.Id)))
                 .OrderBy(p => priority == null ? 0 : priority(p.Id)).ThenBy(p => c.Missed.Contains(p.Id) ? 0 : 1).ThenBy(p => p.Id).Select(p => p.Id).FirstOrDefault();      // no house is seen first; those missed last time are
         }
 
@@ -56,13 +56,16 @@ namespace FamilyLife.Domain
         public static bool RecordCheckup(this FamilyRegistry r, int doctor, int patient, int now)
         {
             var office = Post(r);
-            if (office == null || office.HolderId != doctor || !r.CheckupOpen(now) || patient == doctor || r.GetPerson(patient)?.InColony != true) return false;
+            if (office == null || !(office.HolderId == doctor || IsPractitioner(r, doctor)) || !r.CheckupOpen(now) || patient == doctor || r.GetPerson(patient)?.InColony != true) return false;
             var c = office.Care();
             if (c.Examined.Contains(patient)) return false;
             c.Examined.Add(patient); c.Missed.Remove(patient);
             if (r.Persons.Where(p => p.InColony && p.Id != doctor).All(p => c.Examined.Contains(p.Id))) c.RoundStartTick = 0;
             return true;
         }
+
+        /// <summary>Anyone the player has assigned to care work (Healer/Nurse or Doctor), whether or not they sit in the old post.</summary>
+        public static bool IsPractitioner(this FamilyRegistry r, int person) => r.Assignments().IsAssigned(person, CareRoles.Doctor) || r.Assignments().IsAssigned(person, CareRoles.Healer) || CareSpecialties.RoleIds.Any(id => r.Assignments().IsAssigned(person, id));
 
         // ---- the day's budget ----
 
@@ -73,6 +76,13 @@ namespace FamilyLife.Domain
             return c.RoutineDay == now / ActivityTuning.TicksPerDay ? c.RoutineUsed : 0;
         }
 
+        /// <summary>Whether a particular care worker may start another routine visit now: the community's scaled limit, their own limit and their own gap.</summary>
+        public static bool MayVisit(this FamilyRegistry r, int now, bool outbreak, int practitioner, float capacity)
+        {
+            var o = Post(r); if (o == null || !o.Held) return false;
+            return CheckupWorkload.MayStartFor(r.RoutineVisitsToday(now), PractitionerLoad.UsedToday(practitioner, now), outbreak, PractitionerLoad.SinceLast(practitioner, now), capacity);
+        }
+
         public static bool MayVisit(this FamilyRegistry r, int now, bool outbreak)
         {
             var o = Post(r); if (o == null || !o.Held) return false;
@@ -81,8 +91,9 @@ namespace FamilyLife.Domain
             return CheckupWorkload.MayStart(r.RoutineVisitsToday(now), outbreak, since);
         }
 
-        public static void NoteVisit(this FamilyRegistry r, int now)
+        public static void NoteVisit(this FamilyRegistry r, int now, int practitioner = 0)
         {
+            if (practitioner != 0) PractitionerLoad.Note(practitioner, now);
             var o = Post(r); if (o == null) return;
             var c = o.Care();
             int day = now / ActivityTuning.TicksPerDay;
@@ -96,12 +107,12 @@ namespace FamilyLife.Domain
         /// Records that a patient declined. The caller says which kind it is and why: nothing is inferred later. A <see cref="CareRefusalKind.HealerSpecific"/> refusal is about the
         /// doctor holding the post now; a <see cref="CareRefusalKind.ServiceWide"/> one is about check-ups themselves. Asking again before it expires refreshes the same entry.
         /// </summary>
-        public static void NoteRefusal(this FamilyRegistry r, int person, CareRefusalKind kind, string reason, int now)
+        public static void NoteRefusal(this FamilyRegistry r, int person, CareRefusalKind kind, string reason, int now, int practitioner = 0)
         {
             var o = Post(r); if (o == null || person <= 0) return;
             if (kind != CareRefusalKind.HealerSpecific && kind != CareRefusalKind.ServiceWide) return;
             var c = o.CareRecord();
-            int healer = o.Held ? o.HolderId : 0;
+            int healer = practitioner != 0 ? practitioner : o.Held ? o.HolderId : 0;
             if (kind == CareRefusalKind.HealerSpecific && healer == 0) return;          // refusing "this doctor" needs a doctor
             var entry = c.Refusals.FirstOrDefault(x => x.Patient == person && x.Kind == kind && (kind == CareRefusalKind.ServiceWide || x.Healer == healer));
             if (entry == null) { entry = new CareRefusal { Patient = person, Kind = kind }; c.Refusals.Add(entry); }
@@ -111,10 +122,10 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>Whether this person's refusal is being respected now, for the doctor who holds the post now: a refusal of check-ups, or a refusal of this doctor, not yet expired.</summary>
-        public static bool HasRefused(this FamilyRegistry r, int person, int now)
+        public static bool HasRefused(this FamilyRegistry r, int person, int now, int practitioner = 0)
         {
             var o = Post(r); if (o == null) return false;
-            int healer = o.Held ? o.HolderId : 0;
+            int healer = practitioner != 0 ? practitioner : o.Held ? o.HolderId : 0;
             return o.CareRecord().Refusals.Any(x => x.Patient == person && x.AppliesTo(healer) && x.ActiveAt(now));
         }
 
@@ -126,17 +137,25 @@ namespace FamilyLife.Domain
             return c.Refusals.RemoveAll(x => x.Kind == CareRefusalKind.HealerSpecific && x.Healer != newHolder);
         }
 
+        /// <summary>A care worker stopped serving (unassigned, gone): refusals about them lapse. Others' refusals, and refusals of check-ups generally, stay.</summary>
+        public static int LapseHealerRefusals(this FamilyRegistry r, Func<int, bool> stillServing)
+        {
+            var o = Post(r); if (o == null) return 0;
+            return o.CareRecord().Refusals.RemoveAll(x => x.Kind == CareRefusalKind.HealerSpecific && !stillServing(x.Healer));
+        }
+
         /// <summary>
         /// Checks the saved refusals against the world: those about someone no longer here, about a doctor no longer here or no longer holding the post, or already expired are dropped.
         /// A damaged entry (no patient, a doctor-specific one with no doctor) goes too. Returns how many were removed.
         /// </summary>
-        public static int ReconcileRefusals(this FamilyRegistry r, int now)
+        public static int ReconcileRefusals(this FamilyRegistry r, int now, Func<int, bool> stillServing = null)
         {
             var o = Post(r); if (o == null) return 0;
             var c = o.CareRecord();
             int healer = o.Held ? o.HolderId : 0;
+            Func<int, bool> serving = stillServing ?? (id => id == healer);
             return c.Refusals.RemoveAll(x => x.Patient <= 0 || r.GetPerson(x.Patient) == null || now >= x.Until && now >= x.Tick
-                || x.Kind == CareRefusalKind.HealerSpecific && (x.Healer == 0 || r.GetPerson(x.Healer) == null || x.Healer != healer));
+                || x.Kind == CareRefusalKind.HealerSpecific && (x.Healer == 0 || r.GetPerson(x.Healer) == null || !serving(x.Healer)));
         }
 
         // ---- how people were treated ----

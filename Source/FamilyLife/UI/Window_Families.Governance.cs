@@ -30,9 +30,16 @@ namespace FamilyLife
             {
                 if (!any) { Line(view, ref y, "WFL_Ask_Title".Translate(), 0f, true); any = true; }
                 Line(view, ref y, text, 10f);
-                float x = 10f;
-                foreach (var b in buttons) { if (Widgets.ButtonText(new Rect(x, y, 130f, 26f), b.Key)) b.Value(); x += 136f; }
-                y += 30f;
+                float x = 10f, rowHeight = 0f;
+                foreach (var b in buttons)
+                {
+                    float width = Mathf.Min(view.width - 20f, Mathf.Max(130f, Text.CalcSize(b.Key).x + 20f));
+                    if (x > 10f && x + width > view.width - 10f) { x = 10f; y += rowHeight + 6f; rowHeight = 0f; }
+                    float height = Mathf.Max(28f, Text.CalcHeight(b.Key, width - 16f) + 10f);
+                    if (Widgets.ButtonText(new Rect(x, y, width, height), b.Key)) b.Value();
+                    rowHeight = Mathf.Max(rowHeight, height); x += width + 6f;
+                }
+                y += rowHeight + 8f;
             }
 
             var election = registry.Elections.FirstOrDefault(e => e.State == ElectionState.Voting);
@@ -109,7 +116,7 @@ namespace FamilyLife
             foreach (var seat in registry.Elections.Where(e => e.Council && e.State == ElectionState.Voting && e.Pending.Contains(viewer)).ToList())
             {
                 int electionId = seat.Id;
-                var buttons = seat.Candidates.Take(4).Select(cand => { int id = cand; return new KeyValuePair<string, System.Action>(FamilyUi.NameOf(registry, id), () => registry.CastCouncilBallot(electionId, viewer, id, now)); }).ToList();
+                var buttons = seat.Candidates.Select(cand => { int id = cand; return new KeyValuePair<string, System.Action>(FamilyUi.NameOf(registry, id), () => registry.CastCouncilBallot(electionId, viewer, id, now)); }).ToList();
                 buttons.Add(new KeyValuePair<string, System.Action>("WFL_Ask_Abstain".Translate(), () => registry.CastCouncilBallot(electionId, viewer, 0, now)));
                 Answer(ref y, "WFL_Ask_CouncilLeader".Translate(), buttons.ToArray());
             }

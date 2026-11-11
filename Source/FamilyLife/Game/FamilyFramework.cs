@@ -4,6 +4,7 @@ using System.Linq;
 using FamilyLife.Domain;
 using FamilyLife.Framework;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace FamilyLife
@@ -35,8 +36,18 @@ namespace FamilyLife
         public static readonly WorkRoster Roster;
         public static readonly PlannedEventCatalog PlannedEvents;
         public static readonly MeetingCatalog Meetings;
+        /// <summary>The pages of the Community window. A page draws itself into the rect it is given and returns the height it used (ignored when the page sets <c>OwnsScrolling</c>).</summary>
+        public static readonly CommunityPageCatalog<Func<Rect, FamilyComponent, float>> Pages;
         public static readonly ContributionList<Func<Building, IEnumerable<Gizmo>>> BuildingGizmos;
         public static readonly ContributionList<DiagnosticSection> Diagnostics;
+        public static readonly ContributionList<Action<Pawn, Pawn, int>> OperationCompleted;          // a vanilla operation was completed: (doer, patient, bill id). Read-only: the framework owns the patch, modules only listen
+        public static readonly ContributionList<Action<Pawn, Pawn>> Tended;          // a vanilla tend was done: (doctor, patient). Read-only, as above
+        public static readonly ContributionList<Action<TradeReport>> TradeCompleted;          // a vanilla trade was completed (read-only; the framework owns the patch)
+        public static readonly ContributionList<Action<int, string>> SilverReceived;          // silver arrived from a quest reward: (amount, idempotency key)
+        public static readonly ContributionList<Action<LabourReport>> LabourDone;          // a vanilla job ended successfully (read-only)
+        public static readonly ContributionList<Action<Pawn, float>> ResearchDone;          // research work was performed: (researcher, points)
+        public static readonly ContributionList<Action<FamilyComponent, IList<FamilyEvent>, int>> FamilyEventsApplied;          // after each reconciliation of the family records: (component, the events it produced, now)
+        public static readonly ContributionList<Action<Pawn, string, string, string, string, int>> WorkReported;          // a module reported finished professional work: (pawn, career, specialty, kind, activity key, tick)
         public static readonly ContributionList<Action<CommunityOffice>> DueNow;          // developer menu: brings a module's timers on a post due
         public static readonly ContributionList<Func<FamilyComponent, CleanupReport>> Removal;          // "prepare for removal": one per module
         public static readonly ContributionList<Action> Resets;          // clears a module's in-memory state when a game is loaded or ended
@@ -57,8 +68,17 @@ namespace FamilyLife
             Roster = new WorkRoster(Catalog);
             PlannedEvents = new PlannedEventCatalog(Catalog);
             Meetings = new MeetingCatalog(Catalog);
+            Pages = new CommunityPageCatalog<Func<Rect, FamilyComponent, float>>(Catalog);
             BuildingGizmos = new ContributionList<Func<Building, IEnumerable<Gizmo>>>(Catalog);
             Diagnostics = new ContributionList<DiagnosticSection>(Catalog);
+            OperationCompleted = new ContributionList<Action<Pawn, Pawn, int>>(Catalog);
+            Tended = new ContributionList<Action<Pawn, Pawn>>(Catalog);
+            TradeCompleted = new ContributionList<Action<TradeReport>>(Catalog);
+            SilverReceived = new ContributionList<Action<int, string>>(Catalog);
+            LabourDone = new ContributionList<Action<LabourReport>>(Catalog);
+            ResearchDone = new ContributionList<Action<Pawn, float>>(Catalog);
+            FamilyEventsApplied = new ContributionList<Action<FamilyComponent, IList<FamilyEvent>, int>>(Catalog);
+            WorkReported = new ContributionList<Action<Pawn, string, string, string, string, int>>(Catalog);
             Resets = new ContributionList<Action>(Catalog);
             Removal = new ContributionList<Func<FamilyComponent, CleanupReport>>(Catalog);
             DueNow = new ContributionList<Action<CommunityOffice>>(Catalog);

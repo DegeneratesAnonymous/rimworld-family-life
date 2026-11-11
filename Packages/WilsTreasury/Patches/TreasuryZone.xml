@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- Adds Create Treasury Zone to Architect > Zone, right after the growing zone. -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>*/DesignationCategoryDef[defName="Zone"]/specialDesignatorClasses/li[text()="Designator_ZoneAdd_Growing"]</xpath>
+    <order>Append</order>
+    <value>
+      <li>FamilyLife.Designator_ZoneAdd_Treasury</li>
+    </value>
+  </Operation>
+</Patch>

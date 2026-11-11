@@ -11,4 +11,20 @@
   <WFL_Event_BeginCheckupsDesc>Have the colony's doctor begin a round of check-ups now. Anyone who needs tending is seen to first; people are asked to come, and the sick are visited where they are. In an outbreak the sick are seen first.</WFL_Event_BeginCheckupsDesc>
   <WFL_Checkup_Illness>{0} is seeing the sick first. Tending still comes before any check-up.</WFL_Checkup_Illness>
   <WFL_Checkup_Result>Check-up: {0}</WFL_Checkup_Result>
+  <wils.care.healer_label>Healer</wils.care.healer_label>
+  <wils.care.nurse_label>Nurse</wils.care.nurse_label>
+  <wils.care.doctor_label>Doctor</wils.care.doctor_label>
+  <WFL_Care_NurseTitles>The community has its first Doctor. Entry-level care workers are now called Nurses.</WFL_Care_NurseTitles>
+  <wils.care.specialist.counselor_label>Counselor</wils.care.specialist.counselor_label>
+  <wils.care.specialist.surgeon_label>Surgeon</wils.care.specialist.surgeon_label>
+  <wils.care.specialist.midwife_label>Midwife</wils.care.specialist.midwife_label>
+  <wils.care.specialist.veterinarian_label>Veterinarian</wils.care.specialist.veterinarian_label>
+  <WFL_Care_Page>Community Care</WFL_Care_Page>
+  <WFL_Care_Practitioners>Care workers</WFL_Care_Practitioners>
+  <WFL_Care_None>Nobody is assigned to care work yet. Assign a Healer or Doctor on the Professions page.</WFL_Care_None>
+  <WFL_Care_Capacity>Routine visits the community can give in a day: {0} (up to {1} while an outbreak round is on).</WFL_Care_Capacity>
+  <WFL_Care_Rounds>Check-up rounds</WFL_Care_Rounds>
+  <WFL_Care_NoSeat>No care worker holds the working seat, so no round can run.</WFL_Care_NoSeat>
+  <WFL_Care_RoutineRound>A routine check-up round.</WFL_Care_RoutineRound>
+  <WFL_Care_OutbreakRound>An outbreak round is under way: the sick are seen first.</WFL_Care_OutbreakRound>
 </LanguageData>

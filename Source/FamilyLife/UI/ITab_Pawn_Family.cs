@@ -84,6 +84,8 @@ namespace FamilyLife
                 y += 4f;
             }
 
+            CareerPanel.Draw(view, ref y, pawnForRoles, FamilyComponent.Current);
+
             var household = registry.GetHousehold(record.HouseholdId);
             if (household != null)
                 Row(view, ref y, "WFL_Tab_Household".Translate(),

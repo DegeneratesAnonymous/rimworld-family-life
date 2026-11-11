@@ -106,6 +106,17 @@ namespace FamilyLife.Domain
 
         public static bool IsAppointed(OfficeKind kind) => kind == OfficeKind.Chaplain;
 
+        /// <summary>
+        /// Teacher and Healer are professions now, not elected posts: the player assigns people to them and the old records only carry working state (see <see cref="SeatService"/>). The
+        /// community assembly neither elects nor reviews them, and a vacant one is not filled by a vote.
+        /// </summary>
+        public bool IsProfessional(OfficeKind kind) => ProfessionsAssigned && (kind == OfficeKind.Teacher || kind == OfficeKind.Healer);
+        /// <summary>
+        /// Whether Teacher and Healer are professions (assigned by the player) rather than elected posts. The game turns this on for every colony; the election code itself stays generic, so
+        /// its own tests can still exercise a vote using those posts.
+        /// </summary>
+        public bool ProfessionsAssigned;
+
         /// <summary>How much of the post's work a good year contains. The yardstick for "did they do their part".</summary>
         public int ExpectedActs(OfficeKind kind)
         {
@@ -168,7 +179,7 @@ namespace FamilyLife.Domain
             var changed = new List<CommunityOffice>();
             foreach (OfficeKind kind in Enum.GetValues(typeof(OfficeKind)))
             {
-                if (IsAppointed(kind) || !FamilyLife.Framework.OfficeAvailability.IsOffered(kind)) continue;          // a post of a module that is not installed is not given out
+                if (IsAppointed(kind) || IsProfessional(kind) || !FamilyLife.Framework.OfficeAvailability.IsOffered(kind)) continue;          // a post of a module that is not installed is not given out; professions are assigned, not voted
                 var office = EnsureOffice(kind);
                 if (office.Held || now < office.NextVoteTick) continue;
                 office.NextVoteTick = now + 2 * ActivityTuning.TicksPerDay;
@@ -380,7 +391,7 @@ namespace FamilyLife.Domain
                 office.HolderFamily = FamilyOf(office.HolderId);
                 // A post whose module is absent or stopped cannot be done, so it cannot be neglected: nothing is held against the holder, and the post stays as it was until the module returns.
                 if (!FamilyLife.Framework.OfficeAvailability.IsOffered(office.Kind)) { office.UnmetSinceTick = 0; continue; }
-                if (!IsAppointed(office.Kind) && office.UnmetSinceTick != 0 && now - office.UnmetSinceTick > OfficeNeglectTicks && now - office.LastWorkTick > OfficeNeglectTicks)
+                if (!IsAppointed(office.Kind) && !IsProfessional(office.Kind) && office.UnmetSinceTick != 0 && now - office.UnmetSinceTick > OfficeNeglectTicks && now - office.LastWorkTick > OfficeNeglectTicks)
                 {
                     var house = GetLineage(office.HolderFamily);
                     if (house != null) house.Standing = Math.Max(-100f, house.Standing - 2f);
@@ -388,10 +399,18 @@ namespace FamilyLife.Domain
                 }
             }
             if (NextAssemblyTick == 0 && Persons.Count(p => p.InColony && !p.Juvenile) >= 3) NextAssemblyTick = now + AssemblyYearTicks;
-            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind) && o.TermEndTick == 0)) office.TermEndTick = NextAssemblyTick;
+            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind) && !IsProfessional(o.Kind) && o.TermEndTick == 0)) office.TermEndTick = NextAssemblyTick;
         }
 
         // ---- the yearly assembly ----
+
+        /// <summary>Puts the next assembly back by some days. Only between assemblies: one that is under way is not interrupted. Nothing else depends on the assembly, so this affects no career, class or round.</summary>
+        public bool PostponeAssembly(int now, int days)
+        {
+            if (days <= 0 || NextAssemblyTick == 0 || OpenAssembly != null) return false;
+            NextAssemblyTick = Math.Max(NextAssemblyTick, now) + days * ActivityTuning.TicksPerDay;
+            return true;
+        }
 
         public CommunityAssembly OpenAssembly => Assemblies.FirstOrDefault(a => a.Open);
 
@@ -405,7 +424,7 @@ namespace FamilyLife.Domain
             if (NextAssemblyTick == 0 || now < NextAssemblyTick || OpenAssembly != null) return null;
             while (NextAssemblyTick <= now) NextAssemblyTick += AssemblyYearTicks;
             var assembly = new CommunityAssembly { Id = NextAssemblyId++, StartedTick = now, VotingTick = now + AssemblyCampaignTicks, State = AssemblyState.Campaign };
-            var kinds = Enum.GetValues(typeof(OfficeKind)).Cast<OfficeKind>().Where(k => !IsAppointed(k) && FamilyLife.Framework.OfficeAvailability.IsOffered(k)).ToList();          // a post of an absent or stopped module is left untouched
+            var kinds = Enum.GetValues(typeof(OfficeKind)).Cast<OfficeKind>().Where(k => !IsAppointed(k) && !IsProfessional(k) && FamilyLife.Framework.OfficeAvailability.IsOffered(k)).ToList();          // a post of an absent or stopped module is left untouched
             var fields = kinds.ToDictionary(k => k, k => OfficeCandidates(k, now, ctx, EnsureOffice(k), true));
 
             // A holder who is no longer fit or willing for their own post steps down; those who remain keep standing for it.
@@ -434,7 +453,7 @@ namespace FamilyLife.Domain
                 if (office.Held && race.Candidates.Contains(office.HolderId)) { race.IncumbentId = office.HolderId; race.IncumbentGrade = OfficeGrade(kind); }
                 assembly.Races.Add(race);
             }
-            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind))) office.TermEndTick = NextAssemblyTick;
+            foreach (var office in Offices.Where(o => o.Held && !IsAppointed(o.Kind) && !IsProfessional(o.Kind))) office.TermEndTick = NextAssemblyTick;
             if (assembly.Races.Count == 0) return null;                      // nothing to decide this year: no gathering, and holders simply carry on
             if (Assemblies.Count >= 8) Assemblies.RemoveAt(0);
             Assemblies.Add(assembly);

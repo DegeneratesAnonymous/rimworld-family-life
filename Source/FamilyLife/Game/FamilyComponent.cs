@@ -16,7 +16,7 @@ namespace FamilyLife
         private const int SyncInterval = 2500;     // about an in-game hour
         private const int DirtyDelay = 60;         // coalesce bursts of changes (a birth adds several relations)
 
-        public FamilyRegistry Registry = new FamilyRegistry();
+        public FamilyRegistry Registry = new FamilyRegistry { ProfessionsAssigned = true };          // professions are assigned, not voted, from the first tick of a new game too (ExposeData applies it on load)
         internal readonly FamilyEconomy Economy;
         internal readonly PerformanceProbe Performance = new PerformanceProbe();
         internal readonly TickGate AmbitionGate = new TickGate(2500, 400);
@@ -95,10 +95,11 @@ namespace FamilyLife
             Scribe_Values.Look(ref PerspectiveInitialized,"perspectiveInitialized");
             Scribe_Deep.Look(ref Registry, "registry");
             if (Registry == null) Registry = new FamilyRegistry();     // a game that did not have the mod yet
+            Registry.ProfessionsAssigned = true;          // Teacher and Healer are professions the player assigns, not posts the assembly votes on
         }
 
         /// <summary>A new game or a loaded one: registration closes (once per session), then each module's on/off state follows what this save recorded, then running modules check their saved state against the world.</summary>
-        public override void FinalizeInit() { base.FinalizeInit(); FamilyFramework.FinalizeStartup(); FamilyFramework.ApplyLifecycle(this); }
+        public override void FinalizeInit() { base.FinalizeInit(); FamilyFramework.FinalizeStartup(); FamilyFramework.ApplyLifecycle(this); Registry.ProfessionsAssigned = true; CareerService.OnLoaded(this); }
 
         public override void GameComponentTick()
         {
@@ -149,6 +150,7 @@ namespace FamilyLife
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
                 EstateDriver.OnFamilyEvents(this, events, now);
+                foreach (var listener in FamilyFramework.FamilyEventsApplied.Enabled()) { try { listener(this, events, now); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A family-event listener was skipped: " + ex.Message); } }
                 if (forceReconcile) FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)
                     GriefApplier.Apply(griefs, TryGetPawn);

@@ -30,6 +30,10 @@ namespace FamilyLife
         private const int IllnessGap = 10 * Day;
 
         /// <summary>Down with an illness (not an injury): something that gives them the sick thought.</summary>
+        private static int sickCount, sickAt = -9999;
+        /// <summary>How many colonists are sick, for the page badge. Cached for a few seconds because the badge is read every frame.</summary>
+        internal static int IsSickCount(FamilyComponent c) { int now = FrameworkServices.Now; if (now - sickAt > 300) { sickAt = now; sickCount = c.Registry.Persons.Count(p => p.InColony && IsSick(c.TryGetPawn(p.Id))); } return sickCount; }
+
         internal static bool IsSick(Pawn p) => p?.health?.hediffSet?.hediffs != null && p.health.hediffSet.hediffs.Any(h => h.def.makesSickThought && h.Visible);
 
         /// <summary>A quarter of the colony, and at least three, ill at once: an outbreak or a plague.</summary>

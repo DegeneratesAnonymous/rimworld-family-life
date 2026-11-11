@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- The one Community window: overview, families and households, professions, the assembly and settings, plus a page for every installed module that registers one. -->
+  <MainButtonDef>
+    <defName>WFL_Community</defName>
+    <label>community</label>
+    <description>Families and households, professions, the community assembly and the pages of installed community modules.</description>
+    <workerClass>MainButtonWorker_ToggleTab</workerClass>
+    <tabWindowClass>FamilyLife.MainTabWindow_Community</tabWindowClass>
+    <order>96</order>
+    <validWithoutMap>false</validWithoutMap>
+    <minimized>false</minimized>
+  </MainButtonDef>
+</Defs>

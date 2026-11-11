@@ -56,6 +56,12 @@ namespace FamilyLife
         public override void PreOpen()
         {
             base.PreOpen();
+            PrepareHosted();
+        }
+
+        /// <summary>The set-up that does not depend on being on the window stack, so the Community window can host this window's content on its Families page.</summary>
+        internal void PrepareHosted()
+        {
             var c = FamilyComponent.Current;
             if (c != null && !PerspectiveShiftBridge.TrySync(c) && !c.PerspectiveInitialized)
             {

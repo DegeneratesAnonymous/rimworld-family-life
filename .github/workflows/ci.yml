@@ -15,12 +15,18 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Test domain
-        run: dotnet test Source/FamilyLife.Tests/FamilyLife.Tests.csproj -c Release
       - name: Build RimWorld 1.7
-        run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.7 -v minimal
+        run: |
+          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury; do
+            dotnet build "Source/$project.csproj" -c Release -p:GameVersion=1.7 -v minimal || exit 1
+          done
       - name: Build RimWorld 1.6
-        run: dotnet build Source/FamilyLife/FamilyLife.csproj -c Release -p:GameVersion=1.6 -v minimal
+        run: |
+          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury; do
+            dotnet build "Source/$project.csproj" -c Release -p:GameVersion=1.6 -v minimal || exit 1
+          done
+      - name: Test domain and assembly contracts
+        run: dotnet test Source/FamilyLife.Tests/FamilyLife.Tests.csproj -c Release
       - name: Generate calibration
         run: dotnet run --project tools/StoryCalibration -- /tmp/family-life-calibration
       - name: Upload calibration
