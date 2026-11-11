@@ -76,3 +76,36 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class ModulePageIntegrationTests
+    {
+        [Fact] public void Disabling_either_module_removes_only_its_page_and_never_breaks_the_rest_of_the_navigation()
+        {
+            var mods = new ModuleCatalog();
+            foreach (var id in new[] { "wils.education", "wils.care", "wils.treasury" }) mods.Register(new ModuleInfo { Id = id, Name = id, ApiVersion = 1 });
+            mods.Register(new ModuleInfo { Id = ModuleCatalog.FrameworkId, Name = "fw", IsFramework = true, ApiVersion = 1 });
+            var cat = new CommunityPageCatalog<Func<int>>(mods);
+            Func<int> render = () => 1;
+            cat.Register(new CommunityPage<Func<int>> { Id = "wils.framework.overview", ModuleId = ModuleCatalog.FrameworkId, LabelKey = "o", Order = 0, Render = render });
+            cat.Register(new CommunityPage<Func<int>> { Id = "wils.education.education", ModuleId = "wils.education", LabelKey = "e", Order = 110, Render = render });
+            cat.Register(new CommunityPage<Func<int>> { Id = "wils.care.care", ModuleId = "wils.care", LabelKey = "c", Order = 120, Render = render });
+            cat.Register(new CommunityPage<Func<int>> { Id = "wils.treasury.treasury", ModuleId = "wils.treasury", LabelKey = "t", Order = 130, Render = render });
+            Assert.Equal(4, cat.Visible().Count);
+            mods.SetEnabled("wils.education", false); Assert.Equal(new[] { "wils.framework.overview", "wils.care.care", "wils.treasury.treasury" }, cat.Visible().Select(p => p.Id).ToArray());
+            mods.SetEnabled("wils.care", false); Assert.Equal(new[] { "wils.framework.overview", "wils.treasury.treasury" }, cat.Visible().Select(p => p.Id).ToArray());
+            Assert.Equal("wils.framework.overview", cat.Resolve("wils.education.education").Id);          // a window that was on the Education page falls back cleanly
+        }
+
+        [Fact] public void Each_module_registers_its_own_page_and_the_framework_registers_none_of_theirs()
+        {
+            foreach (var (module, file, id) in new[] { ("Education", "Game/EducationPage.cs", "wils.education.education"), ("Care", "Game/CarePage.cs", "wils.care.care") })
+            {
+                string src = System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource(module), file)); Assert.Contains("\"" + id + "\"", src); Assert.Contains("FamilyFramework.Pages.Register", src);
+            }
+            Assert.Contains("EducationPage.Register(Id)", System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Education"), "Game/EducationModule.cs")));
+            Assert.Contains("CarePage.Register(Id)", System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Care"), "Game/CareModule.cs")));
+        }
+    }
+}

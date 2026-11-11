@@ -45,4 +45,15 @@
   <wils.education.specialist.social_label>Rhetoric Instructor</wils.education.specialist.social_label>
   <wils.education.specialist.intellectual_label>Scholar</wils.education.specialist.intellectual_label>
   <WFL_Event_Testing_TextMany>It is the season for the children's annual assessment. {0} each have assessments due: a few short daytime sittings over two days, and the result will come from what each child has actually studied and how they took part. You do not need to do anything; they begin tomorrow. You can begin now, put them off for a week, or skip this assessment period.</WFL_Event_Testing_TextMany>
+  <WFL_Edu_Page>Education</WFL_Edu_Page>
+  <WFL_Edu_Instructors>Instructors</WFL_Edu_Instructors>
+  <WFL_Edu_None>Nobody is assigned as a Tutor, Teacher or specialist yet. Assign them on the Professions page.</WFL_Edu_None>
+  <WFL_Edu_Classes>Classes under way</WFL_Edu_Classes>
+  <WFL_Edu_NoClasses>No class is being held right now.</WFL_Edu_NoClasses>
+  <WFL_Edu_ClassLine>{0} is teaching {1} to {2} pupils.</WFL_Edu_ClassLine>
+  <WFL_Edu_Assessments>Annual assessments</WFL_Edu_Assessments>
+  <WFL_Edu_NoAssessments>No assessments are due.</WFL_Edu_NoAssessments>
+  <WFL_Edu_AssessmentsDue>Assessments are due for: {0}.</WFL_Edu_AssessmentsDue>
+  <WFL_Edu_Postpone>Put off a week</WFL_Edu_Postpone>
+  <WFL_Edu_Skip>Skip this period</WFL_Edu_Skip>
 </LanguageData>

@@ -19,4 +19,12 @@
   <wils.care.specialist.surgeon_label>Surgeon</wils.care.specialist.surgeon_label>
   <wils.care.specialist.midwife_label>Midwife</wils.care.specialist.midwife_label>
   <wils.care.specialist.veterinarian_label>Veterinarian</wils.care.specialist.veterinarian_label>
+  <WFL_Care_Page>Community Care</WFL_Care_Page>
+  <WFL_Care_Practitioners>Care workers</WFL_Care_Practitioners>
+  <WFL_Care_None>Nobody is assigned to care work yet. Assign a Healer or Doctor on the Professions page.</WFL_Care_None>
+  <WFL_Care_Capacity>Routine visits the community can give in a day: {0} (up to {1} while an outbreak round is on).</WFL_Care_Capacity>
+  <WFL_Care_Rounds>Check-up rounds</WFL_Care_Rounds>
+  <WFL_Care_NoSeat>No care worker holds the working seat, so no round can run.</WFL_Care_NoSeat>
+  <WFL_Care_RoutineRound>A routine check-up round.</WFL_Care_RoutineRound>
+  <WFL_Care_OutbreakRound>An outbreak round is under way: the sick are seen first.</WFL_Care_OutbreakRound>
 </LanguageData>

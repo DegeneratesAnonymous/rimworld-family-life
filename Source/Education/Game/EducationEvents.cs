@@ -52,7 +52,7 @@ namespace FamilyLife
             return true;
         }
 
-        private static List<Pawn> EligibleNow(FamilyComponent c, int now)
+        internal static List<Pawn> EligibleNow(FamilyComponent c, int now)
         {
             var r = c.Registry; var ledger = r.Assessments(); var instructors = EducationCareers.Instructors(r);
             return instructors.Where(id => ledger.Of(id) == null).Select(id => c.TryGetPawn(id)).Where(t => t != null && t.Spawned && !t.Dead && t.Map != null && IsEligible(c, r, ledger, instructors, t, now)).ToList();

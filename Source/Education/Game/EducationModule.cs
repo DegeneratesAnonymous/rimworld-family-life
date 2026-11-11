@@ -23,6 +23,7 @@ namespace FamilyLife
             catalog.Provide(Id, "wils.education.assessment");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.education.teacher", ModuleId = Id, Kind = OfficeKind.Teacher, LabelKey = "WFL_OfficeKind_Teacher", PassionSkills = new[] { "Intellectual", "Social" } });
             EducationCareers.Register(Id);
+            EducationPage.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Teacher, EducationDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Teacher, EducationDriver.TeacherWork);
             FamilyFramework.BuildingGizmos.Add("wils.education.buttons", Id, LecternButtons);

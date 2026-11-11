@@ -22,6 +22,7 @@ namespace FamilyLife
             catalog.Provide(Id, "wils.care.outbreak");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.care.healer", ModuleId = Id, Kind = OfficeKind.Healer, LabelKey = "WFL_OfficeKind_Healer", PassionSkills = new[] { "Medicine" } });
             CareCareers.Register(Id);
+            CarePage.Register(Id);
             FamilyFramework.RegisterFitness(OfficeKind.Healer, CareDriver.Fitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.Healer, CareDriver.HealerWork);
             FamilyFramework.PlannedEvents.Register(new PlannedEventDefinition
