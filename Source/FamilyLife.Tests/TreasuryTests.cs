@@ -599,3 +599,34 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryDiscoveryTests
+    {
+        [Fact] public void A_found_diversion_becomes_an_obligation_to_the_right_creditor_for_exactly_the_amount()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Person, 5, 100), (AccountKind.Person, 8, 0)); var t = new TaxBook();
+            t.RecordDiversion("p:5", Ledger.CommunityId, 30, 4, "embezzle"); t.RecordDiversion("p:5", "p:8", 12, 5, "overcharge"); t.RecordDiversion("p:8", Ledger.CommunityId, 40, 6, "conceal");
+            var a = t.DiscoverFirst(l, 9); Assert.Equal(Ledger.CommunityId, a.Creditor); Assert.Equal(30, a.Outstanding); Assert.Equal(DebtKind.Restitution, a.Kind);
+            var b = t.DiscoverFirst(l, 9); Assert.Equal("p:8", b.Creditor); Assert.Equal(12, b.Outstanding);                              // the person overcharged is owed it back
+            var c = t.DiscoverFirst(l, 9); Assert.Equal(DebtKind.Tax, c.Kind); Assert.Equal("p:8", c.Debtor); Assert.Equal(40, c.Outstanding);          // undeclared income is owed as tax by the one who hid it
+            Assert.Null(t.DiscoverFirst(l, 9));
+            Assert.Equal(30, l.Pay(a.Id, 99, "r1", 10)); Assert.Equal(12, l.Pay(b.Id, 99, "r2", 10)); Assert.Equal(58, l.Balance("p:5")); Assert.True(l.Conserved);
+        }
+
+        [Fact] public void Waiving_part_of_a_debt_without_collecting_it_is_a_loss_the_treasury_can_later_recover()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Household, 1, 80), (AccountKind.Person, 5, 0)); var debt = l.OpenDebt("h:1", Ledger.CommunityId, DebtKind.Tax, 100, 9, "t"); var t = new TaxBook();
+            l.RecordPayment(debt, 25, 4); t.RecordDiversion("p:5", Ledger.CommunityId, 25, 4, "favour");              // a favour: 25 forgiven, nothing paid
+            Assert.Equal(75, debt.Outstanding); Assert.Equal(80, l.Balance("h:1")); Assert.Equal(0, l.Balance(Ledger.CommunityId));
+            var rest = t.DiscoverFirst(l, 8); Assert.Equal(25, rest.Outstanding); Assert.Equal("p:5", rest.Debtor); Assert.True(l.Conserved);
+        }
+
+        [Fact] public void Diversions_round_trip_and_are_bounded()
+        {
+            var t = new TaxBook(); for (int i = 0; i < 100; i++) t.RecordDiversion("p:1", Ledger.CommunityId, 5, i, "embezzle");
+            Assert.Equal(60, t.Diversions.Count); Assert.Equal(t.Encode(), TaxBook.Decode(new StateReader(t.Encode())).Encode());
+        }
+    }
+}

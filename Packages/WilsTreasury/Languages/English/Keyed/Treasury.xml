@@ -76,6 +76,7 @@
   <WFL_Tr_Payday>Payday: {0} silver was due and {1} was paid.{2}</WFL_Tr_Payday>
   <WFL_Tr_RewardShared>A reward of {0} silver was shared: the community kept {1}.</WFL_Tr_RewardShared>
   <WFL_Tr_CollectionNote>{0} {1}.</WFL_Tr_CollectionNote>
+  <WFL_Tr_Caught>{0} left some income out, but the collector noticed and the full amount was paid.</WFL_Tr_Caught>
   <WFL_Tr_Outcome_Paid>paid in full</WFL_Tr_Outcome_Paid>
   <WFL_Tr_Outcome_Partial>paid part of what was owed</WFL_Tr_Outcome_Partial>
   <WFL_Tr_Outcome_Plan>agreed to a repayment plan</WFL_Tr_Outcome_Plan>

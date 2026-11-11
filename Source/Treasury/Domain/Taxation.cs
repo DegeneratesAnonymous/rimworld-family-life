@@ -190,6 +190,23 @@ namespace FamilyLife.Domain
         /// <summary>Diversions nobody has found yet, as "collector|amount|day". Discovery turns one into a restitution debt for exactly that amount.</summary>
         public readonly List<string> Diversions = new List<string>();
 
+        /// <summary>Something wrong that nobody has found yet, as "owes|isOwed|amount|day|kind" (account ids). Discovery turns the oldest into an obligation for exactly that amount: an embezzled or waived sum is owed back to the community, an overcharge to the person charged, concealed income as tax.</summary>
+        public void RecordDiversion(string debtorAccount, string creditorAccount, int amount, int day, string kind)
+        {
+            if (amount > 0 && !string.IsNullOrEmpty(debtorAccount) && !string.IsNullOrEmpty(creditorAccount)) { Diversions.Add(debtorAccount + "|" + creditorAccount + "|" + amount + "|" + day + "|" + kind); while (Diversions.Count > 60) Diversions.RemoveAt(0); }
+        }
+
+        public Debt DiscoverFirst(Ledger l, int day)
+        {
+            while (Diversions.Count > 0)
+            {
+                var p = Diversions[0].Split('|'); Diversions.RemoveAt(0);
+                if (p.Length < 5 || !int.TryParse(p[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var amount) || amount <= 0 || l.Get(p[0]) == null || l.Get(p[1]) == null) continue;
+                return p[4] == "conceal" ? l.OpenDebt(p[0], p[1], DebtKind.Tax, amount, day + 7, "income not declared") : Misconduct.Restitution(l, p[0], p[1], amount, "found: " + p[4], day);
+            }
+            return null;
+        }
+
         public int CursorOf(string account) => cursor.TryGetValue(account, out var c) ? c : 0;
 
         /// <summary>

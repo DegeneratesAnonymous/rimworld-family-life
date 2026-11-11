@@ -129,3 +129,30 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryTaxVisitGuardTests
+    {
+        private static string Visit() => System.IO.File.ReadAllText(System.IO.Path.Combine(RepoPaths.ModuleSource("Treasury"), "Game/TreasuryTaxVisit.cs"));
+
+        [Fact] public void A_collection_visit_creates_and_destroys_no_silver()
+        {
+            string v = Visit(); Assert.DoesNotContain(".Receive(", v); Assert.DoesNotContain(".Spend(", v); Assert.DoesNotContain("RecordLoss", v);
+        }
+
+        [Fact] public void Every_waiver_or_diversion_is_remembered_so_it_can_be_found_and_recovered()
+        {
+            string v = Visit();
+            foreach (var kind in new[] { "\"embezzle\"", "\"favour\"", "\"bribe\"", "\"own taxes\"", "\"overcharge\"", "\"conceal\"" }) Assert.Contains(kind, v);
+            Assert.Contains("tax.DiscoverFirst(l, today)", v);
+        }
+
+        [Fact] public void The_outcome_weighs_relationships_family_mood_skills_and_traits_from_the_real_pawns()
+        {
+            string v = Visit();
+            foreach (var needle in new[] { "OpinionOf(collector)", "HouseholdOpinion", "CurLevelPercentage", "SkillDefOf.Social", "SkillDefOf.Melee", "TraitDefOf.Greedy", "TraitDefOf.Abrasive", "PriorRefusals" }) Assert.Contains(needle, v);
+            Assert.Contains("TaxAuthority.MayCollect", v);
+        }
+    }
+}
