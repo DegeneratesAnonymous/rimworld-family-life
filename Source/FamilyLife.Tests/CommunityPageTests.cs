@@ -109,3 +109,22 @@ namespace FamilyLife.Tests
         }
     }
 }
+
+namespace FamilyLife.Tests
+{
+    public class CommunityNavigationRegressionTests
+    {
+        [Xunit.Fact]
+        public void Core_links_use_the_module_that_actually_registers_the_pages()
+        {
+            string registration = RepoPaths.Read("Game/FamilyLifeModule.cs");
+            Xunit.Assert.Contains("CommunityCorePages.Register(Id)", registration);
+            foreach (var file in new[] { "UI/CommunityCorePages.cs", "UI/CommunityCareerPage.cs", "UI/CommunityWindow.cs" })
+            {
+                string source = RepoPaths.Read(file);
+                Xunit.Assert.DoesNotContain("ModuleCatalog.FrameworkId + \".", source);
+                Xunit.Assert.Contains("FamilyLifeModule.Id + \".", source);
+            }
+        }
+    }
+}

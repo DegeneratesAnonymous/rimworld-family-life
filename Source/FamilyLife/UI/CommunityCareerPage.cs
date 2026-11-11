@@ -15,13 +15,13 @@ namespace FamilyLife
         private static int person;
         private static string career, selectedRole;
 
-        public static void OpenPerson(int id) { person = id; MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".professions"); }
+        public static void OpenPerson(int id) { person = id; MainTabWindow_Community.Open(FamilyLifeModule.Id + ".professions"); }
         public static void OpenRole(string roleId, int id = 0)
         {
             var role = CareerService.Professions.ById(roleId);
             if (role != null) { career = role.Career; selectedRole = role.Id; }
             if (id != 0) person = id;
-            MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".professions");
+            MainTabWindow_Community.Open(FamilyLifeModule.Id + ".professions");
         }
 
         public static float Draw(Rect r, FamilyComponent c)
@@ -150,12 +150,20 @@ namespace FamilyLife
                     }
                 }
             }
-            y = CommunityPageLayout.Action(r, y + 8f, assigned ? "WFL_UX_RemoveRole".Translate(CareerService.TitleOf(role, reg)) : "WFL_UX_AssignRole".Translate(FamilyUi.NameOf(reg, person), CareerService.TitleOf(role, reg)), () =>
+            var lower = CareerService.Professions.All.Where(other => other.Career == role.Career && other.Level < role.Level && book.IsAssigned(person, other.Id)).ToList();
+            bool upgrade = !assigned && lower.Count > 0;
+            if (upgrade) y = CommunityPageLayout.Line(r, y, "WFL_Next_UpgradeHelp".Translate());
+            y = CommunityPageLayout.Action(r, y + 8f, upgrade ? "WFL_Next_Upgrade".Translate(CareerService.TitleOf(role, reg)) : assigned ? "WFL_UX_RemoveRole".Translate(CareerService.TitleOf(role, reg)) : "WFL_UX_AssignRole".Translate(FamilyUi.NameOf(reg, person), CareerService.TitleOf(role, reg)), () =>
             {
                 // Revalidate the resident and module at the action boundary; qualification is never awarded by this page.
                 if (FamilyComponent.Current != c || reg.GetPerson(person)?.InColony != true || reg.GetPerson(person).Juvenile || !FamilyFramework.Catalog.IsEnabled(role.ModuleId)) return;
                 if (book.IsAssigned(person, role.Id)) book.Unassign(person, role.Id);
-                else book.Assign(person, role, ledger, Find.TickManager.TicksGame);
+                else
+                {
+                    var result = book.Assign(person, role, ledger, Find.TickManager.TicksGame);
+                    if (upgrade && result == AssignResult.Assigned)
+                        foreach (var old in lower) book.Unassign(person, old.Id);
+                }
             }, assigned || qualified);
             if (!assigned && !qualified) y = CommunityPageLayout.Line(r, y, "WFL_UX_NotQualified".Translate());
             y = CommunityPageLayout.Line(r, y, "WFL_UX_AssignmentHelp".Translate(), true);

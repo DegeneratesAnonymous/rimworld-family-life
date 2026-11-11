@@ -96,7 +96,7 @@ namespace FamilyLife
             float left = CommunityPageLayout.Section(r, 0f, 0f, w, "WFL_Hub_Residents".Translate(), a =>
             {
                 float y = Line(a, 0f, "WFL_Hub_ResidentsLine".Translate(c.Registry.Persons.Count(p => p.InColony), c.Registry.Lineages.Count(l => c.Registry.IsListedFamily(l.Id))));
-                return CommunityPageLayout.Action(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".families"));
+                return CommunityPageLayout.Action(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(FamilyLifeModule.Id + ".families"));
             });
             left = CommunityPageLayout.Section(r, 0f, left, w, "WFL_UX_ReadyTitle".Translate(), a =>
             {
@@ -115,7 +115,7 @@ namespace FamilyLife
             {
                 float y = Posts(a, c);
                 if (c.Registry.NextAssemblyTick > 0) y = Line(a, y, "WFL_Assembly_Next".Translate(FamilyUi.Date(c.Registry.NextAssemblyTick)), true);
-                return CommunityPageLayout.Action(a, y, "WFL_Hub_Assembly".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".assembly"));
+                return CommunityPageLayout.Action(a, y, "WFL_Hub_Assembly".Translate(), () => MainTabWindow_Community.Open(FamilyLifeModule.Id + ".assembly"));
             });
             return Mathf.Max(left, right);
         }
@@ -138,16 +138,19 @@ namespace FamilyLife
                     FamilyCrest.Draw(new Rect(0f, 0f, 36f, 42f), family);
                     var names = c.Registry.MembersOf(id).Where(person => person.InColony).Select(person => NameOf(c, person.Id)).ToList();
                     string residents = "WFL_Hub_FamilyResidents".Translate(c.Registry.LivingCount(id, Presence.Colony));
-                    float summaryHeight = Mathf.Max(44f, Text.CalcHeight(residents, a.width - 46f));
-                    Widgets.Label(new Rect(46f, 0f, a.width - 46f, summaryHeight), residents);
+                    float summaryHeight = Mathf.Max(44f, Text.CalcHeight(residents, a.width - 82f));
+                    Widgets.Label(new Rect(46f, 0f, a.width - 82f, summaryHeight), residents);
                     float h = Line(a, summaryHeight + 6f, string.Join(", ", names));
                     foreach (var alert in Concerns(c, family).Take(2))
                         h = Line(a, h, FamilyText.AlertText(c.Registry, alert));
-                    return CommunityPageLayout.Action(a, h, "WFL_UX_ViewFamily".Translate(family.Name), () =>
+                    var popout = new Rect(a.width - 28f, 0f, 28f, 28f);
+                    TooltipHandler.TipRegion(popout, "WFL_UX_ViewFamily".Translate(family.Name));
+                    if (Widgets.ButtonText(popout, "↗"))
                     {
                         Window_Families.PendingLineageId = id;
                         if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
-                    });
+                    }
+                    return h;
                 });
                 if (Widgets.ButtonInvisible(new Rect(second ? w + CommunityPageLayout.Gap : 0f, cardY, w, Mathf.Max(28f, Text.CalcHeight(family.Name, w - 16f) + 10f))))
                 {
@@ -164,21 +167,28 @@ namespace FamilyLife
 
         private static float Assembly(Rect r, FamilyComponent c)
         {
-            float y = Line(r, 0f, "WFL_Hub_AssemblyHelp".Translate(), true), w = CommunityPageLayout.ColumnWidth(r);
-            float left = CommunityPageLayout.Section(r, 0f, y, w, "WFL_Hub_Posts".Translate(), a => Posts(a, c));
-            bool columns = CommunityPageLayout.TwoColumns(r);
-            float right = CommunityPageLayout.Section(r, columns ? w + CommunityPageLayout.Gap : 0f, columns ? y : left, w, "WFL_Hub_Assembly".Translate(), a =>
+            var reg = c.Registry; var assembly = reg.OpenAssembly;
+            float y = Line(r, 0f, "WFL_Next_AssemblyHelp".Translate());
+            if (assembly == null)
             {
-                float h = 0f; var reg = c.Registry;
-                if (reg.NextAssemblyTick > 0) h = Line(a, h, "WFL_Assembly_Next".Translate(FamilyUi.Date(reg.NextAssemblyTick)));
-                if (reg.NextAssemblyTick > 0 && reg.OpenAssembly == null)
-                    h = CommunityPageLayout.Action(a, h, "WFL_Assembly_Postpone".Translate(), () => reg.PostponeAssembly(Find.TickManager.TicksGame, 30));
-                if (reg.OpenAssembly != null)
-                    foreach (var race in reg.OpenAssembly.Races)
-                        h = Line(a, h, "WFL_Assembly_RaceLine".Translate(("WFL_OfficeKind_" + race.Kind).Translate(), ("WFL_AssemblyState_" + reg.OpenAssembly.State).Translate(), FamilyUi.NameList(reg, race.Candidates)));
-                return h;
-            });
-            return Mathf.Max(left, right);
+                y = Heading(r, y, "WFL_Next_AssemblyUpcoming".Translate());
+                if (reg.NextAssemblyTick > 0) y = Line(r, y, "WFL_Assembly_Next".Translate(FamilyUi.Date(reg.NextAssemblyTick)));
+                y = Line(r, y, "WFL_Next_AssemblyIdle".Translate());
+                if (reg.NextAssemblyTick > 0) y = CommunityPageLayout.Action(r, y, "WFL_Assembly_Postpone".Translate(), () => reg.PostponeAssembly(Find.TickManager.TicksGame, 30));
+            }
+            else
+            {
+                y = Heading(r, y, ("WFL_AssemblyState_" + assembly.State).Translate());
+                y = Line(r, y, "WFL_Next_Turnout".Translate(assembly.Voted.Count));
+                foreach (var race in assembly.Races)
+                {
+                    y = Heading(r, y, ("WFL_OfficeKind_" + race.Kind).Translate());
+                    y = Line(r, y, "WFL_Next_Candidates".Translate(FamilyUi.NameList(reg, race.Candidates)));
+                    y = Line(r, y, "WFL_Next_Ballots".Translate(race.Votes.Count));
+                    if (race.WinnerId != 0) y = Line(r, y, "WFL_Next_Winner".Translate(NameOf(c, race.WinnerId)));
+                }
+            }
+            return y;
         }
 
         private static float Settings(Rect r, FamilyComponent c)

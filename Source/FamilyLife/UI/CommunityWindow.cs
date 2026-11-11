@@ -22,6 +22,20 @@ namespace FamilyLife
         private static readonly HashSet<string> failed = new HashSet<string>();
         private readonly Dictionary<string, float> heights = new Dictionary<string, float>();
         private Vector2 navScroll;
+        private static Texture2D gear;
+        private static Texture2D MakeGear()
+        {
+            var texture = new Texture2D(32, 32, TextureFormat.RGBA32, false);
+            var pixels = new Color[1024];
+            for (int y = 0; y < 32; y++) for (int x = 0; x < 32; x++)
+            {
+                float dx = x - 15.5f, dy = y - 15.5f;
+                float radius = Mathf.Sqrt(dx * dx + dy * dy);
+                bool tooth = Mathf.Cos(Mathf.Atan2(dy, dx) * 8f) > .3f;
+                pixels[y * 32 + x] = radius >= 5f && radius <= (tooth ? 14f : 11f) ? Color.white : Color.clear;
+            }
+            texture.SetPixels(pixels); texture.Apply(); return texture;
+        }
 
         public override Vector2 RequestedTabSize => new Vector2(Mathf.Min(1180f, UI.screenWidth - 40f), Mathf.Min(760f, UI.screenHeight - 120f));
 
@@ -37,12 +51,12 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current;
             if (c == null) return;
-            var pages = FamilyFramework.Pages.Visible();
+            var pages = FamilyFramework.Pages.Visible().Where(p => p.Id != FamilyLifeModule.Id + ".settings").ToList();
             var page = FamilyFramework.Pages.Resolve(selected);
             if (page == null) { Widgets.Label(inRect, "WFL_Hub_NoPages".Translate()); return; }
             selected = page.Id;
 
-            var nav = new Rect(0f, 0f, NavWidth, inRect.height);
+            var nav = new Rect(0f, 0f, NavWidth, inRect.height - 44f);
             Widgets.DrawBoxSolid(nav, new Color(0.10f, 0.10f, 0.11f, 0.95f));
             float y = 6f;
             Text.Font = GameFont.Small;
@@ -69,6 +83,12 @@ namespace FamilyLife
                 y += row.height + 2f;
             }
             Widgets.EndScrollView();
+
+            var settings = new Rect(8f, inRect.height - 36f, 28f, 28f);
+            if (gear == null) gear = MakeGear();
+            GUI.DrawTexture(settings, gear);
+            TooltipHandler.TipRegion(settings, "WFL_Hub_Settings".Translate());
+            if (Widgets.ButtonInvisible(settings)) Open(FamilyLifeModule.Id + ".settings");
 
             var body = new Rect(NavWidth + 8f, 0f, inRect.width - NavWidth - 8f, inRect.height);
             Text.Font = GameFont.Medium; GUI.color = FamilyKit.Gold;

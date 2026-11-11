@@ -28,4 +28,13 @@
   <WFL_UX_ManageCareer>Manage careers…</WFL_UX_ManageCareer>
   <WFL_UX_ViewFamily>View {0} family</WFL_UX_ViewFamily>
   <WFL_UX_AwaitingEvaluation>These thresholds have been reached. Qualifications are recorded when completed career work is evaluated.</WFL_UX_AwaitingEvaluation>
+  <WFL_Next_AssemblyHelp>The assembly elects community leadership and recognises earned qualifications. Professional work is managed in Careers.</WFL_Next_AssemblyHelp>
+  <WFL_Next_AssemblyUpcoming>Upcoming assembly</WFL_Next_AssemblyUpcoming>
+  <WFL_Next_AssemblyIdle>No election is currently running. Campaigns, candidates and recorded ballots will appear here when an assembly opens.</WFL_Next_AssemblyIdle>
+  <WFL_Next_Turnout>{0} colonists have voted.</WFL_Next_Turnout>
+  <WFL_Next_Candidates>Candidates: {0}</WFL_Next_Candidates>
+  <WFL_Next_Ballots>Recorded ballots for this post: {0}</WFL_Next_Ballots>
+  <WFL_Next_Winner>Elected: {0}</WFL_Next_Winner>
+  <WFL_Next_Upgrade>Upgrade to {0}</WFL_Next_Upgrade>
+  <WFL_Next_UpgradeHelp>Upgrading replaces lower-level assignments in this career. Earned qualifications, other careers and existing specialties are kept.</WFL_Next_UpgradeHelp>
 </LanguageData>
