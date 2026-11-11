@@ -17,6 +17,21 @@ namespace FamilyLife.Tests
             c.Register(new ProfessionRole { Id = "wils.care.doctor", ModuleId = "wils.care", Career = Care, Level = 2 });
             return c;
         }
+        [Fact] public void Old_mixed_tier_saves_keep_highest_known_tier_without_losing_qualifications()
+        {
+            var c = Catalog(); var l = new CareerLedger(); l.Grandfather(1, Teaching);
+            var b = new AssignmentBook(); b.Assign(1, c.ById("wils.education.tutor"), l, 1);
+            b = AssignmentBook.Decode(new StateReader(b.Encode()));
+            b.Assign(1, c.ById("wils.education.teacher"), l, 2);
+            string qualifications = l.Encode();
+            Assert.Equal(1, b.NormalizeTiers(c));
+            Assert.False(b.IsAssigned(1, "wils.education.tutor"));
+            Assert.True(b.IsAssigned(1, "wils.education.teacher"));
+            Assert.Equal(qualifications, l.Encode());
+            var loaded = AssignmentBook.Decode(new StateReader(b.Encode())); loaded.NormalizeTiers(c);
+            Assert.Equal(AssignResult.HigherTierAssigned, loaded.Assign(1, c.ById("wils.education.tutor"), l, 3, c));
+        }
+
         private static FamilyRegistry Colony() { var r = new FamilyRegistry(); r.Apply(new[] { T.P(1, "A"), T.P(2, "B"), T.P(3, "C") }, 1000); return r; }
         private static CommunityOffice Post(FamilyRegistry r, OfficeKind k, int holder) { var o = r.OfficeFor(k); if (o == null) { o = new CommunityOffice { Id = (int)k + 1, Kind = k }; r.Offices.Add(o); } o.HolderId = holder; o.HolderFamily = r.FamilyOf(holder); return o; }
 
@@ -50,7 +65,9 @@ namespace FamilyLife.Tests
             Assert.Equal(new[] { 1, 2, 3 }, b.Holders("wils.education.tutor").ToArray());
             l.Grandfather(1, Teaching); l.Grandfather(1, Care);
             b.Assign(1, c.ById("wils.education.teacher"), l, 1); b.Assign(1, c.ById("wils.care.doctor"), l, 1);
-            Assert.Equal(3, b.RolesOf(1).Count());
+            Assert.Equal(2, b.RolesOf(1).Count());
+            Assert.False(b.IsAssigned(1, "wils.education.tutor"));
+            Assert.Equal(AssignResult.HigherTierAssigned, b.Assign(1, c.ById("wils.education.tutor"), l, 2));
             var big = new AssignmentBook(); var bl = new CareerLedger(); for (int i = 1; i <= 500; i++) big.Assign(i, c.ById("wils.education.tutor"), bl, 1);
             Assert.Equal(500, big.Count);
         }

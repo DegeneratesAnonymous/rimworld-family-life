@@ -34,7 +34,7 @@ namespace FamilyLife
         {
             try
             {
-                var r = c.Registry; int careers = r.ReconcileCareers(), assignments = r.ReconcileAssignments();
+                var r = c.Registry; r.Assignments().NormalizeTiers(Professions); int careers = r.ReconcileCareers(), assignments = r.ReconcileAssignments();
                 Note("loaded: " + r.Assignments().Count + " assignment(s); reconciled " + careers + " career record(s) and " + assignments + " assignment(s) of people no longer known");
             }
             catch (Exception ex) { Log.Warning("[Wil's Family Life] careers: load reconcile failed, data left as it was: " + ex.Message); }

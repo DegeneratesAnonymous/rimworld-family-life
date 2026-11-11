@@ -95,13 +95,16 @@ namespace FamilyLife
                         float nodeWidth = level < 3 ? Mathf.Min(220f, width) : width;
                         var box = new Rect(level < 3 ? (r.width - nodeWidth) / 2f : col * (width + 10f), y, nodeWidth, height);
                         bool assigned = c.Registry.Assignments().IsAssigned(person, role.Id);
-                        bool qualified = AssignmentBook.Check(role, c.Registry.Careers(), person) == AssignResult.Assigned;
+                        bool covered = roles.Any(other => other.Career == role.Career && other.Level > role.Level && c.Registry.Assignments().IsAssigned(person, other.Id));
+                        bool qualified = !covered && AssignmentBook.Check(role, c.Registry.Careers(), person) == AssignResult.Assigned;
                         Widgets.DrawBoxSolid(box, assigned ? new Color(.21f, .28f, .23f) : qualified ? new Color(.27f, .25f, .17f) : new Color(.14f, .16f, .18f));
                         if (role.Id == selectedRole) { GUI.color = FamilyKit.Gold; Widgets.DrawBox(box, 2); GUI.color = Color.white; }
                         float titleH = Text.CalcHeight(CareerService.TitleOf(role, c.Registry), box.width - 16f);
                         Widgets.Label(new Rect(box.x + 8f, box.y + 7f, box.width - 16f, titleH), CareerService.TitleOf(role, c.Registry));
                         GUI.color = assigned || qualified ? Color.white : new Color(.7f, .73f, .75f);
-                        Widgets.Label(new Rect(box.x + 8f, box.y + titleH + 12f, box.width - 16f, box.height - titleH - 16f), (assigned ? "WFL_UX_Assigned" : qualified ? "WFL_UX_CanAssign" : "WFL_UX_Locked").Translate()); GUI.color = Color.white;
+                        Widgets.Label(new Rect(box.x + 8f, box.y + titleH + 12f, box.width - 16f, box.height - titleH - 16f), (covered ? "WFL_Tier_Covered" : assigned ? "WFL_UX_Assigned" : qualified ? "WFL_UX_CanAssign" : "WFL_UX_Locked").Translate()); GUI.color = Color.white;
+                        var holders = c.Registry.Assignments().Holders(role.Id).Where(id => c.Registry.GetPerson(id)?.InColony == true).Select(id => FamilyUi.NameOf(c.Registry, id));
+                        TooltipHandler.TipRegion(box, "WFL_Tier_Holders".Translate(string.Join(", ", holders)));
                         if (Widgets.ButtonInvisible(box)) selectedRole = role.Id;
                     }
                     y += height + 10f;
@@ -123,7 +126,15 @@ namespace FamilyLife
             if (help.CanTranslate()) y = CommunityPageLayout.Line(r, y, help.Translate());
             var def = CareerService.Career(role.Career);
             bool assigned = book.IsAssigned(person, role.Id), qualified = AssignmentBook.Check(role, ledger, person) == AssignResult.Assigned;
-            y = CommunityPageLayout.Line(r, y, (assigned ? "WFL_UX_Assigned" : qualified ? "WFL_UX_CanAssign" : "WFL_UX_Locked").Translate());
+            var higher = CareerService.Professions.All.FirstOrDefault(other => other.Career == role.Career && other.Level > role.Level && book.IsAssigned(person, other.Id));
+            var residents = reg.Persons.Where(p => p.InColony && !p.Juvenile).ToList();
+            var holders = residents.Where(p => book.IsAssigned(p.Id, role.Id)).ToList();
+            var eligible = residents.Where(p => !book.IsAssigned(p.Id, role.Id) && AssignmentBook.Check(role, ledger, p.Id) == AssignResult.Assigned && !CareerService.Professions.All.Any(other => other.Career == role.Career && other.Level > role.Level && book.IsAssigned(p.Id, other.Id))).ToList();
+            y = CommunityPageLayout.Line(r, y, "WFL_Tier_Holders".Translate(holders.Count == 0 ? "WFL_UX_None".Translate().ToString() : string.Join(", ", holders.Select(p => FamilyUi.NameOf(reg, p.Id)))));
+            y = CommunityPageLayout.Line(r, y, "WFL_Tier_Eligible".Translate(eligible.Count == 0 ? "WFL_UX_None".Translate().ToString() : string.Join(", ", eligible.Select(p => FamilyUi.NameOf(reg, p.Id)))));
+            if (eligible.Count > 0) y = CommunityPageLayout.Action(r, y, "WFL_Tier_Choose".Translate(), () => Find.WindowStack.Add(new FloatMenu(eligible.Select(p => new FloatMenuOption(FamilyUi.NameOf(reg, p.Id), () => person = p.Id)).ToList())));
+            if (higher != null) y = CommunityPageLayout.Line(r, y, "WFL_Tier_Higher".Translate(CareerService.TitleOf(higher, reg)));
+            y = CommunityPageLayout.Line(r, y, (higher != null ? "WFL_Tier_Covered" : assigned ? "WFL_UX_Assigned" : qualified ? "WFL_UX_CanAssign" : "WFL_UX_Locked").Translate());
             if (role.Level == 1) y = CommunityPageLayout.Line(r, y, "WFL_UX_EntryRole".Translate());
             else if (def != null)
             {
@@ -164,12 +175,12 @@ namespace FamilyLife
                 }
                 else
                 {
-                    var result = book.Assign(person, role, ledger, Find.TickManager.TicksGame);
+                    var result = book.Assign(person, role, ledger, Find.TickManager.TicksGame, CareerService.Professions);
                     Messages.Message((result == AssignResult.Assigned ? "WFL_Flow_RoleAssigned" : "WFL_UX_NotQualified").Translate(CareerService.TitleOf(role, reg)), result == AssignResult.Assigned ? MessageTypeDefOf.NeutralEvent : MessageTypeDefOf.RejectInput, false);
                     if (upgrade && result == AssignResult.Assigned)
                         foreach (var old in lower) book.Unassign(person, old.Id);
                 }
-            }, assigned || qualified);
+            }, assigned || qualified && higher == null);
             if (!assigned && !qualified) y = CommunityPageLayout.Line(r, y, "WFL_UX_NotQualified".Translate());
             y = CommunityPageLayout.Line(r, y, "WFL_UX_AssignmentHelp".Translate(), true);
             return y;

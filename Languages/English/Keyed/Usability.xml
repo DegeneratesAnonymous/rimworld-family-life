@@ -21,7 +21,7 @@
   <WFL_UX_AssignRole>Assign {0} as {1}</WFL_UX_AssignRole>
   <WFL_UX_RemoveRole>Remove {0} assignment</WFL_UX_RemoveRole>
   <WFL_UX_NotQualified>Earn the missing qualifications before assigning this role.</WFL_UX_NotQualified>
-  <WFL_UX_AssignmentHelp>Multiple assignments are allowed. Removing a role keeps its qualification. Availability, needs and work settings still govern when work happens.</WFL_UX_AssignmentHelp>
+  <WFL_UX_AssignmentHelp>Only one tier per career may be assigned. Higher tiers replace lower tiers. Different careers and specialties at the same tier remain allowed. Qualifications are kept.</WFL_UX_AssignmentHelp>
   <WFL_UX_ReadyTitle>Ready for a new assignment</WFL_UX_ReadyTitle>
   <WFL_UX_NoReady>No unassigned advanced qualifications at the moment. Colonists build career experience through their work.</WFL_UX_NoReady>
   <WFL_UX_ReviewCareer>Review career</WFL_UX_ReviewCareer>
@@ -39,4 +39,9 @@
   <WFL_Next_UpgradeHelp>Upgrading replaces lower-level assignments in this career. Earned qualifications, other careers and existing specialties are kept.</WFL_Next_UpgradeHelp>
   <WFL_Flow_RoleRemoved>Removed the {0} assignment. Qualifications are kept.</WFL_Flow_RoleRemoved>
   <WFL_Flow_RoleAssigned>Assigned as {0}.</WFL_Flow_RoleAssigned>
+  <WFL_Tier_Holders>Assigned: {0}</WFL_Tier_Holders>
+  <WFL_Tier_Eligible>Eligible to assign: {0}</WFL_Tier_Eligible>
+  <WFL_Tier_Choose>Select an eligible colonist…</WFL_Tier_Choose>
+  <WFL_Tier_Higher>Already working as {0}. Remove that higher-tier assignment before choosing a lower tier.</WFL_Tier_Higher>
+  <WFL_Tier_Covered>Covered by higher tier</WFL_Tier_Covered>
 </LanguageData>

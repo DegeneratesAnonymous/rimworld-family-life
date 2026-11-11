@@ -36,12 +36,13 @@ namespace FamilyLife.Domain
         public ProfessionRole ById(string id) => id != null && byId.TryGetValue(id, out var r) ? r : null;
     }
 
-    public enum AssignResult { Assigned, AlreadyAssigned, UnknownRole, NotQualified }
+    public enum AssignResult { Assigned, AlreadyAssigned, UnknownRole, NotQualified, HigherTierAssigned }
 
     /// <summary>Who is assigned to which professional role. Any number of people may hold a role and a person may hold several. Saved as a community-wide payload.</summary>
     public sealed class AssignmentBook : IModuleState
     {
         public const string Id = "wils.assignments";
+        private readonly Dictionary<string, ProfessionRole> definitions = new Dictionary<string, ProfessionRole>();
         private readonly List<int> people = new List<int>(), ticks = new List<int>();
         private readonly List<string> roles = new List<string>();
         private readonly HashSet<string> migrated = new HashSet<string>();
@@ -63,13 +64,32 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>The player's choice. Refused only for lack of a qualification the role needs; there is no cap on how many people hold a role.</summary>
-        public AssignResult Assign(int person, ProfessionRole role, CareerLedger ledger, int tick)
+        public AssignResult Assign(int person, ProfessionRole role, CareerLedger ledger, int tick, ProfessionCatalog catalog = null)
         {
+            if (catalog != null) foreach (var known in catalog.All) definitions[known.Id] = known;
+            if (role != null) definitions[role.Id] = role;
             var check = Check(role, ledger, person);
             if (check != AssignResult.Assigned) return check;
+            var samePath = RolesOf(person).Where(id => definitions.ContainsKey(id) && definitions[id].Career == role.Career).ToList();
+            if (samePath.Any(id => definitions[id].Level > role.Level)) return AssignResult.HigherTierAssigned;
+            foreach (var id in samePath.Where(id => definitions[id].Level < role.Level)) Unassign(person, id);
             if (IsAssigned(person, role.Id)) return AssignResult.AlreadyAssigned;
             people.Add(person); roles.Add(role.Id); ticks.Add(tick);
             return AssignResult.Assigned;
+        }
+
+        /// <summary>Clean old mixed-tier saves using loaded definitions only. Unknown module roles are retained.</summary>
+        public int NormalizeTiers(ProfessionCatalog catalog)
+        {
+            foreach (var role in catalog.All) definitions[role.Id] = role;
+            int removed = 0;
+            foreach (int who in AllPeople().Distinct().ToList())
+                foreach (var path in RolesOf(who).Where(definitions.ContainsKey).Select(id => definitions[id]).GroupBy(role => role.Career).ToList())
+                {
+                    int highest = path.Max(role => role.Level);
+                    foreach (var role in path.Where(role => role.Level < highest).ToList()) if (Unassign(who, role.Id)) removed++;
+                }
+            return removed;
         }
 
         public bool Unassign(int person, string role)
@@ -141,7 +161,7 @@ namespace FamilyLife.Domain
                 if (book.HasMigrated(key)) continue;
                 var role = catalog.ById(post.RoleId); if (role == null) continue;
                 ledger.Grandfather(office.HolderId, role.Career);
-                book.Assign(office.HolderId, role, ledger, tick);
+                book.Assign(office.HolderId, role, ledger, tick, catalog);
                 book.MarkMigrated(key); done.Add(key);
             }
             return done;
