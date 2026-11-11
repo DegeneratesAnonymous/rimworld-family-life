@@ -91,34 +91,71 @@ namespace FamilyLife
         }
 
         /// <summary>
-        /// Silver in storage that no account claims is adopted by the community treasury (an existing colony's starting silver, loot, a gift). Claims above the silver in storage are only reported:
-        /// nothing is debited to hide a shortfall, because the silver may simply be in a caravan or a pocket.
+        /// Reconciles the claims with the silver in storage through <see cref="SilverReconciler"/>: unclaimed silver is adopted by the community only once it has stayed a day (or once, when the module
+        /// first runs in a game, with a notice), and a shortfall is written off from the community's own account only after several days. Personal and household money is never erased.
         /// </summary>
         private static void Reconcile(Ledger l, TreasuryState st, int physical, int now, int today)
         {
-            long surplus = physical - l.TotalClaims;
-            if (surplus > 0 && st.AdoptSurplus) l.Receive(Ledger.CommunityId, (int)Math.Min(int.MaxValue, surplus), TxKind.Correction, "recon:" + now, today, "unclaimed silver in storage");
+            var d = SilverReconciler.Decide(st, l.TotalClaims, physical, l.Balance(Ledger.CommunityId), today, st.AdoptSurplus);
+            st.Discrepancy = d.Discrepancy;
+            if (d.Action == ReconcileAction.AdoptSurplus && d.Amount > 0 && l.Receive(Ledger.CommunityId, d.Amount, TxKind.Correction, "recon:" + now, today, d.Initial ? "silver already in storage when the treasury began" : "unclaimed silver in storage") == LedgerResult.Ok && d.Initial)
+                Messages.Message("WFL_Tr_Adopted".Translate(d.Amount), MessageTypeDefOf.NeutralEvent, false);
+            else if (d.Action == ReconcileAction.WriteOffLoss && d.Amount > 0 && l.RecordLoss(Ledger.CommunityId, d.Amount, "loss:" + now, today, "silver missing from storage") == LedgerResult.Ok)
+                Messages.Message("WFL_Tr_Lost".Translate(d.Amount), MessageTypeDefOf.NegativeEvent, false);
         }
 
-        /// <summary>A person who has died settles their estate (debts first, then heirs: their old household, otherwise the community); a household nobody lives in any more passes to the community.</summary>
+        // ------------------------------------------------------------------ Family Life: households and death
+
+        /// <summary>
+        /// Family Life decides who lives where and who is kin; the ledger owns the money. Someone leaving a household takes an equal share of its silver and debts to wherever they went (their new
+        /// household if they joined one in the same sweep, otherwise their own account), so the totals never change and a caravan party's household account is not swept away. A death settles the
+        /// person's own account to kin. Every step has its own key, so Family Life reconciling again cannot repeat it.
+        /// </summary>
+        public static void OnFamilyEvents(FamilyComponent c, IList<FamilyEvent> events, int now)
+        {
+            var r = c.Registry; var l = r.Ledger(); int today = Today();
+            var died = new HashSet<int>(events.Where(e => e.Kind == FamilyEventKind.Died).Select(e => e.A));
+            var leaves = events.Where(e => e.Kind == FamilyEventKind.HouseholdLeft && !died.Contains(e.A) && r.GetPerson(e.A)?.Presence != Presence.Dead).ToList();
+            for (int i = 0; i < leaves.Count; i++)
+            {
+                var e = leaves[i]; string from = Ledger.IdFor(AccountKind.Household, e.B);
+                if (l.Get(from) == null || l.Get(from).Closed) continue;
+                int remaining = r.GetHousehold(e.B)?.ResidentIds.Count(id => r.GetPerson(id)?.Presence != Presence.Dead) ?? 0;
+                int den = remaining + leaves.Skip(i).Count(x => x.B == e.B);
+                var joined = events.FirstOrDefault(x => x.Kind == FamilyEventKind.HouseholdJoined && x.A == e.A);
+                string to = joined != null ? Ledger.IdFor(AccountKind.Household, joined.B) : PersonAccount(r, e.A);
+                if (joined != null) l.Ensure(AccountKind.Household, joined.B);
+                if (to == from) continue;
+                l.TransferShare(from, to, 1, Math.Max(1, den), "hl:" + e.A + ":" + e.B + ":" + e.Tick, today);
+            }
+            foreach (int id in died) SettleDeath(r, l, id, today);
+        }
+
+        /// <summary>Heirs in Family Life's own order: spouses, then children, then parents, then siblings, then nobody (the community). A juvenile heir's share goes to their household.</summary>
+        internal static List<string> HeirAccounts(FamilyRegistry r, int deceased)
+        {
+            var p = r.GetPerson(deceased); if (p == null) return new List<string>();
+            Func<IEnumerable<int>, List<string>> accounts = ids => ids.Select(r.GetPerson).Where(x => x != null && x.InColony && x.Id != deceased).Select(x => x.HouseholdId > 0 ? Ledger.IdFor(AccountKind.Household, x.HouseholdId) : Ledger.IdFor(AccountKind.Person, x.Id)).Distinct().ToList();
+            var tier = accounts(p.SpouseIds);
+            if (tier.Count == 0) tier = accounts(r.ChildrenOf(deceased));
+            if (tier.Count == 0) tier = accounts(p.ParentIds);
+            if (tier.Count == 0) tier = accounts(r.SiblingsOf(deceased));
+            return tier;
+        }
+
+        private static void SettleDeath(FamilyRegistry r, Ledger l, int id, int today)
+        {
+            string acct = Ledger.IdFor(AccountKind.Person, id); if (l.Get(acct) == null || l.Get(acct).Closed) return;
+            var heirs = HeirAccounts(r, id);
+            foreach (var h in heirs) { var a = l.Get(h); if (a == null) l.Ensure(h.StartsWith("h:") ? AccountKind.Household : AccountKind.Person, int.Parse(h.Substring(2))); }
+            l.SettleEstate(acct, heirs, "estate:" + acct, today);
+        }
+
+        /// <summary>The safety net for a death the event stream missed (a load, a mod that was off): every person recorded dead who still has an open account settles once, by the same rule.</summary>
         private static void Estates(FamilyRegistry r, Ledger l, int today)
         {
-            foreach (var a in l.Accounts.Where(x => !x.Closed && x.Kind != AccountKind.Community).ToList())
-            {
-                if (a.Kind == AccountKind.Person)
-                {
-                    var p = r.GetPerson(a.Owner);
-                    if (p == null || p.Presence != Presence.Dead) continue;
-                    var heirs = new List<string>();
-                    var h = r.GetHousehold(p.LastHouseholdId); if (h != null && h.ResidentIds.Any(i => i != a.Owner && r.GetPerson(i)?.InColony == true)) { l.Ensure(AccountKind.Household, h.Id); heirs.Add(Ledger.IdFor(AccountKind.Household, h.Id)); }
-                    l.SettleEstate(a.Id, heirs, "estate:" + a.Id, today);
-                }
-                else if (a.Kind == AccountKind.Household)
-                {
-                    var h = r.GetHousehold(a.Owner);
-                    if (h == null || !h.ResidentIds.Any(i => r.GetPerson(i)?.InColony == true)) l.SettleEstate(a.Id, null, "estate:" + a.Id, today);
-                }
-            }
+            foreach (var a in l.Accounts.Where(x => !x.Closed && x.Kind == AccountKind.Person).ToList())
+                if (r.GetPerson(a.Owner)?.Presence == Presence.Dead) SettleDeath(r, l, a.Owner, today);
         }
 
         // ------------------------------------------------------------------ taxation

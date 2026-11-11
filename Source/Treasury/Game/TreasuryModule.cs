@@ -36,6 +36,7 @@ namespace FamilyLife
 
             FamilyFramework.TradeCompleted.Add("wils.treasury.trade", Id, TreasuryService.OnTrade);
             FamilyFramework.SilverReceived.Add("wils.treasury.reward", Id, TreasuryService.OnSilver);
+            FamilyFramework.FamilyEventsApplied.Add("wils.treasury.family", Id, TreasuryService.OnFamilyEvents);
             FamilyFramework.WorkReported.Add("wils.treasury.work", Id, TreasuryService.OnWork);
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.periodic", ModuleId = Id, Interval = 2500, Run = TreasuryService.Periodic });
             FamilyFramework.Roster.Register(new WorkItem { Id = "wils.treasury.tax", ModuleId = Id, Interval = 1500, Run = TreasuryService.TaxPass });

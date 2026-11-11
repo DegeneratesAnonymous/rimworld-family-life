@@ -150,6 +150,7 @@ namespace FamilyLife
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
                 EstateDriver.OnFamilyEvents(this, events, now);
+                foreach (var listener in FamilyFramework.FamilyEventsApplied.Enabled()) { try { listener(this, events, now); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A family-event listener was skipped: " + ex.Message); } }
                 if (forceReconcile) FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)
                     GriefApplier.Apply(griefs, TryGetPawn);

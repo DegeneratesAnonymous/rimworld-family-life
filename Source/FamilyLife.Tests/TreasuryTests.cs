@@ -86,7 +86,7 @@ namespace FamilyLife.Tests
             var l = Funded((AccountKind.Person, 1, 100), (AccountKind.Person, 2, 0), (AccountKind.Person, 3, 0));
             var d1 = l.OpenDebt(P(1), Ledger.CommunityId, DebtKind.Tax, 30, 5, "t"); var d2 = l.OpenDebt(P(1), P(3), DebtKind.Loan, 500, 8, "loan");
             Assert.Equal(LedgerResult.Ok, l.SettleEstate(P(1), new[] { P(2), P(3) }, "die1", 10));
-            Assert.Equal(DebtStatus.Paid, l.DebtById(d1.Id).Status); Assert.Equal(DebtStatus.WrittenOff, l.DebtById(d2.Id).Status);          // the loan could only be paid in part
+            Assert.Equal(DebtStatus.Paid, l.DebtById(d1.Id).Status); Assert.True(l.DebtById(d2.Id).Active); Assert.Equal(P(2), l.DebtById(d2.Id).Debtor); Assert.Equal(430, l.DebtById(d2.Id).Outstanding);          // the unpaid part of the loan passes to the first heir; it is never erased
             Assert.True(l.Get(P(1)).Closed); Assert.Equal(0, l.Balance(P(1))); Assert.True(l.Conserved);
             Assert.Equal(LedgerResult.Duplicate, l.SettleEstate(P(1), new[] { P(2) }, "die1", 10));
         }
@@ -426,6 +426,102 @@ namespace FamilyLife.Tests
             var r = new FamilyRegistry(); var l = r.Ledger(); l.Ensure(AccountKind.Person, 3); l.Receive("p:3", 77, TxKind.Income, "k", 1);
             var back = SaveSim.Reload(r);
             Assert.True(back.Shared.Has(Ledger.StateId)); Assert.Equal(77, back.Ledger().Balance("p:3"));          // only the owning module decodes it; the framework just carries it
+        }
+    }
+}
+
+namespace FamilyLife.Tests
+{
+    public class TreasuryFamilyIntegrationTests
+    {
+        private static string H(int id) => Ledger.IdFor(AccountKind.Household, id);
+        private static string P(int id) => Ledger.IdFor(AccountKind.Person, id);
+
+        [Fact] public void Leaving_a_household_moves_a_share_of_silver_and_debt_and_preserves_both_totals()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Household, 1, 300)); l.Ensure(AccountKind.Household, 2);
+            l.OpenDebt(H(1), Ledger.CommunityId, DebtKind.Tax, 90, 5, "tax"); l.OpenDebt(Ledger.CommunityId, H(1), DebtKind.Wage, 30, 5, "owed to the house");
+            long claims = l.TotalClaims; int liab = l.Debts.Where(d => d.Active).Sum(d => d.Outstanding);
+            Assert.Equal(LedgerResult.Ok, l.TransferShare(H(1), H(2), 1, 3, "k1", 4));
+            Assert.Equal(200, l.Balance(H(1))); Assert.Equal(100, l.Balance(H(2)));
+            Assert.Equal(60, l.Liabilities(H(1))); Assert.Equal(30, l.Liabilities(H(2)));
+            Assert.Equal(claims, l.TotalClaims); Assert.Equal(liab, l.Debts.Where(d => d.Active).Sum(d => d.Outstanding)); Assert.True(l.Conserved);
+            Assert.Equal(LedgerResult.Duplicate, l.TransferShare(H(1), H(2), 1, 3, "k1", 4)); Assert.Equal(100, l.Balance(H(2)));          // Family Life reconciling again changes nothing
+        }
+
+        [Fact] public void The_last_person_to_leave_takes_everything_so_a_dissolved_household_keeps_nothing_behind()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Household, 1, 101)); l.OpenDebt(H(1), Ledger.CommunityId, DebtKind.Tax, 7, 5, "t");
+            l.Ensure(AccountKind.Person, 9); l.TransferShare(H(1), P(9), 1, 1, "last", 3);
+            Assert.Equal(0, l.Balance(H(1))); Assert.Equal(101, l.Balance(P(9))); Assert.Equal(0, l.Liabilities(H(1))); Assert.Equal(7, l.Liabilities(P(9)));
+        }
+
+        [Fact] public void Equal_sequential_shares_across_several_leavers_add_up_to_the_whole()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Household, 1, 100)); foreach (var p in new[] { 1, 2, 3, 4 }) l.Ensure(AccountKind.Person, p);
+            l.TransferShare(H(1), P(1), 1, 4, "a", 1); l.TransferShare(H(1), P(2), 1, 3, "b", 1); l.TransferShare(H(1), P(3), 1, 2, "c", 1); l.TransferShare(H(1), P(4), 1, 1, "d", 1);
+            Assert.Equal(new[] { 25, 25, 25, 25 }, new[] { 1, 2, 3, 4 }.Select(i => l.Balance(P(i))).ToArray()); Assert.Equal(0, l.Balance(H(1)));
+        }
+
+        [Fact] public void A_death_never_erases_what_the_dead_owed_and_heirs_receive_the_silver_once()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Person, 1, 50), (AccountKind.Household, 7, 0)); var debt = l.OpenDebt(P(1), Ledger.CommunityId, DebtKind.Loan, 200, 9, "loan");
+            Assert.Equal(LedgerResult.Ok, l.SettleEstate(P(1), new[] { H(7) }, "e", 5)); Assert.Equal(LedgerResult.Duplicate, l.SettleEstate(P(1), new[] { H(7) }, "e", 5));
+            Assert.Equal(0, l.Balance(H(7)));                                                    // the 50 went to the creditor first
+            Assert.Equal(H(7), l.DebtById(debt.Id).Debtor); Assert.Equal(150, l.DebtById(debt.Id).Outstanding); Assert.True(l.Conserved);
+        }
+
+        [Fact] public void Money_with_no_heir_goes_to_the_community_and_a_private_debt_with_no_heir_falls_to_it_too()
+        {
+            var l = TreasuryLedgerTests.Funded((AccountKind.Person, 1, 40), (AccountKind.Person, 2, 0)); var d = l.OpenDebt(P(1), P(2), DebtKind.Loan, 100, 9, "loan");
+            l.SettleEstate(P(1), new string[0], "e", 3);
+            Assert.Equal(0, l.Balance(Ledger.CommunityId)); Assert.Equal(40, l.Balance(P(2))); Assert.Equal(Ledger.CommunityId, l.DebtById(d.Id).Debtor); Assert.Equal(60, l.DebtById(d.Id).Outstanding);
+        }
+    }
+
+    public class SilverReconcilerTests
+    {
+        [Fact] public void An_existing_colonys_silver_is_recorded_once_for_the_community_and_never_distributed()
+        {
+            var st = new TreasuryState(); var d = SilverReconciler.Decide(st, 0, 800, 0, 100, true);
+            Assert.Equal(ReconcileAction.AdoptSurplus, d.Action); Assert.Equal(800, d.Amount); Assert.True(d.Initial);
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 800, 800, 800, 101, true).Action);
+        }
+
+        [Fact] public void Later_unclaimed_silver_is_adopted_only_after_it_has_stayed_a_day_and_only_the_part_that_stayed()
+        {
+            var st = new TreasuryState { Initialized = true };
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 100, 160, 100, 10, true).Action);          // just appeared: maybe a quest drop landing
+            var d = SilverReconciler.Decide(st, 100, 140, 100, 11, true);                                              // 40 of it stayed
+            Assert.Equal(ReconcileAction.AdoptSurplus, d.Action); Assert.Equal(40, d.Amount);
+        }
+
+        [Fact] public void A_shortfall_is_written_off_only_after_days_only_from_the_community_and_never_from_personal_accounts()
+        {
+            var st = new TreasuryState { Initialized = true };
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 300, 150, 10, true).Action);
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 300, 150, 12, true).Action);
+            var d = SilverReconciler.Decide(st, 500, 300, 150, 13, true);
+            Assert.Equal(ReconcileAction.WriteOffLoss, d.Action); Assert.Equal(150, d.Amount); Assert.Equal(50, d.Discrepancy);          // 50 stays visible: personal claims are not erased to hide it
+        }
+
+        [Fact] public void A_recovered_shortfall_is_forgotten_and_a_written_off_loss_conserves_the_ledger()
+        {
+            var st = new TreasuryState { Initialized = true }; SilverReconciler.Decide(st, 500, 300, 150, 10, true);
+            Assert.Equal(ReconcileAction.None, SilverReconciler.Decide(st, 500, 500, 150, 11, true).Action); Assert.Equal(0, st.ShortSinceDay);
+            var l = TreasuryLedgerTests.Funded((AccountKind.Community, 0, 150), (AccountKind.Person, 1, 350)); Assert.Equal(LedgerResult.Ok, l.RecordLoss(Ledger.CommunityId, 150, "loss", 20, "stolen")); Assert.True(l.Conserved); Assert.Equal(350, l.TotalClaims);
+        }
+    }
+
+    public class TreasuryAbsenceTests
+    {
+        [Fact] public void The_framework_attributes_the_treasury_payloads_to_the_absent_module_and_keeps_them()
+        {
+            var r = new FamilyRegistry(); r.Ledger().Receive(Ledger.CommunityId, 55, TxKind.Income, "k", 1); r.Payroll().Accrue(3, "x", 1, 1, "w"); r.Tax().RatePercent = 9;
+            var back = SaveSim.Reload(r);
+            var absent = AbsentModules.Find(back, id => id == ModuleCatalog.FrameworkId).FirstOrDefault(m => m.ModuleId == "wils.treasury");
+            Assert.NotNull(absent); Assert.True(absent.Payloads.Count >= 3);
+            var once = SaveSim.Reload(back); Assert.Equal(55, once.Ledger().Balance(Ledger.CommunityId)); Assert.Equal(9, once.Tax().RatePercent); Assert.Equal(6, once.Payroll().PendingFor(3));
         }
     }
 }

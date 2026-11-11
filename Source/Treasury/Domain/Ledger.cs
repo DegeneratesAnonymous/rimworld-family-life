@@ -175,6 +175,32 @@ namespace FamilyLife.Domain
         }
 
         /// <summary>
+        /// Someone leaves a shared account taking <paramref name="num"/>/<paramref name="den"/> of it: that fraction of its silver moves, and the same fraction of every debt it owes and is owed
+        /// moves with it (split into a new obligation, never copied), so the total money and the total liabilities are exactly what they were. Applied once per key. Taking the last share
+        /// (<c>num == den</c>) moves everything.
+        /// </summary>
+        public LedgerResult TransferShare(string from, string to, int num, int den, string key, int day)
+        {
+            if (Get(from) == null || Get(to) == null || from == to || den <= 0 || num <= 0 || num > den) return LedgerResult.Invalid;
+            if (key != null && keys.ContainsKey(key)) return LedgerResult.Duplicate;
+            int silver = (int)((long)Balance(from) * num / den);
+            if (silver > 0) { var r = Transfer(from, to, silver, TxKind.Transfer, key, day, "share of household"); if (r != LedgerResult.Ok) return r; } else if (key != null) keys[key] = day;
+            foreach (var d in debts.Where(x => x.Active && (x.Debtor == from || x.Creditor == from)).ToList())
+            {
+                int part = num == den ? d.Outstanding : (int)((long)d.Outstanding * num / den);
+                if (part <= 0) continue;
+                var moved = new Debt { Id = NextDebtId++, Debtor = d.Debtor == from ? to : d.Debtor, Creditor = d.Creditor == from ? to : d.Creditor, Kind = d.Kind, Original = part, Outstanding = part, DueDay = d.DueDay, NextDueDay = d.NextDueDay, Installment = d.Installment, EveryDays = d.EveryDays, FamilyRef = d.FamilyRef, Origin = (d.Origin ?? "") + " (share)", Status = d.Status };
+                d.Outstanding -= part; if (d.Outstanding == 0) d.Status = DebtStatus.Paid;
+                if (moved.Debtor == moved.Creditor) continue;          // both sides ended up the same account: the obligation cancels itself
+                debts.Add(moved);
+            }
+            return LedgerResult.Ok;
+        }
+
+        /// <summary>Silver that is gone (stolen, destroyed, burned). Recorded as an outflow from the named account so the ledger stays conserved and the loss is visible in the history.</summary>
+        public LedgerResult RecordLoss(string account, int amount, string key, int day, string memo) => Spend(account, amount, TxKind.Correction, key, day, memo);
+
+        /// <summary>
         /// A person dies. Their debts are paid from what they had, oldest first; whatever cannot be paid is written off (a debt does not pass to heirs unless the estate system makes a separate
         /// obligation); what remains is shared equally among the heirs, the odd silver going to the first. The account is closed and points at its first heir.
         /// </summary>
@@ -188,7 +214,10 @@ namespace FamilyLife.Domain
             {
                 int pay = Math.Min(left, d.Outstanding);
                 if (pay > 0) { moves.Add(new Move(deceased, d.Creditor, pay, "estate debt " + d.Id)); left -= pay; d.Outstanding -= pay; d.Payments.Add(day + ":" + pay); }
-                if (d.Outstanding == 0) d.Status = DebtStatus.Paid; else { d.Status = DebtStatus.WrittenOff; d.Outstanding = 0; }
+                if (d.Outstanding == 0) d.Status = DebtStatus.Paid;
+                else if (live.Count > 0) { d.Debtor = live[0]; d.Origin = (d.Origin ?? "") + " (inherited)"; if (d.Creditor == d.Debtor) { d.Status = DebtStatus.Forgiven; d.Outstanding = 0; } }          // an unpaid obligation passes to the first heir; it is never erased
+                else if (d.Creditor == CommunityId) { d.Status = DebtStatus.Forgiven; d.Outstanding = 0; }          // nobody to inherit and the community is the creditor: it forgives
+                else { d.Debtor = CommunityId; d.Origin = (d.Origin ?? "") + " (estate with no heir)"; }          // an unpaid private debt with no heir falls to the community, so the creditor is not silently wronged
             }
             if (left > 0)
             {

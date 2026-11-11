@@ -64,6 +64,8 @@
   <WFL_Tr_Resolve>Resolve</WFL_Tr_Resolve>
   <WFL_Tr_TxLine>Day {0}: {1}, {2} silver, {3} to {4}</WFL_Tr_TxLine>
   <WFL_Tr_Outside>outside</WFL_Tr_Outside>
+  <WFL_Tr_Adopted>{0} silver that was already in storage has been recorded as community funds. Nothing was given to anyone.</WFL_Tr_Adopted>
+  <WFL_Tr_Lost>{0} silver that the accounts claimed is no longer in storage (stolen, destroyed or lost). It was removed from the community treasury, and the loss is in the transaction history.</WFL_Tr_Lost>
   <WFL_Tr_Payday>Payday: {0} silver was due and {1} was paid.{2}</WFL_Tr_Payday>
   <WFL_Tr_RewardShared>A reward of {0} silver was shared: the community kept {1}.</WFL_Tr_RewardShared>
   <WFL_Tr_CollectionNote>{0} {1}.</WFL_Tr_CollectionNote>

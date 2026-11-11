@@ -55,6 +55,13 @@ namespace FamilyLife.Framework
                     var e = Entry(who); if (!e.Payloads.Contains(pid)) e.Payloads.Add(pid);
                 }
             }
+            if (registry.Shared?.Ids != null)          // state a module keeps on the community itself (accounts, wages): a module-owned id has the form wils.<module>.<name>; the two-part ids belong to the framework
+                foreach (var pid in registry.Shared.Ids)
+                {
+                    string who = pid.Split('.').Length >= 3 ? OwnerOfPayload(pid) : null;
+                    if (who == null || isInstalled(who)) continue;
+                    var e = Entry(who); if (!e.Payloads.Contains(pid)) e.Payloads.Add(pid);
+                }
             foreach (var rec in registry.Lifecycle.Records)
                 if (!string.IsNullOrEmpty(rec.ModuleId) && !isInstalled(rec.ModuleId)) Entry(rec.ModuleId);
             foreach (var e in found.Values) { e.State = registry.Lifecycle.StateOf(e.ModuleId); e.Posts.Sort(); e.Payloads.Sort(StringComparer.Ordinal); }
