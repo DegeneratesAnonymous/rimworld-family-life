@@ -188,6 +188,12 @@ namespace FamilyLife.Tests
             foreach (var k in configs) { output.WriteLine($"-- retention {k.pct}%, ordinary {k.o}x{k.ou} cap {k.oc}, professional {k.p}x{k.pu} --"); foreach (var c in Colonies) foreach (var (label, income) in Incomes) Run(With(c, label, income, k.pct, k.o, k.ou, k.oc, k.p, k.pu), true, output); }
         }
 
+        [Fact] public void The_new_defaults_are_measured_for_every_colony_size_and_income_level()
+        {
+            output.WriteLine("-- NEW defaults: retention 50%, ordinary 1 silver, 1 unit, cap 1/day; professionals by level (avg 3), 2 units/day --");
+            foreach (var c in Colonies) foreach (var (label, income) in Incomes) Run(With(c, label, income, 50, 1, 1, 1, 3, 2), true, output);
+        }
+
         [Fact] public void A_colony_with_no_income_owes_everything_and_creates_no_silver()
         {
             var r = Run(With(Colonies[1], "no income", 0, 25, 1, 3, 8, 4, 4), true, output);

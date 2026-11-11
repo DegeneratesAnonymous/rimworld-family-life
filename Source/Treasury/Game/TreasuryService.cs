@@ -141,6 +141,7 @@ namespace FamilyLife
                 if (rep.TotalDue <= 0) continue;
                 Messages.Message("WFL_Tr_Payday".Translate(rep.TotalDue, rep.TotalPaid, rep.Shortfall > 0 ? (string)"WFL_Tr_ShortBy".Translate(rep.Shortfall) : ""), MessageTypeDefOf.NeutralEvent, false);
                 TreasuryOffice.Add(c, "payday|" + rep.Payday, FinancialOp.Payday, true);
+                if (rep.Shortfall > 0) WageStrain(c, r, rep);
             }
             Estates(r, l, today);
             l.Prune(today);
@@ -206,6 +207,29 @@ namespace FamilyLife
             var heirs = HeirAccounts(r, id);
             foreach (var h in heirs) { var a = l.Get(h); if (a == null) l.Ensure(h.StartsWith("h:") ? AccountKind.Household : AccountKind.Person, int.Parse(h.Substring(2))); }
             l.SettleEstate(acct, heirs, "estate:" + acct, today);
+        }
+
+        /// <summary>
+        /// What prolonged nonpayment does to people, through Family Life's own relationship opinions rather than a flat mood penalty. A worker unpaid for two paydays in a row holds it against the
+        /// Treasurer; after four it is a long grievance. The household of a worker who has gone three paydays without full pay feels the pinch. Community leadership hears one summary complaint per
+        /// payday. Nothing here changes any balance or debt: the wages are still owed in full.
+        /// </summary>
+        private static void WageStrain(FamilyComponent c, FamilyRegistry r, PayrollReport rep)
+        {
+            var book = r.Payroll(); var treasurer = Holders(r, TreasuryRoles.Treasurer).Select(c.TryGetPawn).FirstOrDefault(p => p != null);
+            var waiting = book.WorkersMissing(2); if (waiting.Count == 0) return;
+            string def2 = "WFL_WagesOwed", def4 = "WFL_WagesOwedLong"; int households = 0;
+            foreach (int id in waiting)
+            {
+                var pawn = c.TryGetPawn(id); if (pawn?.needs?.mood?.thoughts?.memories == null) continue; int missed = book.Missed(id);
+                var def = DefDatabase<ThoughtDef>.GetNamedSilentFail(missed >= 4 ? def4 : def2);
+                if (def != null && treasurer != null && treasurer != pawn) pawn.needs.mood.thoughts.memories.TryGainMemory(def, treasurer);
+                if (missed < 3) continue;
+                var home = r.GetHousehold(r.GetPerson(id)?.HouseholdId ?? 0); var strain = DefDatabase<ThoughtDef>.GetNamedSilentFail("WFL_HouseholdStrain");
+                if (home == null || strain == null) continue; households++;
+                foreach (int other in home.ResidentIds) { var p = c.TryGetPawn(other); if (p != null && p != pawn && p.needs?.mood?.thoughts?.memories != null) p.needs.mood.thoughts.memories.TryGainMemory(strain); }
+            }
+            Messages.Message("WFL_Tr_WageComplaint".Translate(waiting.Count, r.Ledger().Debts.Where(d => d.Active && d.Kind == DebtKind.Wage).Sum(d => d.Outstanding)), MessageTypeDefOf.NegativeEvent, false);
         }
 
         /// <summary>The safety net for a death the event stream missed (a load, a mod that was off): every person recorded dead who still has an open account settles once, by the same rule.</summary>

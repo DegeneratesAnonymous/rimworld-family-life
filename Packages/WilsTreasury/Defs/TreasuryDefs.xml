@@ -28,6 +28,27 @@
     <stackLimit>1</stackLimit>
     <stages><li><label>would not pay what is owed</label><baseOpinionOffset>-4</baseOpinionOffset></li></stages>
   </ThoughtDef>
+  <!-- Prolonged nonpayment, expressed as opinion of whoever keeps the books and as strain on the worker's household. The wages themselves stay owed in full. -->
+  <ThoughtDef>
+    <defName>WFL_WagesOwed</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>8</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>wages still unpaid</label><baseOpinionOffset>-5</baseOpinionOffset></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_WagesOwedLong</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>12</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>owed wages for a long time</label><baseOpinionOffset>-12</baseOpinionOffset></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_HouseholdStrain</defName>
+    <durationDays>8</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>family short of money</label><description>Someone in my family has not been paid what they are owed.</description><baseMoodEffect>-3</baseMoodEffect></li></stages>
+  </ThoughtDef>
   <!-- The Treasurer sits at the Treasury chair to deal with waiting financial business. Nothing is decided here; the books were settled when the operation happened. -->
   <JobDef>
     <defName>WFL_TreasuryOffice</defName>

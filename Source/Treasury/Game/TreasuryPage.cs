@@ -80,6 +80,10 @@ namespace FamilyLife
             y = Line(r, y, "WFL_Tr_CommunityFunds".Translate(l.Balance(Ledger.CommunityId)));
             int physical = TreasuryService.PhysicalSilver(map);
             y = Line(r, y, "WFL_Tr_Claims".Translate(l.TotalClaims, physical));
+            y = Line(r, y, "WFL_Tr_Owned".Translate(l.TotalClaims, l.TotalAvailable, l.Unbacked), l.Unbacked > 0);
+            if (l.Unbacked > 0) y = Line(r, y, "WFL_Tr_Bearer".Translate(l.CommunityShare, l.SpilledToOwners), true);
+            int owedWages = l.Debts.Where(d => d.Active && d.Kind == DebtKind.Wage).Sum(d => d.Outstanding);
+            if (owedWages > 0) y = Line(r, y, "WFL_Tr_WagesOwedTotal".Translate(owedWages, pay.WorkersMissing(2).Count), true);
             if (l.Unbacked > 0) y = Line(r, y, "WFL_Tr_Discrepancy".Translate(l.Unbacked, l.TotalAvailable), true);
             else if (physical > l.TotalClaims + 3) y = Line(r, y, "WFL_Tr_Surplus".Translate(physical - l.TotalClaims));
             var personal = l.Accounts.Where(a => a.Kind != AccountKind.Community && !a.Closed).ToList();
@@ -135,6 +139,28 @@ namespace FamilyLife
         {
             var reg = c.Registry; var pay = reg.Payroll(); var pol = pay.Policy;
             y = Line(r, y, "WFL_Tr_PayrollHelp".Translate(), true) + 4f;
+            y = Heading(r, y + 4f, "WFL_Tr_FundingTitle".Translate());
+            foreach (PayrollFunding f in Enum.GetValues(typeof(PayrollFunding))) { if (Widgets.RadioButtonLabeled(new Rect(4f, y, r.width - 16f, 24f), ("WFL_Tr_Funding_" + f).Translate(), pol.Funding == f)) pol.Funding = f; y += 26f; }
+            y = Line(r, y, "WFL_Tr_FundingNote".Translate(), true);
+            var roles = CareerService.Professions.All.Where(x => FamilyFramework.Catalog.IsEnabled(x.ModuleId)).OrderBy(x => x.Career, StringComparer.Ordinal).ThenBy(x => x.Level).ThenBy(x => x.Id, StringComparer.Ordinal).ToList();
+            if (pol.Funding == PayrollFunding.EssentialFirst)
+                foreach (var role in roles) { bool ess = pol.Essential.Contains(role.Id); Widgets.CheckboxLabeled(new Rect(24f, y, 360f, 24f), "WFL_Tr_Essential".Translate() + ": " + CareerService.TitleOf(role, reg), ref ess); if (ess) pol.Essential.Add(role.Id); else pol.Essential.Remove(role.Id); y += 26f; }
+            if (pol.Funding == PayrollFunding.Manual)
+            {
+                foreach (var role in roles) if (!pol.Order.Contains(role.Id)) pol.Order.Add(role.Id);
+                for (int i = 0; i < pol.Order.Count; i++)
+                {
+                    var rl = roles.FirstOrDefault(x => x.Id == pol.Order[i]); Widgets.Label(new Rect(24f, y, 300f, 24f), (i + 1) + ". " + (rl == null ? pol.Order[i] : CareerService.TitleOf(rl, reg)));
+                    if (i > 0 && Widgets.ButtonText(new Rect(330f, y, 30f, 22f), "▲")) { var t = pol.Order[i]; pol.Order[i] = pol.Order[i - 1]; pol.Order[i - 1] = t; }
+                    if (i < pol.Order.Count - 1 && Widgets.ButtonText(new Rect(364f, y, 30f, 22f), "▼")) { var t = pol.Order[i]; pol.Order[i] = pol.Order[i + 1]; pol.Order[i + 1] = t; }
+                    y += 26f;
+                }
+            }
+            if (pay.WorkersMissing(2).Count > 0)
+            {
+                if (Widgets.ButtonText(new Rect(4f, y, 320f, 24f), "WFL_Tr_Renegotiate".Translate())) foreach (var k in pol.Rates.Keys.ToList()) pol.Rates[k] = Math.Max(1, pol.Rates[k] * 3 / 4);
+                y = Line(r, y + 26f, "WFL_Tr_RenegotiateNote".Translate(), true);
+            }
             foreach (var role in CareerService.Professions.All.Where(x => FamilyFramework.Catalog.IsEnabled(x.ModuleId)).OrderBy(x => x.Career, StringComparer.Ordinal).ThenBy(x => x.Level).ThenBy(x => x.Id, StringComparer.Ordinal))
                 y = RateRow(r, y, role.Id, CareerService.TitleOf(role, reg));
             y = Heading(r, y + 6f, "WFL_Tr_VanillaWork".Translate());

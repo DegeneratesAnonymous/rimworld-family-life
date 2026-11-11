@@ -101,3 +101,41 @@ These scenarios give every pawn the daily ordinary maximum and each professional
 * `LabourReport.TargetDead`, the delivery-job exclusion and the office visit change live in game code that the offline tests cannot execute; they compile on both versions but are unverified in the game.
 * Interrupted jobs are excluded by the existing `Succeeded` condition; partial construction and work whose effect happens before the job ends are only approximated by the per-target daily key.
 * Wage defaults are not tuned. Treat wage inflation as the main runtime risk and watch the "waiting" and debt totals in a real colony.
+
+## 9. Third pass: economy, funding policy and insolvency semantics
+
+Offline only (1,360 tests, both 1.6 and 1.7 packages build and pass the package checks). Nothing was run in RimWorld.
+
+### Corrections to the previous report
+* **"Half value" was Treasurer experience only.** `TreasuryXp.AwayFromOffice` halves *career points* for an office item that expired without a visit. No silver, balance, claim or proceeds is ever reduced: rewards and trades settle in full in `OnSilver`/`OnTrade` before any office item exists, and `TreasuryOffice.cs` contains no ledger access. Tests: `TreasuryOfficeNeverDecidesMoneyTests`.
+* **The 120/240 arrears caps are removed.** Unpaid wages are never capped or forgiven; a worker can be owed any amount. Test: 120 days unpaid owes exactly what was earned. Earnings caps and the once-per-key work dedupe stay.
+
+### Fixes
+* **Funding policy (player-chosen, Payroll page):** proportional (default; everyone gets the same share, remainder owed), essential professions first, or a manual priority order. Payroll draws only on the community treasury; household and personal accounts are never touched (tested). Wage debts carry their tier and persist.
+* **Consequences of nonpayment** (no generic mood penalty): after 2 missed paydays a worker holds an opinion against the Treasurer (`WFL_WagesOwed`, `-5`), after 4 a long grievance (`-12`); after 3 the worker's household takes a small mood hit (`WFL_HouseholdStrain`); leadership gets one complaint message per short payday with the amount owed. The Payroll page offers an optional "-25% rates from now on" renegotiation that only affects future work. Not implemented: repayment demands as separate events. The thoughts and the complaint run in game code and are untested in the game.
+* **Bug found by the simulation accounting identity:** a worker holding two wage debts of the same kind (one inherited) only had one updated, so earned wages could disappear from the books. Payments now apply to every matching debt.
+* **Insolvency semantics.** With 1,000 claims and 300 silver: ownership (`Balance`) never changes; spendable (`Available`) is reduced; the shortage is borne **by the community treasury first** (up to its balance) and only the remainder is spread pro rata over households and people; the total spendable never exceeds physical silver; Payroll, Trade and Transfer cannot spend more than `Available`, so the same silver cannot be spent twice through two accounts; recovered silver restores spending at once; `WriteDown` (explicit, no UI yet) takes the loss in the same order. The Overview page now shows owned / spendable / missing silver, who bears it, and wages owed.
+* **Economy defaults changed:** treasury keeps 50% of rewards and shared trade profit (was 25%); ordinary labour is a base wage of 1 silver, one unit and at most 1 silver per day (was up to 8); professionals are paid by level (entry 2, mid 3, specialist 4 per unit, 2 units a day, pawn cap 10/day, was a flat 4 x 4). Existing saves keep their stored caps and retention. Paydays stay on the 1st and 8th.
+
+### Simulation (180 days, real ledger/payroll/income code, no debt cap, no silver invented)
+Income per pawn per day is an assumption, not a measurement: low 0.5, typical 2.0, prosperous 6.0. Every run keeps `Conserved` and satisfies earned = paid + still owed. "Cover" is wages paid / wages earned. Wages are the 3-category ordinary base plus professionals (about 25% of pawns).
+
+| Colony | Income level | External in | To treasury | Earned | Paid | Owed | Cover |
+|---|---|---|---|---|---|---|---|
+| Tribal 5 | low | 450 | 300 | 1,440 | 300 | 1,140 | 21% |
+| Tribal 5 | typical | 1,800 | 900 | 1,440 | 900 | 540 | 62% |
+| Tribal 5 | prosperous | 5,400 | 2,700 | 1,440 | 1,432 | 8 | 99% (stable) |
+| Ordinary 16 | low | 1,395 | 930 | 4,950 | 930 | 4,020 | 19% |
+| Ordinary 16 | typical | 5,580 | 2,790 | 4,950 | 2,790 | 2,160 | 56% |
+| Ordinary 16 | prosperous | 16,740 | 8,370 | 4,950 | 4,923 | 27 | 99% (stable) |
+| Large 42 | low | 3,690 | 2,460 | 12,780 | 2,460 | 10,320 | 19% |
+| Large 42 | typical | 14,760 | 7,380 | 12,780 | 7,380 | 5,400 | 58% |
+| Large 42 | prosperous | 44,280 | 22,140 | 12,780 | 12,710 | 70 | 99% (stable) |
+
+Reading: with the new defaults the payroll is sustainable only at roughly 3.5 or more silver per pawn per day of outside income (retention 50%). A typical-income colony pays about 60% and owes the rest; a low-income colony cannot meet payroll and becomes genuinely indebted, as intended. The previous defaults covered 4-13% at low/typical income and 21-39% at prosperous. A wider sweep (retention 30/40/50%, ordinary caps 1-3, professional rates 3-4) is printed by `TreasurySimulationTests`; raising wages or lowering retention always lowered cover, and no configuration made the low-income case sustainable. Small rewards also push more to the treasury than the nominal percent because each resident's share rounds down.
+Treasurer experience is about 270-440 points per 180 days; Tax Collector progression is not simulated because collection needs the unlock and is unit-tested only.
+
+### Remaining risks
+* The income levels above are assumptions; real RimWorld silver income is untested. If real income is far lower, expect widespread wage debt and the new consequences to fire often; the main levers are the retention slider, the ordinary base wage and the funding policy.
+* No UI for `WriteDown` yet. The funding page, thoughts, complaint message and Overview lines are compile-checked only.
+* A worker with debt to a closed account is paid to the heir's account; the heir receives the worker's unpaid wages as part of the estate.

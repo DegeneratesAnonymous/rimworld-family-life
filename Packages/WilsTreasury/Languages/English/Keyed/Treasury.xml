@@ -62,6 +62,18 @@
   <WFL_Tr_PastPayments>Recent paydays</WFL_Tr_PastPayments>
   <WFL_Tr_PaydayLine>Day {0}: {1} due, {2} paid{3}</WFL_Tr_PaydayLine>
   <WFL_Tr_ShortBy> (short by {0}, still owed)</WFL_Tr_ShortBy>
+  <WFL_Tr_WageComplaint>{0} workers have not been paid in full for several paydays. {1} silver in wages is owed. They are asking the community leadership to settle it.</WFL_Tr_WageComplaint>
+  <WFL_Tr_FundingTitle>When the treasury cannot cover payroll</WFL_Tr_FundingTitle>
+  <WFL_Tr_Funding_Proportional>Pay everyone the same share; the rest stays owed</WFL_Tr_Funding_Proportional>
+  <WFL_Tr_Funding_EssentialFirst>Essential professions first (tick them below)</WFL_Tr_Funding_EssentialFirst>
+  <WFL_Tr_Funding_Manual>My own order (use the arrows below)</WFL_Tr_Funding_Manual>
+  <WFL_Tr_FundingNote>Payroll only ever uses the community treasury. Household and personal savings are never touched. Unpaid wages stay owed in full.</WFL_Tr_FundingNote>
+  <WFL_Tr_Essential>Essential</WFL_Tr_Essential>
+  <WFL_Tr_Renegotiate>Offer lower rates from now on (-25%)</WFL_Tr_Renegotiate>
+  <WFL_Tr_RenegotiateNote>Only future work is paid at the new rates. Wages already earned stay owed in full.</WFL_Tr_RenegotiateNote>
+  <WFL_Tr_Owned>Owned by accounts: {0}. Can be spent now: {1}. Silver that cannot be found: {2}.</WFL_Tr_Owned>
+  <WFL_Tr_Bearer>The community treasury bears the shortage first ({0} silver). {1} is spread over households and people in proportion to what they own. Nobody loses ownership; if the silver is found, spending is restored.</WFL_Tr_Bearer>
+  <WFL_Tr_WagesOwedTotal>Wages owed to workers: {0} silver ({1} workers unpaid for 2 or more paydays).</WFL_Tr_WagesOwedTotal>
   <WFL_Tr_TaxLocked>Taxation is locked. Assign a qualified Tax Collector (Professions page) to unlock it. Until then the community may keep a share of income, but that is not a tax.</WFL_Tr_TaxLocked>
   <WFL_Tr_TaxRate>Tax on income: {0}%</WFL_Tr_TaxRate>
   <WFL_Tr_TaxLine>{0} owes {1} (due day {2})</WFL_Tr_TaxLine>
