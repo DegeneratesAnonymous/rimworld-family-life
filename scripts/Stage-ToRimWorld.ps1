@@ -1,22 +1,23 @@
-# Builds the mod for 1.6 and 1.7 and copies it into the game's Mods folder so it can be tested.
-# Usage: .\scripts\Stage-ToRimWorld.ps1 [-GameDir "B:\SteamLibrary\steamapps\common\RimWorld"] [-Name WilsFamilyLife]
+# Builds the packages for 1.6 and 1.7 and copies them into the game's Mods folder so they can be tested.
+# Usage: .\scripts\Stage-ToRimWorld.ps1 [-GameDir "B:\SteamLibrary\steamapps\common\RimWorld"] [-Only WilsEducation,WilsCommunityCare] [-FrameworkOnly]
+#   -FrameworkOnly   stages only the framework (the "Framework alone" load test; remove the module folders from Mods first, or they stay loaded)
+#   -Only            stage just these packages (WilsFamilyLife, WilsEducation, WilsCommunityCare); the others already in Mods are left untouched
+# Each package is a Mods folder of its own with its own About.xml. RimWorld must be closed: it keeps the DLLs locked.
 param(
     [string]$GameDir = "B:\SteamLibrary\steamapps\common\RimWorld",
-    [string]$Name = "WilsFamilyLife"
+    [string[]]$Only,
+    [switch]$FrameworkOnly
 )
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$dest = Join-Path $GameDir "Mods\$Name"
-
-foreach ($v in "1.7", "1.6") {
-    dotnet build (Join-Path $repo "Source\FamilyLife") -c Release -p:GameVersion=$v -v q
-    if ($LASTEXITCODE -ne 0) { throw "Build failed for $v" }
+& (Join-Path $PSScriptRoot "Build-Packages.ps1")
+$dist = Join-Path $repo "dist"
+$packages = @("WilsFamilyLife", "WilsEducation", "WilsCommunityCare")
+if ($FrameworkOnly) { $packages = @("WilsFamilyLife") } elseif ($Only) { $packages = $Only }
+foreach ($pkg in $packages) {
+    $dest = Join-Path $GameDir "Mods\$pkg"
+    robocopy (Join-Path $dist $pkg) $dest /MIR /XF PublishedFileId.txt /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "Copy failed for $pkg - is RimWorld still running? Close it (it keeps the mod DLL locked) and run this again." }
+    Write-Host "Staged $pkg to $dest"
 }
-
-New-Item -ItemType Directory -Force $dest | Out-Null
-foreach ($dir in "About", "Defs", "Patches", "Languages", "Textures", "1.6", "1.7") {
-    robocopy (Join-Path $repo $dir) (Join-Path $dest $dir) /MIR /XF PublishedFileId.txt .gitkeep /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "Copy failed for $dir - is RimWorld still running? Close it (it keeps the mod DLL locked) and run this again." }
-}
-Copy-Item (Join-Path $repo "LICENSE") $dest -Force
-Write-Host "Staged to $dest"
+$global:LASTEXITCODE = 0

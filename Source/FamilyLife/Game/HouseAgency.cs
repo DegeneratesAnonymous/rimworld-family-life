@@ -6,10 +6,9 @@ using Verse;
 namespace FamilyLife
 {
     /// <summary>
-    /// How a house's people shape it. Colonists act on their own: a pawn who has earned a place asks to join, a head invites someone they have
-    /// come to trust, a trusted member seeks recognition, the head of a small house proposes uniting with another. Each is the same walk-over-and-talk
-    /// the player can start by hand (select a pawn, right-click another: <see cref="FloatMenuOptionProvider_FamilyHouse"/>), and a pawn the player has
-    /// selected is left alone, so the player is never fighting the colony for the same pawn.
+    /// How a house's people shape it. Generic admission, self-promotion and trust-based house mergers are deliberately absent: membership now
+    /// comes from kinship/marriage or explicit player authority, while a head may still recognize sustained service by appointing a steward.
+    /// A selected pawn and the Perspective Shift avatar are left alone.
     /// </summary>
     internal static class HouseAgency
     {
@@ -51,7 +50,7 @@ namespace FamilyLife
                 foreach (var person in people.InRandomOrder())
                 {
                     var pawn = c.TryGetPawn(person.Id);
-                    if (pawn == null || !pawn.Spawned || Find.Selector.IsSelected(pawn)) continue;
+                    if (pawn == null || !pawn.Spawned || Find.Selector.IsSelected(pawn) || PerspectiveShiftBridge.IsAvatar(pawn)) continue;
                     if (TryAct(c, r, people, person, pawn)) return;     // one thing per sweep keeps a colony from feeling like a committee
                 }
             }
@@ -63,15 +62,19 @@ namespace FamilyLife
             int mine = r.FamilyOf(me.Id);
             bool head = mine != 0 && r.HeadOf(mine) == me.Id;
 
+            if(mine!=0&&r.CanManageHouse(me.Id,mine)&&Rand.Chance(.25f))
+            {
+                var union=r.MarriageAlliances.FirstOrDefault(a=>a.FamilyA==mine&&a.UnionState==HouseUnionState.Eligible);
+                if(union!=null&&MarriageAlliancePlanner.Representative(r,mine)==me.Id&&MarriageAlliancePlanner.StartUnion(c,union,pawn))return true;
+                var consent=r.MarriageAlliances.FirstOrDefault(a=>a.State==MarriageAllianceState.Supported&&
+                    (a.FamilyA==mine&&a.ConsentA==MarriageConsentState.NotAsked||a.FamilyB==mine&&a.ConsentB==MarriageConsentState.NotAsked));
+                if(consent!=null&&MarriageAlliancePlanner.ConsentRepresentative(r,mine,mine==consent.FamilyA?consent.PawnA:consent.PawnB)==me.Id&&MarriageAlliancePlanner.StartConsent(c,consent,pawn))return true;
+                var alliance=r.MarriageAlliances.FirstOrDefault(a=>(a.FamilyA==mine||a.FamilyB==mine)&&a.State==MarriageAllianceState.Opportunity);
+                if(alliance!=null&&MarriageAlliancePlanner.StartNegotiation(c,alliance,pawn))return true;
+            }
+
             if (head)
             {
-                // Invite someone the head has come to trust and who has no better home.
-                if (Rand.Chance(.35f))
-                {
-                    var guest = people.Where(o => o.Id != me.Id && r.FamilyOf(o.Id) != mine && WouldAcceptInvitation(r, o.Id, me.Id, mine))
-                        .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
-                    if (guest != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Admission, true, guest)) return true;
-                }
                 // Standing is given, not asked for: a head honors a member who has earned their trust and the house's respect.
                 if (Rand.Chance(.2f) && (r.GetLineage(mine)?.Stewards.Count ?? 0) < 2)
                 {
@@ -80,20 +83,7 @@ namespace FamilyLife
                         .OrderByDescending(o => r.GetBond(o.Id, me.Id)?.Trust ?? 0).Select(o => c.TryGetPawn(o.Id)).FirstOrDefault(o => o != null && o.Spawned);
                     if (honored != null && HouseInteractions.StartPetition(pawn, mine, PetitionKind.Recognition, true, honored)) return true;
                 }
-                // A small house may seek to join a larger one it trusts.
-                if (Rand.Chance(.15f) && r.LivingCount(mine, Presence.Colony) <= 2)
-                {
-                    foreach (var other in r.Lineages.Where(l => l.Id != mine && l.AbsorbedIntoId == 0 && r.LivingCount(l.Id, Presence.Colony) > r.LivingCount(mine, Presence.Colony)))
-                        if (Wants(r, me.Id, other.Id, PetitionKind.Union) && HouseInteractions.StartPetition(pawn, other.Id, PetitionKind.Union)) return true;
-                }
                 return false;
-            }
-
-            // Ask to join a house whose head would take them in.
-            if (Rand.Chance(.4f))
-            {
-                foreach (var house in r.Lineages.Where(l => l.AbsorbedIntoId == 0 && l.Id != mine && r.LivingCount(l.Id, Presence.Colony) > 0))
-                    if (Wants(r, me.Id, house.Id, PetitionKind.Admission) && HouseInteractions.StartPetition(pawn, house.Id, PetitionKind.Admission)) return true;
             }
             return false;
         }
@@ -119,13 +109,71 @@ namespace FamilyLife
         {
             var actor = context.FirstSelectedPawn;
             var c = FamilyComponent.Current;
-            if (c == null || actor == null || clicked == null || !actor.IsColonistPlayerControlled || !clicked.IsColonist || clicked.HostFaction != null) yield break;
+            if (c == null || actor == null || clicked == null || !PerspectiveShiftBridge.CanActAs(actor) || !actor.IsColonistPlayerControlled || !clicked.IsColonist || clicked.HostFaction != null) yield break;
             var r = c.Registry;
             var me = r.GetPerson(actor.thingIDNumber); var them = r.GetPerson(clicked.thingIDNumber);
-            if (me == null || them == null || me.Juvenile) yield break;
-            string a = actor.LabelShort, b = clicked.LabelShort;
-            int myFamily = r.FamilyOf(me.Id), theirFamily = r.FamilyOf(them.Id);
+            if (me == null || them == null) yield break;
+            int myFamily=r.FamilyOf(me.Id),theirFamily=r.FamilyOf(them.Id);
+            string b = clicked.LabelShort;
+            if(actor!=clicked)
+                yield return Act("WFL_Act_SocialMoment".Translate(b),()=>SocialMoments.TryPlayerMoment(actor,clicked));
+            var rift=r.OpenRiftBetween(me.Id,them.Id);
+            if(rift!=null&&FamilyLifeMod.Settings.conflicts&&r.MayTryReconcile(rift.Id,Activities.Now))
+                yield return Act("WFL_Act_MakePeace".Translate(b),()=>HouseInteractions.StartRiftRepair(actor,clicked));
+            var repair=r.Incidents.Where(i=>!i.Resolved&&i.ActorId==them.Id&&i.KnownBy.Contains(me.Id)&&
+                (i.VictimId==me.Id||i.VictimFamily==myFamily&&myFamily!=0)).OrderByDescending(i=>i.Tick).FirstOrDefault();
+            if(repair!=null)
+            {
+                int incidentId=repair.Id;
+                yield return Act("WFL_Act_DiscussIncident".Translate(b),()=>HouseInteractions.StartIncidentRepair(actor,clicked,incidentId));
+            }
+            if(me.Juvenile)yield break;
             bool iLead = myFamily != 0 && r.HeadOf(myFamily) == me.Id, theyLead = theirFamily != 0 && r.HeadOf(theirFamily) == them.Id;
+
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Opportunity&&(a.FamilyA==myFamily||a.FamilyB==myFamily)))
+                if(r.CanManageHouse(me.Id,myFamily)&&actor!=clicked&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
+                    yield return Act("WFL_Act_NegotiateMarriage".Translate(b),()=>MarriageAlliancePlanner.StartNegotiation(c,alliance,actor,true));
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Negotiating&&
+                (System.Math.Abs(a.NegotiatorA)==me.Id||System.Math.Abs(a.NegotiatorB)==me.Id)))
+            {
+                var pending=alliance;
+                int counterpart=System.Math.Abs(alliance.NegotiatorA)==me.Id?System.Math.Abs(alliance.NegotiatorB):System.Math.Abs(alliance.NegotiatorA);
+                if(them.Id!=counterpart)continue;
+                yield return Act("WFL_Act_SupportMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,true));
+                yield return Act("WFL_Act_OpposeMarriage".Translate(),()=>MarriageAlliancePlanner.DecideAs(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.FamilyA==myFamily&&a.PawnA==them.Id&&a.ConsentA==MarriageConsentState.NotAsked||a.FamilyB==myFamily&&a.PawnB==them.Id&&a.ConsentB==MarriageConsentState.NotAsked)))
+            {
+                var pending=alliance;
+                if(r.CanManageHouse(me.Id,myFamily)&&MarriageAlliancePlanner.ConsentRepresentative(r,myFamily,them.Id)==me.Id)
+                    yield return Act("WFL_Act_AskMarriageConsent".Translate(b),()=>MarriageAlliancePlanner.StartConsent(c,pending,actor,true));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.PawnA==me.Id&&a.ConsentA==MarriageConsentState.Awaiting&&a.ConsentApproacherA==them.Id||a.PawnB==me.Id&&a.ConsentB==MarriageConsentState.Awaiting&&a.ConsentApproacherB==them.Id)))
+            {
+                var pending=alliance;
+                yield return Act("WFL_Act_AcceptMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideConsentAs(c,pending,actor,true));
+                yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideConsentAs(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.State==MarriageAllianceState.Supported&&
+                (a.PawnA==me.Id&&a.PawnB==them.Id&&a.ConsentA==MarriageConsentState.NotAsked&&MarriageAlliancePlanner.ConsentRepresentative(r,a.FamilyA,a.PawnA)==me.Id||
+                 a.PawnB==me.Id&&a.PawnA==them.Id&&a.ConsentB==MarriageConsentState.NotAsked&&MarriageAlliancePlanner.ConsentRepresentative(r,a.FamilyB,a.PawnB)==me.Id)))
+            {
+                var pending=alliance;
+                yield return Act("WFL_Act_AcceptMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,true));
+                yield return Act("WFL_Act_RefuseMarriageConsent".Translate(),()=>MarriageAlliancePlanner.DecideSelfConsent(c,pending,actor,false));
+            }
+            foreach(var alliance in r.MarriageAlliances.Where(a=>(a.FamilyA==myFamily||a.FamilyB==myFamily)&&a.UnionState==HouseUnionState.Eligible))
+                if(r.MayDecide(me.Id,myFamily,HouseDecision.MarriageUnion)&&MarriageAlliancePlanner.Representative(r,alliance.FamilyA==myFamily?alliance.FamilyB:alliance.FamilyA)==them.Id)
+                {var pending=alliance;yield return Act("WFL_Act_NegotiateUnion".Translate(b),()=>MarriageAlliancePlanner.StartUnion(c,pending,actor,true));}
+            foreach(var alliance in r.MarriageAlliances.Where(a=>a.UnionState==HouseUnionState.Negotiating&&
+                (System.Math.Abs(a.UnionNegotiatorA)==me.Id||System.Math.Abs(a.UnionNegotiatorB)==me.Id)))
+            {
+                int counterpart=System.Math.Abs(alliance.UnionNegotiatorA)==me.Id?System.Math.Abs(alliance.UnionNegotiatorB):System.Math.Abs(alliance.UnionNegotiatorA);if(counterpart!=them.Id)continue;
+                var pending=alliance;yield return Act("WFL_Act_SupportUnion".Translate(),()=>MarriageAlliancePlanner.DecideUnionAs(c,pending,actor,true));
+                yield return Act("WFL_Act_KeepHousesSeparate".Translate(),()=>MarriageAlliancePlanner.DecideUnionAs(c,pending,actor,false));
+            }
 
             // A petition waiting on this pawn's word.
             foreach (var q in r.HousePetitions.Where(q => q.State == PetitionState.Heard && q.PersonId == them.Id && q.HeardBy == me.Id && r.HeadOf(q.FamilyId) == me.Id))
@@ -138,21 +186,11 @@ namespace FamilyLife
 
             if (!them.Juvenile)
             {
-                // Joining another house, or bringing someone into this one.
-                if (theyLead && !r.BelongsToFamily(me, theirFamily))
-                    yield return Act("WFL_Act_AskToJoin".Translate(a, r.LineageDisplayName(r.GetLineage(theirFamily))), () => HouseInteractions.StartPetition(actor, theirFamily, PetitionKind.Admission, byPlayer: true));
-                if (iLead && !r.BelongsToFamily(them, myFamily))
-                    yield return Act("WFL_Act_Invite".Translate(b, r.LineageDisplayName(r.GetLineage(myFamily))), () => HouseInteractions.StartPetition(actor, myFamily, PetitionKind.Admission, true, clicked, true));
-                if (iLead && theyLead && myFamily != theirFamily)
-                    yield return Act("WFL_Act_Unite".Translate(r.LineageDisplayName(r.GetLineage(myFamily)), r.LineageDisplayName(r.GetLineage(theirFamily))), () => HouseInteractions.StartPetition(actor, theirFamily, PetitionKind.Union, byPlayer: true));
-
-                // Standing within a house.
-                if (theyLead && myFamily == theirFamily && r.RoleInHouse(me.Id, myFamily) == HouseRole.Member)
-                    yield return Act("WFL_Act_Recognition".Translate(b), () => HouseInteractions.StartPetition(actor, myFamily, PetitionKind.Recognition, byPlayer: true));
+                // A Steward is an office granted by the head for demonstrated service; members do not ask for standing.
                 if (iLead && myFamily == theirFamily)
                 {
                     var house = r.GetLineage(myFamily); bool steward = house.Stewards.Contains(them.Id);
-                    yield return new FloatMenuOption((steward ? "WFL_Act_Revoke" : "WFL_Act_Appoint").Translate(b), () => { r.DelegateHouse(me.Id, them.Id, myFamily, !steward); c.MarkDirty(); });
+                    yield return new FloatMenuOption((steward ? "WFL_Act_Revoke" : "WFL_Act_Appoint").Translate(b), () => { r.DelegateHouse(me.Id, them.Id, myFamily, !steward, Activities.Now); c.MarkDirty(); });
                 }
                 if (iLead && myFamily == theirFamily && them.Id != me.Id)
                     yield return new FloatMenuOption("WFL_Act_Release".Translate(b), () => { r.SetSocialFamily(them.Id, -1, Activities.Now); c.FamilyMembershipChanged(); });

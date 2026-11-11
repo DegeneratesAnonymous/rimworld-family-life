@@ -33,7 +33,7 @@
   <WFL_Tab_Members>Members</WFL_Tab_Members>
   <WFL_Tab_Households>Households</WFL_Tab_Households>
   <WFL_Tab_Manage>House</WFL_Tab_Manage>
-  <WFL_Manage_Help>People in a house act on their own: they ask to join, invite those they trust, seek standing and offer help as the relationships allow. To act as one of them yourself, select that colonist and right-click another colonist; the options that pawn could take toward them appear in the menu.</WFL_Manage_Help>
+  <WFL_Manage_Help>Each house assesses its food, living space, safety, continuity, skills, cohesion and influence, then keeps a stable ambition for several days. Membership follows kinship, marriage or explicit family decisions; standing is earned through service. Select a colonist and right-click another to see actions that pawn can actually take.</WFL_Manage_Help>
   <WFL_Manage_Membership>Who belongs</WFL_Manage_Membership>
   <WFL_Manage_Standing>Standing and help</WFL_Manage_Standing>
   <WFL_Manage_Leadership>Leadership</WFL_Manage_Leadership>
@@ -51,12 +51,68 @@
   <WFL_Generation>Generation {0}</WFL_Generation>
   <WFL_ChildOf>child of {0}</WFL_ChildOf>
   <WFL_PartnerOf>partner of {0}</WFL_PartnerOf>
-  <WFL_HouseholdsHelp>A household is the people who live together. Partners who move in together form a new household, children stay with their parents, and adult children stay until they pair up. Use Move to change it yourself.</WFL_HouseholdsHelp>
+  <WFL_HouseholdsHelp>A household is the people who live together. Partners who move in together form a new household, children stay with their parents, and adult children stay until they pair up. Use the row menu (...) beside a person to move them yourself.</WFL_HouseholdsHelp>
   <WFL_HouseholdN>Household {0}</WFL_HouseholdN>
   <WFL_Move>Move...</WFL_Move>
   <WFL_MoveTo>Move in with {0}</WFL_MoveTo>
   <WFL_MoveToNew>Start a new household</WFL_MoveToNew>
   <WFL_NoHistory>Nothing recorded yet.</WFL_NoHistory>
+
+  <!-- House situation and ambitions -->
+  <WFL_Ambition_Title>Current family ambition</WFL_Ambition_Title>
+  <WFL_Ambition_Assessing>The family is still assessing its circumstances.</WFL_Ambition_Assessing>
+  <WFL_Ambition_Primary>{0} — driven by {1}; urgency {2}</WFL_Ambition_Primary>
+  <WFL_Ambition_Secondary>Secondary: {0} ({1})</WFL_Ambition_Secondary>
+  <WFL_Ambition_Target>with {0}</WFL_Ambition_Target>
+  <WFL_Ambition_SkillGap>Weakest capability: {0}</WFL_Ambition_SkillGap>
+  <WFL_Ambition_Metrics>Family assessment, 0–100:
+Food security {0}; living space {1}; safety {2}; continuity {3}; capability {4}; cohesion {5}; influence {6}; independence {7}.
+
+Assessments are cached and refreshed gradually, not recalculated every tick.</WFL_Ambition_Metrics>
+  <WFL_Ambition_None>No active ambition</WFL_Ambition_None>
+  <WFL_Ambition_SecureProvisions>Secure provisions</WFL_Ambition_SecureProvisions>
+  <WFL_Ambition_EstablishFamilyQuarters>Establish family quarters</WFL_Ambition_EstablishFamilyQuarters>
+  <WFL_Ambition_ImproveSafety>Improve family safety</WFL_Ambition_ImproveSafety>
+  <WFL_Ambition_SeekProtection>Seek a protective alliance</WFL_Ambition_SeekProtection>
+  <WFL_Ambition_SecureSuccession>Secure succession</WFL_Ambition_SecureSuccession>
+  <WFL_Ambition_FillSkillGap>Fill a capability gap</WFL_Ambition_FillSkillGap>
+  <WFL_Ambition_TrainNextGeneration>Train the next generation</WFL_Ambition_TrainNextGeneration>
+  <WFL_Ambition_RestoreCohesion>Restore family cohesion</WFL_Ambition_RestoreCohesion>
+  <WFL_Ambition_ExpandLegacy>Expand the family legacy</WFL_Ambition_ExpandLegacy>
+  <WFL_Ambition_PreserveIndependence>Preserve family independence</WFL_Ambition_PreserveIndependence>
+  <WFL_Ambition_IncreaseInfluence>Increase family influence</WFL_Ambition_IncreaseInfluence>
+  <WFL_Ambition_Contentment>Enjoy a period of contentment</WFL_Ambition_Contentment>
+  <WFL_Need_None>no urgent need</WFL_Need_None>
+  <WFL_Need_Sustenance>food and supplies</WFL_Need_Sustenance>
+  <WFL_Need_LivingSpace>living space</WFL_Need_LivingSpace>
+  <WFL_Need_Safety>safety</WFL_Need_Safety>
+  <WFL_Need_Continuity>continuity and succession</WFL_Need_Continuity>
+  <WFL_Need_Capability>missing skills</WFL_Need_Capability>
+  <WFL_Need_Cohesion>internal relationships</WFL_Need_Cohesion>
+  <WFL_Need_Influence>influence</WFL_Need_Influence>
+  <WFL_Need_Independence>independence</WFL_Need_Independence>
+  <WFL_Need_Legacy>legacy</WFL_Need_Legacy>
+  <WFL_Capability_None>none</WFL_Capability_None>
+  <WFL_Capability_Medical>medical</WFL_Capability_Medical>
+  <WFL_Capability_Cooking>cooking</WFL_Capability_Cooking>
+  <WFL_Capability_Growing>growing</WFL_Capability_Growing>
+  <WFL_Capability_Construction>construction</WFL_Capability_Construction>
+  <WFL_Capability_Crafting>crafting</WFL_Capability_Crafting>
+  <WFL_Capability_Intellectual>research</WFL_Capability_Intellectual>
+  <WFL_Capability_Social>social</WFL_Capability_Social>
+  <WFL_Capability_Childcare>childcare</WFL_Capability_Childcare>
+  <WFL_Capability_Combat>combat</WFL_Capability_Combat>
+  <WFL_Capability_Animals>animal handling</WFL_Capability_Animals>
+  <WFL_Stewardship_Title>Leadership and stewardship</WFL_Stewardship_Title>
+  <WFL_Stewardship_Head>Head: {0}</WFL_Stewardship_Head>
+  <WFL_Stewardship_None>No Steward currently serves this house.</WFL_Stewardship_None>
+  <WFL_Stewardship_Line>{0}: {1} recorded successes; {2} failures</WFL_Stewardship_Line>
+  <WFL_Stewardship_Tip>Ceremonies organized: {0}
+Aid transfers completed: {1}
+Reconciliations completed: {2}
+Negotiations led: {3}
+Guests housed: {4}
+Shortages averted: {5}</WFL_Stewardship_Tip>
 
   <!-- Pawn tab -->
   <WFL_TabFamily>Family</WFL_TabFamily>
@@ -100,7 +156,7 @@
   <WFL_CohesionHelp>Closeness is a summary of how attached and trusting the people in a household are, less any tension between them. Individuals can feel differently from the household as a whole.</WFL_CohesionHelp>
   <WFL_RelPick>Showing: {0}</WFL_RelPick>
   <WFL_RelHelp>How this person feels about each of their relatives. It sits alongside the game's own opinion and never replaces it. Hover a row for the numbers.</WFL_RelHelp>
-  <WFL_Bond_Attachment>Attachment</WFL_Bond_Attachment>
+  <WFL_Bond_Attachment>Closeness</WFL_Bond_Attachment>
   <WFL_Bond_Trust>Trust</WFL_Bond_Trust>
   <WFL_Bond_Tension>Tension</WFL_Bond_Tension>
   <WFL_Bond_Familiarity>Familiarity</WFL_Bond_Familiarity>
@@ -111,7 +167,7 @@
   <WFL_BondKind_Sibling>sibling</WFL_BondKind_Sibling>
   <WFL_BondKind_Partner>partner</WFL_BondKind_Partner>
   <WFL_BondKind_Ex>former partner</WFL_BondKind_Ex>
-  <WFL_BondTip>{0} toward {1}: attachment {2}, trust {3}, tension {4}, familiarity {5}.</WFL_BondTip>
+  <WFL_BondTip>{0} toward {1}: closeness {2}, trust {3}, tension {4}, familiarity {5}.</WFL_BondTip>
 
   <!-- Phases 4-6 -->
   <WFL_S_Dates>Dates for partners (with a sitter for the children)</WFL_S_Dates>
@@ -124,6 +180,10 @@
   <WFL_S_BedsideTip>Relatives who are close to someone unwell may sit with them.</WFL_S_BedsideTip>
   <WFL_S_Traditions>Family traditions and gatherings</WFL_S_Traditions>
   <WFL_S_TraditionsTip>Families take up traditions from what they value, and sometimes hold gatherings for them, for a coming of age, or to remember someone.</WFL_S_TraditionsTip>
+  <WFL_S_Ceremonies>Autonomous family ceremonies</WFL_S_Ceremonies>
+  <WFL_S_CeremoniesTip>Families plan weddings and funerals themselves when life gives them a reason. Your relationships, spaces and choices influence how they unfold.</WFL_S_CeremoniesTip>
+  <WFL_S_VisitingKin>Annual grand family reunions</WFL_S_VisitingKin>
+  <WFL_S_VisitingKinTip>Established families may arrange an annual reunion when they have living relatives away from the colony. Visiting relatives who are present are invited automatically.</WFL_S_VisitingKinTip>
   <WFL_S_Conflicts>Family conflict</WFL_S_Conflicts>
   <WFL_S_ConflictsTip>Tension that lasts can become a rift between relatives. Rifts can be mended with time together.</WFL_S_ConflictsTip>
   <WFL_S_Rivalry>Sibling rivalry</WFL_S_Rivalry>
@@ -138,12 +198,41 @@
   <WFL_Gathering_Report_tradition>at a family gathering.</WFL_Gathering_Report_tradition>
   <WFL_Gathering_Report_comingofage>celebrating a coming of age.</WFL_Gathering_Report_comingofage>
   <WFL_Gathering_Report_memorial>remembering someone.</WFL_Gathering_Report_memorial>
+  <WFL_Gathering_Report_funeral>at a family funeral.</WFL_Gathering_Report_funeral>
+  <WFL_Gathering_Report_wedding>at a family wedding.</WFL_Gathering_Report_wedding>
+  <WFL_Gathering_Report_grandreunion>at a grand family reunion.</WFL_Gathering_Report_grandreunion>
   <WFL_Gathering_Title_tradition>Family tradition</WFL_Gathering_Title_tradition>
   <WFL_Gathering_Text_tradition>{0} is bringing the family together for a tradition.</WFL_Gathering_Text_tradition>
   <WFL_Gathering_Title_comingofage>Coming of age</WFL_Gathering_Title_comingofage>
   <WFL_Gathering_Text_comingofage>{0} is bringing the family together to celebrate {1} becoming an adult.</WFL_Gathering_Text_comingofage>
   <WFL_Gathering_Title_memorial>Remembering</WFL_Gathering_Title_memorial>
   <WFL_Gathering_Text_memorial>{0} is gathering the family to remember {1}.</WFL_Gathering_Text_memorial>
+  <WFL_Gathering_Title_funeral>Family funeral</WFL_Gathering_Title_funeral>
+  <WFL_Gathering_Text_funeral>{0} is gathering the family to mourn {1} and remember their life.</WFL_Gathering_Text_funeral>
+  <WFL_Gathering_Title_wedding>Family wedding</WFL_Gathering_Title_wedding>
+  <WFL_Gathering_Text_wedding>{0} has brought the families together for the wedding of {1}.</WFL_Gathering_Text_wedding>
+  <WFL_Gathering_Title_grandreunion>Grand family reunion</WFL_Gathering_Title_grandreunion>
+  <WFL_Gathering_Text_grandreunion>{0} is gathering relatives from near and far for a grand family reunion.</WFL_Gathering_Text_grandreunion>
+  <WFL_Ceremonies_Title>Family ceremonies</WFL_Ceremonies_Title>
+  <WFL_Ceremony_None>No ceremony is currently planned. Families arrange them when their lives and relationships give them a reason.</WFL_Ceremony_None>
+  <WFL_Ceremony_Planned>{0} — expected around {1}. Shaped by: {2}.</WFL_Ceremony_Planned>
+  <WFL_Ceremony_Recent>{0} — {1}: {2} attended and {3} notable interactions unfolded.</WFL_Ceremony_Recent>
+  <WFL_Ceremony_Prestige>Prestige earned through public service: {0}.</WFL_Ceremony_Prestige>
+  <WFL_Ceremony_Tradition>family tradition</WFL_Ceremony_Tradition>
+  <WFL_Ceremony_ComingOfAge>coming of age</WFL_Ceremony_ComingOfAge>
+  <WFL_Ceremony_Funeral>family funeral</WFL_Ceremony_Funeral>
+  <WFL_Ceremony_Reconciliation>reconciliation gathering</WFL_Ceremony_Reconciliation>
+  <WFL_Ceremony_Wedding>family wedding</WFL_Ceremony_Wedding>
+  <WFL_Ceremony_GrandReunion>grand family reunion</WFL_Ceremony_GrandReunion>
+  <WFL_Ceremony_Influence_None>family initiative</WFL_Ceremony_Influence_None>
+  <WFL_Ceremony_Influence_Engagement>an engagement</WFL_Ceremony_Influence_Engagement>
+  <WFL_Ceremony_Influence_RecentDeath>a recent death</WFL_Ceremony_Influence_RecentDeath>
+  <WFL_Ceremony_Influence_MissingKin>relatives living far away</WFL_Ceremony_Influence_MissingKin>
+  <WFL_Ceremony_Influence_FamilyCulture>family values and traditions</WFL_Ceremony_Influence_FamilyCulture>
+  <WFL_Ceremony_Influence_StrongRelationships>strong family relationships</WFL_Ceremony_Influence_StrongRelationships>
+  <WFL_Ceremony_Influence_HeadSupport>support from the family head</WFL_Ceremony_Influence_HeadSupport>
+  <WFL_Ceremony_Influence_SuitableVenue>a suitable family space</WFL_Ceremony_Influence_SuitableVenue>
+  <WFL_Ceremony_Influence_Hospitality>the family's hospitality</WFL_Ceremony_Influence_Hospitality>
   <WFL_Chron_CameOfAge>{0} came of age.</WFL_Chron_CameOfAge>
   <WFL_Chron_Reunion>{0} came back after a long time away.</WFL_Chron_Reunion>
   <WFL_Chron_Anniversary>{0} and {1} marked another year together.</WFL_Chron_Anniversary>
@@ -223,7 +312,7 @@
   <WFL_Tree_Died>died</WFL_Tree_Died>
   <WFL_Tree_Away>elsewhere</WFL_Tree_Away>
   <WFL_Tree_MarriedIn>by marriage</WFL_Tree_MarriedIn>
-  <WFL_TreeClick>Click to compare closeness with everyone.</WFL_TreeClick>
+  <WFL_TreeClick>Click to open their details.</WFL_TreeClick>
   <WFL_TreeLegend>The coloured bar on a person is the household they live in. Dim boxes are people who are elsewhere or who have died.</WFL_TreeLegend>
   <WFL_TreeLinkPartners>Partners</WFL_TreeLinkPartners>
   <WFL_TreeLinkFormer>Former partners: the partnership ended (divorced or separated).</WFL_TreeLinkFormer>
@@ -324,4 +413,47 @@
   <WFL_ZoneDealBedsConfirm>Take back the beds in this zone that were given out to {0} and share them out again? Beds you gave to someone yourself since, beds locked in Better Beds, and beds owned by people outside the family stay as they are.</WFL_ZoneDealBedsConfirm>
   <WFL_ZoneDealBeds>Share out beds</WFL_ZoneDealBeds>
   <WFL_ZoneDealBedsDesc>Unassign the family's beds in this zone and give them out again: couples first, to the most comfortable place they can sleep together, then the children, then everyone else, to the most comfortable beds left. Any kind of bed. Beds owned by anyone outside the family stay as they are.</WFL_ZoneDealBedsDesc>
+  <!-- Variants: a line may be given as WFL_Name_0, WFL_Name_1, ... and the game chooses among them. Add more freely. -->
+  <WFL_Knock_0>Knock, knock.</WFL_Knock_0>
+  <WFL_Knock_1>Hello? Anyone home?</WFL_Knock_1>
+  <WFL_Knock_2>Excuse me?</WFL_Knock_2>
+  <WFL_Knock_3>*knock knock*</WFL_Knock_3>
+  <WFL_Knock_4>May I come in?</WFL_Knock_4>
+  <WFL_ComeIn_0>Come in.</WFL_ComeIn_0>
+  <WFL_ComeIn_1>Of course, come on in.</WFL_ComeIn_1>
+  <WFL_ComeIn_2>Ah, there you are. Come in.</WFL_ComeIn_2>
+  <WFL_ComeIn_3>Mind the step. Come in.</WFL_ComeIn_3>
+  <WFL_ComeIn_4>Welcome. Come in.</WFL_ComeIn_4>
+  <WFL_MealCall_0>Time to eat!</WFL_MealCall_0>
+  <WFL_MealCall_1>Food's ready!</WFL_MealCall_1>
+  <WFL_MealCall_2>Come and get it!</WFL_MealCall_2>
+  <WFL_MealCall_3>Table's set, everyone!</WFL_MealCall_3>
+  <WFL_MealCall_4>Who's hungry?</WFL_MealCall_4>
+  <WFL_Lead_Dawn_0>At first light,</WFL_Lead_Dawn_0>
+  <WFL_Lead_Dawn_1>Before the day had properly begun,</WFL_Lead_Dawn_1>
+  <WFL_Lead_Dawn_2>In the cool of the early morning,</WFL_Lead_Dawn_2>
+  <WFL_Lead_Morning_0>Over the morning's work,</WFL_Lead_Morning_0>
+  <WFL_Lead_Morning_1>Mid-morning,</WFL_Lead_Morning_1>
+  <WFL_Lead_Morning_2>While the day was still young,</WFL_Lead_Morning_2>
+  <WFL_Lead_Afternoon_0>In the heat of the afternoon,</WFL_Lead_Afternoon_0>
+  <WFL_Lead_Afternoon_1>During a quiet stretch of the afternoon,</WFL_Lead_Afternoon_1>
+  <WFL_Lead_Afternoon_2>Somewhere between one chore and the next,</WFL_Lead_Afternoon_2>
+  <WFL_Lead_Evening_0>As the light began to fade,</WFL_Lead_Evening_0>
+  <WFL_Lead_Evening_1>After the day's work was done,</WFL_Lead_Evening_1>
+  <WFL_Lead_Evening_2>At the end of the day,</WFL_Lead_Evening_2>
+  <WFL_Lead_Night_0>Late in the night,</WFL_Lead_Night_0>
+  <WFL_Lead_Night_1>When most of the colony was asleep,</WFL_Lead_Night_1>
+  <WFL_Lead_Night_2>In the small hours,</WFL_Lead_Night_2>
+  <WFL_Tail_Poor_0>Neither mentioned it again that day.</WFL_Tail_Poor_0>
+  <WFL_Tail_Poor_1>The silence afterwards said more than the words.</WFL_Tail_Poor_1>
+  <WFL_Tail_Poor_2>It will be remembered.</WFL_Tail_Poor_2>
+  <WFL_Tail_Flat_0>Nothing came of it, but nothing was lost.</WFL_Tail_Flat_0>
+  <WFL_Tail_Flat_1>They went their separate ways soon after.</WFL_Tail_Flat_1>
+  <WFL_Tail_Flat_2>It was an ordinary moment, and ordinary moments are most of life.</WFL_Tail_Flat_2>
+  <WFL_Tail_Good_0>They parted on better terms than they met.</WFL_Tail_Good_0>
+  <WFL_Tail_Good_1>It was a small thing, and it helped.</WFL_Tail_Good_1>
+  <WFL_Tail_Good_2>Both were lighter for it.</WFL_Tail_Good_2>
+  <WFL_Tail_Great_0>It is the sort of moment people carry for years.</WFL_Tail_Great_0>
+  <WFL_Tail_Great_1>Something between them changed for good.</WFL_Tail_Great_1>
+  <WFL_Tail_Great_2>Neither will forget it.</WFL_Tail_Great_2>
 </LanguageData>

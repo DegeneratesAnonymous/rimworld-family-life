@@ -63,6 +63,27 @@ namespace FamilyLife
                 y = Mathf.Max(y, 66f);
             }
 
+            var pawnForRoles = SelPawn;
+            var roles = PostBadges.For(pawnForRoles);
+            if (roles.Count > 0)
+            {
+                Text.Font = GameFont.Small;
+                GUI.color = Color.gray;
+                Widgets.Label(new Rect(0f, y, view.width, 22f), "WFL_Tab_Roles".Translate());
+                GUI.color = Color.white;
+                y += 22f;
+                foreach (var badge in roles)
+                {
+                    var icon = new Rect(10f, y, 22f, 22f);
+                    RoleIcons.Draw(icon, badge.Role, true);
+                    var line = new Rect(38f, y, view.width - 38f, 22f);
+                    Widgets.Label(line, badge.Title);
+                    TooltipHandler.TipRegion(new Rect(10f, y, view.width - 10f, 22f), RoleIcons.Description(badge.Role));
+                    y += 26f;
+                }
+                y += 4f;
+            }
+
             var household = registry.GetHousehold(record.HouseholdId);
             if (household != null)
                 Row(view, ref y, "WFL_Tab_Household".Translate(),

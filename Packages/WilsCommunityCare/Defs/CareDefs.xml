@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef><defName>WFL_Checkup</defName><driverClass>FamilyLife.JobDriver_StoryTalk</driverClass><reportString>giving TargetA a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_ClinicDoctor</defName><driverClass>FamilyLife.JobDriver_ClinicDoctor</driverClass><reportString>seeing patients in the clinic.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <JobDef><defName>WFL_ClinicPatient</defName><driverClass>FamilyLife.JobDriver_ClinicPatient</driverClass><reportString>having a check-up.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+  <ThoughtDef><defName>WFL_ReassuringCheckup</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>reassuring check-up</label><description>The doctor listened and put my mind at ease.</description><baseMoodEffect>4</baseMoodEffect></li></stages></ThoughtDef>
+  <ThoughtDef><defName>WFL_DismissiveCheckup</defName><thoughtClass>Thought_Memory</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>brushed off at a check-up</label><description>The doctor hardly seemed to listen.</description><baseMoodEffect>-2</baseMoodEffect></li></stages></ThoughtDef>
+</Defs>

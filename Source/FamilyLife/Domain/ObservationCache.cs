@@ -28,7 +28,7 @@ namespace FamilyLife.Domain
             foreach (var o in observations)
                 previous[o.Id] = new PersonObservation
                 {
-                    Id = o.Id, Name = o.Name, LastName = o.LastName, BirthAbsTick = o.BirthAbsTick,
+                    Id = o.Id, Name = o.Name, LastName = o.LastName, FirstName = o.FirstName, BirthAbsTick = o.BirthAbsTick,
                     Presence = o.Presence, Juvenile = o.Juvenile, TopSkill = o.TopSkill, TopSkillLevel = o.TopSkillLevel,
                     ParentIds = Copy(o.ParentIds), SpouseIds = Copy(o.SpouseIds), SpouseSince = Copy(o.SpouseSince),
                     LoverIds = Copy(o.LoverIds), ExIds = Copy(o.ExIds)
@@ -39,7 +39,7 @@ namespace FamilyLife.Domain
         private static List<int> Copy(List<int> values) => values == null ? null : new List<int>(values);
         private static bool Equal(List<int> a, List<int> b) => a == null ? b == null : b != null && a.SequenceEqual(b);
         private static bool Same(PersonObservation a, PersonObservation b) =>
-            a.Name == b.Name && a.LastName == b.LastName && a.BirthAbsTick == b.BirthAbsTick &&
+            a.Name == b.Name && a.LastName == b.LastName && a.FirstName == b.FirstName &&a.BirthAbsTick == b.BirthAbsTick &&
             a.Presence == b.Presence && a.Juvenile == b.Juvenile && a.TopSkill == b.TopSkill && a.TopSkillLevel == b.TopSkillLevel &&
             Equal(a.ParentIds, b.ParentIds) && Equal(a.SpouseIds, b.SpouseIds) && Equal(a.SpouseSince, b.SpouseSince) &&
             Equal(a.LoverIds, b.LoverIds) && Equal(a.ExIds, b.ExIds);

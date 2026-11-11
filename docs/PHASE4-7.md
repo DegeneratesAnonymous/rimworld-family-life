@@ -33,7 +33,7 @@ the "needs checking in the game" list at the end as the test plan.
   parents' gratitude and the sitter's own memory are recorded.
 - **Newborn bonding in three ways**: parents hold (cradle), sing (lullaby at night) and play with babies, within the daily budget.
 - **Bedside**: relatives close to someone downed or resting for illness sit with them.
-- Not built: weddings/funerals as dedicated ceremonies (the game's own marriage ceremony is untouched; memorials use the gathering above).
+- **Later expansion:** families now plan dedicated post-marriage wedding receptions and funerals through the same safe gathering machinery. They do not replace RimWorld's own marriage ceremony.
 
 ## Phase 6 - conflict
 

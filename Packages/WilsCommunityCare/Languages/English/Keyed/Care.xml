@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_Checkup_Round>{0} has begun a round of check-ups. People are asked to come when they are free.</WFL_Checkup_Round>
+  <WFL_Event_Checkups_Title>Check-ups planned</WFL_Event_Checkups_Title>
+  <WFL_Event_Checkups_Text>{0} has planned the colony's next round of check-ups for tomorrow. Anyone who needs tending is seen to first, and people are asked to come when they are free; nobody is made to. You do not need to do anything. You can begin now, put it off for a week, or skip it this time.</WFL_Event_Checkups_Text>
+  <WFL_Event_Illness_Title>Sickness in the colony</WFL_Event_Illness_Title>
+  <WFL_Event_Illness_Text>{0} is seeing the sick first. Anyone who needs tending is still tended before anything else.</WFL_Event_Illness_Text>
+  <WFL_Event_NoPost_Doctor>Nobody holds the post of doctor on this map.</WFL_Event_NoPost_Doctor>
+  <WFL_Event_BeginCheckups>Begin check-ups</WFL_Event_BeginCheckups>
+  <WFL_Event_BeginIllness>Check-ups for the sick</WFL_Event_BeginIllness>
+  <WFL_Event_BeginCheckupsDesc>Have the colony's doctor begin a round of check-ups now. Anyone who needs tending is seen to first; people are asked to come, and the sick are visited where they are. In an outbreak the sick are seen first.</WFL_Event_BeginCheckupsDesc>
+  <WFL_Checkup_Illness>{0} is seeing the sick first. Tending still comes before any check-up.</WFL_Checkup_Illness>
+  <WFL_Checkup_Result>Check-up: {0}</WFL_Checkup_Result>
+</LanguageData>

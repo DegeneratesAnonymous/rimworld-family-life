@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_FW_Tab_Summary>Summary</WFL_FW_Tab_Summary>
+  <WFL_FW_Tab_People>People</WFL_FW_Tab_People>
+  <WFL_FW_Tab_Relationships>Relationships</WFL_FW_Tab_Relationships>
+  <WFL_FW_Tab_Story>Story</WFL_FW_Tab_Story>
+  <WFL_FW_Tab_Home>Home</WFL_FW_Tab_Home>
+  <WFL_FW_Tab_HouseAffairs>House Affairs</WFL_FW_Tab_HouseAffairs>
+  <WFL_FW_TabTip_Summary>How the family is doing, what needs attention, what is coming up and the latest of its story.</WFL_FW_TabTip_Summary>
+  <WFL_FW_TabTip_People>Everyone in the family: a portrait list or the family tree.</WFL_FW_TabTip_People>
+  <WFL_FW_TabTip_Relationships>How one person feels about each of the people they know.</WFL_FW_TabTip_Relationships>
+  <WFL_FW_TabTip_Story>What is planned, what has just happened and the family's permanent history.</WFL_FW_TabTip_Story>
+  <WFL_FW_TabTip_Home>Households, beds, reserves and the family area.</WFL_FW_TabTip_Home>
+  <WFL_FW_TabTip_HouseAffairs>The family's offices, ambition, alliances and institutions.</WFL_FW_TabTip_HouseAffairs>
+  <WFL_FW_Families>Families</WFL_FW_Families>
+  <WFL_FW_Search>Search...</WFL_FW_Search>
+  <WFL_FW_SortBy>Sort: {0}</WFL_FW_SortBy>
+  <WFL_FW_Sort_Name>name</WFL_FW_Sort_Name>
+  <WFL_FW_Sort_Size>size</WFL_FW_Sort_Size>
+  <WFL_FW_Sort_Standing>standing</WFL_FW_Sort_Standing>
+  <WFL_FW_Sort_Attention>needs attention</WFL_FW_Sort_Attention>
+  <WFL_FW_NoMatch>No family matches.</WFL_FW_NoMatch>
+  <WFL_FW_SidebarHide>Hide the family list</WFL_FW_SidebarHide>
+  <WFL_FW_SidebarShow>Show the family list</WFL_FW_SidebarShow>
+  <WFL_FW_MembersN>{0} House members</WFL_FW_MembersN>
+  <WFL_FW_FamilyRowTip>House {0}&#10;{1} members in the colony, {2} households.&#10;Cohesion: {3}&#10;Things needing attention: {4}</WFL_FW_FamilyRowTip>
+  <WFL_FW_NotAssessed>Not assessed yet</WFL_FW_NotAssessed>
+  <WFL_FW_HouseHead>House Head</WFL_FW_HouseHead>
+  <WFL_FW_Steward>Steward</WFL_FW_Steward>
+  <WFL_FW_Members>Members</WFL_FW_Members>
+  <WFL_FW_Households>Households</WFL_FW_Households>
+  <WFL_FW_NoHead>None recognised</WFL_FW_NoHead>
+  <WFL_FW_NoSteward>None appointed</WFL_FW_NoSteward>
+  <WFL_FW_CohesionIs>Cohesion: {0}</WFL_FW_CohesionIs>
+  <WFL_FW_AmbitionIs>Ambition: {0}</WFL_FW_AmbitionIs>
+  <WFL_FW_AmbitionNone>Ambition: still deciding</WFL_FW_AmbitionNone>
+  <WFL_FW_AmbitionTip>What the family is working toward. Click to open Leadership.</WFL_FW_AmbitionTip>
+  <WFL_FW_UrgentN>{0} urgent</WFL_FW_UrgentN>
+  <WFL_FW_AttentionN>{0} need attention</WFL_FW_AttentionN>
+  <WFL_FW_AlertsTip>Things this family may want to look at. They are listed on the Summary tab.</WFL_FW_AlertsTip>
+  <WFL_FW_NotKnownTo>Not known to {0}.</WFL_FW_NotKnownTo>
+  <WFL_FW_ViewingAs>Viewing as {0}</WFL_FW_ViewingAs>
+  <WFL_FW_ColonyOverview>Colony overview</WFL_FW_ColonyOverview>
+  <WFL_FW_OverviewTip>The full administrative view. Nothing is hidden. Choose a person to see only what they would know.</WFL_FW_OverviewTip>
+  <WFL_FW_PerspectiveTip>Only what this person knows is shown. Secret plans, undisclosed heirs and wrongs they were never told of stay hidden.</WFL_FW_PerspectiveTip>
+  <WFL_FW_PerspectiveShiftTip>Perspective Shift is active: the window follows the character you are playing.</WFL_FW_PerspectiveShiftTip>
+  <WFL_FW_MenuTip>More: export the family's records.</WFL_FW_MenuTip>
+  <WFL_FW_ExportOverviewOnly>Export records (colony overview only)</WFL_FW_ExportOverviewOnly>
+  <WFL_FW_Help_Summary>The Summary is built from records the mod already keeps. A concern appears only when something supports it. Click one to go to where it can be dealt with.</WFL_FW_Help_Summary>
+  <WFL_FW_Alert_NoHead>No House Head is recognised</WFL_FW_Alert_NoHead>
+  <WFL_FW_Alert_NoSteward>No Steward appointed</WFL_FW_Alert_NoSteward>
+  <WFL_FW_Alert_FoodLow>Food is below the household's target</WFL_FW_Alert_FoodLow>
+  <WFL_FW_Alert_HousingProblem>Not everyone has a good place to sleep</WFL_FW_Alert_HousingProblem>
+  <WFL_FW_Alert_SafetyLow>The family does not feel safe</WFL_FW_Alert_SafetyLow>
+  <WFL_FW_Alert_CapabilityGap>The family is missing an important skill</WFL_FW_Alert_CapabilityGap>
+  <WFL_FW_Alert_PromiseDue>{0} promise(s) due or overdue</WFL_FW_Alert_PromiseDue>
+  <WFL_FW_Alert_OpenRift>{0} and {1} are estranged</WFL_FW_Alert_OpenRift>
+  <WFL_FW_Alert_Grievance>{0} unresolved grievance(s) between families</WFL_FW_Alert_Grievance>
+  <WFL_FW_Alert_CeremonyPrep>{0} occasion(s) still being planned</WFL_FW_Alert_CeremonyPrep>
+  <WFL_FW_Alert_Petition>{0} petition(s) waiting to be heard</WFL_FW_Alert_Petition>
+  <WFL_FW_Alert_Negotiation>{0} marriage negotiation(s) under way</WFL_FW_Alert_Negotiation>
+  <WFL_FW_AlertShort_NoHead>No head</WFL_FW_AlertShort_NoHead>
+  <WFL_FW_AlertShort_NoSteward>No steward</WFL_FW_AlertShort_NoSteward>
+  <WFL_FW_AlertShort_FoodLow>Food needed</WFL_FW_AlertShort_FoodLow>
+  <WFL_FW_AlertShort_HousingProblem>Housing problem</WFL_FW_AlertShort_HousingProblem>
+  <WFL_FW_AlertShort_SafetyLow>Feels unsafe</WFL_FW_AlertShort_SafetyLow>
+  <WFL_FW_AlertShort_CapabilityGap>Skill gap</WFL_FW_AlertShort_CapabilityGap>
+  <WFL_FW_AlertShort_PromiseDue>Promise due</WFL_FW_AlertShort_PromiseDue>
+  <WFL_FW_AlertShort_OpenRift>Rising tension</WFL_FW_AlertShort_OpenRift>
+  <WFL_FW_AlertShort_Grievance>Grievance</WFL_FW_AlertShort_Grievance>
+  <WFL_FW_AlertShort_CeremonyPrep>Planning</WFL_FW_AlertShort_CeremonyPrep>
+  <WFL_FW_AlertShort_Petition>Petition</WFL_FW_AlertShort_Petition>
+  <WFL_FW_AlertShort_Negotiation>Negotiating</WFL_FW_AlertShort_Negotiation>
+  <WFL_FW_AlertTip_NoHead>The house has no recognised head. Succession is in Leadership.</WFL_FW_AlertTip_NoHead>
+  <WFL_FW_AlertTip_NoSteward>A Steward helps the head run the house. None is named.</WFL_FW_AlertTip_NoSteward>
+  <WFL_FW_AlertTip_FoodLow>The food the family has set aside is below what it wants to keep. See Home &gt; Supplies.</WFL_FW_AlertTip_FoodLow>
+  <WFL_FW_AlertTip_HousingProblem>Some members have no bed or sleep outside the family area. See Home &gt; Households.</WFL_FW_AlertTip_HousingProblem>
+  <WFL_FW_AlertTip_SafetyLow>The family judges its home unsafe. See its ambition in Leadership.</WFL_FW_AlertTip_SafetyLow>
+  <WFL_FW_AlertTip_CapabilityGap>The family lacks someone skilled in an area it needs. See its ambition in Leadership.</WFL_FW_AlertTip_CapabilityGap>
+  <WFL_FW_AlertTip_PromiseDue>Someone promised to spend time with someone and the day is near or past. See Events &gt; Upcoming.</WFL_FW_AlertTip_PromiseDue>
+  <WFL_FW_AlertTip_OpenRift>Two people have fallen out. See their relationship.</WFL_FW_AlertTip_OpenRift>
+  <WFL_FW_AlertTip_Grievance>A wrong between houses is unresolved. See Events &gt; Recent.</WFL_FW_AlertTip_Grievance>
+  <WFL_FW_AlertTip_CeremonyPrep>An occasion needs planning. See Events &gt; Upcoming.</WFL_FW_AlertTip_CeremonyPrep>
+  <WFL_FW_AlertTip_Petition>Someone asked the house for something. See Leadership.</WFL_FW_AlertTip_Petition>
+  <WFL_FW_AlertTip_Negotiation>Houses are talking about a marriage. See Leadership.</WFL_FW_AlertTip_Negotiation>
+  <WFL_FW_ClickToOpen>Click to open {0}.</WFL_FW_ClickToOpen>
+  <WFL_FW_Card_Status>Family status</WFL_FW_Card_Status>
+  <WFL_FW_Card_Attention>Needs attention</WFL_FW_Card_Attention>
+  <WFL_FW_Card_Upcoming>Current</WFL_FW_Card_Upcoming>
+  <WFL_FW_Card_Story>Recent family story</WFL_FW_Card_Story>
+  <WFL_FW_Card_People>People</WFL_FW_Card_People>
+  <WFL_FW_FoundedLabel>Founded</WFL_FW_FoundedLabel>
+  <WFL_FW_HomeArea>Home area</WFL_FW_HomeArea>
+  <WFL_FW_AreaCovers>{0} (covers {1} of {2})</WFL_FW_AreaCovers>
+  <WFL_FW_Cohesion>Cohesion</WFL_FW_Cohesion>
+  <WFL_FW_Standing>Standing</WFL_FW_Standing>
+  <WFL_FW_StandingTip>How much weight the family carries in the colony (power {0}).</WFL_FW_StandingTip>
+  <WFL_FW_NothingAttention>Nothing needs attention right now.</WFL_FW_NothingAttention>
+  <WFL_FW_NothingUpcoming>Nothing is planned, promised or expected.</WFL_FW_NothingUpcoming>
+  <WFL_FW_NothingStory>Nothing meaningful has happened lately.</WFL_FW_NothingStory>
+  <WFL_FW_SeeAllUpcoming>See everything coming</WFL_FW_SeeAllUpcoming>
+  <WFL_FW_ViewTimeline>View full timeline</WFL_FW_ViewTimeline>
+  <WFL_FW_SeeAllPeople>See everyone</WFL_FW_SeeAllPeople>
+  <WFL_FW_People_Portraits>Portraits</WFL_FW_People_Portraits>
+  <WFL_FW_People_Tree>Family tree</WFL_FW_People_Tree>
+  <WFL_FW_Recenter>Recenter</WFL_FW_Recenter>
+  <WFL_FW_RecenterTip>Zoom back to normal and centre the tree.</WFL_FW_RecenterTip>
+  <WFL_FW_ZoomIn>Zoom in</WFL_FW_ZoomIn>
+  <WFL_FW_ZoomOut>Zoom out</WFL_FW_ZoomOut>
+  <WFL_FW_ShowGone>Show those elsewhere</WFL_FW_ShowGone>
+  <WFL_FW_ShowGoneTip>Include relatives who are away or have died.</WFL_FW_ShowGoneTip>
+  <WFL_FW_NoHousehold>Not in a household</WFL_FW_NoHousehold>
+  <WFL_FW_HouseholdN>Household {0}</WFL_FW_HouseholdN>
+  <WFL_FW_Elsewhere>Elsewhere or departed</WFL_FW_Elsewhere>
+  <WFL_FW_GoneHidden>{0} relative(s) are away or have died. Show them with the button above.</WFL_FW_GoneHidden>
+  <WFL_FW_ClickForDetails>Click for details. Double-click to find them in the colony.</WFL_FW_ClickForDetails>
+  <WFL_FW_You>This is you</WFL_FW_You>
+  <WFL_FW_Adult>adult</WFL_FW_Adult>
+  <WFL_FW_Rel_Parent>{0}'s child</WFL_FW_Rel_Parent>
+  <WFL_FW_Rel_Child>{0}'s parent</WFL_FW_Rel_Child>
+  <WFL_FW_Rel_Sibling>{0}'s sibling</WFL_FW_Rel_Sibling>
+  <WFL_FW_Rel_Partner>{0}'s partner</WFL_FW_Rel_Partner>
+  <WFL_FW_Rel_Ex>{0}'s former partner</WFL_FW_Rel_Ex>
+  <WFL_FW_Rel_Housemate>Lives with {0}</WFL_FW_Rel_Housemate>
+  <WFL_FW_Rel_Acquaintance>Knows {0}</WFL_FW_Rel_Acquaintance>
+  <WFL_FW_NotLoaded>Not on the map</WFL_FW_NotLoaded>
+  <WFL_FW_InCaravan>In a caravan</WFL_FW_InCaravan>
+  <WFL_FW_OffMap>Off the map</WFL_FW_OffMap>
+  <WFL_FW_OnMap>On the map</WFL_FW_OnMap>
+  <WFL_FW_Concern_Break>In a mental break</WFL_FW_Concern_Break>
+  <WFL_FW_Concern_Downed>Down</WFL_FW_Concern_Downed>
+  <WFL_FW_Concern_Hungry>Starving</WFL_FW_Concern_Hungry>
+  <WFL_FW_Concern_Hurt>Needs treatment</WFL_FW_Concern_Hurt>
+  <WFL_FW_Concern_Rift>Estranged from {0}</WFL_FW_Concern_Rift>
+  <WFL_FW_PublicRoles>Public roles</WFL_FW_PublicRoles>
+  <WFL_FW_Belonging>How they belong</WFL_FW_Belonging>
+  <WFL_FW_FindInColony>Select {0}</WFL_FW_FindInColony>
+  <WFL_FW_FindTip>Jump the camera to them.</WFL_FW_FindTip>
+  <WFL_FW_ViewRelationships>Relationships</WFL_FW_ViewRelationships>
+  <WFL_FW_ViewRelationshipsTip>See how they feel about everyone they know.</WFL_FW_ViewRelationshipsTip>
+  <WFL_FW_NotInColony>They are not in the colony.</WFL_FW_NotInColony>
+  <WFL_FW_Close>Close</WFL_FW_Close>
+  <WFL_FW_TreeParentChild>A line from parents to their children. A child hangs from the point between its own two parents.</WFL_FW_TreeParentChild>
+  <WFL_FW_Legend_Descent>Parent and child</WFL_FW_Legend_Descent>
+  <WFL_FW_Legend_Partners>Partners</WFL_FW_Legend_Partners>
+  <WFL_FW_Legend_Former>Former partners</WFL_FW_Legend_Former>
+  <WFL_FW_Legend_Step>Step-relatives</WFL_FW_Legend_Step>
+  <WFL_FW_Legend_StepTip>Blue text under a name marks step-parents and step-children.</WFL_FW_Legend_StepTip>
+  <WFL_FW_RelOwn>Their feelings toward</WFL_FW_RelOwn>
+  <WFL_FW_RelShowing>Showing feelings of</WFL_FW_RelShowing>
+  <WFL_FW_RelOwnTip>These are {0}'s own feelings. Only the person you are playing is shown.</WFL_FW_RelOwnTip>
+  <WFL_FW_RelPickTip>Choose whose feelings to show.</WFL_FW_RelPickTip>
+  <WFL_FW_RelFilter_Family>Family</WFL_FW_RelFilter_Family>
+  <WFL_FW_RelFilter_Associates>Associates</WFL_FW_RelFilter_Associates>
+  <WFL_FW_RelFilter_Everyone>Everyone known</WFL_FW_RelFilter_Everyone>
+  <WFL_FW_RelFilter_EveryoneTip>Everyone they have a recorded bond with, including people outside the house.</WFL_FW_RelFilter_EveryoneTip>
+  <WFL_FW_RelSort_Closest>Closest</WFL_FW_RelSort_Closest>
+  <WFL_FW_RelSort_LeastTrusted>Least trusted</WFL_FW_RelSort_LeastTrusted>
+  <WFL_FW_RelSort_MostTense>Most tense</WFL_FW_RelSort_MostTense>
+  <WFL_FW_RelSort_Recent>Recently changed</WFL_FW_RelSort_Recent>
+  <WFL_FW_RelNoMatch>No one matches. Try another filter or clear the search.</WFL_FW_RelNoMatch>
+  <WFL_FW_BondTip_0>How emotionally attached they are. It drives wanting to spend time together and how hard a loss lands.</WFL_FW_BondTip_0>
+  <WFL_FW_BondTip_1>How much they rely on and confide in this person.</WFL_FW_BondTip_1>
+  <WFL_FW_BondTip_2>Friction between them. It drives avoidance and conflict.</WFL_FW_BondTip_2>
+  <WFL_FW_BondTip_3>How well they know each other. It helps teaching and storytelling.</WFL_FW_BondTip_3>
+  <WFL_FW_Trend_Up>Warming lately</WFL_FW_Trend_Up>
+  <WFL_FW_Trend_Down>Cooling lately</WFL_FW_Trend_Down>
+  <WFL_FW_Trend_Flat>Steady</WFL_FW_Trend_Flat>
+  <WFL_FW_Rel_Causes>Recent causes</WFL_FW_Rel_Causes>
+  <WFL_FW_Rel_LastTogether>Last time spent together on purpose: {0}</WFL_FW_Rel_LastTogether>
+  <WFL_FW_Rel_Memories>Shared memories</WFL_FW_Rel_Memories>
+  <WFL_FW_Rel_Grievances>Grievances</WFL_FW_Rel_Grievances>
+  <WFL_FW_Rel_Promises>Promises</WFL_FW_Rel_Promises>
+  <WFL_FW_Rel_Actions>What {0} can do</WFL_FW_Rel_Actions>
+  <WFL_FW_Act_Time>Spend time with {0}</WFL_FW_Act_Time>
+  <WFL_FW_Act_TimeTip>Have them seek this person out for a moment together.</WFL_FW_Act_TimeTip>
+  <WFL_FW_Act_Peace>Make peace</WFL_FW_Act_Peace>
+  <WFL_FW_Act_PeaceTip>Try to mend what has come between them.</WFL_FW_Act_PeaceTip>
+  <WFL_FW_Why_Overview>Choose a character first (the colony overview acts as nobody).</WFL_FW_Why_Overview>
+  <WFL_FW_Why_Self>This is the character itself.</WFL_FW_Why_Self>
+  <WFL_FW_Why_ActorBusy>{0} cannot act right now (not on the map, down or dead).</WFL_FW_Why_ActorBusy>
+  <WFL_FW_Why_NotNear>{0} is not on this map.</WFL_FW_Why_NotNear>
+  <WFL_FW_Why_NotAvatar>Perspective Shift is controlling a different character.</WFL_FW_Why_NotAvatar>
+  <WFL_FW_Why_TooSoon>They tried recently. Wait a while.</WFL_FW_Why_TooSoon>
+  <WFL_FW_Why_NotKnown>{0} does not know of this wrong.</WFL_FW_Why_NotKnown>
+  <WFL_FW_Ev_Current>Current</WFL_FW_Ev_Current>
+  <WFL_FW_Ev_Timeline>Timeline</WFL_FW_Ev_Timeline>
+  <WFL_FW_Ev_Chronicle>Chronicle</WFL_FW_Ev_Chronicle>
+  <WFL_FW_UpKind_Ceremony>Occasion</WFL_FW_UpKind_Ceremony>
+  <WFL_FW_UpKind_Tradition>Tradition</WFL_FW_UpKind_Tradition>
+  <WFL_FW_UpKind_Promise>Promise</WFL_FW_UpKind_Promise>
+  <WFL_FW_UpKind_KinVisit>Visit</WFL_FW_UpKind_KinVisit>
+  <WFL_FW_UpKind_CampTrip>Camping</WFL_FW_UpKind_CampTrip>
+  <WFL_FW_UpKind_Marriage>Marriage</WFL_FW_UpKind_Marriage>
+  <WFL_FW_Up_CeremonyFor>{0}: {1}</WFL_FW_Up_CeremonyFor>
+  <WFL_FW_Up_Promise>{0} promised {1}</WFL_FW_Up_Promise>
+  <WFL_FW_Up_Kin>{0} relative(s) coming to visit</WFL_FW_Up_Kin>
+  <WFL_FW_Up_Camp>A camping trip</WFL_FW_Up_Camp>
+  <WFL_FW_Up_CampBy>A camping trip, suggested by {0}</WFL_FW_Up_CampBy>
+  <WFL_FW_Up_Marriage>A marriage between {0} and {1}</WFL_FW_Up_Marriage>
+  <WFL_FW_Up_Overdue>overdue ({0})</WFL_FW_Up_Overdue>
+  <WFL_FW_Up_Soon>soon</WFL_FW_Up_Soon>
+  <WFL_FW_PlanTip>Open the plan for this occasion.</WFL_FW_PlanTip>
+  <WFL_FW_Card_Traditions>Traditions</WFL_FW_Card_Traditions>
+  <WFL_FW_Muted>muted</WFL_FW_Muted>
+  <WFL_FW_Card_Open>Matters still open</WFL_FW_Card_Open>
+  <WFL_FW_NothingOpen>No active plots, unresolved incidents or urgent promises.</WFL_FW_NothingOpen>
+  <WFL_FW_NothingRecent>Nothing in this view has happened lately.</WFL_FW_NothingRecent>
+  <WFL_FW_NothingChronicle>Nothing in this view has become permanent history yet.</WFL_FW_NothingChronicle>
+  <WFL_FW_Cat_All>All</WFL_FW_Cat_All>
+  <WFL_FW_Cat_AllTip>Show every kind of event.</WFL_FW_Cat_AllTip>
+  <WFL_FW_Cat_Ceremonies>Ceremonies</WFL_FW_Cat_Ceremonies>
+  <WFL_FW_Cat_Relationships>Relationships</WFL_FW_Cat_Relationships>
+  <WFL_FW_Cat_Conflict>Conflict</WFL_FW_Cat_Conflict>
+  <WFL_FW_Cat_Leadership>Leadership</WFL_FW_Cat_Leadership>
+  <WFL_FW_Cat_BirthsDeaths>Births &amp; deaths</WFL_FW_Cat_BirthsDeaths>
+  <WFL_FW_Cat_Traditions>Traditions</WFL_FW_Cat_Traditions>
+  <WFL_FW_Cat_Household>Households</WFL_FW_Cat_Household>
+  <WFL_FW_Cat_Plot>Plot</WFL_FW_Cat_Plot>
+  <WFL_FW_Defining>Defining memory</WFL_FW_Defining>
+  <WFL_FW_DefiningTip>This became part of how the family remembers itself.</WFL_FW_DefiningTip>
+  <WFL_FW_Tier_Poor>It strained things between them.</WFL_FW_Tier_Poor>
+  <WFL_FW_Tier_Flat>It left things as they were.</WFL_FW_Tier_Flat>
+  <WFL_FW_Tier_Good>It brought them closer.</WFL_FW_Tier_Good>
+  <WFL_FW_Tier_Great>It was a real step closer.</WFL_FW_Tier_Great>
+  <WFL_FW_CeremonyBody>{0} attended; {1} moments of note.</WFL_FW_CeremonyBody>
+  <WFL_FW_CeremonyWell>It went well.</WFL_FW_CeremonyWell>
+  <WFL_FW_CeremonyBadly>It went badly.</WFL_FW_CeremonyBadly>
+  <WFL_FW_IncidentLine>{0}: {1} against {2}</WFL_FW_IncidentLine>
+  <WFL_FW_IncidentLinePrivate>{0}: {1} against {2}</WFL_FW_IncidentLinePrivate>
+  <WFL_FW_ShowMore>Show {0} more</WFL_FW_ShowMore>
+  <WFL_FW_Home_Households>Households</WFL_FW_Home_Households>
+  <WFL_FW_Home_Supplies>Supplies</WFL_FW_Home_Supplies>
+  <WFL_FW_Home_Area>Family area</WFL_FW_Home_Area>
+  <WFL_FW_PartnerOfN>Partner of {0}</WFL_FW_PartnerOfN>
+  <WFL_FW_ChildOfN>Child of {0}</WFL_FW_ChildOfN>
+  <WFL_FW_GuardianN>In {0}'s care</WFL_FW_GuardianN>
+  <WFL_FW_Outdoors>Outdoors</WFL_FW_Outdoors>
+  <WFL_FW_InsideArea>inside the family area</WFL_FW_InsideArea>
+  <WFL_FW_OutsideArea>outside the family area</WFL_FW_OutsideArea>
+  <WFL_FW_Problem_NoBed>No bed assigned</WFL_FW_Problem_NoBed>
+  <WFL_FW_Problem_BedOutside>Sleeps outside the area</WFL_FW_Problem_BedOutside>
+  <WFL_FW_RowMenuTip>Housing options for {0}.</WFL_FW_RowMenuTip>
+  <WFL_FW_WhyNotMove>{0} cannot arrange housing for {1}.</WFL_FW_WhyNotMove>
+  <WFL_FW_FindNamed>Find {0} in the colony</WFL_FW_FindNamed>
+  <WFL_FW_RelationshipsOf>Show {0}'s relationships</WFL_FW_RelationshipsOf>
+  <WFL_FW_Supply_Food>Food</WFL_FW_Supply_Food>
+  <WFL_FW_Supply_Fuel>Fuel</WFL_FW_Supply_Fuel>
+  <WFL_FW_Supply_Medicine>Medicine</WFL_FW_Supply_Medicine>
+  <WFL_FW_Supply_Apparel>Apparel</WFL_FW_Supply_Apparel>
+  <WFL_FW_SupplyTip_Food>Days of meals the family has set aside, against how many it wants to keep.</WFL_FW_SupplyTip_Food>
+  <WFL_FW_SupplyTip_Fuel>How long the fuel in the area's machines would last.</WFL_FW_SupplyTip_Fuel>
+  <WFL_FW_SupplyTip_Medicine>Medicine the family has claimed, against what it wants to keep.</WFL_FW_SupplyTip_Medicine>
+  <WFL_FW_SupplyTip_Apparel>Whether everyone has clothes.</WFL_FW_SupplyTip_Apparel>
+  <WFL_FW_Level_Unknown>Unknown</WFL_FW_Level_Unknown>
+  <WFL_FW_Level_Short>Short</WFL_FW_Level_Short>
+  <WFL_FW_Level_Low>Low</WFL_FW_Level_Low>
+  <WFL_FW_Level_Enough>Enough</WFL_FW_Level_Enough>
+  <WFL_FW_Unit_Days>days</WFL_FW_Unit_Days>
+  <WFL_FW_Unit_Pieces>pieces</WFL_FW_Unit_Pieces>
+  <WFL_FW_Keep>Keep</WFL_FW_Keep>
+  <WFL_FW_NotTracked>Not tracked</WFL_FW_NotTracked>
+  <WFL_FW_Apparel_Enough>Sufficient</WFL_FW_Apparel_Enough>
+  <WFL_FW_Apparel_Short>{0} without clothes</WFL_FW_Apparel_Short>
+  <WFL_FW_ReservesTip>What the family holds against what it wants to keep. Drag a slider to change the target.</WFL_FW_ReservesTip>
+  <WFL_FW_Policies>Household policies</WFL_FW_Policies>
+  <WFL_FW_PolicyEmergencyTip>When on, anyone may take food while starving and medicine for emergency treatment, even from another house's store.</WFL_FW_PolicyEmergencyTip>
+  <WFL_FW_PolicyFundsTip>When on, the family may spend colony silver in barter for its own needs.</WFL_FW_PolicyFundsTip>
+  <WFL_FW_FamilyArea>Family area</WFL_FW_FamilyArea>
+  <WFL_FW_Covers>Covers</WFL_FW_Covers>
+  <WFL_FW_CoversN>{0} of {1} members</WFL_FW_CoversN>
+  <WFL_FW_BedsAssigned>Beds</WFL_FW_BedsAssigned>
+  <WFL_FW_BedsN>{0} of {1} have a bed</WFL_FW_BedsN>
+  <WFL_FW_Access>Access</WFL_FW_Access>
+  <WFL_FW_AccessPolicy>Family and invited guests. Visitors have to knock and be let in.</WFL_FW_AccessPolicy>
+  <WFL_FW_MeetingPlace>Meeting place</WFL_FW_MeetingPlace>
+  <WFL_FW_Missing>Missing essentials</WFL_FW_Missing>
+  <WFL_FW_NothingMissing>Nothing essential is missing.</WFL_FW_NothingMissing>
+  <WFL_FW_Missing_Beds>No bed for {0}.</WFL_FW_Missing_Beds>
+  <WFL_FW_Missing_Area>No family area is set.</WFL_FW_Missing_Area>
+  <WFL_FW_Missing_Meeting>No meeting place is chosen.</WFL_FW_Missing_Meeting>
+  <WFL_FW_Missing_Food>No food has been set aside.</WFL_FW_Missing_Food>
+  <WFL_FW_AreaActions>Actions</WFL_FW_AreaActions>
+  <WFL_FW_EditArea>Draw or edit family area</WFL_FW_EditArea>
+  <WFL_FW_NoMap>There is no home map to draw an area on.</WFL_FW_NoMap>
+  <WFL_FW_Card_Offices>Family offices</WFL_FW_Card_Offices>
+  <WFL_FW_Card_Alliances>Alliances and requests</WFL_FW_Card_Alliances>
+  <WFL_FW_Card_Institutions>Institutions</WFL_FW_Card_Institutions>
+  <WFL_FW_Card_Identity>Associates and identity</WFL_FW_Card_Identity>
+  <WFL_FW_Vacant>Vacant</WFL_FW_Vacant>
+  <WFL_FW_NoHeir>No heir named</WFL_FW_NoHeir>
+  <WFL_FW_NameHeir>Declare an heir</WFL_FW_NameHeir>
+  <WFL_FW_NameHeirTip>Only the House Head can name an heir.</WFL_FW_NameHeirTip>
+  <WFL_FW_RoleWhy_Head>Holds it by this house's custom: {0}.</WFL_FW_RoleWhy_Head>
+  <WFL_FW_RoleWhy_Steward>Appointed to help the head run the house.</WFL_FW_RoleWhy_Steward>
+  <WFL_FW_RoleWhy_Heir>Named by the head.</WFL_FW_RoleWhy_Heir>
+  <WFL_FW_RoleWhy_Named>Named by the colony's ideoligion.</WFL_FW_RoleWhy_Named>
+  <WFL_FW_RoleWhy_Elected>Elected. The term runs until {0}.</WFL_FW_RoleWhy_Elected>
+  <WFL_FW_RoleWhy_ElectedOpen>Elected at the colony's yearly assembly.</WFL_FW_RoleWhy_ElectedOpen>
+  <WFL_FW_Status_Succession>Succession under way: {0}.</WFL_FW_Status_Succession>
+  <WFL_FW_Status_NoSteward>No Steward is appointed.</WFL_FW_Status_NoSteward>
+  <WFL_FW_Status_Vacant>Nobody holds this post.</WFL_FW_Status_Vacant>
+  <WFL_FW_Urgency>Urgency</WFL_FW_Urgency>
+  <WFL_FW_Approaches>Ways to move forward</WFL_FW_Approaches>
+  <WFL_FW_Needs>Where the house stands</WFL_FW_Needs>
+  <WFL_FW_Need_Sustenance>Provisions</WFL_FW_Need_Sustenance>
+  <WFL_FW_Need_LivingSpace>Living space</WFL_FW_Need_LivingSpace>
+  <WFL_FW_Need_Safety>Safety</WFL_FW_Need_Safety>
+  <WFL_FW_Need_Continuity>Succession</WFL_FW_Need_Continuity>
+  <WFL_FW_Need_Capability>Skills</WFL_FW_Need_Capability>
+  <WFL_FW_Need_Cohesion>Togetherness</WFL_FW_Need_Cohesion>
+  <WFL_FW_Need_Influence>Influence</WFL_FW_Need_Influence>
+  <WFL_FW_Need_Independence>Independence</WFL_FW_Need_Independence>
+  <WFL_FW_NeedTip_Sustenance>Whether the family has food and supplies set aside.</WFL_FW_NeedTip_Sustenance>
+  <WFL_FW_NeedTip_LivingSpace>Whether everyone has a place to sleep.</WFL_FW_NeedTip_LivingSpace>
+  <WFL_FW_NeedTip_Safety>How safe the family judges its home.</WFL_FW_NeedTip_Safety>
+  <WFL_FW_NeedTip_Continuity>Whether the house has a clear future head.</WFL_FW_NeedTip_Continuity>
+  <WFL_FW_NeedTip_Capability>Whether it has the skills it needs.</WFL_FW_NeedTip_Capability>
+  <WFL_FW_NeedTip_Cohesion>How well the members get along.</WFL_FW_NeedTip_Cohesion>
+  <WFL_FW_NeedTip_Influence>Weight in the colony.</WFL_FW_NeedTip_Influence>
+  <WFL_FW_NeedTip_Independence>How much the house relies on others.</WFL_FW_NeedTip_Independence>
+  <WFL_FW_Approach_SecureProvisions>Set aside more food and fuel&#10;Grow or hunt for the household&#10;Ask another house for supplies</WFL_FW_Approach_SecureProvisions>
+  <WFL_FW_Approach_EstablishFamilyQuarters>Draw a family area&#10;Assign beds to everyone&#10;Build more bedrooms</WFL_FW_Approach_EstablishFamilyQuarters>
+  <WFL_FW_Approach_ImproveSafety>Strengthen the home's defences&#10;Seek protection from another house&#10;Keep armed members nearby</WFL_FW_Approach_ImproveSafety>
+  <WFL_FW_Approach_SeekProtection>Befriend a stronger house&#10;Agree to a protection arrangement</WFL_FW_Approach_SeekProtection>
+  <WFL_FW_Approach_SecureSuccession>Name an heir&#10;Bring up a capable child&#10;Seek a marriage</WFL_FW_Approach_SecureSuccession>
+  <WFL_FW_Approach_FillSkillGap>Teach a family member&#10;Seek a skilled marriage&#10;Develop a trusted Associate</WFL_FW_Approach_FillSkillGap>
+  <WFL_FW_Approach_TrainNextGeneration>Teach the children&#10;Pair them with skilled elders</WFL_FW_Approach_TrainNextGeneration>
+  <WFL_FW_Approach_RestoreCohesion>Spend time together&#10;Mend open estrangements&#10;Hold a gathering</WFL_FW_Approach_RestoreCohesion>
+  <WFL_FW_Approach_ExpandLegacy>Hold traditions&#10;Mark milestones as a family&#10;Record memorable deeds</WFL_FW_Approach_ExpandLegacy>
+  <WFL_FW_Approach_PreserveIndependence>Pay back what the house owes&#10;Avoid new debts to other houses</WFL_FW_Approach_PreserveIndependence>
+  <WFL_FW_Approach_IncreaseInfluence>Hold a colony post&#10;Support allies in the assembly&#10;Take part in public occasions</WFL_FW_Approach_IncreaseInfluence>
+  <WFL_FW_Approach_Contentment>Nothing urgent. Keep doing what works.</WFL_FW_Approach_Contentment>
+  <WFL_FW_Approach_None>Nothing to suggest yet.</WFL_FW_Approach_None>
+  <WFL_FW_SuccessionLabel>Succession</WFL_FW_SuccessionLabel>
+  <WFL_FW_ColonyLeadership>Around the colony</WFL_FW_ColonyLeadership>
+  <WFL_FW_NoLeader>No recognised colony leader</WFL_FW_NoLeader>
+  <WFL_FW_Threats>Active threats</WFL_FW_Threats>
+  <WFL_FW_BranchTip>Found a new house from a member of this one.</WFL_FW_BranchTip>
+  <WFL_FW_WhyNot_Head>Only the head of House {1} can do this. {0} is not.</WFL_FW_WhyNot_Head>
+  <WFL_FW_WhyNot_Manage>{0} does not run House {1}.</WFL_FW_WhyNot_Manage>
+  <WFL_FW_Feel_Both_Glad>"{2}" left {0} and {1} glowing.</WFL_FW_Feel_Both_Glad>
+  <WFL_FW_Feel_Both_Warm>"{2}" brought {0} and {1} closer.</WFL_FW_Feel_Both_Warm>
+  <WFL_FW_Feel_Both_Hurt>"{2}" hurt both {0} and {1}.</WFL_FW_Feel_Both_Hurt>
+  <WFL_FW_Feel_Both_Uneasy>"{2}" left {0} and {1} uneasy.</WFL_FW_Feel_Both_Uneasy>
+  <WFL_FW_Feel_One_Glad>{0} came away glowing.</WFL_FW_Feel_One_Glad>
+  <WFL_FW_Feel_One_Warm>{0} felt warmer for it.</WFL_FW_Feel_One_Warm>
+  <WFL_FW_Feel_One_Hurt>{0} was hurt by it.</WFL_FW_Feel_One_Hurt>
+  <WFL_FW_Feel_One_Uneasy>{0} was left uneasy.</WFL_FW_Feel_One_Uneasy>
+  <WFL_FW_After_RiftOpened>A rift opened between {0} and {1}.</WFL_FW_After_RiftOpened>
+  <WFL_FW_After_RiftEased>The rift between {0} and {1} eased a little.</WFL_FW_After_RiftEased>
+  <WFL_FW_After_RiftResolved>{0} and {1} settled the rift between them.</WFL_FW_After_RiftResolved>
+  <WFL_FW_After_PromiseMade>{0} made {1} a promise.</WFL_FW_After_PromiseMade>
+  <WFL_FW_After_PromiseKept>{0} kept a promise to {1}.</WFL_FW_After_PromiseKept>
+  <WFL_FW_After_TieChanged>It shifted how their two families stand.</WFL_FW_After_TieChanged>
+  <WFL_FW_After_Memory>The family will remember it.</WFL_FW_After_Memory>
+  <WFL_FW_StoryOutsider>{0}'s part in their story</WFL_FW_StoryOutsider>
+</LanguageData>

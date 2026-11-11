@@ -16,3 +16,12 @@ tools/**/obj/
 
 # Reproducible detailed calibration output; commit summary and frequency tables only.
 docs/calibration/history.csv
+
+obj-isolation/
+
+# Built module assemblies and the assembled install folders
+Packages/*/1.6/Assemblies/*.dll
+Packages/*/1.7/Assemblies/*.dll
+Packages/*/1.6/Assemblies/*.json
+Packages/*/1.7/Assemblies/*.json
+dist/

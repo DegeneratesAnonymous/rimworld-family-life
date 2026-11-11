@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_Event_Testing_Title>Annual assessment planned</WFL_Event_Testing_Title>
+  <WFL_Event_Testing_Text>It is the season for the children's annual assessment. {0} has planned a few short daytime sittings over two days, and the result will come from what each child has actually studied and how they took part. You do not need to do anything. You can begin now, put it off for a week, or skip it this year.</WFL_Event_Testing_Text>
+  <WFL_Event_NoPost_Teacher>Nobody holds the post of teacher on this map.</WFL_Event_NoPost_Teacher>
+  <WFL_Event_NoPupils>There are no children to assess.</WFL_Event_NoPupils>
+  <WFL_Event_BeginTesting>Begin annual testing</WFL_Event_BeginTesting>
+  <WFL_Event_BeginTestingDesc>Begin the children's annual assessment now: a few short daytime sittings over two days. The result comes from what each child has studied.</WFL_Event_BeginTestingDesc>
+  <WFL_Testing_Begins>{0} begins the annual assessment of {1} children. It runs over two days, in the daytime.</WFL_Testing_Begins>
+  <WFL_Testing_ResultTitle>Assessment results</WFL_Testing_ResultTitle>
+  <WFL_Testing_ResultText>The annual assessment overseen by {0} is over.\n\n{1}</WFL_Testing_ResultText>
+  <WFL_HoldClass_Label>Hold class</WFL_HoldClass_Label>
+  <WFL_HoldClass_Desc>Have the colony's teacher hold a class here now. The colony's children come and sit in this room, and the teacher teaches for about four hours in short blocks with breaks. Anyone who needs to eat, sleep, or be seen to can leave and come back.</WFL_HoldClass_Desc>
+  <WFL_HoldClass_NoTeacher>Nobody holds the post of teacher on this map, so there is nobody to hold a class.</WFL_HoldClass_NoTeacher>
+  <WFL_HoldClass_Running>{0} is already holding a class.</WFL_HoldClass_Running>
+  <WFL_HoldClass_NoPupils>There are no children free to come to a class just now.</WFL_HoldClass_NoPupils>
+  <WFL_HoldClass_Cannot>{0} cannot get to the front of this room.</WFL_HoldClass_Cannot>
+  <WFL_HoldClass_Started>{0} begins a class for {1} children.</WFL_HoldClass_Started>
+  <WFL_Class_Ended>{0} finished the class on {3}: {1} pupils learned something.</WFL_Class_Ended>
+  <WFL_Class_EndedBook>{0} finished the class on {3}, reading {2} with {1} pupils.</WFL_Class_EndedBook>
+  <WFL_Class_Begins>{0} is holding a class.</WFL_Class_Begins>
+  <WFL_Testing_LineDone>{0}: {1}{2}. Consolidated: {3}.</WFL_Testing_LineDone>
+  <WFL_Testing_LineIncomplete>{0}: not enough to judge yet ({1}).</WFL_Testing_LineIncomplete>
+  <WFL_Testing_LineNothing>{0}: nothing was studied since the last assessment, so there is nothing to assess.</WFL_Testing_LineNothing>
+  <WFL_Testing_Why_Excused>missed sittings through illness or other need; a make-up can be arranged</WFL_Testing_Why_Excused>
+  <WFL_Testing_Why_Little>too little time in class this period</WFL_Testing_Why_Little>
+  <WFL_Testing_Provisional> (provisional)</WFL_Testing_Provisional>
+  <WFL_Testing_Sat>Sitting done.</WFL_Testing_Sat>
+  <WFL_Testing_Support_Recover>{0} may sit it again once they are well; there is no mark against them.</WFL_Testing_Support_Recover>
+  <WFL_Testing_Support_Tutor>{0} may do better with some time one-to-one with the teacher.</WFL_Testing_Support_Tutor>
+  <WFL_Testing_Support_Approach>A different approach in class may suit {0}: shorter blocks, or a subject they enjoy more.</WFL_Testing_Support_Approach>
+  <WFL_HoldClass_Queued>{0} cannot start the class just now. It will be held at the next opportunity.</WFL_HoldClass_Queued>
+</LanguageData>

@@ -24,6 +24,7 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Id, "id");
             Scribe_Values.Look(ref Name, "name", "");
             Scribe_Values.Look(ref LastName, "last", "");
+            Scribe_Values.Look(ref FirstName, "first", "");
             Scribe_Values.Look(ref BirthAbsTick, "birth");
             Scribe_Values.Look(ref Presence, "presence", Presence.Away);
             Scribe_Values.Look(ref EverColonist, "everColonist");
@@ -69,6 +70,9 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Traditions, "traditions", LookMode.Deep);
             Scribe_Values.Look(ref StoriesTold, "storiesTold");
             Scribe_Values.Look(ref MealsShared, "mealsShared");
+            Scribe_Values.Look(ref LastGrandReunionTick,"lastGrandReunion");
+            Scribe_Values.Look(ref NextCeremonyCheckTick,"nextCeremonyCheck");
+            Scribe_Values.Look(ref Standing,"standing");
             Scribe_Values.Look(ref ZoneMapId, "zoneMapId", -1);
             Scribe_Values.Look(ref FoodReserveDays, "foodReserveDays", 1f);
             Scribe_Values.Look(ref FuelReserveDays, "fuelReserveDays", 2f);
@@ -89,6 +93,81 @@ namespace FamilyLife.Domain
             if (ZoneApplied == null) ZoneApplied = new List<int>();
             Scribe_Collections.Look(ref BedDeals, "bedDeals", LookMode.Value);
             if (BedDeals == null) BedDeals = new List<int>();
+            Scribe_Deep.Look(ref Situation, "situation");
+            Scribe_Deep.Look(ref Ambition, "ambition");
+            if (Situation == null) Situation = new HouseSituation();
+            if (Ambition == null) Ambition = new HouseAmbitionRecord();
+            Scribe_Values.Look(ref VacantHeadId,"vacantHead");Scribe_Values.Look(ref VacantSeenTick,"vacantSeen");
+            Scribe_Values.Look(ref Custom,"successionCustom",SuccessionCustom.Seniority);Scribe_Values.Look(ref CustomSet,"successionCustomSet");
+            Scribe_Collections.Look(ref Precedent,"successionPrecedent",LookMode.Value);Scribe_Values.Look(ref DesignatedHeirId,"designatedHeir");
+            Scribe_Values.Look(ref DesignatedTick,"designatedTick");Scribe_Collections.Look(ref DesignationKnownBy,"designationKnownBy",LookMode.Value);
+            Scribe_Deep.Look(ref Crime,"crime");
+            if (Precedent == null) Precedent = new List<int> { 0, 0, 0, 0, 0 };
+            if (DesignationKnownBy == null) DesignationKnownBy = new List<int>();
+            if (Crime == null) Crime = new CrimeRecord();
+        }
+    }
+
+    public sealed partial class HouseSituation : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref EvaluatedTick, "evaluated");
+            Scribe_Values.Look(ref Members, "members"); Scribe_Values.Look(ref Adults, "adults"); Scribe_Values.Look(ref Children, "children");
+            Scribe_Values.Look(ref PartneredAdults, "partnered"); Scribe_Values.Look(ref EligibleSingles, "singles");
+            Scribe_Values.Look(ref SuitableBeds, "suitableBeds"); Scribe_Values.Look(ref SpareBeds, "spareBeds");
+            Scribe_Values.Look(ref Sustenance, "sustenance", 50f); Scribe_Values.Look(ref LivingSpace, "livingSpace", 50f);
+            Scribe_Values.Look(ref Safety, "safety", 50f); Scribe_Values.Look(ref Continuity, "continuity", 50f);
+            Scribe_Values.Look(ref Capability, "capability", 50f); Scribe_Values.Look(ref Cohesion, "cohesion", 50f);
+            Scribe_Values.Look(ref Influence, "influence", 50f); Scribe_Values.Look(ref Independence, "independence", 50f);
+            Scribe_Values.Look(ref Legacy, "legacy", 50f); Scribe_Values.Look(ref Power, "power");
+            Scribe_Values.Look(ref WeakestCapability, "weakestCapability", HouseCapability.None);
+            Scribe_Values.Look(ref ThreateningFamilyId, "threateningFamily"); Scribe_Values.Look(ref CooperativeFamilyId, "cooperativeFamily");
+        }
+    }
+
+    public sealed partial class HouseAmbitionRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Primary, "primary", HouseAmbitionKind.None); Scribe_Values.Look(ref Secondary, "secondary", HouseAmbitionKind.None);
+            Scribe_Values.Look(ref PrimaryReason, "primaryReason", HouseNeed.None); Scribe_Values.Look(ref SecondaryReason, "secondaryReason", HouseNeed.None);
+            Scribe_Values.Look(ref StartedTick, "started"); Scribe_Values.Look(ref LastChangedTick, "changed"); Scribe_Values.Look(ref LockedUntilTick, "lockedUntil");
+            Scribe_Values.Look(ref TargetFamilyId, "targetFamily"); Scribe_Values.Look(ref TargetCapability, "targetCapability", HouseCapability.None);
+            Scribe_Values.Look(ref Urgency, "urgency"); Scribe_Values.Look(ref Progress, "progress");
+        }
+    }
+
+    public sealed partial class StewardRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref PersonId, "person"); Scribe_Values.Look(ref FamilyId, "family");
+            Scribe_Values.Look(ref AppointedTick, "appointed"); Scribe_Values.Look(ref EndedTick, "ended"); Scribe_Values.Look(ref LastServiceTick, "lastService");
+            Scribe_Values.Look(ref CeremoniesOrganized, "ceremonies"); Scribe_Values.Look(ref AidTransfers, "aid");
+            Scribe_Values.Look(ref Reconciliations, "reconciliations"); Scribe_Values.Look(ref NegotiationsLed, "negotiations");
+            Scribe_Values.Look(ref GuestsHoused, "guests"); Scribe_Values.Look(ref ShortagesAverted, "shortages"); Scribe_Values.Look(ref Failures, "failures"); Scribe_Values.Look(ref PetitionsHeard, "petitionsHeard"); Scribe_Values.Look(ref Interruptions, "interruptions");
+        }
+    }
+
+    public sealed partial class MarriageAlliance : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id,"id");Scribe_Values.Look(ref PawnA,"pawnA");Scribe_Values.Look(ref PawnB,"pawnB");
+            Scribe_Values.Look(ref FamilyA,"familyA");Scribe_Values.Look(ref FamilyB,"familyB");Scribe_Values.Look(ref CreatedTick,"created");
+            Scribe_Values.Look(ref ExpiresTick,"expires");Scribe_Values.Look(ref LastChangedTick,"changed");
+            Scribe_Values.Look(ref NegotiatorA,"negotiatorA");Scribe_Values.Look(ref NegotiatorB,"negotiatorB");
+            Scribe_Values.Look(ref HouseAInterest,"houseAInterest");Scribe_Values.Look(ref HouseBInterest,"houseBInterest");
+            Scribe_Values.Look(ref PawnAWillingness,"pawnAWillingness");Scribe_Values.Look(ref PawnBWillingness,"pawnBWillingness");
+            Scribe_Values.Look(ref Reasons,"reasons",MarriageAllianceReason.None);Scribe_Values.Look(ref ObjectionsA,"objectionsA",MarriageAllianceObjection.None);
+            Scribe_Values.Look(ref ObjectionsB,"objectionsB",MarriageAllianceObjection.None);Scribe_Values.Look(ref State,"state",MarriageAllianceState.Opportunity);
+            Scribe_Values.Look(ref ConsentA,"consentA",MarriageConsentState.NotAsked);Scribe_Values.Look(ref ConsentB,"consentB",MarriageConsentState.NotAsked);
+            Scribe_Values.Look(ref ConsentApproacherA,"consentApproacherA");Scribe_Values.Look(ref ConsentApproacherB,"consentApproacherB");
+            Scribe_Values.Look(ref DefianceA,"defianceA");Scribe_Values.Look(ref DefianceB,"defianceB");Scribe_Collections.Look(ref KnownBy,"knownBy",LookMode.Value);
+            Scribe_Values.Look(ref UnionState,"unionState",HouseUnionState.None);Scribe_Values.Look(ref UnionTargetFamilyId,"unionTarget");
+            Scribe_Values.Look(ref UnionNegotiatorA,"unionNegotiatorA");Scribe_Values.Look(ref UnionNegotiatorB,"unionNegotiatorB");
+            if(KnownBy==null)KnownBy=new List<int>();
         }
     }
 
@@ -150,7 +229,45 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref NotBefore, "notBefore");
             Scribe_Values.Look(ref Expires, "expires");
             Scribe_Values.Look(ref Attempts, "attempts");
+            Scribe_Values.Look(ref Ceremony,"ceremony",CeremonyKind.None);
+            Scribe_Values.Look(ref State,"ceremonyState",CeremonyState.Planned);
+            Scribe_Values.Look(ref Influences,"influences",CeremonyInfluence.None);
+            Scribe_Values.Look(ref SecondLineageId,"secondLineage");
+            Scribe_Values.Look(ref SubjectBId,"subjectB");
+            Scribe_Values.Look(ref CreatedTick,"created");
+            Scribe_Values.Look(ref StartedTick,"started");
+            Scribe_Values.Look(ref OrganizerId,"organizer");
+            Scribe_Values.Look(ref MapId,"map",-1);
+            Scribe_Values.Look(ref Seed,"seed");
+            Scribe_Values.Look(ref MomentBudget,"momentBudget");
+            Scribe_Values.Look(ref MomentsResolved,"momentsResolved");
+            Scribe_Collections.Look(ref InvitedIds,"invited",LookMode.Value);
+            Scribe_Collections.Look(ref VisitorIds,"visitors",LookMode.Value);
+            if(Scribe.mode==LoadSaveMode.PostLoadInit)
+            {
+                InvitedIds=InvitedIds??new List<int>();VisitorIds=VisitorIds??new List<int>();
+                if(Ceremony==CeremonyKind.None)Ceremony=FamilyRegistry.CeremonyOf(Kind);
+            }
         }
+    }
+
+    public sealed partial class CeremonyRecord : IExposable
+    {
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref Id,"id");Scribe_Values.Look(ref Kind,"kind",CeremonyKind.None);
+            Scribe_Values.Look(ref LineageId,"lineage");Scribe_Values.Look(ref SecondLineageId,"secondLineage");
+            Scribe_Values.Look(ref SubjectId,"subject");Scribe_Values.Look(ref SubjectBId,"subjectB");Scribe_Values.Look(ref OrganizerId,"organizer");
+            Scribe_Values.Look(ref StartedTick,"started");Scribe_Values.Look(ref CompletedTick,"completed");Scribe_Values.Look(ref Attendees,"attendees");
+            Scribe_Values.Look(ref Visitors,"visitors");Scribe_Values.Look(ref Moments,"moments");Scribe_Values.Look(ref Influences,"influences",CeremonyInfluence.None);
+            Scribe_Values.Look(ref Outcome,"outcome");
+        }
+    }
+
+    public sealed partial class PrestigeRecord : IExposable
+    {
+        public void ExposeData()
+        {Scribe_Values.Look(ref PersonId,"person");Scribe_Values.Look(ref LastTick,"last");Scribe_Values.Look(ref CeremoniesOrganized,"ceremonies");Scribe_Values.Look(ref Value,"value");}
     }
 
     public sealed partial class Memory : IExposable
@@ -248,6 +365,9 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref Weight, "weight", EventWeight.Ambient);
             Scribe_Values.Look(ref Setting, "setting");
             Scribe_Values.Look(ref Third, "third");
+            Scribe_Values.Look(ref FeelA, "feelA");
+            Scribe_Values.Look(ref FeelB, "feelB");
+            Scribe_Values.Look(ref Aftermath, "aftermath");
         }
     }
 
@@ -319,7 +439,8 @@ namespace FamilyLife.Domain
             Scribe_Values.Look(ref CreatedTick,"createdTick");
             Scribe_Values.Look(ref HeardTick,"heardTick");
             Scribe_Values.Look(ref HeardBy,"heardBy");
-            Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");
+            Scribe_Values.Look(ref SourceFamilyId,"sourceFamily");Scribe_Values.Look(ref AwaitingCouncil,"awaitingCouncil");
+            Scribe_Values.Look(ref ReceivedBy,"receivedBy");
             Scribe_Values.Look(ref Kind,"kind");
             Scribe_Values.Look(ref State,"state");
         }
@@ -413,11 +534,33 @@ namespace FamilyLife.Domain
             Scribe_Collections.Look(ref Rifts, "rifts", LookMode.Deep);
             Scribe_Collections.Look(ref Memories, "memories", LookMode.Deep);
             Scribe_Collections.Look(ref GatheringRequests, "gatheringRequests", LookMode.Deep);
+            Scribe_Collections.Look(ref Ceremonies,"ceremonies",LookMode.Deep);
+            Scribe_Collections.Look(ref Prestige,"prestige",LookMode.Deep);
             Scribe_Collections.Look(ref EventLog, "eventLog", LookMode.Deep);
             Scribe_Collections.Look(ref Commitments, "commitments", LookMode.Deep);
             Scribe_Collections.Look(ref Ties, "familyTies", LookMode.Deep);
             Scribe_Collections.Look(ref HouseContacts,"houseContacts",LookMode.Deep);
             Scribe_Collections.Look(ref HousePetitions,"housePetitions",LookMode.Deep);
+            Scribe_Collections.Look(ref StewardRecords,"stewardRecords",LookMode.Deep);
+            Scribe_Collections.Look(ref MarriageAlliances,"marriageAlliances",LookMode.Deep);
+            Scribe_Values.Look(ref NextMarriageAllianceId,"nextMarriageAllianceId",1);
+            Scribe_Collections.Look(ref CeremonyPlans,"ceremonyPlans",LookMode.Deep);Scribe_Values.Look(ref NextPlanId,"nextPlanId",1);
+            Scribe_Collections.Look(ref StewardDuties,"stewardDuties",LookMode.Deep);Scribe_Collections.Look(ref FamilyOffices,"familyOffices",LookMode.Deep);
+            Scribe_Values.Look(ref NextStewardDutyId,"nextStewardDutyId",1);Scribe_Collections.Look(ref SuccessionCases,"successionCases",LookMode.Deep);
+            Scribe_Values.Look(ref NextSuccessionCaseId,"nextSuccessionCaseId",1);Scribe_Collections.Look(ref Heists,"heists",LookMode.Deep);
+            Scribe_Collections.Look(ref CrimeKnowledgeRecords,"crimeKnowledge",LookMode.Deep);Scribe_Collections.Look(ref ProtectionArrangements,"protectionArrangements",LookMode.Deep);
+            Scribe_Values.Look(ref NextHeistId,"nextHeistId",1);Scribe_Values.Look(ref NextProtectionId,"nextProtectionId",1);
+            Scribe_Deep.Look(ref Institution,"institution");Scribe_Collections.Look(ref Elections,"elections",LookMode.Deep);
+            Scribe_Collections.Look(ref InstitutionMovements,"institutionMovements",LookMode.Deep);Scribe_Values.Look(ref NextInstitutionMovementId,"nextInstitutionMovementId",1);Scribe_Values.Look(ref LastInstitutionMovementTick,"lastInstitutionMovementTick",-1000000);
+            Scribe_Collections.Look(ref Coups,"coups",LookMode.Deep);Scribe_Values.Look(ref NextElectionId,"nextElectionId",1);
+            Scribe_Values.Look(ref NextCoupId,"nextCoupId",1);
+            Scribe_Collections.Look(ref Favors,"favors",LookMode.Deep);Scribe_Values.Look(ref NextFavorId,"nextFavorId",1);
+            Scribe_Collections.Look(ref CouncilMatters,"councilMatters",LookMode.Deep);Scribe_Values.Look(ref NextCouncilMatterId,"nextCouncilMatterId",1);Scribe_Values.Look(ref LastCoupPlanTick,"lastCoupPlanTick",-1000000);
+            Scribe_Collections.Look(ref Offices,"communityOffices",LookMode.Deep);Scribe_Values.Look(ref NextOfficeId,"nextOfficeId",1);ExposeLifecycle();
+            Scribe_Collections.Look(ref Assemblies,"assemblies",LookMode.Deep);Scribe_Values.Look(ref NextAssemblyId,"nextAssemblyId",1);Scribe_Values.Look(ref NextAssemblyTick,"nextAssemblyTick");Scribe_Values.Look(ref HallMapId,"hallMap",-1);Scribe_Values.Look(ref HallX,"hallX");Scribe_Values.Look(ref HallZ,"hallZ");
+            Scribe_Collections.Look(ref KinVisits,"kinVisits",LookMode.Deep);Scribe_Values.Look(ref NextKinVisitId,"nextKinVisitId",1);
+            Scribe_Collections.Look(ref PersonalItems,"personalItems",LookMode.Deep);Scribe_Collections.Look(ref Beneficiaries,"beneficiaries",LookMode.Deep);Scribe_Collections.Look(ref Estates,"estates",LookMode.Deep);Scribe_Values.Look(ref NextEstateId,"nextEstateId",1);
+            Scribe_Collections.Look(ref CampTrips,"campTrips",LookMode.Deep);Scribe_Values.Look(ref NextCampId,"nextCampId",1);Scribe_Values.Look(ref CampCursor,"campCursor");Scribe_Values.Look(ref LastCampScanTick,"lastCampScanTick",-1000000);
             Scribe_Values.Look(ref NextPetitionId,"nextPetitionId",1);
             Scribe_Collections.Look(ref Attention, "attention", LookMode.Deep);
             Scribe_Collections.Look(ref Agency, "agency", LookMode.Deep);
@@ -439,6 +582,12 @@ namespace FamilyLife.Domain
                     Log.Warning("[Wil's Family Life] This save was written by a newer version of the mod (data v" + DataVersion
                         + ", this is v" + CurrentDataVersion + "). Some family data may be ignored.");
                 RebuildIndexes();
+                Ceremonies=Ceremonies??new List<CeremonyRecord>();Prestige=Prestige??new List<PrestigeRecord>();
+                CeremonyPlans=CeremonyPlans??new List<CeremonyPlan>();StewardDuties=StewardDuties??new List<StewardDuty>();FamilyOffices=FamilyOffices??new List<FamilyOffice>();
+                SuccessionCases=SuccessionCases??new List<SuccessionCase>();Heists=Heists??new List<Heist>();CrimeKnowledgeRecords=CrimeKnowledgeRecords??new List<CrimeKnowledge>();
+                ProtectionArrangements=ProtectionArrangements??new List<ProtectionArrangement>();Institution=Institution??new ColonyInstitution();InstitutionMovements=InstitutionMovements??new List<InstitutionMovement>();
+                Elections=Elections??new List<Election>();Coups=Coups??new List<CoupPlan>();
+                Favors=Favors??new List<FavorDebt>();CouncilMatters=CouncilMatters??new List<CouncilMatter>();Offices=Offices??new List<CommunityOffice>();Assemblies=Assemblies??new List<CommunityAssembly>();CampTrips=CampTrips??new List<CampTrip>();KinVisits=KinVisits??new List<KinVisit>();PersonalItems=PersonalItems??new List<PersonalItem>();Beneficiaries=Beneficiaries??new List<Beneficiary>();Estates=Estates??new List<EstateCase>();
             }
         }
     }

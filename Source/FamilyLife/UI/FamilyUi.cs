@@ -33,7 +33,7 @@ namespace FamilyLife
         public static string NameOf(FamilyRegistry registry, int personId)
         {
             var p = registry.GetPerson(personId);
-            return p == null ? "WFL_Someone".Translate().ToString() : p.FullName;
+            return p == null ? "WFL_Someone".Translate().ToString() : HouseholdNames.Short(p);
         }
 
         public static string LineageName(FamilyRegistry registry, int lineageId)

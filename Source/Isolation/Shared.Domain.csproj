@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Isolation proof, not shipped: the framework's pure code (Domain + Framework) compiled as an assembly of its own. Education.Domain and Care.Domain below reference only this
+    assembly, so they build only if they use nothing but its public members. If this stops building, a module has started reaching into something it should not.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Wils.Shared.Domain</AssemblyName>
+    <RootNamespace>FamilyLife</RootNamespace>
+    <OutputPath>../../obj-isolation/shared/</OutputPath>
+    <BaseIntermediateOutputPath>../../obj-isolation/shared-obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\FamilyLife\Domain\**\*.cs" />
+    <Compile Include="..\FamilyLife\Framework\**\*.cs" />
+  </ItemGroup>
+</Project>

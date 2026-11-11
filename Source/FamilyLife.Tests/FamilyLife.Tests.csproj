@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\FamilyLife\Domain\**\*.cs" LinkBase="Domain" />
+    <Compile Include="..\FamilyLife\Framework\**\*.cs" LinkBase="Framework" />
+    <Compile Include="..\Education\Domain\**\*.cs" LinkBase="Education\Domain" />
+    <Compile Include="..\Care\Domain\**\*.cs" LinkBase="Care\Domain" />
     <Compile Remove="obj/**" />
   </ItemGroup>
   <ItemGroup>

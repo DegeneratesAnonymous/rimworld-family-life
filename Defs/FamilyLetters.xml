@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- A neutral event the player can begin or pass on (check-ups, an outbreak round, the annual testing). -->
+  <LetterDef>
+    <defName>WFL_OfficeEvent</defName>
+    <letterClass>FamilyLife.ChoiceLetter_OfficeEvent</letterClass>
+    <color>(0.78, 0.8, 0.84)</color>
+    <flashColor>(0.78, 0.8, 0.84)</flashColor>
+    <arriveSound>LetterArrive</arriveSound>
+  </LetterDef>
+  <!-- One notice that a saved game refers to a module that is not installed (nothing is lost; see ModuleNotice). -->
+  <LetterDef>
+    <defName>WFL_ModuleAbsent</defName>
+    <letterClass>FamilyLife.ChoiceLetter_ModuleAbsent</letterClass>
+    <color>(0.9, 0.75, 0.4)</color>
+    <flashColor>(0.9, 0.75, 0.4)</flashColor>
+    <arriveSound>LetterArrive</arriveSound>
+  </LetterDef>
+</Defs>

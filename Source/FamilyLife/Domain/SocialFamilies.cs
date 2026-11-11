@@ -52,7 +52,8 @@ namespace FamilyLife.Domain
             if(p.SocialFamilyId==family) return false;
             p.SocialFamilyId=family;
             foreach(var request in Requests.Where(q=>q.Open && (q.RequesterId==person || q.DonorId==person))) request.State=SupplyState.Cancelled;
-            foreach(var house in Lineages) if(!BelongsToFamily(p,house.Id)) house.Stewards.Remove(person);
+            foreach(var house in Lineages)
+                if(!BelongsToFamily(p,house.Id)&&house.Stewards.Remove(person)) EndStewardship(person,house.Id,now);
             Chronicle.Add(new FamilyEvent(FamilyEventKind.SocialMembership,now,person,family));
             if(Chronicle.Count>MaxChronicle) Chronicle.RemoveAt(0);
             if(maintain) MaintainAgency(now); return true;
@@ -62,9 +63,8 @@ namespace FamilyLife.Domain
             var person=GetPerson(founder); var source=GetLineage(parent);
             if(person?.InColony!=true || person.Juvenile || source==null || !IsActiveHouse(parent) || !BelongsToFamily(person,parent)) return null;
             string label=(name??"").Trim();if(label.Length==0) label=source.Name+" branch";if(label.Length>48) label=label.Substring(0,48);
-            var branch=new Lineage{Id=NextLineageId++,Name=label,FounderId=founder,FoundedTick=now,ParentHouseId=parent,
-                CrestPrimary=CrestStyle.Index(source.CrestPrimary,source.Id,CrestStyle.Colors),CrestSecondary=source.CrestSecondary,
-                CrestMark=CrestStyle.Index(source.CrestMark,source.Id/CrestStyle.Colors,CrestStyle.Marks),CrestPattern=(source.CrestPattern+1)%CrestStyle.Patterns};
+            var branch=new Lineage{Id=NextLineageId++,Name=label,FounderId=founder,FoundedTick=now,ParentHouseId=parent};
+            CrestStyle.Branch(source,branch);
             Lineages.Add(branch);lineageById[branch.Id]=branch;
             SetSocialFamily(founder,branch.Id,now);
             Chronicle.Add(new FamilyEvent(FamilyEventKind.SocialBranch,now,founder,branch.Id));
@@ -78,6 +78,7 @@ namespace FamilyLife.Domain
             var sourceHouse=GetLineage(source);var targetHouse=GetLineage(target);
             int sourceColonyMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,source));
             if(sourceColonyMembers==0) return false;
+            if(!CouncilClears(source,target,now)) return false;       // under a council, a union needs its approval first
             var members=Persons.Where(p=>BelongsToFamily(p,source)).Select(p=>p.Id).ToList();
             int targetMembers=Persons.Count(p=>p.InColony && BelongsToFamily(p,target));
             int total=Math.Max(1,sourceColonyMembers+targetMembers);
@@ -108,6 +109,7 @@ namespace FamilyLife.Domain
             foreach(var petition in HousePetitions.Where(q=>q.State<=PetitionState.Heard && (q.FamilyId==source || q.SourceFamilyId==source))) petition.State=PetitionState.Expired;
             if(targetHouse.ZoneAreaId==0 && sourceHouse.ZoneAreaId!=0)
             {targetHouse.ZoneAreaId=sourceHouse.ZoneAreaId;targetHouse.ZoneMapId=sourceHouse.ZoneMapId;targetHouse.ZoneApplied.Clear();}
+            foreach(var steward in sourceHouse.Stewards.ToList())EndStewardship(steward,source,now);
             sourceHouse.AbsorbedIntoId=target;sourceHouse.RetiredTick=now;sourceHouse.HeadId=0;sourceHouse.Stewards.Clear();
             sourceHouse.ZoneAreaId=0;sourceHouse.ZoneMapId=-1;sourceHouse.ZoneApplied.Clear();
             MaintainAgency(now);

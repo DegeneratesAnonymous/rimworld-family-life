@@ -20,12 +20,21 @@ The goal is to reduce simulation work without disabling family systems. These ch
 | Housekeeping | Ties, commitments, gatherings and zone application coincide with the core sweep | Four phases, 625 ticks apart, each normally once per 2,500 ticks. Structural/life-event consequences remain atomic. |
 | Family UI | Rebuild layout on a 120-tick expiry; rebuild family list every draw | Cache layout and listed families by registry/reconciliation revision and selection. Household moves invalidate the revision. Live relationship/mood values are still drawn from current records. |
 | Family-zone display | Scan zone visibility every 30 ticks | Update when toggled, registered, or resetting/loading a game. |
+| House ambitions | No situation/goal layer | At most one house is considered per roughly hourly gate. Each house receives at most one full aggregate assessment per in-game day; results are saved. Skill coverage is linear in current adult members, cohesion samples at most 20 members, and inter-house comparison uses one compact record per active house. No map-cell grid or pawn-pair matrix is retained. Meaningful registry changes invalidate snapshots. |
+| Marriage alliances | No alliance planner | Candidate discovery runs only during a relevant house's cached daily assessment, examines at most 48 same-map pairs, and retains at most one active opportunity per involved house. Consent adds one constant-time lookup while building an already-sampled social context; negotiations use ordinary interruptible jobs rather than a new tick scanner. |
 
 In an unchanged map, the fallback work refresh rate is one tenth of its old rate. This is a count of discovery passes, not a claim of 90% less total CPU time. New work can be discovered later than before; stale tasks are never trusted merely because they are cached. Roof *designations* or mod edits that bypass the hooks are caught by the fallback refresh.
 
 The observation cache compares IDs, names, birth dates, presence, juvenile status, relationships, marriage dates and top-skill facts. It owns copies of relation lists before reconciliation normalizes them. Ordinary AgeTicks changes do not invalidate it: that field only classifies newly recorded people, and new IDs always force reconciliation. Failed syncs clear the cache; loads rebuild it. Pawn observations, trait profiles, bond dynamics, culture and milestones still update hourly. A full fallback also repairs unexpected model changes.
 
 The new caches are transient, scoped to a game/map/registry, and cleared or rebuilt on load. There is no save-format change. Existing unscoped family-area identity and player-restriction ownership problems remain tracked in issue #2; a map-local work cache does not resolve that policy issue.
+
+## Heirlooms, estates and rescues
+
+- Discovery looks at three colonists per hourly governance pass, reading only what they wear, wield and carry (at most 24 inventory items each). There is no map-wide item scan. An open estate is searched for by id only for the few items it holds, three deliveries per pass, with growing waits between tries so an unreachable item does not repeat path searches. Only open estates are advanced; finished ones are skipped and history is capped at 24.
+- The rescue site poll runs every 250 ticks and returns at once unless a rescue is on site; the hourly reconciliation touches only the sixteen kept visits.
+- The performance capture reports these as "Estates: discovery", "Estates: open and advance", "Estates: delivery", "Kin rescue: reconcile" and "Kin rescue: site". Per-game static state (cursors, told-sets, the site gate) is cleared on a new or loaded game.
+- A domain timing test advances 24 open estates of 12 items repeatedly in a loose bound; it is a sanity check on cost, not a TPS measurement.
 
 ## Measurement already available
 
@@ -77,6 +86,7 @@ If both builds already sustain the speed cap, compare CPU headroom and spikes ra
 - Dense crowds do not permanently favor the same initiating pawns or nearby candidates. Shared recreation remains within six cells and uses the same job.
 - Adults/children, stories, meals, teaching, reconciliation and forced/debug events still use the correct opportunities and participants.
 - Births, deaths, relationships, name/skill changes, becoming adult, departures and returns still reconcile promptly. Debug resync always performs a full reconciliation.
+- House ambitions remain stable for ordinary changes, severe hunger/danger can interrupt them, and a large number of houses does not cause all snapshots to run in one tick. Housing follows actual bed/zone assignments and Better Beds locks; skill-gap mentoring does not override a mentor who lacks the needed advantage.
 - Promises and gathering requests survive saving between maintenance phases and apply consequences once. No pending life-event queue is left unsaved.
 - UI trees update on reconciliation and household moves; bars and histories remain live. Loading a different game cannot reuse an old registry's layout.
 - Check performance with event logging and capture off as well as with capture on.

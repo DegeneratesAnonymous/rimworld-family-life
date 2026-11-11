@@ -5,10 +5,11 @@ using HarmonyLib;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace FamilyLife
 {
-    internal struct DoorWish { public Pawn Pawn; public Zone_Family Zone; public int Tick; }
+    internal struct DoorWish { public Pawn Pawn; public Zone_Family Zone; public int Tick; public IntVec3 Cell; public Job Job; }
 
     /// <summary>
     /// Someone from outside the family does not walk into its zone. To the game, a family zone is out of bounds for them, as a restricted area
@@ -31,11 +32,21 @@ namespace FamilyLife
         /// <summary>Whether this pawn must not enter this cell: it is in a family zone the pawn does not belong to, and they have not been let in.</summary>
         public static bool Blocks(IntVec3 cell, Pawn pawn, bool noteWish)
         {
-            if (!Enabled || pawn == null || pawn.playerSettings == null || Current.ProgramState != ProgramState.Playing) return false;
+            if (!Enabled || pawn == null || Current.ProgramState != ProgramState.Playing) return false;
+            bool visitor = IsVisitor(pawn);
+            if (pawn.playerSettings == null && !visitor) return false;
             var map = pawn.MapHeld;
             if (map == null || !cell.InBounds(map)) return false;
             var zone = map.zoneManager.ZoneAt(cell) as Zone_Family;
             if (zone == null || zone.areaId == 0) return false;
+            if (visitor)
+            {
+                // Visitors and guests of the colony stay out of other people's homes. They are not asked to knock; they simply do not go there,
+                // unless they have been let in or they are taking part in a family gathering.
+                if (pawn.Downed || pawn.InMentalState) return false;
+                if (pawn.GetLord()?.LordJob?.GetType().Name == "LordJob_FamilyGathering") return false;
+                return !GuestPasses.HasPassFor(pawn, zone);
+            }
             if (pawn.Faction != Faction.OfPlayer || pawn.Drafted || pawn.Downed || pawn.InMentalState || pawn.IsPrisoner || pawn.IsSlave) return false;
             var component = FamilyComponent.Current;
             var lineage = component == null ? null : zone.Family(component.Registry);
@@ -52,9 +63,19 @@ namespace FamilyLife
             var bed = pawn.ownership?.OwnedBed;
             if (bed != null && bed.Spawned && bed.Map == map && bed.OccupiedRect().Cells.Any(zone.ContainsCell)) return false;      // they sleep here
 
-            if (noteWish) wishes[pawn.thingIDNumber] = new DoorWish { Pawn = pawn, Zone = zone, Tick = Find.TickManager.TicksGame };
+            if (noteWish)
+            {
+                int now = Find.TickManager.TicksGame;
+                // Keep the job noted a moment ago for this same place, so the visit can pick up where the pawn was going.
+                Job kept = wishes.TryGetValue(pawn.thingIDNumber, out var prev) && prev.Zone == zone && now - prev.Tick < 120 ? prev.Job : null;
+                wishes[pawn.thingIDNumber] = new DoorWish { Pawn = pawn, Zone = zone, Tick = now, Cell = cell, Job = kept };
+            }
             return true;
         }
+
+        /// <summary>A person of another faction who is not an enemy: a trader, a visitor, a guest, a relative come for a reunion.</summary>
+        private static bool IsVisitor(Pawn pawn)
+            => pawn.Faction != null && pawn.Faction != Faction.OfPlayer && pawn.RaceProps.Humanlike && !pawn.IsPrisoner && !pawn.HostileTo(Faction.OfPlayer);
 
         private static bool IsMember(FamilyComponent component, Lineage lineage, Pawn pawn)
         {
@@ -64,6 +85,14 @@ namespace FamilyLife
             bool member = GuestPasses.IsFamilyMember(component.Registry, lineage, pawn);
             memberCache[key] = new KeyValuePair<int, bool>(now, member);
             return member;
+        }
+
+        /// <summary>The job a pawn was about to start when the door stopped them, kept so they can carry on with it once let in.</summary>
+        public static void AttachJob(Pawn pawn, Job job)
+        {
+            if (pawn == null || job == null || !wishes.TryGetValue(pawn.thingIDNumber, out var wish)) return;
+            try { wish.Job = job.Clone(); wishes[pawn.thingIDNumber] = wish; }
+            catch (System.Exception ex) { HookSafety.Report("family door wish", ex); }
         }
 
         /// <summary>The recent wishes to enter a zone, each pawn once. They are cleared as they are taken.</summary>
@@ -103,8 +132,13 @@ namespace FamilyLife
             {
                 var pawn = PawnRef(__instance);
                 var job = pawn?.CurJob;
-                if (job == null || job.playerForced || !dest.IsValid || dest.Thing is Pawn || job.def.defName.StartsWith("WFL_")) return true;
-                if (!FamilyDoorRule.Blocks(dest.Cell, pawn, true)) return true;
+                if (job == null || job.playerForced || !dest.IsValid || job.def.defName.StartsWith("WFL_")) return true;
+                // Following or approaching a person is judged by where that person is, so nobody walks into a home after someone. A person who is down is
+                // always reachable (a rescue or a tending is not stopped).
+                if (dest.Thing is Pawn target && (target.Downed || target.Dead || !target.Spawned)) return true;
+                var cell = dest.Thing is Pawn other ? other.Position : dest.Cell;
+                if (!FamilyDoorRule.Blocks(cell, pawn, true)) return true;
+                FamilyDoorRule.AttachJob(pawn, job);
                 pawn.jobs.curDriver?.Notify_PatherFailed();
                 return false;
             }

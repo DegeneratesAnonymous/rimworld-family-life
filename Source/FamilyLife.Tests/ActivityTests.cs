@@ -303,5 +303,15 @@ namespace FamilyLife.Tests
             r.GetBond(1, 3).Attachment = 5f;
             Assert.Empty(r.SharedMealPartners(1, 7, now, new[] { new RecentMeal { PersonId = 3, Tick = now, RoomKey = 7 } }));
         }
+
+        [Fact]
+        public void Time_together_never_pushes_a_bond_past_its_limit()
+        {
+            var r = new FamilyRegistry();
+            r.Apply(new[] { T.P(1, "A"), T.P(2, "B") }, 1000);
+            r.ChangeBond(1, 2, new BondChange(99.9f, 0, 0, 0), 1000);
+            for (int d = 1; d < 6; d++) r.RecordTogether(1, 2, ActivityTuning.DefaultDailyTargetTicks, 1000 + d * Day);
+            Assert.True(r.GetBond(1, 2).Attachment <= 100f);
+        }
     }
 }

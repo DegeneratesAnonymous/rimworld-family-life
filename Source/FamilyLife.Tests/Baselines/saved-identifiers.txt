@@ -1,0 +1,935 @@
+# Everything an existing save (or an installed def) can name, as written by the last all-in-one version before the module work (fc0bd3d).
+# The architecture tests require every line to still exist, so extracting a module cannot silently rename what a save refers to. Regenerate only when a release is cut.
+class FamilyLife.ChoiceLetter_OfficeEvent
+class FamilyLife.GatheringWorker_FamilyGathering
+class FamilyLife.JobDriver_Attend
+class FamilyLife.JobDriver_BarterFunds
+class FamilyLife.JobDriver_BedtimeStory
+class FamilyLife.JobDriver_CastAssemblyVote
+class FamilyLife.JobDriver_CastVote
+class FamilyLife.JobDriver_ClassStudent
+class FamilyLife.JobDriver_ClassTeacher
+class FamilyLife.JobDriver_ClinicDoctor
+class FamilyLife.JobDriver_ClinicPatient
+class FamilyLife.JobDriver_Comfort
+class FamilyLife.JobDriver_FamilySupply
+class FamilyLife.JobDriver_FamilyTime
+class FamilyLife.JobDriver_FetchHeirloom
+class FamilyLife.JobDriver_HallServe
+class FamilyLife.JobDriver_HallSit
+class FamilyLife.JobDriver_HostGuest
+class FamilyLife.JobDriver_LetGuestIn
+class FamilyLife.JobDriver_ListenToStory
+class FamilyLife.JobDriver_PersonalTime
+class FamilyLife.JobDriver_SocialListen
+class FamilyLife.JobDriver_SocialMoment
+class FamilyLife.JobDriver_StoryListen
+class FamilyLife.JobDriver_StoryTalk
+class FamilyLife.JobDriver_TestStudent
+class FamilyLife.JobDriver_VisitHome
+class FamilyLife.JobDriver_WaitAtDoor
+class FamilyLife.JobGiver_BedtimeStory
+class FamilyLife.JobGiver_FamilyCare
+class FamilyLife.ScenPart_FamiliesStart
+class FamilyLife.ThoughtWorker_BabyCloseBy
+const PendingEvent None = 0, Checkups = 1, Illness = 2, Testing = 3
+def GatheringDef WFL_FamilyGathering
+def HediffDef WFL_CheckedUp
+def JobDef WFL_Babysit
+def JobDef WFL_BarterFunds
+def JobDef WFL_Bedside
+def JobDef WFL_BedtimeStory
+def JobDef WFL_CastAssemblyVote
+def JobDef WFL_CastVote
+def JobDef WFL_Checkup
+def JobDef WFL_ClassStudent
+def JobDef WFL_ClassTeacher
+def JobDef WFL_ClinicDoctor
+def JobDef WFL_ClinicPatient
+def JobDef WFL_CollectSupply
+def JobDef WFL_Comfort
+def JobDef WFL_CoupConfront
+def JobDef WFL_CoupRecruit
+def JobDef WFL_Cradle
+def JobDef WFL_Date
+def JobDef WFL_ExchangeSupply
+def JobDef WFL_FamilyTime
+def JobDef WFL_FetchHeirloom
+def JobDef WFL_HallServe
+def JobDef WFL_HallSit
+def JobDef WFL_HeistRecruit
+def JobDef WFL_HostGuest
+def JobDef WFL_HouseInvite
+def JobDef WFL_HousePetition
+def JobDef WFL_HouseUnionNegotiation
+def JobDef WFL_InstitutionPetition
+def JobDef WFL_LetGuestIn
+def JobDef WFL_ListenToStory
+def JobDef WFL_Lullaby
+def JobDef WFL_MarriageConsent
+def JobDef WFL_MarriageNegotiation
+def JobDef WFL_OfficeLesson
+def JobDef WFL_PersonalTime
+def JobDef WFL_PlayBaby
+def JobDef WFL_ProtectionOffer
+def JobDef WFL_Reconcile
+def JobDef WFL_ReconcileStory
+def JobDef WFL_SocialListen
+def JobDef WFL_SocialMoment
+def JobDef WFL_StealSupply
+def JobDef WFL_StewardGuest
+def JobDef WFL_StewardMediate
+def JobDef WFL_StewardNegotiate
+def JobDef WFL_StewardPetition
+def JobDef WFL_StoryListen
+def JobDef WFL_StoryTalk
+def JobDef WFL_Teach
+def JobDef WFL_TestStudent
+def JobDef WFL_VisitHome
+def JobDef WFL_WaitAtDoor
+def JoyGiverDef WFL_FamilyTime
+def JoyKindDef WFL_FamilyTime
+def LetterDef WFL_OfficeEvent
+def QuestScriptDef WFL_KinRescue
+def ScenarioDef WFL_ThreeFamilies
+def ScenarioDef WFL_ThreeFamiliesTesting
+def ThoughtDef WFL_Anniversary
+def ThoughtDef WFL_AssemblyAttended
+def ThoughtDef WFL_BabyCloseBy
+def ThoughtDef WFL_Babysat
+def ThoughtDef WFL_BabysatForUs
+def ThoughtDef WFL_Bedside
+def ThoughtDef WFL_BondedWithBaby
+def ThoughtDef WFL_BoringLesson
+def ThoughtDef WFL_CameOfAge
+def ThoughtDef WFL_Comforted
+def ThoughtDef WFL_ComfortedEased
+def ThoughtDef WFL_ComingOfAgeAttended
+def ThoughtDef WFL_Cuddled
+def ThoughtDef WFL_Date
+def ThoughtDef WFL_DismissiveCheckup
+def ThoughtDef WFL_Estranged
+def ThoughtDef WFL_FamilyGrief
+def ThoughtDef WFL_FamilyTimeSpent
+def ThoughtDef WFL_FuneralAttended
+def ThoughtDef WFL_GrandReunionAttended
+def ThoughtDef WFL_HeardBedtimeStory
+def ThoughtDef WFL_HeardFamilyStory
+def ThoughtDef WFL_InheritedKeepsake
+def ThoughtDef WFL_InspiringLesson
+def ThoughtDef WFL_KinInPost
+def ThoughtDef WFL_Learned
+def ThoughtDef WFL_MadePeace
+def ThoughtDef WFL_MemorialAttended
+def ThoughtDef WFL_Missing
+def ThoughtDef WFL_MomentAwkward
+def ThoughtDef WFL_MomentGood
+def ThoughtDef WFL_MomentGreat
+def ThoughtDef WFL_MomentSore
+def ThoughtDef WFL_PostAdequate
+def ThoughtDef WFL_PostFailing
+def ThoughtDef WFL_PostTrusted
+def ThoughtDef WFL_ReassuringCheckup
+def ThoughtDef WFL_ReconciliationAttended
+def ThoughtDef WFL_Reunion
+def ThoughtDef WFL_ServedByKin
+def ThoughtDef WFL_SharedMeal
+def ThoughtDef WFL_Taught
+def ThoughtDef WFL_TestingDisappointed
+def ThoughtDef WFL_TestingDone
+def ThoughtDef WFL_TestingProud
+def ThoughtDef WFL_ToldBedtimeStory
+def ThoughtDef WFL_TraditionAttended
+def ThoughtDef WFL_Visited
+def ThoughtDef WFL_WeddingAttended
+def WorldObjectDef WFL_KinRescueSite
+enum FamilyRole ColonyLeader,CouncilRepresentative,Healer,Teacher,HallKeeper,Chaplain,HouseHead,PublicHeir,Steward,HouseProtector,CeremonyOrganizer,TrustedAssociate,Associate
+enum OfficeEnd None,TermEnded,Neglected,Left,Resigned,Replaced
+enum OfficeKind Healer,Teacher,HallKeeper,Chaplain
+label Affiliation.kind
+label Affiliation.person
+label Affiliation.since
+label AgencyRecord.endedTick
+label AgencyRecord.excluded
+label AgencyRecord.familyId
+label AgencyRecord.goal
+label AgencyRecord.included
+label AgencyRecord.lastActionTick
+label AgencyRecord.lastEvent
+label AgencyRecord.lastEvidenceTick
+label AgencyRecord.lastPersonalDay
+label AgencyRecord.personId
+label AgencyRecord.personalSessions
+label AgencyRecord.progress
+label AgencyRecord.startedTick
+label AssemblyEndorsement.candidate
+label AssemblyEndorsement.endorser
+label AssemblyEndorsement.family
+label AssemblyEndorsement.kind
+label AssemblyRace.abstained
+label AssemblyRace.candidates
+label AssemblyRace.incumbent
+label AssemblyRace.incumbentGrade
+label AssemblyRace.kind
+label AssemblyRace.margin
+label AssemblyRace.motives
+label AssemblyRace.votes
+label AssemblyRace.winner
+label AttentionRecord.day
+label AttentionRecord.giver
+label AttentionRecord.recipient
+label AttentionRecord.ticks
+label Beneficiary.heir
+label Beneficiary.knownBy
+label Beneficiary.owner
+label Beneficiary.thing
+label Beneficiary.tick
+label Bond.attachment
+label Bond.familiarity
+label Bond.from
+label Bond.highTensionSince
+label Bond.last
+label Bond.lastMilestone
+label Bond.lastOpinion
+label Bond.lastQuality
+label Bond.qualityDay
+label Bond.qualityRecent
+label Bond.qualityTicksToday
+label Bond.reasons
+label Bond.tension
+label Bond.tier
+label Bond.tierSeen
+label Bond.to
+label Bond.trust
+label BondReason.cause
+label BondReason.delta
+label BondReason.tick
+label CampMoment.actor
+label CampMoment.kind
+label CampMoment.other
+label CampMoment.outcome
+label CampMoment.tick
+label CampTrip.arrived
+label CampTrip.authorized
+label CampTrip.ended
+label CampTrip.expires
+label CampTrip.family
+label CampTrip.id
+label CampTrip.members
+label CampTrip.moments
+label CampTrip.motive
+label CampTrip.organizer
+label CampTrip.proposed
+label CampTrip.quality
+label CampTrip.seed
+label CampTrip.state
+label CampTrip.stay
+label CampTrip.subject
+label CampTrip.suggested
+label CampTrip.tile
+label CeremonyPlan.ask
+label CeremonyPlan.avatar
+label CeremonyPlan.deadline
+label CeremonyPlan.earliest
+label CeremonyPlan.family
+label CeremonyPlan.id
+label CeremonyPlan.invitees
+label CeremonyPlan.knownBy
+label CeremonyPlan.latest
+label CeremonyPlan.opened
+label CeremonyPlan.organizer
+label CeremonyPlan.playerAdjusted
+label CeremonyPlan.request
+label CeremonyPlan.scheduled
+label CeremonyPlan.state
+label CeremonyPlan.venueArea
+label CeremonyPlan.venueMap
+label CeremonyRecord.attendees
+label CeremonyRecord.completed
+label CeremonyRecord.id
+label CeremonyRecord.influences
+label CeremonyRecord.kind
+label CeremonyRecord.lineage
+label CeremonyRecord.moments
+label CeremonyRecord.organizer
+label CeremonyRecord.outcome
+label CeremonyRecord.secondLineage
+label CeremonyRecord.started
+label CeremonyRecord.subject
+label CeremonyRecord.subjectB
+label CeremonyRecord.visitors
+label ColonyInstitution.council
+label ColonyInstitution.kind
+label ColonyInstitution.leader
+label ColonyInstitution.pollMap
+label ColonyInstitution.pollX
+label ColonyInstitution.pollZ
+label ColonyInstitution.since
+label ColonyInstitution.termEnd
+label Commitment.created
+label Commitment.due
+label Commitment.event
+label Commitment.from
+label Commitment.id
+label Commitment.importance
+label Commitment.state
+label Commitment.to
+label CommunityAssembly.convened
+label CommunityAssembly.counted
+label CommunityAssembly.endorsements
+label CommunityAssembly.id
+label CommunityAssembly.races
+label CommunityAssembly.started
+label CommunityAssembly.state
+label CommunityAssembly.voted
+label CommunityAssembly.voting
+label CommunityOffice.actsToday
+label CommunityOffice.backers
+label CommunityOffice.barred
+label CommunityOffice.barredUntil
+label CommunityOffice.counter
+label CommunityOffice.counterReady
+label CommunityOffice.dayStamp
+label CommunityOffice.elected
+label CommunityOffice.endReason
+label CommunityOffice.ended
+label CommunityOffice.examined
+label CommunityOffice.holder
+label CommunityOffice.holderFamily
+label CommunityOffice.id
+label CommunityOffice.illnessRound
+label CommunityOffice.kind
+label CommunityOffice.lastGrade
+label CommunityOffice.lastHolder
+label CommunityOffice.lastIllness
+label CommunityOffice.lastTestingYear
+label CommunityOffice.lastWork
+label CommunityOffice.nextRound
+label CommunityOffice.nextSession
+label CommunityOffice.nextVote
+label CommunityOffice.opponents
+label CommunityOffice.pendingKind
+label CommunityOffice.pendingTick
+label CommunityOffice.qualityCount
+label CommunityOffice.qualitySum
+label CommunityOffice.roundStart
+label CommunityOffice.sessionQueue
+label CommunityOffice.sessionStart
+label CommunityOffice.termEnd
+label CommunityOffice.terms
+label CommunityOffice.testIds
+label CommunityOffice.testPass
+label CommunityOffice.testTry
+label CommunityOffice.testingSlot
+label CommunityOffice.testingStart
+label CommunityOffice.tokens
+label CommunityOffice.unmetSince
+label CommunityOffice.work
+label CouncilMatter.decided
+label CouncilMatter.familyA
+label CouncilMatter.familyB
+label CouncilMatter.id
+label CouncilMatter.kind
+label CouncilMatter.no
+label CouncilMatter.requested
+label CouncilMatter.state
+label CouncilMatter.voted
+label CouncilMatter.yes
+label CoupParticipant.person
+label CoupParticipant.stance
+label CoupPlan.discoveredBy
+label CoupPlan.discovery
+label CoupPlan.ended
+label CoupPlan.goal
+label CoupPlan.id
+label CoupPlan.organizer
+label CoupPlan.participants
+label CoupPlan.policy
+label CoupPlan.setbacks
+label CoupPlan.stage
+label CoupPlan.stageTick
+label CoupPlan.started
+label CoupPlan.state
+label CoupPlan.target
+label CrimeKnowledge.heist
+label CrimeKnowledge.level
+label CrimeKnowledge.person
+label CrimeRecord.direction
+label CrimeRecord.ended
+label CrimeRecord.heat
+label CrimeRecord.lastAmends
+label CrimeRecord.lastPlan
+label CrimeRecord.reform
+label CrimeRecord.started
+label CrimeRecord.status
+label Election.abstained
+label Election.candidates
+label Election.council
+label Election.counted
+label Election.endorsements
+label Election.id
+label Election.margin
+label Election.pending
+label Election.started
+label Election.state
+label Election.voted
+label Election.votes
+label Election.voting
+label Election.winner
+label ElectionEndorsement.candidate
+label ElectionEndorsement.endorser
+label ElectionEndorsement.family
+label ElectionEndorsement.weight
+label ElectionVote.candidate
+label ElectionVote.reason
+label ElectionVote.voter
+label EstateAsk.answered
+label EstateAsk.asked
+label EstateAsk.expired
+label EstateAsk.expires
+label EstateAsk.kind
+label EstateAsk.person
+label EstateAsk.thing
+label EstateCase.asks
+label EstateCase.closed
+label EstateCase.compromised
+label EstateCase.deceased
+label EstateCase.family
+label EstateCase.grievances
+label EstateCase.id
+label EstateCase.items
+label EstateCase.mediator
+label EstateCase.mediatorAsked
+label EstateCase.opened
+label EstateCase.stage
+label EstateCase.stageTick
+label EstateCase.steward
+label EstateClaim.basis
+label EstateClaim.claimant
+label EstateClaim.dormant
+label EstateClaim.pressed
+label EstateClaim.raised
+label EstateClaim.relinquished
+label EstateClaim.strength
+label EstateItem.attempts
+label EstateItem.blockedSince
+label EstateItem.claims
+label EstateItem.closed
+label EstateItem.contested
+label EstateItem.def
+label EstateItem.deliveryStart
+label EstateItem.heir
+label EstateItem.heirloom
+label EstateItem.house
+label EstateItem.houseHeir
+label EstateItem.kind
+label EstateItem.label
+label EstateItem.lost
+label EstateItem.nextTry
+label EstateItem.outcome
+label EstateItem.proposed
+label EstateItem.thing
+label EstateItem.usedBy
+label EstateItem.value
+label EventRecord.a
+label EventRecord.aftermath
+label EventRecord.b
+label EventRecord.event
+label EventRecord.feelA
+label EventRecord.feelB
+label EventRecord.setting
+label EventRecord.third
+label EventRecord.tick
+label EventRecord.tier
+label EventRecord.weight
+label FamilyComponent.perspectiveInitialized
+label FamilyComponent.perspectivePawn
+label FamilyComponent.registry
+label FamilyEvent.a
+label FamilyEvent.b
+label FamilyEvent.k
+label FamilyEvent.t
+label FamilyIncident.actorFamily
+label FamilyIncident.actorId
+label FamilyIncident.amount
+label FamilyIncident.context
+label FamilyIncident.familiesAffected
+label FamilyIncident.id
+label FamilyIncident.kind
+label FamilyIncident.knownBy
+label FamilyIncident.lastRepairTick
+label FamilyIncident.mapId
+label FamilyIncident.repairSteps
+label FamilyIncident.resolved
+label FamilyIncident.resolvedTick
+label FamilyIncident.resource
+label FamilyIncident.restored
+label FamilyIncident.severity
+label FamilyIncident.tick
+label FamilyIncident.victimFamily
+label FamilyIncident.victimId
+label FamilyOffice.family
+label FamilyOffice.map
+label FamilyOffice.set
+label FamilyOffice.x
+label FamilyOffice.z
+label FamilyRegistry.agency
+label FamilyRegistry.assemblies
+label FamilyRegistry.attention
+label FamilyRegistry.beneficiaries
+label FamilyRegistry.bonds
+label FamilyRegistry.campCursor
+label FamilyRegistry.campTrips
+label FamilyRegistry.ceremonies
+label FamilyRegistry.ceremonyPlans
+label FamilyRegistry.chronicle
+label FamilyRegistry.commitments
+label FamilyRegistry.communityOffices
+label FamilyRegistry.councilMatters
+label FamilyRegistry.coups
+label FamilyRegistry.crimeKnowledge
+label FamilyRegistry.dataVersion
+label FamilyRegistry.elections
+label FamilyRegistry.estates
+label FamilyRegistry.eventLog
+label FamilyRegistry.familyOffices
+label FamilyRegistry.familyTies
+label FamilyRegistry.favors
+label FamilyRegistry.gatheringRequests
+label FamilyRegistry.hallMap
+label FamilyRegistry.hallX
+label FamilyRegistry.hallZ
+label FamilyRegistry.heists
+label FamilyRegistry.houseContacts
+label FamilyRegistry.housePetitions
+label FamilyRegistry.households
+label FamilyRegistry.incidents
+label FamilyRegistry.institution
+label FamilyRegistry.institutionMovements
+label FamilyRegistry.kinVisits
+label FamilyRegistry.lastAnniversaryTick
+label FamilyRegistry.lastCampScanTick
+label FamilyRegistry.lastCoupPlanTick
+label FamilyRegistry.lastInstitutionMovementTick
+label FamilyRegistry.lineages
+label FamilyRegistry.marriageAlliances
+label FamilyRegistry.memories
+label FamilyRegistry.nextAssemblyId
+label FamilyRegistry.nextAssemblyTick
+label FamilyRegistry.nextCampId
+label FamilyRegistry.nextCommitmentId
+label FamilyRegistry.nextCouncilMatterId
+label FamilyRegistry.nextCoupId
+label FamilyRegistry.nextElectionId
+label FamilyRegistry.nextEstateId
+label FamilyRegistry.nextFavorId
+label FamilyRegistry.nextHeistId
+label FamilyRegistry.nextHouseholdId
+label FamilyRegistry.nextIncidentId
+label FamilyRegistry.nextInstitutionMovementId
+label FamilyRegistry.nextKinVisitId
+label FamilyRegistry.nextLineageId
+label FamilyRegistry.nextMarriageAllianceId
+label FamilyRegistry.nextOfficeId
+label FamilyRegistry.nextPetitionId
+label FamilyRegistry.nextPlanId
+label FamilyRegistry.nextPlotId
+label FamilyRegistry.nextProtectionId
+label FamilyRegistry.nextRequestId
+label FamilyRegistry.nextRiftId
+label FamilyRegistry.nextStewardDutyId
+label FamilyRegistry.nextSuccessionCaseId
+label FamilyRegistry.nextSupplyRequestId
+label FamilyRegistry.personalItems
+label FamilyRegistry.persons
+label FamilyRegistry.plots
+label FamilyRegistry.prestige
+label FamilyRegistry.protectionArrangements
+label FamilyRegistry.rifts
+label FamilyRegistry.stewardDuties
+label FamilyRegistry.stewardRecords
+label FamilyRegistry.stockClaims
+label FamilyRegistry.successionCases
+label FamilyRegistry.supplyRequests
+label FamilyRegistry.timeRecords
+label FamilyTie.a
+label FamilyTie.b
+label FamilyTie.familiarity
+label FamilyTie.goodwill
+label FamilyTie.grievance
+label FamilyTie.grievanceTick
+label FamilyTie.last
+label FamilyTie.lastGathering
+label FamilyTie.shared
+label FamilyTie.wronged
+label FamilyTie.wrongedBy
+label FavorDebt.called
+label FavorDebt.created
+label FavorDebt.creditor
+label FavorDebt.debtor
+label FavorDebt.debtorFamily
+label FavorDebt.ended
+label FavorDebt.gift
+label FavorDebt.id
+label FavorDebt.request
+label FavorDebt.state
+label GatheringRequest.attempts
+label GatheringRequest.ceremony
+label GatheringRequest.ceremonyState
+label GatheringRequest.created
+label GatheringRequest.expires
+label GatheringRequest.id
+label GatheringRequest.influences
+label GatheringRequest.invited
+label GatheringRequest.kind
+label GatheringRequest.lineage
+label GatheringRequest.map
+label GatheringRequest.momentBudget
+label GatheringRequest.momentsResolved
+label GatheringRequest.notBefore
+label GatheringRequest.organizer
+label GatheringRequest.secondLineage
+label GatheringRequest.seed
+label GatheringRequest.started
+label GatheringRequest.subject
+label GatheringRequest.subjectB
+label GatheringRequest.visitors
+label Heist.direction
+label Heist.evidence
+label Heist.family
+label Heist.goods
+label Heist.id
+label Heist.incident
+label Heist.laundered
+label Heist.organizer
+label Heist.participants
+label Heist.planned
+label Heist.requests
+label Heist.risk
+label Heist.state
+label Heist.stateTick
+label Heist.targetFamily
+label Heist.targetMap
+label Heist.targetToken
+label HeistParticipant.person
+label HeistParticipant.stance
+label HouseAmbitionRecord.changed
+label HouseAmbitionRecord.lockedUntil
+label HouseAmbitionRecord.primary
+label HouseAmbitionRecord.primaryReason
+label HouseAmbitionRecord.progress
+label HouseAmbitionRecord.secondary
+label HouseAmbitionRecord.secondaryReason
+label HouseAmbitionRecord.started
+label HouseAmbitionRecord.targetCapability
+label HouseAmbitionRecord.targetFamily
+label HouseAmbitionRecord.urgency
+label HouseContact.contactDays
+label HouseContact.familyId
+label HouseContact.lastContactDay
+label HouseContact.lastPositiveDay
+label HouseContact.lastTick
+label HouseContact.personId
+label HouseContact.respect
+label HouseContact.serviceDays
+label HousePetition.awaitingCouncil
+label HousePetition.createdTick
+label HousePetition.familyId
+label HousePetition.heardBy
+label HousePetition.heardTick
+label HousePetition.id
+label HousePetition.kind
+label HousePetition.personId
+label HousePetition.receivedBy
+label HousePetition.sourceFamily
+label HousePetition.state
+label HouseSituation.adults
+label HouseSituation.capability
+label HouseSituation.children
+label HouseSituation.cohesion
+label HouseSituation.continuity
+label HouseSituation.cooperativeFamily
+label HouseSituation.evaluated
+label HouseSituation.independence
+label HouseSituation.influence
+label HouseSituation.legacy
+label HouseSituation.livingSpace
+label HouseSituation.members
+label HouseSituation.partnered
+label HouseSituation.power
+label HouseSituation.safety
+label HouseSituation.singles
+label HouseSituation.spareBeds
+label HouseSituation.suitableBeds
+label HouseSituation.sustenance
+label HouseSituation.threateningFamily
+label HouseSituation.weakestCapability
+label Household.formed
+label Household.id
+label Household.residents
+label InstitutionMovement.contacted
+label InstitutionMovement.deadline
+label InstitutionMovement.ended
+label InstitutionMovement.from
+label InstitutionMovement.id
+label InstitutionMovement.oppose
+label InstitutionMovement.proposer
+label InstitutionMovement.started
+label InstitutionMovement.state
+label InstitutionMovement.support
+label InstitutionMovement.target
+label KinVisit.acceptedTick
+label KinVisit.arrive
+label KinVisit.arrivedIds
+label KinVisit.complication
+label KinVisit.created
+label KinVisit.ended
+label KinVisit.family
+label KinVisit.id
+label KinVisit.kin
+label KinVisit.landingIds
+label KinVisit.lostIds
+label KinVisit.offerExpiry
+label KinVisit.questId
+label KinVisit.reachedTick
+label KinVisit.request
+label KinVisit.rescue
+label KinVisit.rescueDeadline
+label KinVisit.rescueEnded
+label KinVisit.rescuers
+label KinVisit.seed
+label KinVisit.siteId
+label KinVisit.siteVisits
+label KinVisit.state
+label KinVisit.stayEnd
+label KinVisit.strandTile
+label KinVisit.trouble
+label Lineage.absorbedInto
+label Lineage.affiliations
+label Lineage.ambition
+label Lineage.bedDeals
+label Lineage.crestMark
+label Lineage.crestPattern
+label Lineage.crestPrimary
+label Lineage.crestSecondary
+label Lineage.crime
+label Lineage.culture
+label Lineage.designatedHeir
+label Lineage.designatedTick
+label Lineage.designationKnownBy
+label Lineage.emergencySharing
+label Lineage.foodReserveDays
+label Lineage.founded
+label Lineage.founder
+label Lineage.fuelReserveDays
+label Lineage.head
+label Lineage.id
+label Lineage.lastCultureTick
+label Lineage.lastGrandReunion
+label Lineage.mealsShared
+label Lineage.medicineReserve
+label Lineage.name
+label Lineage.nextCeremonyCheck
+label Lineage.parentHouse
+label Lineage.retiredTick
+label Lineage.situation
+label Lineage.standing
+label Lineage.stewards
+label Lineage.storiesTold
+label Lineage.successionCustom
+label Lineage.successionCustomSet
+label Lineage.successionPrecedent
+label Lineage.traditions
+label Lineage.usePublicBarterFunds
+label Lineage.vacantHead
+label Lineage.vacantSeen
+label Lineage.zoneApplied
+label Lineage.zoneAreaId
+label Lineage.zoneMapId
+label MarriageAlliance.changed
+label MarriageAlliance.consentA
+label MarriageAlliance.consentApproacherA
+label MarriageAlliance.consentApproacherB
+label MarriageAlliance.consentB
+label MarriageAlliance.created
+label MarriageAlliance.defianceA
+label MarriageAlliance.defianceB
+label MarriageAlliance.expires
+label MarriageAlliance.familyA
+label MarriageAlliance.familyB
+label MarriageAlliance.houseAInterest
+label MarriageAlliance.houseBInterest
+label MarriageAlliance.id
+label MarriageAlliance.knownBy
+label MarriageAlliance.negotiatorA
+label MarriageAlliance.negotiatorB
+label MarriageAlliance.objectionsA
+label MarriageAlliance.objectionsB
+label MarriageAlliance.pawnA
+label MarriageAlliance.pawnAWillingness
+label MarriageAlliance.pawnB
+label MarriageAlliance.pawnBWillingness
+label MarriageAlliance.reasons
+label MarriageAlliance.state
+label MarriageAlliance.unionNegotiatorA
+label MarriageAlliance.unionNegotiatorB
+label MarriageAlliance.unionState
+label MarriageAlliance.unionTarget
+label Memory.a
+label Memory.b
+label Memory.kind
+label Memory.lineage
+label Memory.tick
+label Memory.weight
+label PersonRecord.awayTick
+label PersonRecord.birth
+label PersonRecord.died
+label PersonRecord.everColonist
+label PersonRecord.exes
+label PersonRecord.first
+label PersonRecord.household
+label PersonRecord.id
+label PersonRecord.juvenile
+label PersonRecord.last
+label PersonRecord.lastHousehold
+label PersonRecord.lineage
+label PersonRecord.lovers
+label PersonRecord.name
+label PersonRecord.parents
+label PersonRecord.presence
+label PersonRecord.seen
+label PersonRecord.socialFamily
+label PersonRecord.spouseSince
+label PersonRecord.spouses
+label PersonRecord.topSkill
+label PersonRecord.topSkillLevel
+label PersonalItem.basis
+label PersonalItem.def
+label PersonalItem.heirloom
+label PersonalItem.heldHours
+label PersonalItem.house
+label PersonalItem.kind
+label PersonalItem.label
+label PersonalItem.lastNote
+label PersonalItem.owner
+label PersonalItem.quality
+label PersonalItem.recorded
+label PersonalItem.thing
+label PersonalItem.usedBy
+label PersonalItem.value
+label PlanInvitee.arrival
+label PlanInvitee.barriers
+label PlanInvitee.byPlayer
+label PlanInvitee.person
+label PlanInvitee.source
+label PlanInvitee.status
+label PrestigeRecord.ceremonies
+label PrestigeRecord.last
+label PrestigeRecord.person
+label PrestigeRecord.value
+label ProtectionArrangement.agreed
+label ProtectionArrangement.agreedBy
+label ProtectionArrangement.coerced
+label ProtectionArrangement.ended
+label ProtectionArrangement.id
+label ProtectionArrangement.lastCollection
+label ProtectionArrangement.lastRequest
+label ProtectionArrangement.lastToken
+label ProtectionArrangement.payments
+label ProtectionArrangement.protected
+label ProtectionArrangement.protector
+label ProtectionArrangement.recorded
+label ProtectionArrangement.tribute
+label RevengePlot.action
+label RevengePlot.asked
+label RevengePlot.attackJobs
+label RevengePlot.createdTick
+label RevengePlot.id
+label RevengePlot.incidentId
+label RevengePlot.lastActionTick
+label RevengePlot.organizerId
+label RevengePlot.recruits
+label RevengePlot.state
+label RevengePlot.targetId
+label Rift.a
+label Rift.b
+label Rift.calmSince
+label Rift.cause
+label Rift.id
+label Rift.lastTry
+label Rift.resolved
+label Rift.severity
+label Rift.start
+label StewardDuty.ended
+label StewardDuty.evidence
+label StewardDuty.family
+label StewardDuty.headActed
+label StewardDuty.holder
+label StewardDuty.id
+label StewardDuty.kind
+label StewardDuty.started
+label StewardDuty.state
+label StewardDuty.target
+label StewardRecord.aid
+label StewardRecord.appointed
+label StewardRecord.ceremonies
+label StewardRecord.ended
+label StewardRecord.failures
+label StewardRecord.family
+label StewardRecord.guests
+label StewardRecord.interruptions
+label StewardRecord.lastService
+label StewardRecord.negotiations
+label StewardRecord.person
+label StewardRecord.petitionsHeard
+label StewardRecord.reconciliations
+label StewardRecord.shortages
+label StockClaim.holderFamily
+label StockClaim.kind
+label StockClaim.mapId
+label StockClaim.ownerFamily
+label StockClaim.thingId
+label SuccessionCase.branch
+label SuccessionCase.chosen
+label SuccessionCase.custom
+label SuccessionCase.declined
+label SuccessionCase.dispute
+label SuccessionCase.factors
+label SuccessionCase.family
+label SuccessionCase.former
+label SuccessionCase.id
+label SuccessionCase.runnerUp
+label SuccessionCase.stage
+label SuccessionCase.stageTick
+label SuccessionCase.started
+label SupplyRequest.approach
+label SupplyRequest.count
+label SupplyRequest.createdTick
+label SupplyRequest.debtId
+label SupplyRequest.debtPaid
+label SupplyRequest.definition
+label SupplyRequest.donorId
+label SupplyRequest.doorX
+label SupplyRequest.doorZ
+label SupplyRequest.dueTick
+label SupplyRequest.homeX
+label SupplyRequest.homeZ
+label SupplyRequest.id
+label SupplyRequest.kind
+label SupplyRequest.mapId
+label SupplyRequest.price
+label SupplyRequest.repaymentAttemptTick
+label SupplyRequest.requesterId
+label SupplyRequest.rootIncidentId
+label SupplyRequest.sourceId
+label SupplyRequest.state
+label SupplyRequest.units
+label TimeRecord.day
+label TimeRecord.lastStory
+label TimeRecord.person
+label TimeRecord.ticks
+label TraditionRecord.adopted
+label TraditionRecord.id
+label TraditionRecord.lastHeld
+label TraditionRecord.muted
+label TraditionRecord.timesHeld

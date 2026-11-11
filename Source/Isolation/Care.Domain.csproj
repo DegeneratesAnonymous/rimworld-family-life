@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Isolation proof, not shipped: Community Care's pure code compiled against the shared assembly only. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Wils.Care.Domain</AssemblyName>
+    <RootNamespace>FamilyLife</RootNamespace>
+    <OutputPath>../../obj-isolation/care/</OutputPath>
+    <BaseIntermediateOutputPath>../../obj-isolation/care-obj/</BaseIntermediateOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Care\Domain\**\*.cs" />
+    <ProjectReference Include="Shared.Domain.csproj" />
+  </ItemGroup>
+</Project>

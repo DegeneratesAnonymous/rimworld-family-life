@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_RoleTitleHouse>{0} of House {1}</WFL_RoleTitleHouse>
+  <WFL_RoleTitleHead>Head of House {0}</WFL_RoleTitleHead>
+  <WFL_RoleAlsoHolds>Also:</WFL_RoleAlsoHolds>
+  <WFL_RoleClickHint>Click to open their family.</WFL_RoleClickHint>
+
+  <WFL_RoleName_ColonyLeader>Colony leader</WFL_RoleName_ColonyLeader>
+  <WFL_RoleDesc_ColonyLeader>Leads the whole colony under its current form of government.</WFL_RoleDesc_ColonyLeader>
+  <WFL_RoleName_CouncilRepresentative>Council representative</WFL_RoleName_CouncilRepresentative>
+  <WFL_RoleDesc_CouncilRepresentative>Speaks for a house on the colony council and votes on its behalf.</WFL_RoleDesc_CouncilRepresentative>
+  <WFL_RoleName_Healer>Healer</WFL_RoleName_Healer>
+  <WFL_RoleDesc_Healer>The colony's healer: looks after people's health and holds check-ups.</WFL_RoleDesc_Healer>
+  <WFL_RoleName_Teacher>Teacher</WFL_RoleName_Teacher>
+  <WFL_RoleDesc_Teacher>The colony's teacher: holds lessons for the children.</WFL_RoleDesc_Teacher>
+  <WFL_RoleName_HallKeeper>Hall keeper</WFL_RoleName_HallKeeper>
+  <WFL_RoleDesc_HallKeeper>Keeps the colony's hall and hosts its shared meals.</WFL_RoleDesc_HallKeeper>
+  <WFL_RoleName_Chaplain>Chaplain</WFL_RoleName_Chaplain>
+  <WFL_RoleDesc_Chaplain>Tends to the colony's spirits and comforts people in hard times.</WFL_RoleDesc_Chaplain>
+  <WFL_RoleName_HouseHead>Head of house</WFL_RoleName_HouseHead>
+  <WFL_RoleDesc_HouseHead>Speaks for the house and makes its decisions.</WFL_RoleDesc_HouseHead>
+  <WFL_RoleName_PublicHeir>Public heir</WFL_RoleName_PublicHeir>
+  <WFL_RoleDesc_PublicHeir>Named by the head of house as the one to lead next, and known to be.</WFL_RoleDesc_PublicHeir>
+  <WFL_RoleName_Steward>Steward</WFL_RoleName_Steward>
+  <WFL_RoleDesc_Steward>Trusted by the head of house to organise the house's affairs.</WFL_RoleDesc_Steward>
+  <WFL_RoleName_HouseProtector>House Protector</WFL_RoleName_HouseProtector>
+  <WFL_RoleDesc_HouseProtector>A trusted family member who watches over the house's people. (Not yet in the game.)</WFL_RoleDesc_HouseProtector>
+  <WFL_RoleName_CeremonyOrganizer>Ceremony organizer</WFL_RoleName_CeremonyOrganizer>
+  <WFL_RoleDesc_CeremonyOrganizer>Is arranging an occasion for the house, such as a wedding, a funeral or a reunion.</WFL_RoleDesc_CeremonyOrganizer>
+  <WFL_RoleName_TrustedAssociate>Trusted associate</WFL_RoleName_TrustedAssociate>
+  <WFL_RoleDesc_TrustedAssociate>Not family, but a long-standing, trusted friend of the house.</WFL_RoleDesc_TrustedAssociate>
+  <WFL_RoleName_Associate>Associate</WFL_RoleName_Associate>
+  <WFL_RoleDesc_Associate>Not family, but known to the house and welcome there.</WFL_RoleDesc_Associate>
+
+  <WFL_S_RoleIcons>Show family-role icons on the colonist bar</WFL_S_RoleIcons>
+  <WFL_S_RoleIconsTip>A small emblem on each colonist's portrait for their most senior family role. Hover for details; click to open their family.</WFL_S_RoleIconsTip>
+  <WFL_S_RoleIconSize_0>Role icon size: small</WFL_S_RoleIconSize_0>
+  <WFL_S_RoleIconSize_1>Role icon size: medium</WFL_S_RoleIconSize_1>
+  <WFL_S_RoleIconSize_2>Role icon size: large</WFL_S_RoleIconSize_2>
+  <WFL_S_RoleIconCorner_0>Role icon corner: top left</WFL_S_RoleIconCorner_0>
+  <WFL_S_RoleIconCorner_1>Role icon corner: top right</WFL_S_RoleIconCorner_1>
+  <WFL_S_RoleIconCorner_2>Role icon corner: bottom left</WFL_S_RoleIconCorner_2>
+  <WFL_S_RoleIconCorner_3>Role icon corner: bottom right</WFL_S_RoleIconCorner_3>
+  <WFL_S_RoleIconsLeadership>Show only leadership and appointed roles</WFL_S_RoleIconsLeadership>
+  <WFL_S_RoleIconsLeadershipTip>Hides trusted associates too. Turn off to show them.</WFL_S_RoleIconsLeadershipTip>
+  <WFL_S_AssociateIcons>Show associate icons</WFL_S_AssociateIcons>
+  <WFL_S_AssociateIconsTip>People who are not family but have standing with a house. Many colonists can qualify, so this is off by default.</WFL_S_AssociateIconsTip>
+</LanguageData>

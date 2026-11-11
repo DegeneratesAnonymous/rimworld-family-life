@@ -199,6 +199,7 @@ namespace FamilyLife.Domain
                 line.Motive = d.Motive.Value(c, d.Skill);
                 if (d.ValueAffinity.HasValue) line.Motive *= Math.Max(0.4f, 1f + c.Initiator.Axis(d.ValueAffinity.Value) * 0.4f);
                 line.Weight = (d.Favored.Contains(c.Setting) ? line.Motive * 1.6f : line.Motive) * AgencyEventFactor(c,d) * SelectionFatigue(history,d.Id);
+                if(c.ConsentedMatch&&((d.Effects&EventEffect.Romance)!=0||ReferenceEquals(d.Arc,Arc.Longing)))line.Weight*=1.25f;
                 if (line.Weight <= 0.01f) { line.Reason = "no motivation"; continue; }
                 line.Eligible = true;
                 line.Reason = "possible";
@@ -471,7 +472,21 @@ namespace FamilyLife.Domain
                 r.BecameMemory = kept;
             }
 
-            EventLog.Add(new EventRecord { EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0 });
+            var after = AftermathFlags.None;
+            if (r.RiftOpened != 0) after |= AftermathFlags.RiftOpened;
+            if (r.RiftEased) after |= AftermathFlags.RiftEased;
+            if (r.RiftResolved) after |= AftermathFlags.RiftResolved;
+            if (r.PromiseMade != 0) after |= AftermathFlags.PromiseMade;
+            if (r.PromiseKept != 0) after |= AftermathFlags.PromiseKept;
+            if (r.BecameMemory) after |= AftermathFlags.Memory;
+            if (r.FamilyTieChanged) after |= AftermathFlags.TieChanged;
+            EventLog.Add(new EventRecord
+            {
+                EventId = d.Id, A = a, B = b, Tick = now, Tier = r.Tier, Weight = d.Weight, Setting = (byte)c.Setting, Third = c.Third?.Id ?? 0,
+                FeelA = Math.Max(-100, Math.Min(100, (int)Math.Round(r.InitiatorFeeling * 100f))),
+                FeelB = Math.Max(-100, Math.Min(100, (int)Math.Round(r.RecipientFeeling * 100f))),
+                Aftermath = (int)after
+            });
             TrimLog();
             NoteAgencyMoment(r, now);
         }

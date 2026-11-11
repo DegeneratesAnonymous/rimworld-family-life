@@ -12,6 +12,9 @@ namespace FamilyLife
     {
         public bool familyStories = true, familySupplies = true, familyTheft = true, familyViolence = true, lethalPlots;
         public bool logEvents;
+        // Colonist-bar role emblems. Size 0/1/2 = small/medium/large; corner 0/1/2/3 = top left/top right/bottom left/bottom right.
+        public bool showRoleIcons = true, showAssociateIcons = false, roleIconsLeadershipOnly = true;
+        public int roleIconSize = 0, roleIconCorner = 0;
         public bool griefAmplification = true;
         public bool familyActivities = true;
         public float dailyFamilyHours = 2f;
@@ -20,6 +23,19 @@ namespace FamilyLife
         public bool dates = true;
         public bool teaching = true;
         public bool traditions = true;
+        public bool ceremonies=true;
+        public bool governance=true;
+        public bool visitingKin=true;
+        public bool camping=true;
+        public bool holdClasses=true;
+        public int classEveryDays=3;
+        public bool adultStudents=false;
+        public bool healthChecks=true;
+        public bool holdHallMeals=true;
+        public bool mindComfort=true;
+        public int hallMealEveryDays=3;
+        public int checkupsPerYear=2;
+        public int campRadius=4;
         public bool babyBonding = true;
         public bool bedside = true;
         public bool conflicts = true;
@@ -47,6 +63,11 @@ namespace FamilyLife
             Scribe_Values.Look(ref familyViolence, "familyViolence", true);
             Scribe_Values.Look(ref lethalPlots, "lethalPlots");
             Scribe_Values.Look(ref logEvents, "logEvents");
+            Scribe_Values.Look(ref showRoleIcons, "showRoleIcons", true);
+            Scribe_Values.Look(ref showAssociateIcons, "showAssociateIcons", false);
+            Scribe_Values.Look(ref roleIconsLeadershipOnly, "roleIconsLeadershipOnly", true);
+            Scribe_Values.Look(ref roleIconSize, "roleIconSize", 0);
+            Scribe_Values.Look(ref roleIconCorner, "roleIconCorner", 0);
             Scribe_Values.Look(ref griefAmplification, "griefAmplification", true);
             Scribe_Values.Look(ref familyActivities, "familyActivities", true);
             Scribe_Values.Look(ref dailyFamilyHours, "dailyFamilyHours", 2f);
@@ -55,6 +76,19 @@ namespace FamilyLife
             Scribe_Values.Look(ref dates, "dates", true);
             Scribe_Values.Look(ref teaching, "teaching", true);
             Scribe_Values.Look(ref traditions, "traditions", true);
+            Scribe_Values.Look(ref ceremonies,"ceremonies",true);
+            Scribe_Values.Look(ref governance,"governance",true);
+            Scribe_Values.Look(ref visitingKin,"visitingKin",true);
+            Scribe_Values.Look(ref camping,"camping",true);
+            Scribe_Values.Look(ref holdClasses,"holdClasses",true);
+            Scribe_Values.Look(ref classEveryDays,"classEveryDays",3);
+            Scribe_Values.Look(ref adultStudents,"adultStudents",false);
+            Scribe_Values.Look(ref healthChecks,"healthChecks",true);
+            Scribe_Values.Look(ref holdHallMeals,"holdHallMeals",true);
+            Scribe_Values.Look(ref mindComfort,"mindComfort",true);
+            Scribe_Values.Look(ref hallMealEveryDays,"hallMealEveryDays",3);
+            Scribe_Values.Look(ref checkupsPerYear,"checkupsPerYear",2);
+            Scribe_Values.Look(ref campRadius,"campRadius",4);
             Scribe_Values.Look(ref babyBonding, "babyBonding", true);
             Scribe_Values.Look(ref bedside, "bedside", true);
             Scribe_Values.Look(ref conflicts, "conflicts", true);
@@ -85,6 +119,7 @@ namespace FamilyLife
         public FamilyLifeMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<FamilySettings>();
+            FamilyFramework.Ensure();          // register the modules once, and report any problem before a save is loaded
 
             // One patch class at a time: if a hook fails (another mod, a new game build) it is skipped and logged,
             // and the periodic reconcile still keeps the family records correct.
@@ -98,6 +133,8 @@ namespace FamilyLife
                     Log.Warning("[Wil's Family Life] Skipped hook " + type.Name + ": " + e.Message);
                 }
             }
+            PerspectiveShiftBridge.Install(harmony);
+            FamilyLife.Domain.Narrative.PlayedHook = id => PerspectiveShiftBridge.AvatarId == id;
             LongEventHandler.ExecuteWhenFinished(FamilyTabs.RegisterOnHumanlikes);
             Log.Message("[Wil's Family Life] Loaded (" + applied.Count + " hooks" + (failed.Count > 0 ? ", " + failed.Count + " skipped" : "") + ").");
         }
@@ -105,7 +142,7 @@ namespace FamilyLife
         public override string SettingsCategory() => "Wil's Family Life";
 
         private Vector2 settingsScroll;
-        private float settingsHeight = 1400;
+        private float settingsHeight = 1850;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             var list = new Listing_Standard();
@@ -124,6 +161,35 @@ namespace FamilyLife
                 list.CheckboxLabeled("WFL_S_Bedside".Translate(), ref Settings.bedside, "WFL_S_BedsideTip".Translate());
             }
             list.CheckboxLabeled("WFL_S_Traditions".Translate(), ref Settings.traditions, "WFL_S_TraditionsTip".Translate());
+            list.CheckboxLabeled("WFL_S_Ceremonies".Translate(),ref Settings.ceremonies,"WFL_S_CeremoniesTip".Translate());
+            list.CheckboxLabeled("WFL_S_Governance".Translate(),ref Settings.governance,"WFL_S_GovernanceTip".Translate());
+            if(Settings.ceremonies)list.CheckboxLabeled("WFL_S_VisitingKin".Translate(),ref Settings.visitingKin,"WFL_S_VisitingKinTip".Translate());
+            list.CheckboxLabeled("WFL_S_Classes".Translate(),ref Settings.holdClasses,"WFL_S_ClassesTip".Translate());
+            if(Settings.holdClasses)
+            {
+                list.Label("WFL_S_ClassEvery".Translate(Settings.classEveryDays),tooltip:"WFL_S_ClassEveryTip".Translate());
+                Settings.classEveryDays=Mathf.RoundToInt(list.Slider(Settings.classEveryDays,1f,10f));
+                list.CheckboxLabeled("WFL_S_AdultStudents".Translate(),ref Settings.adultStudents,"WFL_S_AdultStudentsTip".Translate());
+            }
+            list.CheckboxLabeled("WFL_S_HealthChecks".Translate(),ref Settings.healthChecks,"WFL_S_HealthChecksTip".Translate());
+            if(Settings.healthChecks)
+            {
+                list.Label("WFL_S_CheckupsPerYear".Translate(Settings.checkupsPerYear),tooltip:"WFL_S_CheckupsPerYearTip".Translate());
+                Settings.checkupsPerYear=Mathf.RoundToInt(list.Slider(Settings.checkupsPerYear,1f,4f));
+            }
+            list.CheckboxLabeled("WFL_S_MindComfort".Translate(),ref Settings.mindComfort,"WFL_S_MindComfortTip".Translate());
+            list.CheckboxLabeled("WFL_S_HallMeals".Translate(),ref Settings.holdHallMeals,"WFL_S_HallMealsTip".Translate());
+            if(Settings.holdHallMeals)
+            {
+                list.Label("WFL_S_HallEvery".Translate(Settings.hallMealEveryDays),tooltip:"WFL_S_HallEveryTip".Translate());
+                Settings.hallMealEveryDays=Mathf.RoundToInt(list.Slider(Settings.hallMealEveryDays,1f,10f));
+            }
+            list.CheckboxLabeled("WFL_S_Camping".Translate(),ref Settings.camping,"WFL_S_CampingTip".Translate());
+            if(Settings.camping)
+            {
+                list.Label("WFL_S_CampRadius".Translate(Settings.campRadius),tooltip:"WFL_S_CampRadiusTip".Translate());
+                Settings.campRadius=Mathf.RoundToInt(list.Slider(Settings.campRadius,2f,8f));
+            }
             list.CheckboxLabeled("WFL_S_Conflicts".Translate(), ref Settings.conflicts, "WFL_S_ConflictsTip".Translate());
             if (Settings.conflicts)
             {
@@ -153,6 +219,14 @@ namespace FamilyLife
             list.CheckboxLabeled("WFL_S_Grief".Translate(), ref Settings.griefAmplification, "WFL_S_GriefTip".Translate());
             list.CheckboxLabeled("WFL_S_FamilyMeals".Translate(), ref Settings.familyMeals, "WFL_S_FamilyMealsTip".Translate());
             list.CheckboxLabeled("WFL_S_FamilyDoors".Translate(), ref Settings.familyDoors, "WFL_S_FamilyDoorsTip".Translate());
+            list.CheckboxLabeled("WFL_S_RoleIcons".Translate(), ref Settings.showRoleIcons, "WFL_S_RoleIconsTip".Translate());
+            if (Settings.showRoleIcons)
+            {
+                if (list.ButtonText(("WFL_S_RoleIconSize_" + Settings.roleIconSize).Translate())) Settings.roleIconSize = (Settings.roleIconSize + 1) % 3;
+                if (list.ButtonText(("WFL_S_RoleIconCorner_" + Settings.roleIconCorner).Translate())) Settings.roleIconCorner = (Settings.roleIconCorner + 1) % 4;
+                list.CheckboxLabeled("WFL_S_RoleIconsLeadership".Translate(), ref Settings.roleIconsLeadershipOnly, "WFL_S_RoleIconsLeadershipTip".Translate());
+                list.CheckboxLabeled("WFL_S_AssociateIcons".Translate(), ref Settings.showAssociateIcons, "WFL_S_AssociateIconsTip".Translate());
+            }
             list.CheckboxLabeled("WFL_S_LogEvents".Translate(), ref Settings.logEvents, "WFL_S_LogEventsTip".Translate());
             settingsHeight = list.CurHeight + 12;
             list.End();

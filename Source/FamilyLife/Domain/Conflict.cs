@@ -281,6 +281,8 @@ namespace FamilyLife.Domain
             if (Chronicle.Count > MaxChronicle) Chronicle.RemoveRange(0, Chronicle.Count - MaxChronicle);
             int lineage = personById.TryGetValue(rift.A, out var pa) ? LineageIdFor(pa) : 0;
             Remember(lineage, MemoryKind.Reconciliation, now, rift.A, rift.B, 1.0f);
+            NoteStewardService(rift.A, FamilyOf(rift.A), StewardServiceKind.Reconciliation, true, now);
+            NoteStewardService(rift.B, FamilyOf(rift.B), StewardServiceKind.Reconciliation, true, now);
             return e;
         }
 

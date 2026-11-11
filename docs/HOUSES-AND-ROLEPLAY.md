@@ -39,6 +39,8 @@ For initial compatibility, an uninitialized house recognizes its living founder,
 
 The first opening chooses a selected colonist or a present nonjuvenile colonist. **Acting as** lets the player choose another representative or explicitly use **Colony overseer** for unrestricted setup/management. This is a roleplay lens, not a security boundary against debug tools or vanilla colony controls.
 
+When Perspective Shift is active, its current avatar becomes the acting pawn automatically; selecting or ordering another pawn does not silently change the Family Life perspective. Director mode retains the normal selected-pawn behavior. Autonomous house decisions do not take control of the avatar. NPCs may walk over and speak to the avatar, but Family Life does not replace the avatar's current job with a listener job; the approach simply fails if the player moves away. Shared activities the player chose can still produce organic moments. **Spend time with...**, **Try to make peace with...**, and evidence-backed **Discuss what happened with...** actions let the avatar deliberately engage without choosing the outcome. This is a soft reflection integration, so Perspective Shift is never a required dependency.
+
 As an ordinary member or outsider:
 
 - Seek admission or recognition through an actual conversation with the house's head.
@@ -64,6 +66,8 @@ Connection and recognition modestly bias otherwise eligible social choices. Inde
 The attention ledger records actual parent-child one-to-one time over seven days. Medical care, meals and group gatherings do not count as favoritism evidence. The UI describes unequal **recorded attention**, never asserts deliberate intent, and does not create anger merely from missing observations.
 
 Quality-time gains are capped per directed pair/day. Runtime social-event quality credit matches conversation duration and is zero when the underlying shared activity already recorded time. Third-party, promise and family-tie conversation shifts use the gradual pace. Large gatherings sample bounded pairs and distribute credit rather than expanding everyone against everyone.
+
+Ceremony scenes are tied to the ceremony request rather than merely to whoever is standing nearby. Wedding scenes know both spouses and both houses; funeral blame and recollection must concern the person being mourned; reunion welcomes require an actual returning visitor. Ordinary scenes require both participants to belong to the relevant house tree (including branches), be immediate kin of a subject, or be a recorded visitor. Explicit host/outsider scenes are the narrow exception. Scenes require actual proximity and sight at the gathering, and adult-responsibility scenes cannot cast children into adult roles. Attendance outcomes count only invitees who were physically eligible to attend that map.
 
 Known incidents can be discussed in physical reconciliation conversations. Accepted repair steps require separate days and informed participants; a family's authorized representative must finalize a family-level resolution. Complete matching restitution and an explicit authorized forgiveness remain separate ways out. A successful ordinary conversation does not instantly erase a severe rift in gradual mode.
 

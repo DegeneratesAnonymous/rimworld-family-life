@@ -19,6 +19,8 @@ namespace FamilyLife
         public FamilyRegistry Registry = new FamilyRegistry();
         internal readonly FamilyEconomy Economy;
         internal readonly PerformanceProbe Performance = new PerformanceProbe();
+        internal readonly TickGate AmbitionGate = new TickGate(2500, 400);
+        internal readonly SearchCursor AmbitionCursor = new SearchCursor();
         internal int Revision { get; private set; }
         private readonly TickGate maintenance = new TickGate(625);
         private int maintenancePhase;
@@ -77,6 +79,7 @@ namespace FamilyLife
             if (dirty) return;
             dirty = true;
             dirtySince = Find.TickManager.TicksGame;
+            HouseSituationPlanner.Invalidate(this);
         }
 
         public Pawn TryGetPawn(int id)
@@ -94,6 +97,9 @@ namespace FamilyLife
             if (Registry == null) Registry = new FamilyRegistry();     // a game that did not have the mod yet
         }
 
+        /// <summary>A new game or a loaded one: registration closes (once per session), then each module's on/off state follows what this save recorded, then running modules check their saved state against the world.</summary>
+        public override void FinalizeInit() { base.FinalizeInit(); FamilyFramework.FinalizeStartup(); FamilyFramework.ApplyLifecycle(this); }
+
         public override void GameComponentTick()
         {
             using var measurement = Performance.Measure("Family tick");
@@ -104,7 +110,9 @@ namespace FamilyLife
             if (now != lastSync && maintenance.Take(now)) Maintain(now);
             using (Performance.Measure("Social sampling")) SocialMoments.Tick(this, now);
             Economy.Tick(now);
+            KinRescueDriver.Tick(this, now);
             HouseAgency.Tick(this, now);
+            HouseSituationPlanner.Tick(this, now);
         }
 
         /// <summary>Reconciles with vanilla right now. Safe to call at any time.</summary>
@@ -131,12 +139,16 @@ namespace FamilyLife
                 using (Performance.Measure("Update bonds")) griefs = Registry.UpdateBonds(OpinionOf, now, events, ProfileOf);
                 var s = FamilyLifeMod.Settings;
                 Registry.UpdateCulture(ProfileOf, now);
+                // Expiry and interrupted-request recovery apply to every gathering. Only new reunion planning
+                // follows the ceremonies/visiting-kin switches.
+                Registry.UpdateOrganicCeremonies(now,(s==null||s.ceremonies)&&(s==null||s.visitingKin));
                 events.AddRange(Registry.UpdateMilestones(now));
                 if (s == null || s.traditions) events.AddRange(Registry.UpdateTraditions(now));
                 if (s == null || s.conflicts) events.AddRange(Registry.UpdateRifts(now, s == null || s.rivalry, events));
                 events.AddRange(Registry.UpdateBondMilestones(now));
                 Registry.RecordMemories(events, griefs, now);
                 EventEffects.Apply(this, events, griefs, now);
+                EstateDriver.OnFamilyEvents(this, events, now);
                 if (forceReconcile) FamilyZones.Apply(this);
                 if (FamilyLifeMod.Settings == null || FamilyLifeMod.Settings.griefAmplification)
                     GriefApplier.Apply(griefs, TryGetPawn);
@@ -168,6 +180,7 @@ namespace FamilyLife
                         Registry.PruneTimeRecords(now);
                         Registry.MaintainAgency(now);
                         Registry.UpdateTies(now);
+                        Governance.Maintain(this, now);
                         var s = FamilyLifeMod.Settings;
                         if (s == null || (s.traditions && s.eventsInterFamily)) Registry.RequestReconciliations(now);
                         break;

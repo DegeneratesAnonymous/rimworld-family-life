@@ -33,8 +33,8 @@ namespace FamilyLife.Domain
     ///   together: a double bed, or two beds in one room. With a baby they look first for the best room that also has a bed for it.
     /// - A baby sleeps in its parents' room, so a parent never has far to go in the night. A parent on their own is housed the same way.
     /// - Adults with no one depending on them choose next (eldest first), then each older child takes the most comfortable bed left. Small
-    ///   children keep within reach of a parent, and brothers and sisters lean towards the same room. A single parent then picks to be with
-    ///   their child. Anyone left over gets no bed, and the game finds them one.
+    ///   children keep within reach of a parent, and brothers and sisters lean towards the same room. Parents are housed before their
+    ///   children, and a child takes the bed nearest a parent's by the walk (not a straight line). Anyone left over gets no bed, and the game finds them one.
     /// The same input always gives the same answer. People already housed can be given as <c>fixedBeds</c>: they are not moved, their beds are
     /// not available, and the rest are housed around them.
     /// </summary>
@@ -46,8 +46,9 @@ namespace FamilyLife.Domain
 
         /// <param name="canUse">Whether this person can sleep in this bed at all (size, age, kind). Null means anyone can.</param>
         /// <param name="fixedBeds">People who already have a bed they keep (person id to bed id). Not part of the result.</param>
+        /// <param name="pathDistance">How far apart two beds are to walk, in cells (bed id, bed id). Null means a straight line. Used to keep a child near a parent.</param>
         /// <returns>For each person who gets a bed, the bed's id. Two partners in a double bed have the same bed id.</returns>
-        public static Dictionary<int, int> Deal(IList<BedSleeper> sleepers, IList<BedSlot> beds, Func<int, int, bool> canUse = null, IDictionary<int, int> fixedBeds = null)
+        public static Dictionary<int, int> Deal(IList<BedSleeper> sleepers, IList<BedSlot> beds, Func<int, int, bool> canUse = null, IDictionary<int, int> fixedBeds = null, Func<int, int, float> pathDistance = null)
         {
             var result = new Dictionary<int, int>();
             var left = beds.OrderBy(b => b.X).ThenBy(b => b.Z).ThenBy(b => b.Id).ToList();
@@ -58,7 +59,7 @@ namespace FamilyLife.Domain
                 if (result.TryGetValue(personId, out int bedId) || (fixedBeds != null && fixedBeds.TryGetValue(personId, out bedId))) return beds.FirstOrDefault(b => b.Id == bedId);
                 return null;
             }
-            float Dist(BedSlot a, BedSlot b) => (a.X - b.X) * (a.X - b.X) + (a.Z - b.Z) * (a.Z - b.Z);
+            float Dist(BedSlot a, BedSlot b) => pathDistance != null ? pathDistance(a.Id, b.Id) : (float)Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Z - b.Z) * (a.Z - b.Z));
             float Age(BedSleeper s) => s.AgeYears;
 
             // Babies of the people being housed, still without a bed.
@@ -149,7 +150,7 @@ namespace FamilyLife.Domain
 
             // Everyone else: adults with no one depending on them (eldest first), then the young, then a single parent to be with them.
             var parentIds = new HashSet<int>(sleepers.Where(k => k.Stage != SleeperStage.Adult).SelectMany(k => k.ParentIds));
-            int Turn(BedSleeper s) => s.Stage == SleeperStage.Adult ? (parentIds.Contains(s.Id) ? 3 : 0) : s.Stage == SleeperStage.Baby ? 1 : 2;
+            int Turn(BedSleeper s) => s.Stage == SleeperStage.Adult ? (parentIds.Contains(s.Id) ? 2 : 0) : s.Stage == SleeperStage.Baby ? 1 : 3;      // a parent is housed before their children, so a child can follow them
             var rest = sleepers.Where(s => !result.ContainsKey(s.Id)).OrderBy(Turn).ThenByDescending(s => s.Stage == SleeperStage.Adult ? Age(s) : 0f).ThenBy(s => s.Stage).ThenBy(s => s.Id).ToList();
             foreach (var s in rest)
             {
@@ -174,14 +175,17 @@ namespace FamilyLife.Domain
                     // A small child stays within reach of a parent, if anything is.
                     if (anchors.Count > 0 && s.AgeYears > 0f && s.AgeYears < SmallChildAge)
                     {
-                        var near = options.Where(b => Near(b) <= SmallChildReach * SmallChildReach).ToList();
+                        var near = options.Where(b => Near(b) <= SmallChildReach).ToList();
                         if (near.Count > 0) options = near;
                     }
                     // Brothers and sisters lean towards one room.
                     var siblingRooms = new HashSet<int>(sleepers.Concat(Enumerable.Empty<BedSleeper>())
                         .Where(k => k.Id != s.Id && k.Stage != SleeperStage.Adult && k.ParentIds.Intersect(s.ParentIds).Any())
                         .Select(k => BedOf(k.Id)).Where(b => b != null && b.RoomId >= 0).Select(b => b.RoomId));
-                    pick = options.OrderByDescending(b => b.Comfort + (b.RoomId >= 0 && siblingRooms.Contains(b.RoomId) ? SiblingBonus : 0f)).ThenBy(Near).FirstOrDefault();
+                    pick = anchors.Count > 0
+                        // A child with a parent housed goes to the bed nearest that parent's (a walk, not a straight line); a shared room and comfort break ties.
+                        ? options.OrderByDescending(b => b.RoomId >= 0 && siblingRooms.Contains(b.RoomId)).ThenBy(b => (float)Math.Round(Near(b) / 3f)).ThenByDescending(b => b.Comfort).ThenBy(Near).FirstOrDefault()
+                        : options.OrderByDescending(b => b.Comfort + (b.RoomId >= 0 && siblingRooms.Contains(b.RoomId) ? SiblingBonus : 0f)).FirstOrDefault();
                 }
                 else pick = left.Where(b => Usable(s, b)).OrderByDescending(b => b.Comfort).ThenBy(Near).FirstOrDefault();
                 if (pick != null) { result[s.Id] = pick.Id; left.Remove(pick); }

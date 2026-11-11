@@ -2,7 +2,7 @@
 
 A RimWorld mod (1.6 and 1.7) that keeps durable family records and, over later versions, turns them into a generational family simulation: relationships, shared meals and activities, memories, traditions, and the strains that come with them.
 
-**Status:** Phases 1-7 built. Phases 1 and 2 have been checked in the game; Phases 3-7 have not. See [docs/DESIGN.md](docs/DESIGN.md) for the design, [docs/PHASE1.md](docs/PHASE1.md), [docs/PHASE2.md](docs/PHASE2.md), [docs/PHASE3.md](docs/PHASE3.md) and [docs/PHASE4-7.md](docs/PHASE4-7.md) for what works, what is tested and what needs checking in the game.
+**Status:** Phases 1-7 and the current houses/governance expansion are built. Player testing reports the mod and its performance are working well; the newest ceremony planning, visiting-kin, camping, community-post and political drivers still need focused live acceptance. Every change is also checked by domain tests, mutation checks and 1.6/1.7 builds. See [docs/DESIGN.md](docs/DESIGN.md) and [docs/OPEN-ITEMS.md](docs/OPEN-ITEMS.md) for the remaining release gates.
 
 ## Family stories and household supplies
 
@@ -10,7 +10,15 @@ Adds 48 value-tradition episodes, witnessed incidents and shared news, family su
 
 ## Development roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The current development PR adds chosen houses, earned associates, colonist-based actions, crests, gradual relationship updates and household recovery. See [the implementation guide](docs/HOUSES-AND-ROLEPLAY.md) for supported play styles and limits. Prestige, succession disputes, elections and coups remain future work; the new jobs and UI still require live acceptance.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for individual agency, gradual relationships, house membership and branches, crests, prestige, succession and political institutions. The current development PR includes chosen houses, earned associates, colonist-based actions, crests, gradual relationship updates, household recovery, prestige, succession disputes, elections, councils, coups and evidence-backed crime families. See [the implementation guide](docs/HOUSES-AND-ROLEPLAY.md) for supported play styles and limits. These newer jobs and UI still require focused live acceptance.
+
+## Organic ceremonies
+
+Families autonomously plan funerals after a death, a family wedding reception after RimWorld records a marriage, and an annual grand-reunion gathering when meaningful relatives are away. The player influences these stories through relationships, family culture, attendance, leadership and the spaces they build rather than selecting outcomes directly. Weddings, funerals and reunions have 26 dedicated social scenes, and successful organizers earn modest personal prestige while the house's standing changes gradually. A reunion card can invite up to six eligible distant relatives; they travel safely from the world, may be held up on the road (a real quest in the Quest tab, a world site and a map, which the player may accept or ignore), arrive on foot or by shuttle, visit for several days and are handed back to the world when they leave.
+
+## Heirlooms and inheritance
+
+Weapons, garments, books and art that a person has carried a long time, or that mark a wedding or coming of age, become heirlooms. When someone dies, their estate goes to a named heir, their partner, their children and other close kin, or their house, and is carried over by the heir; a contested heirloom becomes a case with claimants, reasons, a mediator and a compromise. Ordinary supplies stay communal, the office of head and possessions are inherited separately, and the person you are playing is asked rather than answered for. See [docs/GOVERNANCE.md](docs/GOVERNANCE.md).
 
 ## Design principles
 

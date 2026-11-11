@@ -37,11 +37,11 @@ MUTATIONS = [
     ("a friend joins a plot against their loved one", "Domain/FamilyStories.cs",
      "targetLove >= 45 ||", "false ||"),
     ("insufficient goods count as a handover", "Domain/FamilySupplies.cs",
-     "actualCount < r.Count", "false"),
+     "actualCount<r.Count", "false"),
     ("theft transfers legal ownership", "Domain/FamilySupplies.cs",
      "r.Approach == SupplyApproach.Steal || source != null && source.OwnerFamily != source.HolderFamily ? source.OwnerFamily : receiver", "receiver"),
     ("public collection can confiscate private stock", "Domain/FamilySupplies.cs",
-     "if (r.Approach == SupplyApproach.PublicClaim && source != null) return false;", ""),
+     "if(r.Approach==SupplyApproach.PublicClaim) return source==null;", "if(r.Approach==SupplyApproach.PublicClaim) return true;"),
     ("splitting drops family ownership", "Domain/FamilySupplies.cs",
      "if (claim != null) ClaimStock(result, claim.OwnerFamily, claim.HolderFamily, claim.MapId, claim.Kind);", ""),
 
@@ -221,7 +221,7 @@ MUTATIONS = [
     ("choosing another zone leaves everyone on the old one", "Domain/Zones.cs",
      "lineage.ZoneApplied = new List<int>();\n        }", "}"),
     ("people who are away are given the zone", "Domain/Zones.cs",
-     "Persons.Where(p => p.InColony && (p.PrimaryLineageId", "Persons.Where(p => (p.PrimaryLineageId"),
+     "Persons.Where(p => p.InColony && (BelongsToFamily(p,lineageId))", "Persons.Where(p => (BelongsToFamily(p,lineageId))"),
     # Insight and culture
     ("every bond change is announced", "Domain/Insight.cs",
      "if (!bond.TierSeen)\n                {", "if (false)\n                {"),
@@ -273,7 +273,7 @@ MUTATIONS = [
     ("every outcome becomes a defining memory", "Domain/Events/EventEngine.cs",
      "&& (r.Tier == EventTier.Great || r.Tier == EventTier.Poor);", "&& true;"),
     ("children do no more to a feud than adults", "Domain/Events/EventEngine.cs",
-     "float bridge = (d.Effects & EventEffect.Bridge) != 0 ? 1.5f : 1f;", "float bridge = 1f;"),
+     "float bridge = ((d.Effects & EventEffect.Bridge) != 0 ? 1.5f : 1f) * pace;", "float bridge = 1f * pace;"),
     ("child events happen without children being supported", "Domain/Events/EventEngine.cs",
      "if (d.NeedsChild && !childrenEnabled)", "if (false)"),
     ("the lesson roles are reversed", "Domain/Events/EventEngine.cs",
@@ -293,19 +293,59 @@ MUTATIONS = [
     ("ambient moments use up the daily allowance", "Domain/Events/EventEngine.cs",
      "if (e.Weight != EventWeight.Ambient && (e.A == personId || e.B == personId)) n++;", "if (e.A == personId || e.B == personId) n++;"),
     ("every outcome is a good one", "Domain/Events/EventEngine.cs",
-     "public const float GoodAt = 0.52f;", "public const float GoodAt = 0.0f;"),
+     "public const float GoodAt = 0.56f;", "public const float GoodAt = 0.0f;"),
     ("what happened is not recorded", "Domain/Events/EventEngine.cs",
      "EventLog.Add(new EventRecord { EventId = d.Id,", "var unused = (new EventRecord { EventId = d.Id,"),
     ("a strained family tie never eases", "Domain/Events/EventEngine.cs",
      "t.Grievance = Math.Max(0f, t.Grievance - EventTuning.TieGrievanceEasePerDay * days);", ""),
     ("a poor reception does not depend on trust", "Domain/Events/EventCatalog.cs",
      "Factor.RecipientTrust, 0.25f, Factor.RecipientAttachment, 0.15f,", "Factor.RecipientTrust, 0.0f, Factor.RecipientAttachment, 0.15f,"),
+    # Heirlooms, estates and the reunion rescue
+    ("silence on an heir's question counts as a yes", "Domain/Estates.cs",
+     "if (claim != null) claim.Dormant = true;", ""),
+    ("an item is inherited by someone who does not hold it", "Domain/Estates.cs",
+     "if (holder != item.HeirId || GetPerson(holder)?.InColony != true) return false;", ""),
+    ("a lost item stays deliverable", "Domain/Estates.cs",
+     "item.Outcome = ItemOutcome.Lost; item.Lost = reason == LostReason.None ? LostReason.Missing : reason;", "item.Lost = reason == LostReason.None ? LostReason.Missing : reason;"),
+    ("an unreachable item is tried forever", "Domain/Estates.cs",
+     "if (item.Attempts >= EstateTuning.MaxAttempts || now - item.BlockedSince > limit)", "if (false)"),
+    ("a secret designation carries weight", "Domain/Estates.cs",
+     "if (b.KnownBy.Contains(b.HeirId) || b.KnownBy.Count > 1) return b;", "return b;"),
+    ("children too young and relatives far away inherit", "Domain/Estates.cs",
+     "if (id == estate.DeceasedId || p?.InColony != true || p.Juvenile) return;", "if (id == estate.DeceasedId || p == null) return;"),
+    ("becoming head awards the possessions", "Domain/Estates.cs",
+     "if (item.HouseId != 0)\n            {\n                int head = HeadOf(item.HouseId);", "if (true)\n            {\n                int head = HeadOf(estate.FamilyId);"),
+    ("a disputed item is delivered before it is settled", "Domain/Estates.cs",
+     "item.Contested = item.Heirloom && lead != null && second != null", "item.Contested = false && lead != null && second != null"),
+    ("an unanswered mediator is waited on forever", "Domain/Estates.cs",
+     "if (ask.Kind == EstateAskKind.Mediate) { estate.MediatorAsked = false; if (estate.MediatorId == ask.PersonId) estate.MediatorId = -1; continue; }", "if (ask.Kind == EstateAskKind.Mediate) { continue; }"),
+    ("an estate can be opened twice", "Domain/Estates.cs",
+     "if (existing != null) return existing;", ""),
+    ("a rescue can resolve twice", "Domain/KinRescue.cs",
+     "if (visit == null || visit.State != KinVisitState.Stranded || visit.Rescue == RescueStage.Offered || now > visit.RescueDeadlineTick) return false;", "if (visit == null || visit.Rescue == RescueStage.Offered || now > visit.RescueDeadlineTick) return false;"),
+    ("an offer can be accepted after it lapsed", "Domain/KinRescue.cs",
+     "|| visit.Rescue != RescueStage.Offered || now > visit.OfferExpiryTick) return false;", "|| visit.Rescue != RescueStage.Offered) return false;"),
+    ("relatives who died stay on the guest list", "Domain/KinRescue.cs",
+     "foreach (int dead in gone) RemoveKinFrom(visit, dead);", ""),
+    ("anyone at all is credited as a rescuer", "Domain/KinRescue.cs",
+     "Where(p => GetPerson(p)?.InColony == true).Take(6).ToList();\n            visit.State = KinVisitState.Travelling;", "Take(6).ToList();\n            visit.State = KinVisitState.Travelling;"),
+    ("a failed rescue leaves the reunion waiting", "Domain/KinRescue.cs",
+     "if (request != null) request.VisitorIds.Clear();\n            return true;\n        }\n\n        /// <summary>People the game says", "return true;\n        }\n\n        /// <summary>People the game says"),
+    ("an ignored offer never lapses", "Domain/KinRescue.cs",
+     "if (visit.Rescue == RescueStage.Offered && now > visit.OfferExpiryTick)", "if (false)"),
+    ("a late arrival still counts", "Domain/KinRescue.cs",
+     "|| now > visit.RescueDeadlineTick) return false;\n            if (visit.Rescue == RescueStage.Accepted) { visit.Rescue = RescueStage.OnSite;", ") return false;\n            if (visit.Rescue == RescueStage.Accepted) { visit.Rescue = RescueStage.OnSite;"),
 ]
 
 
 def run_tests():
-    out = subprocess.run(["dotnet", "test", str(ROOT / "Source" / "FamilyLife.Tests" / "FamilyLife.Tests.csproj"), "--no-restore"],
-                         capture_output=True, text=True, timeout=600).stdout
+    try:
+        out = subprocess.run(["dotnet", "test", str(ROOT / "Source" / "FamilyLife.Tests" / "FamilyLife.Tests.csproj"), "--no-restore"],
+                             capture_output=True, text=True, timeout=240).stdout
+    except subprocess.TimeoutExpired:
+        # A rule broken so badly that the suite never finishes is noticed, not a reason to abandon the run.
+        subprocess.run(["taskkill", "/F", "/IM", "testhost.exe"] if sys.platform == "win32" else ["pkill", "-f", "testhost"], capture_output=True)
+        return (True, 1, 0)
     m = re.search(r"(Failed!|Passed!)\s+-\s+Failed:\s+(\d+), Passed:\s+(\d+)", out)
     return (m.group(1) == "Failed!", int(m.group(2)), int(m.group(3))) if m else (None, 0, 0)
 

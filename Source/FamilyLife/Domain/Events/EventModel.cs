@@ -132,7 +132,13 @@ namespace FamilyLife.Domain
         public EventWeight Weight;
         public byte Setting;                  // ActivityKind
         public int Third;
+        // How it landed, kept so the history can tell what came of it. Old saves have none of this and show nothing extra.
+        public int FeelA, FeelB;              // how each walked away feeling, -100..100
+        public int Aftermath;                 // AftermathFlags
     }
+
+    [System.Flags]
+    public enum AftermathFlags { None = 0, RiftOpened = 1, RiftEased = 2, RiftResolved = 4, PromiseMade = 8, PromiseKept = 16, Memory = 32, TieChanged = 64 }
 
     /// <summary>Everything an event looks at. Built by the game layer from a pair of real people and the registry's records.</summary>
     public sealed class PairContext
@@ -152,6 +158,14 @@ namespace FamilyLife.Domain
         public float QualityHours = -1f; // -1 retains legacy domain-call credit; runtime supplies actual duration or zero for already-recorded activities.
         public float RelationshipPace = 1f; // Runtime tuning; contexts created by older callers retain existing behavior.
         public string TraditionId;
+        // The public occasion that supplied this context. Ceremony moments use these facts instead of
+        // treating every attendee as interchangeable: whose wedding/funeral it is, which houses are
+        // hosting, and which people actually travelled for a reunion.
+        public int OccasionFamilyId;
+        public int OccasionSecondFamilyId;
+        public int OccasionSubjectId;
+        public int OccasionSubjectBId;
+        public IReadOnlyCollection<int> OccasionVisitorIds = Array.Empty<int>();
         public bool ResourcePressure;
         public bool FromActivity;             // reported by a game activity (a story, a meal, a gathering) rather than sampled from two people being near
         public int Now;
@@ -161,6 +175,7 @@ namespace FamilyLife.Domain
         public int ThirdAttachToInitiator = -1;
         public int ThirdOpinionOfInitiator;       // the third person's opinion of the initiator
         public bool RomanticallyEligible;         // the game's own rules allow a romance between them (adults, orientation, no conflicting bonds)
+        public bool ConsentedMatch;               // both pawns agreed to consider a match; changes weight only, never eligibility
 
         /// <summary>Copies the pair facts for a different third participant. Actors are read-only for this selection.</summary>
         public PairContext Copy() => (PairContext)MemberwiseClone();
