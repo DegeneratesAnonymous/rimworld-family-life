@@ -51,8 +51,9 @@ namespace FamilyLife
             float y = 0f; float x = 0f;
             for (int i = 0; i < Tabs.Length; i++)
             {
-                var label = Tabs[i].Translate(); float w = Mathf.Max(90f, Text.CalcSize(label).x + 20f);
-                var tab = new Rect(x, y, w, 26f);
+                var label = Tabs[i].Translate(); float w = Mathf.Min(r.width, Mathf.Max(90f, Text.CalcSize(label).x + 20f));
+                if (x > 0f && x + w > r.width) { x = 0f; y += 34f; }
+                var tab = new Rect(x, y, w, 30f);
                 if (Widgets.ButtonText(tab, label, true, true, i == sub ? new Color(0.9f, 0.74f, 0.28f) : Color.white)) sub = i;
                 x += w + 4f;
             }
