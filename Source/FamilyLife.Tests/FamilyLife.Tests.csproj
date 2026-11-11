@@ -13,6 +13,7 @@
     <Compile Include="..\FamilyLife\Framework\**\*.cs" LinkBase="Framework" />
     <Compile Include="..\Education\Domain\**\*.cs" LinkBase="Education\Domain" />
     <Compile Include="..\Care\Domain\**\*.cs" LinkBase="Care\Domain" />
+    <Compile Include="..\Treasury\Domain\**\*.cs" LinkBase="Treasury\Domain" />
     <Compile Remove="obj/**" />
   </ItemGroup>
   <ItemGroup>
