@@ -26,6 +26,7 @@ namespace FamilyLife
             FamilyFramework.RegisterFitness(OfficeKind.HallKeeper, FrameworkServices.SocialFitness);
             FamilyFramework.RegisterFitness(OfficeKind.Chaplain, FrameworkServices.SocialFitness);
             FamilyFramework.RegisterOfficeWork(Id, OfficeKind.HallKeeper, OfficeDriver.HallWork);
+            CommunityCorePages.Register(Id);
         }
     }
 }

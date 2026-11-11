@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <WFL_Hub_NoPages>The Community window has no pages to show.</WFL_Hub_NoPages>
+  <WFL_Hub_PageFailed>This page could not be drawn and has been switched off for this session. The details are in the log.</WFL_Hub_PageFailed>
+  <WFL_Hub_Overview>Overview</WFL_Hub_Overview>
+  <WFL_Hub_Families>Families &amp; Households</WFL_Hub_Families>
+  <WFL_Hub_Professions>Professions</WFL_Hub_Professions>
+  <WFL_Hub_Assembly>Community Assembly</WFL_Hub_Assembly>
+  <WFL_Hub_Settings>Settings</WFL_Hub_Settings>
+  <WFL_Hub_Residents>Residents</WFL_Hub_Residents>
+  <WFL_Hub_ResidentsLine>{0} people live in the colony, in {1} families.</WFL_Hub_ResidentsLine>
+  <WFL_Hub_Posts>Community posts</WFL_Hub_Posts>
+  <WFL_Hub_Vacant>vacant</WFL_Hub_Vacant>
+  <WFL_Hub_Modules>Modules</WFL_Hub_Modules>
+  <WFL_Hub_OpenFamilies>Open as a window</WFL_Hub_OpenFamilies>
+  <WFL_Hub_NoProfessions>No professions are registered. Install a module that provides careers, such as Education or Community Care.</WFL_Hub_NoProfessions>
+  <WFL_Hub_ProfessionsHelp>Anyone may be assigned to an entry-level profession. Higher levels need the qualification to be earned first; assigning is always your choice.</WFL_Hub_ProfessionsHelp>
+  <WFL_Career_Needs_Short>not yet qualified</WFL_Career_Needs_Short>
+  <WFL_Hub_AssemblyHelp>The assembly meets to choose the people who hold the community's posts. Professions are assigned by you and never elected.</WFL_Hub_AssemblyHelp>
+  <WFL_Hub_OpenSettings>Open mod settings</WFL_Hub_OpenSettings>
+</LanguageData>

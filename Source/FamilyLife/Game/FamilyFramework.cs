@@ -4,6 +4,7 @@ using System.Linq;
 using FamilyLife.Domain;
 using FamilyLife.Framework;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace FamilyLife
@@ -35,6 +36,8 @@ namespace FamilyLife
         public static readonly WorkRoster Roster;
         public static readonly PlannedEventCatalog PlannedEvents;
         public static readonly MeetingCatalog Meetings;
+        /// <summary>The pages of the Community window. A page draws itself into the rect it is given and returns the height it used (ignored when the page sets <c>OwnsScrolling</c>).</summary>
+        public static readonly CommunityPageCatalog<Func<Rect, FamilyComponent, float>> Pages;
         public static readonly ContributionList<Func<Building, IEnumerable<Gizmo>>> BuildingGizmos;
         public static readonly ContributionList<DiagnosticSection> Diagnostics;
         public static readonly ContributionList<Action<Pawn, Pawn, int>> OperationCompleted;          // a vanilla operation was completed: (doer, patient, bill id). Read-only: the framework owns the patch, modules only listen
@@ -59,6 +62,7 @@ namespace FamilyLife
             Roster = new WorkRoster(Catalog);
             PlannedEvents = new PlannedEventCatalog(Catalog);
             Meetings = new MeetingCatalog(Catalog);
+            Pages = new CommunityPageCatalog<Func<Rect, FamilyComponent, float>>(Catalog);
             BuildingGizmos = new ContributionList<Func<Building, IEnumerable<Gizmo>>>(Catalog);
             Diagnostics = new ContributionList<DiagnosticSection>(Catalog);
             OperationCompleted = new ContributionList<Action<Pawn, Pawn, int>>(Catalog);
