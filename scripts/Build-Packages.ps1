@@ -32,9 +32,9 @@ foreach ($dir in "About", "Defs", "Patches", "Languages", "Textures", "1.6", "1.
 Copy-Item (Join-Path $repo "LICENSE") $fw -Force
 
 # the module packages
-foreach ($pkg in "WilsEducation", "WilsCommunityCare") {
+foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury") {
     $dest = Join-Path $dist $pkg; $src = Join-Path $repo "Packages\$pkg"
-    foreach ($dir in "About", "Defs", "Languages", "1.6", "1.7") { if (Test-Path (Join-Path $src $dir)) { Copy-Tree (Join-Path $src $dir) (Join-Path $dest $dir) } }
+    foreach ($dir in "About", "Defs", "Patches", "Languages", "1.6", "1.7") { if (Test-Path (Join-Path $src $dir)) { Copy-Tree (Join-Path $src $dir) (Join-Path $dest $dir) } }
     Copy-Item (Join-Path $repo "LICENSE") $dest -Force
 }
 
@@ -42,7 +42,7 @@ foreach ($pkg in "WilsEducation", "WilsCommunityCare") {
 $problems = @()
 function Need($path, $what) { if (-not (Test-Path $path)) { $script:problems += "missing $what ($path)" } }
 
-foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLife.dll"), @("WilsEducation", "SpacemanWil.WilsEducation", "WilsEducation.dll"), @("WilsCommunityCare", "SpacemanWil.WilsCommunityCare", "WilsCommunityCare.dll"))) {
+foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLife.dll"), @("WilsEducation", "SpacemanWil.WilsEducation", "WilsEducation.dll"), @("WilsCommunityCare", "SpacemanWil.WilsCommunityCare", "WilsCommunityCare.dll"), @("WilsTreasury", "SpacemanWil.WilsTreasury", "WilsTreasury.dll"))) {
     $dir = Join-Path $dist $entry[0]
     Need (Join-Path $dir "About\About.xml") ("About.xml in " + $entry[0])
     Need (Join-Path $dir "LICENSE") ("licence in " + $entry[0])
@@ -55,11 +55,12 @@ foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLi
     }
 }
 # a module package carries no framework content, and the framework package carries no module content
-foreach ($pkg in "WilsEducation", "WilsCommunityCare") {
-    foreach ($forbidden in "Patches", "Textures") { if (Test-Path (Join-Path $dist "$pkg\$forbidden")) { $problems += "$pkg ships $forbidden, which belong to the framework" } }
+foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury") {
+    $forbidden = if ($pkg -eq "WilsTreasury") { @("Textures") } else { @("Patches", "Textures") }          # the Treasury package carries its own zone patch
+    foreach ($f in $forbidden) { if (Test-Path (Join-Path (Join-Path $dist $pkg) $f)) { $problems += "$pkg ships $f, which belongs to the framework" } }
 }
 $fwDefs = (Get-ChildItem (Join-Path $dist "WilsFamilyLife\Defs") -Recurse -Filter *.xml | Get-Content -Raw) -join "`n"
 foreach ($name in "WFL_ClassTeacher", "WFL_OfficeLesson", "WFL_ClinicDoctor", "WFL_CheckedUp") { if ($fwDefs -match "<defName>$name</defName>") { $problems += "framework package defines $name, which a module owns" } }
 
 if ($problems.Count -gt 0) { $problems | ForEach-Object { Write-Host "PACKAGE PROBLEM: $_" -ForegroundColor Red }; throw "Package check failed" }
-Write-Host "Packages assembled under $dist and checked: WilsFamilyLife, WilsEducation, WilsCommunityCare (1.6 and 1.7)."
+Write-Host "Packages assembled under $dist and checked: WilsFamilyLife, WilsEducation, WilsCommunityCare, WilsTreasury (1.6 and 1.7)."

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- A tax collection visit: the framework's shared talk job, with the meaning supplied by Wil's Treasury. -->
+  <JobDef>
+    <defName>WFL_TaxVisit</defName>
+    <driverClass>FamilyLife.JobDriver_StoryTalk</driverClass>
+    <reportString>collecting what TargetA owes.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <ThoughtDef>
+    <defName>WFL_TaxPaidFairly</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>6</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>fair collection</label><baseOpinionOffset>4</baseOpinionOffset></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_TaxPressured</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>10</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>pressed for money</label><baseOpinionOffset>-8</baseOpinionOffset></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>WFL_TaxRefusedAgainst</defName>
+    <thoughtClass>Thought_MemorySocial</thoughtClass>
+    <durationDays>8</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages><li><label>would not pay what is owed</label><baseOpinionOffset>-4</baseOpinionOffset></li></stages>
+  </ThoughtDef>
+</Defs>

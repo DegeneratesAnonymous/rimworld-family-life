@@ -110,6 +110,9 @@ namespace FamilyLife
                 if (c.Registry.GetPerson(pawn.thingIDNumber)?.InColony != true) return 0;          // only the colony's own people build a career (not a raider who tends someone, or a passing guest)
                 var ledger = c.Registry.Careers();
                 int day = now / ActivityTuning.TicksPerDay;
+                EconomyHits.WorkReports++;
+                foreach (var listener in FamilyFramework.WorkReported.Enabled())          // wages: a listener decides whether the work is paid; it is told once per finished activity
+                    try { listener(pawn, careerId, specialty, kind, activityKey, now); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A work listener was skipped: " + ex.Message); }
                 int given = ledger.Award(pawn.thingIDNumber, careerId, specialty, kind, activityKey, points, day);
                 if (given <= 0) return 0;
                 Event(pawn.LabelShort + " +" + given + " " + careerId + (specialty != null ? ":" + specialty : "") + " (" + kind + ")");

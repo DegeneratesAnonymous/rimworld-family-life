@@ -187,6 +187,8 @@ namespace FamilyLife.Domain
         private readonly Dictionary<string, int> cursor = new Dictionary<string, int>();          // account -> last transaction id assessed
         public readonly Dictionary<string, int> LastEventDay = new Dictionary<string, int>();
         public readonly Dictionary<string, int> Refusals = new Dictionary<string, int>();
+        /// <summary>Diversions nobody has found yet, as "collector|amount|day". Discovery turns one into a restitution debt for exactly that amount.</summary>
+        public readonly List<string> Diversions = new List<string>();
 
         public int CursorOf(string account) => cursor.TryGetValue(account, out var c) ? c : 0;
 
@@ -210,6 +212,7 @@ namespace FamilyLife.Domain
             w.Strings("cur", cursor.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("ev", LastEventDay.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
             w.Strings("ref", Refusals.OrderBy(k => k.Key, StringComparer.Ordinal).Select(k => k.Key + "|" + k.Value).ToList());
+            w.Strings("div", Diversions);
             return w.ToString();
         }
 
@@ -217,6 +220,7 @@ namespace FamilyLife.Domain
         {
             var b = new TaxBook { RatePercent = r.Int("rate"), Legitimacy = r.Has("leg") ? r.Int("leg") : 60, AutoRemit = r.Bool("auto") };
             Fill(r.Strings("cur"), b.cursor); Fill(r.Strings("ev"), b.LastEventDay); Fill(r.Strings("ref"), b.Refusals);
+            b.Diversions.AddRange(r.Strings("div"));
             return b;
         }
         private static void Fill(List<string> src, Dictionary<string, int> into) { foreach (var s in src) { var p = s.Split('|'); if (p.Length == 2 && int.TryParse(p[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n)) into[p[0]] = n; } }

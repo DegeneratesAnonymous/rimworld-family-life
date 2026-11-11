@@ -42,6 +42,9 @@ namespace FamilyLife
         public static readonly ContributionList<DiagnosticSection> Diagnostics;
         public static readonly ContributionList<Action<Pawn, Pawn, int>> OperationCompleted;          // a vanilla operation was completed: (doer, patient, bill id). Read-only: the framework owns the patch, modules only listen
         public static readonly ContributionList<Action<Pawn, Pawn>> Tended;          // a vanilla tend was done: (doctor, patient). Read-only, as above
+        public static readonly ContributionList<Action<TradeReport>> TradeCompleted;          // a vanilla trade was completed (read-only; the framework owns the patch)
+        public static readonly ContributionList<Action<int, string>> SilverReceived;          // silver arrived from a quest reward: (amount, idempotency key)
+        public static readonly ContributionList<Action<Pawn, string, string, string, string, int>> WorkReported;          // a module reported finished professional work: (pawn, career, specialty, kind, activity key, tick)
         public static readonly ContributionList<Action<CommunityOffice>> DueNow;          // developer menu: brings a module's timers on a post due
         public static readonly ContributionList<Func<FamilyComponent, CleanupReport>> Removal;          // "prepare for removal": one per module
         public static readonly ContributionList<Action> Resets;          // clears a module's in-memory state when a game is loaded or ended
@@ -67,6 +70,9 @@ namespace FamilyLife
             Diagnostics = new ContributionList<DiagnosticSection>(Catalog);
             OperationCompleted = new ContributionList<Action<Pawn, Pawn, int>>(Catalog);
             Tended = new ContributionList<Action<Pawn, Pawn>>(Catalog);
+            TradeCompleted = new ContributionList<Action<TradeReport>>(Catalog);
+            SilverReceived = new ContributionList<Action<int, string>>(Catalog);
+            WorkReported = new ContributionList<Action<Pawn, string, string, string, string, int>>(Catalog);
             Resets = new ContributionList<Action>(Catalog);
             Removal = new ContributionList<Func<FamilyComponent, CleanupReport>>(Catalog);
             DueNow = new ContributionList<Action<CommunityOffice>>(Catalog);

@@ -70,17 +70,18 @@ namespace FamilyLife.Domain
     public sealed class TreasuryState : IModuleState
     {
         public const string StateId = "wils.treasury.state";
-        public int PrimaryZoneId, MapId, LastZoneDay;
+        public int PrimaryZoneId, MapId, LastZoneDay, CommunityPercent = 25, OwnerFeePercent;
+        public bool AdoptSurplus = true;
         public readonly ValuablesRegistry Valuables = new ValuablesRegistry();
         public string Encode()
         {
-            var w = new StateWriter().Int("zone", PrimaryZoneId).Int("map", MapId).Int("zday", LastZoneDay);
+            var w = new StateWriter().Int("zone", PrimaryZoneId).Int("map", MapId).Int("zday", LastZoneDay).Int("cpct", CommunityPercent + 1).Int("fee", OwnerFeePercent).Bool("noadopt", !AdoptSurplus);
             w.Strings("val", Valuables.All.Select(v => v.DefName + "|" + (v.Liquid ? 1 : 0)).ToList());
             return w.ToString();
         }
         public static TreasuryState Decode(StateReader r)
         {
-            var s = new TreasuryState { PrimaryZoneId = r.Int("zone"), MapId = r.Int("map"), LastZoneDay = r.Int("zday") };
+            var s = new TreasuryState { PrimaryZoneId = r.Int("zone"), MapId = r.Int("map"), LastZoneDay = r.Int("zday"), CommunityPercent = r.Has("cpct") ? r.Int("cpct") - 1 : 25, OwnerFeePercent = r.Int("fee"), AdoptSurplus = !r.Bool("noadopt") };
             var list = r.Strings("val");
             if (list.Count > 0) { foreach (var v in s.Valuables.All.ToList()) s.Valuables.Remove(v.DefName); foreach (var x in list) { var p = x.Split('|'); if (p.Length == 2) s.Valuables.Set(p[0], p[1] == "1"); } }
             return s;

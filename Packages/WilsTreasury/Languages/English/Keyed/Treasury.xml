@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <wils.treasury.treasurer_label>Treasurer</wils.treasury.treasurer_label>
+  <wils.treasury.taxcollector_label>Tax Collector</wils.treasury.taxcollector_label>
+  <WFL_Treasury_Page>Treasury</WFL_Treasury_Page>
+  <WFL_ModuleName_wils_treasury>Treasury</WFL_ModuleName_wils_treasury>
+  <WFL_ModuleInactive_wils_treasury>Accounts, payroll and taxation are inactive; the saved accounts are kept.</WFL_ModuleInactive_wils_treasury>
+  <WFL_TreasuryZone>Treasury Zone</WFL_TreasuryZone>
+  <WFL_TreasuryZoneDesc>Paint the Treasury: an enclosed room with a table, a chair or stool, and storage that accepts silver.</WFL_TreasuryZoneDesc>
+  <WFL_TZ_Status_Valid>Treasury open</WFL_TZ_Status_Valid>
+  <WFL_TZ_Status_Invalid>Not yet a Treasury</WFL_TZ_Status_Invalid>
+  <WFL_TZ_Missing>Missing: {0}</WFL_TZ_Missing>
+  <WFL_TZ_Need_Enclosed>an enclosed room</WFL_TZ_Need_Enclosed>
+  <WFL_TZ_Need_Table>a table or desk</WFL_TZ_Need_Table>
+  <WFL_TZ_Need_Seat>a chair or stool</WFL_TZ_Need_Seat>
+  <WFL_TZ_Need_SilverStorage>storage that accepts silver</WFL_TZ_Need_SilverStorage>
+  <WFL_TZ_Treasurer>Treasurer: {0}</WFL_TZ_Treasurer>
+  <WFL_TZ_NoTreasurer>no Treasurer assigned (office duties unavailable)</WFL_TZ_NoTreasurer>
+  <WFL_TZ_Reserves>Silver in storage: {0}. Other valuables: about {1} silver. Free storage slots: {2}.</WFL_TZ_Reserves>
+  <WFL_TZ_Secondary>A treasury already exists on this map; this zone is not used.</WFL_TZ_Secondary>
+  <WFL_TZ_Open>Open the Treasury</WFL_TZ_Open>
+  <WFL_TZ_OpenDesc>Open the Treasury page of the Community window.</WFL_TZ_OpenDesc>
+  <WFL_Tr_Overview>Overview</WFL_Tr_Overview>
+  <WFL_Tr_Accounts>Accounts</WFL_Tr_Accounts>
+  <WFL_Tr_Payroll>Payroll</WFL_Tr_Payroll>
+  <WFL_Tr_Taxation>Taxation</WFL_Tr_Taxation>
+  <WFL_Tr_Debts>Debts</WFL_Tr_Debts>
+  <WFL_Tr_Transactions>Transactions</WFL_Tr_Transactions>
+  <WFL_Tr_CommunityFunds>Community funds: {0} silver</WFL_Tr_CommunityFunds>
+  <WFL_Tr_Claims>All accounts together hold {0} silver of claims; {1} silver is physically in storage.</WFL_Tr_Claims>
+  <WFL_Tr_Discrepancy>The claims and the silver in storage differ by {0}. Nothing is created or removed to hide it.</WFL_Tr_Discrepancy>
+  <WFL_Tr_Wealth>Personal and household wealth: {0} silver in {1} accounts.</WFL_Tr_Wealth>
+  <WFL_Tr_NextPayday>Next payday: {0} days away. Wages earned and waiting: {1} silver.</WFL_Tr_NextPayday>
+  <WFL_Tr_DebtsTotal>Outstanding debts: {0} silver in {1} obligations.</WFL_Tr_DebtsTotal>
+  <WFL_Tr_ZoneStatus>Treasury Zone: {0}</WFL_Tr_ZoneStatus>
+  <WFL_Tr_NoZone>none yet (accounts and payroll work without one)</WFL_Tr_NoZone>
+  <WFL_Tr_Treasurer>Treasurer: {0}</WFL_Tr_Treasurer>
+  <WFL_Tr_Collector>Tax Collector: {0}</WFL_Tr_Collector>
+  <WFL_Tr_None>nobody assigned</WFL_Tr_None>
+  <WFL_Tr_AccountLine>{0}: {1} silver</WFL_Tr_AccountLine>
+  <WFL_Tr_Community>Community treasury</WFL_Tr_Community>
+  <WFL_Tr_Household>Household {0}</WFL_Tr_Household>
+  <WFL_Tr_Business>Business {0}</WFL_Tr_Business>
+  <WFL_Tr_Transfer>Transfer...</WFL_Tr_Transfer>
+  <WFL_Tr_TransferFrom>From</WFL_Tr_TransferFrom>
+  <WFL_Tr_TransferTo>To</WFL_Tr_TransferTo>
+  <WFL_Tr_TransferDo>Move {0} silver</WFL_Tr_TransferDo>
+  <WFL_Tr_TransferFailed>That transfer could not be made ({0}).</WFL_Tr_TransferFailed>
+  <WFL_Tr_PayrollHelp>Wages are paid on the 1st and 8th of every quadrum from the treasury, for finished work by people assigned to a profession. If the money is short everyone receives the same share and the rest stays owed. Payroll never creates silver.</WFL_Tr_PayrollHelp>
+  <WFL_Tr_RatePerUnit>{0}: silver per finished task</WFL_Tr_RatePerUnit>
+  <WFL_Tr_DailyCap>Most any one person can earn in a day</WFL_Tr_DailyCap>
+  <WFL_Tr_VanillaWork>Ordinary labour (paid only if you set a rate)</WFL_Tr_VanillaWork>
+  <WFL_Tr_PastPayments>Recent paydays</WFL_Tr_PastPayments>
+  <WFL_Tr_PaydayLine>Day {0}: {1} due, {2} paid{3}</WFL_Tr_PaydayLine>
+  <WFL_Tr_ShortBy> (short by {0}, still owed)</WFL_Tr_ShortBy>
+  <WFL_Tr_TaxLocked>Taxation is locked. Assign a qualified Tax Collector (Professions page) to unlock it. Until then the community may keep a share of income, but that is not a tax.</WFL_Tr_TaxLocked>
+  <WFL_Tr_TaxRate>Tax on income: {0}%</WFL_Tr_TaxRate>
+  <WFL_Tr_TaxLine>{0} owes {1} (due day {2})</WFL_Tr_TaxLine>
+  <WFL_Tr_Legitimacy>Community trust in collection: {0}/100</WFL_Tr_Legitimacy>
+  <WFL_Tr_IncomeShare>Share of rewards the community keeps: {0}%</WFL_Tr_IncomeShare>
+  <WFL_Tr_DebtLine>{0} owes {1}: {2} of {3} ({4})</WFL_Tr_DebtLine>
+  <WFL_Tr_Forgive>Forgive</WFL_Tr_Forgive>
+  <WFL_Tr_Dispute>Dispute</WFL_Tr_Dispute>
+  <WFL_Tr_Resolve>Resolve</WFL_Tr_Resolve>
+  <WFL_Tr_TxLine>Day {0}: {1}, {2} silver, {3} to {4}</WFL_Tr_TxLine>
+  <WFL_Tr_Outside>outside</WFL_Tr_Outside>
+  <WFL_Tr_Payday>Payday: {0} silver was due and {1} was paid.{2}</WFL_Tr_Payday>
+  <WFL_Tr_RewardShared>A reward of {0} silver was shared: the community kept {1}.</WFL_Tr_RewardShared>
+  <WFL_Tr_CollectionNote>{0} {1}.</WFL_Tr_CollectionNote>
+  <WFL_Tr_Outcome_Paid>paid in full</WFL_Tr_Outcome_Paid>
+  <WFL_Tr_Outcome_Partial>paid part of what was owed</WFL_Tr_Outcome_Partial>
+  <WFL_Tr_Outcome_Plan>agreed to a repayment plan</WFL_Tr_Outcome_Plan>
+  <WFL_Tr_Outcome_Refused>refused to pay</WFL_Tr_Outcome_Refused>
+  <WFL_Tr_Outcome_Hardship>has nothing to pay with</WFL_Tr_Outcome_Hardship>
+  <WFL_Tr_Event_embezzles>Part of a collection did not reach the treasury.</WFL_Tr_Event_embezzles>
+  <WFL_Tr_Event_demands_more>The collector asked for more than was authorised.</WFL_Tr_Event_demands_more>
+  <WFL_Tr_Event_accepts_bribe>The collector took a payment to look the other way.</WFL_Tr_Event_accepts_bribe>
+  <WFL_Tr_Event_reports_missing_funds>Missing funds were found and reported; the amount is now owed back.</WFL_Tr_Event_reports_missing_funds>
+  <WFL_Tr_Event_corruption_accusation>Some in the community accuse the collector of corruption.</WFL_Tr_Event_corruption_accusation>
+  <WFL_Tr_Event_fair_treatment>The collector's even-handedness has been noticed.</WFL_Tr_Event_fair_treatment>
+  <WFL_Tr_Event_returns_money>The collector returned money that should not have been taken.</WFL_Tr_Event_returns_money>
+  <WFL_Tr_Event_community_petition>A petition about the collection is going round.</WFL_Tr_Event_community_petition>
+</LanguageData>

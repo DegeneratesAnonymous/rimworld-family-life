@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Wil's Treasury</name>
+  <author>Spaceman_Wil</author>
+  <packageId>SpacemanWil.WilsTreasury</packageId>
+  <modVersion>0.1.0</modVersion>
+  <supportedVersions>
+    <li>1.6</li>
+    <li>1.7</li>
+  </supportedVersions>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+    </li>
+    <li>
+      <packageId>SpacemanWil.WilsFamilyLife</packageId>
+      <displayName>Wil's Community Framework (the framework)</displayName>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>SpacemanWil.WilsFamilyLife</li>
+  </loadAfter>
+  <description>WIL'S TREASURY (early development)
+
+Money for a community: personal and household accounts, a community treasury, a physical Treasury Zone, quest rewards and trade proceeds shared by policy, trades paid from the treasury first and then from household accounts, wages and a payday on the 1st and 8th of every quadrum, the Treasurer, and (once a Tax Collector is appointed) taxation, collection visits and the disputes that follow.
+
+Accounts are claims on the colony's real silver. Nothing here creates silver.
+
+Requires Wil's Community Framework. It does not need Wil's Educators or Wil's Community Care; when they are installed their professions can be paid wages.
+
+Early development: not yet verified in a running game. Load it after Wil's Community Framework. If you take it out of a game, use the developer action "Prepare Treasury for removal" first; its accounts stay in the save and are picked up again if you add it back.
+
+Created by Spaceman_Wil. Uses Harmony by Andreas Pardeike.</description>
+</ModMetaData>
