@@ -10,7 +10,7 @@ $dist = Join-Path $repo "dist"
 
 if (-not $NoBuild) {
     foreach ($v in "1.7", "1.6") {
-        foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj") {
+        foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj", "Treasury\WilsTreasury.csproj") {
             dotnet build (Join-Path $repo "Source\$project") -c Release -p:GameVersion=$v -v q
             if ($LASTEXITCODE -ne 0) { throw "Build failed for $project ($v)" }
         }

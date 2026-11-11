@@ -15,11 +15,12 @@ namespace FamilyLife
     /// </summary>
     public class MainTabWindow_Community : MainTabWindow
     {
-        private const float NavWidth = 190f, RowH = 30f;
+        private const float NavWidth = 224f;
         private static string selected;
         private static readonly Dictionary<string, Vector2> scrolls = new Dictionary<string, Vector2>();
         private static readonly HashSet<string> failed = new HashSet<string>();
-        private float contentHeight = 400f;
+        private readonly Dictionary<string, float> heights = new Dictionary<string, float>();
+        private Vector2 navScroll;
 
         public override Vector2 RequestedTabSize => new Vector2(Mathf.Min(1180f, UI.screenWidth - 40f), Mathf.Min(760f, UI.screenHeight - 120f));
 
@@ -43,28 +44,36 @@ namespace FamilyLife
             Widgets.DrawBoxSolid(nav, new Color(0.10f, 0.10f, 0.11f, 0.95f));
             float y = 6f;
             Text.Font = GameFont.Small;
+            var statuses = pages.Select(p => FamilyFramework.Pages.StatusOf(p)).ToList();
+            var rowHeights = pages.Select((p, i) => Mathf.Max(34f, Text.CalcHeight(p.LabelKey.Translate(), NavWidth - (statuses[i] > 0 ? 92f : 66f)) + 12f)).ToList();
+            Widgets.BeginScrollView(nav, ref navScroll, new Rect(0f, 0f, NavWidth - 18f, Mathf.Max(nav.height, rowHeights.Sum() + 12f)));
+            int index = 0;
             foreach (var p in pages)
             {
-                var row = new Rect(4f, y, NavWidth - 8f, RowH - 2f);
+                var row = new Rect(4f, y, NavWidth - 26f, rowHeights[index++] - 2f);
                 bool on = p.Id == page.Id;
                 if (on) Widgets.DrawBoxSolid(row, new Color(0.25f, 0.22f, 0.12f, 0.9f)); else if (Mouse.IsOver(row)) Widgets.DrawHighlight(row);
                 var icon = string.IsNullOrEmpty(p.Icon) ? null : ContentFinder<Texture2D>.Get(p.Icon, false);
                 float x = row.x + 6f;
-                if (icon != null) { GUI.DrawTexture(new Rect(x, row.y + 4f, 20f, 20f), icon); x += 26f; }
+                if (icon != null) { GUI.DrawTexture(new Rect(x, row.center.y - 10f, 20f, 20f), icon); }
+                x += 26f;
+                int status = statuses[index - 1];
                 Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(new Rect(x, row.y, row.xMax - x - 28f, row.height), p.LabelKey.Translate());
-                int status = FamilyFramework.Pages.StatusOf(p);
+                Widgets.Label(new Rect(x, row.y, row.xMax - x - (status > 0 ? 30f : 4f), row.height), p.LabelKey.Translate());
+                TooltipHandler.TipRegion(row, p.LabelKey.Translate());
                 if (status > 0) { Text.Anchor = TextAnchor.MiddleRight; GUI.color = FamilyKit.Gold; Widgets.Label(new Rect(row.xMax - 30f, row.y, 26f, row.height), status.ToString()); GUI.color = Color.white; }
                 Text.Anchor = TextAnchor.UpperLeft;
                 if (Widgets.ButtonInvisible(row) && !on) { selected = p.Id; }
-                y += RowH;
+                y += row.height + 2f;
             }
+            Widgets.EndScrollView();
 
             var body = new Rect(NavWidth + 8f, 0f, inRect.width - NavWidth - 8f, inRect.height);
             Text.Font = GameFont.Medium; GUI.color = FamilyKit.Gold;
-            Widgets.Label(new Rect(body.x, body.y, body.width, 32f), page.LabelKey.Translate());
+            float titleHeight = Mathf.Max(32f, Text.CalcHeight(page.LabelKey.Translate(), body.width));
+            Widgets.Label(new Rect(body.x, body.y, body.width, titleHeight), page.LabelKey.Translate());
             GUI.color = Color.white; Text.Font = GameFont.Small;
-            var area = new Rect(body.x, body.y + 36f, body.width, body.height - 36f);
+            var area = new Rect(body.x, body.y + titleHeight + 8f, body.width, body.height - titleHeight - 8f);
             DrawPage(page, area, c);
         }
 
@@ -77,19 +86,21 @@ namespace FamilyLife
                 // A page that owns its scrolling is given the whole area; every other page is drawn into a scroll view sized to the height it reports.
                 if (page.OwnsScrolling) { page.Render(new Rect(area.x, area.y, area.width, area.height), c); return; }
                 scrolls.TryGetValue(page.Id, out var scroll);
-                var view = new Rect(0f, 0f, area.width - 18f, Mathf.Max(contentHeight, area.height));
+                heights.TryGetValue(page.Id, out float height);
+                var view = new Rect(0f, 0f, area.width - 18f, Mathf.Max(height, area.height));
                 Widgets.BeginScrollView(area, ref scroll, view);
-                float used = page.Render(new Rect(0f, 0f, view.width, area.height), c);
-                Widgets.EndScrollView();
+                float used;
+                try { used = page.Render(new Rect(0f, 0f, view.width, area.height), c); }
+                finally { Widgets.EndScrollView(); }
                 scrolls[page.Id] = scroll;
-                contentHeight = used + 20f;
+                heights[page.Id] = used + 20f;
             }
             catch (Exception ex)
             {
-                try { Widgets.EndScrollView(); } catch (Exception) { }
                 failed.Add(page.Id);
                 Log.Error("[Wil's Family Life] Community page '" + page.Id + "' failed and was disabled for this session: " + ex);
             }
+            finally { GUI.color = Color.white; Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; }
         }
     }
 

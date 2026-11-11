@@ -18,4 +18,10 @@
   <WFL_Career_Needs_Short>not yet qualified</WFL_Career_Needs_Short>
   <WFL_Hub_AssemblyHelp>The assembly meets to choose the people who hold the community's posts. Professions are assigned by you and never elected.</WFL_Hub_AssemblyHelp>
   <WFL_Hub_OpenSettings>Open mod settings</WFL_Hub_OpenSettings>
+  <WFL_Hub_FamiliesHelp>Browse colony families here. Open a family to manage its people, relationships, home and affairs in the full Families window.</WFL_Hub_FamiliesHelp>
+  <WFL_Hub_FamilyResidents>{0} family members living in the colony</WFL_Hub_FamilyResidents>
+  <WFL_Hub_AllFamilies>Browse all families</WFL_Hub_AllFamilies>
+  <WFL_Hub_Search>Search roles</WFL_Hub_Search>
+  <WFL_Hub_NoMatches>No professions match this search.</WFL_Hub_NoMatches>
+  <WFL_Hub_Qualified>Level {0} · {1} eligible colonists</WFL_Hub_Qualified>
 </LanguageData>
