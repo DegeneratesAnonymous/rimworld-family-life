@@ -20,13 +20,7 @@ namespace FamilyLife
         public const string PageId = "wils.treasury.treasury";
 
         /// <summary>The pay-calendar day: days since the start of year 0, from the world's own calendar at the home map's longitude.</summary>
-        public static int Today()
-        {
-            var map = Find.AnyPlayerHomeMap ?? Find.CurrentMap;
-            float lon = map != null ? Find.WorldGrid.LongLatOf(map.Tile).x : 0f;
-            long abs = Find.TickManager.TicksAbs;
-            return GenDate.Year(abs, lon) * PayCalendar.DaysPerYear + GenDate.DayOfYear(abs, lon);
-        }
+        public static int Today() => FrameworkServices.EconomyDay;
 
         public static List<Resident> Residents(FamilyRegistry r) => r.Persons.Where(p => p.InColony).Select(p => new Resident(p.Id, p.HouseholdId)).ToList();
         public static string PersonAccount(FamilyRegistry r, int pawnId) { r.Ledger().Ensure(AccountKind.Person, pawnId); return Ledger.IdFor(AccountKind.Person, pawnId); }
@@ -90,6 +84,7 @@ namespace FamilyLife
         public static void OnWork(Pawn pawn, string career, string specialty, string kind, string key, int now)
         {
             var c = FamilyComponent.Current; if (c == null || pawn == null) return;
+            if (FamilyFramework.PrivateWork.Enabled().Any(f => f(pawn, career))) return;
             var r = c.Registry; int id = pawn.thingIDNumber; var book = r.Assignments();
             var role = CareerService.Professions.All.Where(x => x.Career == career && book.IsAssigned(id, x.Id)).OrderByDescending(x => x.Specialty == specialty ? 1 : 0).ThenByDescending(x => x.Level).FirstOrDefault();
             if (role == null) return;
@@ -103,6 +98,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current; if (c == null || rep?.Pawn == null) return;
             TreasuryOffice.OnJobFinished(rep);
+            if (FamilyFramework.PrivateLabour.Enabled().Any(f => f(rep))) return;
             var r = c.Registry; var person = r.GetPerson(rep.Pawn.thingIDNumber); if (person == null || !person.InColony) return;
             var facts = new JobFacts { JobDef = rep.JobDef, WorkType = rep.WorkType, RecipeSkill = rep.RecipeSkill, JobId = rep.JobId, ThingId = rep.ThingId, HaulToStorage = rep.HaulToStorage, TargetDead = rep.TargetDead, WorkAmount = rep.WorkAmount };
             string cat = Labour.CategoryOf(facts); if (cat == null) return;

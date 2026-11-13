@@ -136,3 +136,110 @@ namespace FamilyLife
         }
     }
 }
+
+namespace FamilyLife
+{
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.WorkGiver_DoBill), nameof(RimWorld.WorkGiver_DoBill.JobOnThing))]
+    internal static class Patch_BillWorkPermission
+    {
+        private static bool Prefix(Pawn pawn, Thing thing, ref Verse.AI.Job __result)
+        {
+            foreach (var predicate in FamilyFramework.BillWorkAllowed.Enabled())
+                try { if (!predicate(pawn, thing)) { __result = null; return false; } } catch (Exception ex) { Log.Warning("[Wil's Family Life] Work permission skipped: " + ex.Message); }
+            return true;
+        }
+    }
+    [HarmonyLib.HarmonyPatch(typeof(GenRecipe), nameof(GenRecipe.MakeRecipeProducts))]
+    internal static class Patch_RecipeProducts
+    {
+        private static void Postfix(ref IEnumerable<Thing> __result, Pawn worker, IBillGiver billGiver)
+        {
+            if (FamilyFramework.ProductMade.Count > 0) __result = Observe(__result, worker, billGiver as Thing, worker?.CurJob?.loadID ?? 0);
+        }
+        private static IEnumerable<Thing> Observe(IEnumerable<Thing> products, Pawn worker, Thing bench, int job)
+        {
+            foreach (var product in products)
+            {
+                foreach (var listener in FamilyFramework.ProductMade.Enabled())
+                    try { listener(worker, bench, product, job); } catch (Exception ex) { Log.Warning("[Wil's Family Life] Production observer skipped: " + ex.Message); }
+                yield return product;
+            }
+        }
+    }
+    [HarmonyLib.HarmonyPatch(typeof(Thing), nameof(Thing.SplitOff))]
+    internal static class Patch_CommercialSplit
+    {
+        private static void Postfix(Thing __instance, Thing __result)
+        {
+            if (__result == null || __instance == __result) return;
+            foreach (var listener in FamilyFramework.StackSplit.Enabled())
+                try { listener(__instance, __result); } catch (Exception ex) { Log.Warning("[Wil's Family Life] Split observer skipped: " + ex.Message); }
+        }
+    }
+    [HarmonyLib.HarmonyPatch(typeof(Thing), nameof(Thing.TryAbsorbStack))]
+    internal static class Patch_CommercialMerge
+    {
+        private static void Prefix(Thing __instance, out int __state) { __state = __instance.stackCount; }
+        private static void Postfix(Thing __instance, Thing other, int __state)
+        {
+            int moved = __instance.stackCount - __state; if (moved <= 0) return;
+            foreach (var listener in FamilyFramework.StackMerged.Enabled())
+                try { listener(other, __instance, moved); } catch (Exception ex) { Log.Warning("[Wil's Family Life] Merge observer skipped: " + ex.Message); }
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.WorkGiver_DoBill), "IsUsableIngredient")]
+    internal static class Patch_BusinessIngredients
+    {
+        private static void Postfix(Thing t, RimWorld.Bill bill, ref bool __result)
+        {
+            if (!__result) return;
+            foreach (var predicate in FamilyFramework.BillIngredientAllowed.Enabled())
+                try { if (!predicate(t, bill?.billStack?.billGiver as Thing)) { __result = false; return; } } catch (Exception ex) { Log.Warning("[Wil's Family Life] Ingredient access skipped: " + ex.Message); }
+        }
+    }
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.FoodUtility), nameof(RimWorld.FoodUtility.WillEat), new[] { typeof(Pawn), typeof(Thing), typeof(Pawn), typeof(bool), typeof(bool) })]
+    internal static class Patch_BusinessFoodAccess
+    {
+        private static void Postfix(Pawn p, Thing food, ref bool __result)
+        {
+            if (!__result) return;
+            foreach (var predicate in FamilyFramework.FoodAccess.Enabled())
+                try { if (!predicate(p, food)) { __result = false; return; } } catch (Exception ex) { Log.Warning("[Wil's Family Life] Food access skipped: " + ex.Message); }
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.Pawn_InteractionsTracker), nameof(RimWorld.Pawn_InteractionsTracker.TryInteractWith))]
+    internal static class Patch_CommercialInteraction
+    {
+        private static void Postfix(Pawn ___pawn, Pawn recipient, InteractionDef intDef, bool __result)
+        {
+            if (!__result) return;
+            foreach (var listener in FamilyFramework.SocialInteraction.Enabled())
+                try { listener(___pawn, recipient, intDef); } catch (Exception ex) { Log.Warning("[Wil's Family Life] Interaction observer skipped: " + ex.Message); }
+        }
+    }
+}
+
+namespace FamilyLife
+{
+    [HarmonyLib.HarmonyPatch(typeof(Verse.AI.Group.Trigger_TicksPassed), nameof(Verse.AI.Group.Trigger_TicksPassed.ActivateOn))]
+    internal static class Patch_VisitorTimedDeparture
+    {
+        private static readonly Type TraderToil = typeof(LordJob_TradeWithColony).Assembly.GetType("RimWorld.LordToil_DefendTraderCaravan");
+        private static void Postfix(Verse.AI.Group.Lord lord, ref bool __result)
+        {
+            if (!__result || lord == null || !(lord.LordJob is LordJob_TradeWithColony || lord.LordJob is LordJob_VisitColony)) return;
+            // Only the normal visit/trade timer. Travel, danger, violence and other transitions are unaffected.
+            if (!(lord.CurLordToil is Verse.AI.Group.LordToil_DefendPoint || lord.CurLordToil?.GetType() == TraderToil)) return;
+            foreach (var predicate in FamilyFramework.TimedDepartureAllowed.Enabled())
+                try { if (!predicate(lord)) { __result = false; return; } } catch (Exception ex) { Log.Warning("[Wil's Family Life] Departure preference skipped: " + ex.Message); }
+        }
+    }
+}

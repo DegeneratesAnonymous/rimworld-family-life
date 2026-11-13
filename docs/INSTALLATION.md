@@ -45,3 +45,8 @@ Not undone by preparation (and said so in its report): skill experience already 
 ```
 
 Do not publish any of these to the Workshop from the build output without playing the checklist in MODULE-VERIFICATION.md first.
+
+
+## Cooking & Hospitality development candidate
+
+Optional package `WilsHospitality` adds Community -> Establishments. Use matching Framework/Treasury builds from the candidate. See [COOKING-HOSPITALITY.md](COOKING-HOSPITALITY.md) for setup, implemented behavior, dormant story sources and live acceptance requirements. CI publishes a checked five-package gameplay-test archive; it is not a Workshop release.

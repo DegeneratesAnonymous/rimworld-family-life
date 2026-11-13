@@ -120,7 +120,33 @@ namespace FamilyLife.Domain
         public int Available(string id)
         {
             var a = Get(id); if (a == null || a.Closed) return 0;
-            return Math.Max(0, a.Balance - Impairment(a));
+            return Math.Max(0, a.Balance - Impairment(a) - Held(id));
+        }
+        private readonly Dictionary<string, KeyValuePair<string, int>> holds = new Dictionary<string, KeyValuePair<string, int>>();
+        public int Held(string account) => holds.Values.Where(h => h.Key == account).Sum(h => h.Value);
+        public bool Hold(string key, string account, int amount)
+        {
+            if (string.IsNullOrEmpty(key) || amount <= 0) return false;
+            if (holds.TryGetValue(key, out var old)) return old.Key == account && old.Value == amount;
+            if (Available(account) < amount) return false;
+            holds[key] = new KeyValuePair<string, int>(account, amount); return true;
+        }
+        public bool SplitHold(string fromKey,string toKey,int amount)
+        {
+            if(amount<=0||holds.ContainsKey(toKey)||!holds.TryGetValue(fromKey,out var source)||source.Value<amount)return false;
+            holds[toKey]=new KeyValuePair<string,int>(source.Key,amount);
+            if(source.Value==amount)holds.Remove(fromKey);else holds[fromKey]=new KeyValuePair<string,int>(source.Key,source.Value-amount);
+            return true;
+        }
+        public void ReleaseHold(string key) { holds.Remove(key); }
+        public bool CommitHold(string key, string to, int day)
+        {
+            if (Applied("hold:" + key)) return true;
+            if (!holds.TryGetValue(key, out var h)) return false;
+            holds.Remove(key);
+            var result = Transfer(h.Key, to, h.Value, TxKind.Trade, "hold:" + key, day, "establishment checkout");
+            if (result == LedgerResult.Ok || result == LedgerResult.Duplicate) return true;
+            holds[key] = h; return false;
         }
         public long TotalAvailable => accounts.Values.Where(a => !a.Closed).Sum(a => (long)Available(a.Id));
 
@@ -162,7 +188,7 @@ namespace FamilyLife.Domain
                 if (m.To != null) net[m.To] = (net.TryGetValue(m.To, out var t) ? t : 0) + m.Amount;
             }
             foreach (var kv in net) if (Get(kv.Key).Balance + kv.Value < 0) return LedgerResult.Insufficient;
-            if (Unbacked > 0 && (kind == TxKind.Payroll || kind == TxKind.Trade || kind == TxKind.Transfer)) foreach (var kv in net) if (kv.Value < 0 && -kv.Value > Available(kv.Key)) return LedgerResult.Insufficient;          // money that does not exist cannot be spent, by anyone, twice
+            foreach (var kv in net) if (kv.Value < 0 && (Held(kv.Key) > 0 || Unbacked > 0 && (kind == TxKind.Payroll || kind == TxKind.Trade || kind == TxKind.Transfer)) && -kv.Value > Available(kv.Key)) return LedgerResult.Insufficient;          // money that does not exist cannot be spent, by anyone, twice
             foreach (var m in moves)
             {
                 if (m.From != null) accounts[m.From].Balance -= m.Amount; else ExternalIn += m.Amount;
@@ -282,6 +308,8 @@ namespace FamilyLife.Domain
         public LedgerResult SettleEstate(string deceased, IList<string> heirs, string key, int day, bool heirsLiable = false)
         {
             var acct = Get(deceased); if (acct == null) return LedgerResult.UnknownAccount;
+            // A pending purchase/booking must settle or cancel before this account closes. No debt or estate state has changed yet.
+            if (Held(deceased) > 0) return LedgerResult.Insufficient;
             if (key != null && keys.ContainsKey(key)) return LedgerResult.Duplicate;
             var live = (heirs ?? new string[0]).Where(h => h != deceased && Get(h) != null && !Get(h).Closed).Distinct().ToList();
             var moves = new List<Move>(); int left = acct.Balance;
@@ -322,6 +350,7 @@ namespace FamilyLife.Domain
         public string Encode()
         {
             var w = new StateWriter().Int("ntx", NextTxId).Int("ndebt", NextDebtId).Strings("xin", new[] { ExternalIn.ToString(System.Globalization.CultureInfo.InvariantCulture) }).Strings("xout", new[] { ExternalOut.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            w.Strings("holds", holds.Select(h => h.Key + "|" + h.Value.Key + "|" + h.Value.Value).ToList());
             w.Strings("acct", accounts.Values.OrderBy(a => a.Id, StringComparer.Ordinal).Select(a => string.Join("|", S(a.Id), (int)a.Kind, a.Owner, a.Balance, a.Closed ? 1 : 0, S(a.Successor))).ToList());
             w.Strings("tx", history.Select(t => string.Join("|", t.Id, t.Day, (int)t.Kind, S(t.From), S(t.To), t.Amount, S(t.Key), S(t.Memo), S(t.Tag))).ToList());
             w.Strings("key", keys.OrderBy(k => k.Value).ThenBy(k => k.Key, StringComparer.Ordinal).Select(k => S(k.Key) + "|" + k.Value).ToList());
@@ -333,6 +362,7 @@ namespace FamilyLife.Domain
         public static Ledger Decode(StateReader r)
         {
             var l = new Ledger(); l.accounts.Clear();
+            foreach (var row in r.Strings("holds")) { var h = row.Split('|'); if (h.Length == 3 && I(h[2]) > 0) l.holds[h[0]] = new KeyValuePair<string, int>(h[1], I(h[2])); }
             l.NextTxId = Math.Max(1, r.Int("ntx", 1)); l.NextDebtId = Math.Max(1, r.Int("ndebt", 1));
             l.Unbacked = r.Int("unb"); foreach (var s in r.Strings("inc")) { var p = s.Split('|'); if (p.Length == 2 && p[0].Length > 0) l.incomeSince[p[0]] = I(p[1]); }
             long.TryParse(r.Strings("xin").FirstOrDefault() ?? "0", System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out l.ExternalIn);

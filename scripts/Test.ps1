@@ -5,7 +5,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 
 # 1. The framework, then each module against the framework's public surface only, for both versions. A module that reaches for something internal fails here.
 foreach ($v in "1.7", "1.6") {
-    foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj", "Treasury\WilsTreasury.csproj") {
+    foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj", "Treasury\WilsTreasury.csproj", "Hospitality\WilsHospitality.csproj") {
         dotnet build (Join-Path $repo "Source\$project") -c Release -p:GameVersion=$v -v q
         if ($LASTEXITCODE -ne 0) { throw "Build failed for $project ($v)" }
     }

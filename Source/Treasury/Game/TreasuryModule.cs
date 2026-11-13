@@ -25,6 +25,7 @@ namespace FamilyLife
             var catalog = FamilyFramework.Catalog;
             catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Treasury", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             catalog.Provide(Id, "wils.treasury.accounts");
+            FamilyFramework.Commerce.Register(Id, () => FamilyComponent.Current == null ? null : new BusinessBank(FamilyComponent.Current.Registry.Ledger()));
 
             // The career: Treasurer is level 1 (anyone may be assigned); Tax Collector is level 2 and earned. Both are ordinary career roles, so assignment, progress and wages need nothing special.
             CareerService.RegisterCareer(new CareerDefinition { Id = TreasuryRoles.Career, ModuleId = Id, Level2 = new CareerRule { GeneralXp = TreasuryRoles.CollectorExperience }.Skill("Social", TreasuryRoles.CollectorSocial).Skill("Melee", TreasuryRoles.CollectorMelee) });

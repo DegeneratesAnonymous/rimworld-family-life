@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "Build-Packages.ps1")
 $dist = Join-Path $repo "dist"
-$packages = @("WilsFamilyLife", "WilsEducation", "WilsCommunityCare", "WilsTreasury")
+$packages = @("WilsFamilyLife", "WilsEducation", "WilsCommunityCare", "WilsTreasury", "WilsHospitality")
 if ($FrameworkOnly) { $packages = @("WilsFamilyLife") } elseif ($Only) { $packages = $Only }
 foreach ($pkg in $packages) {
     $dest = Join-Path $GameDir "Mods\$pkg"

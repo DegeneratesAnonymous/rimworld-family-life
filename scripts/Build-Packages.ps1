@@ -10,7 +10,7 @@ $dist = Join-Path $repo "dist"
 
 if (-not $NoBuild) {
     foreach ($v in "1.7", "1.6") {
-        foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj", "Treasury\WilsTreasury.csproj") {
+        foreach ($project in "FamilyLife\FamilyLife.csproj", "Education\WilsEducation.csproj", "Care\WilsCommunityCare.csproj", "Treasury\WilsTreasury.csproj", "Hospitality\WilsHospitality.csproj") {
             dotnet build (Join-Path $repo "Source\$project") -c Release -p:GameVersion=$v -v q
             if ($LASTEXITCODE -ne 0) { throw "Build failed for $project ($v)" }
         }
@@ -32,7 +32,7 @@ foreach ($dir in "About", "Defs", "Patches", "Languages", "Textures", "1.6", "1.
 Copy-Item (Join-Path $repo "LICENSE") $fw -Force
 
 # the module packages
-foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury") {
+foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury", "WilsHospitality") {
     $dest = Join-Path $dist $pkg; $src = Join-Path $repo "Packages\$pkg"
     foreach ($dir in "About", "Defs", "Patches", "Languages", "1.6", "1.7") { if (Test-Path (Join-Path $src $dir)) { Copy-Tree (Join-Path $src $dir) (Join-Path $dest $dir) } }
     Copy-Item (Join-Path $repo "LICENSE") $dest -Force
@@ -42,7 +42,7 @@ foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury") {
 $problems = @()
 function Need($path, $what) { if (-not (Test-Path $path)) { $script:problems += "missing $what ($path)" } }
 
-foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLife.dll"), @("WilsEducation", "SpacemanWil.WilsEducation", "WilsEducation.dll"), @("WilsCommunityCare", "SpacemanWil.WilsCommunityCare", "WilsCommunityCare.dll"), @("WilsTreasury", "SpacemanWil.WilsTreasury", "WilsTreasury.dll"))) {
+foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLife.dll"), @("WilsEducation", "SpacemanWil.WilsEducation", "WilsEducation.dll"), @("WilsCommunityCare", "SpacemanWil.WilsCommunityCare", "WilsCommunityCare.dll"), @("WilsTreasury", "SpacemanWil.WilsTreasury", "WilsTreasury.dll"), @("WilsHospitality", "SpacemanWil.WilsHospitality", "WilsHospitality.dll"))) {
     $dir = Join-Path $dist $entry[0]
     Need (Join-Path $dir "About\About.xml") ("About.xml in " + $entry[0])
     Need (Join-Path $dir "LICENSE") ("licence in " + $entry[0])
@@ -55,7 +55,7 @@ foreach ($entry in @(@("WilsFamilyLife", "SpacemanWil.WilsFamilyLife", "FamilyLi
     }
 }
 # a module package carries no framework content, and the framework package carries no module content
-foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury") {
+foreach ($pkg in "WilsEducation", "WilsCommunityCare", "WilsTreasury", "WilsHospitality") {
     $forbidden = if ($pkg -eq "WilsTreasury") { @("Textures") } else { @("Patches", "Textures") }          # the Treasury package carries its own zone patch
     foreach ($f in $forbidden) { if (Test-Path (Join-Path (Join-Path $dist $pkg) $f)) { $problems += "$pkg ships $f, which belongs to the framework" } }
 }
