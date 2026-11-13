@@ -7,4 +7,5 @@
 <JobDef><defName>WFL_H_Standby</defName><driverClass>FamilyLife.JobDriver_EstablishmentShift</driverClass><reportString>Covering the establishment.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 <JobDef><defName>WFL_H_Room</defName><driverClass>FamilyLife.JobDriver_EstablishmentShift</driverClass><reportString>Preparing a guest room.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 <JobDef><defName>WFL_H_Customer</defName><driverClass>FamilyLife.JobDriver_EstablishmentCustomer</driverClass><reportString>Visiting an establishment.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
+<JobDef><defName>WFL_H_Story</defName><driverClass>FamilyLife.JobDriver_HospitalityStory</driverClass><reportString>Talking at the establishment.</reportString><casualInterruptible>true</casualInterruptible></JobDef>
 </Defs>

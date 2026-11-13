@@ -19,6 +19,7 @@ namespace FamilyLife.Domain
         public VenuePersonality Personality=new VenuePersonality();
         public bool Enabled, Residents = true, Visitors = true, Alcohol = true, CutOffDrunks = true, Quiet;
         public int OpenHour = 8, CloseHour = 22, MaxStay = 5, HouseholdBudget = 15, Reserve = 20;
+        public readonly HashSet<int> BannedCustomers=new HashSet<int>(),ExcludedFamilies=new HashSet<int>();
         public readonly List<int> Staff = new List<int>(), Benches = new List<int>(), Beds = new List<int>();
         public readonly HashSet<int> ServiceCells = new HashSet<int>(), StockCells = new HashSet<int>(), StorageCells = new HashSet<int>();
         public readonly HashSet<int> StockContainers = new HashSet<int>(), StorageContainers = new HashSet<int>();
@@ -40,8 +41,10 @@ namespace FamilyLife.Domain
     {
         public int Id, Business, Customer, Thing, Count = 1, Price, Created, DeliveredTick, Worker, TableCell, LastTouched;
         public string Account, ExternalKey;
-        public bool Visitor, Lodging, Refunded;
-        public int Booking, Maker, Presentation;
+        public bool Visitor, Lodging, Refunded, TipAttempted, DietRequest;
+        public int Tip;
+        public int Booking, Maker, Presentation, AllowanceDay=-1;
+        public string AllowanceAccount;
         public ServiceStage Stage;
         public string Key => "establishment-order:" + Id;
     }
@@ -128,11 +131,21 @@ namespace FamilyLife.Domain
             if (order.Visitor ? externalPayment == null || !externalPayment(order) : bank == null || !bank.Commit(order.Key, bank.Business(e.Id), day)) return false;
             order.Stage = ServiceStage.Settled; Sale(e, order.Price); return true;
         }
-        public bool Cancel(ServiceOrder order, ICommerceBank bank)
+        public bool GiveTip(ServiceOrder order,int worker,int silver,int day,ICommerceBank bank,Func<bool> physicalPayment=null)
+        {
+            if(order.Stage!=ServiceStage.Settled||order.TipAttempted||bank==null||worker<=0)return false;order.TipAttempted=true;
+            if(silver<=0||silver>3)return false;string key="tip:"+order.Key;var e=ById(order.Business);if(e==null)return false;
+            bool paid=order.Visitor?bank.ExternalSale(key,bank.Business(e.Id),silver,day,physicalPayment):bank.Transfer(key,bank.Person(order.Customer),bank.Business(e.Id),silver,day,true);
+            if(!paid)return false;Earn(e,worker,silver,BusinessCalendar.Next(day));order.Tip=silver;return true;
+        }
+        public bool Cancel(ServiceOrder order, ICommerceBank bank, BookingBook bookings=null)
         {
             if (order.Stage >= ServiceStage.Delivered && order.Stage <= ServiceStage.Consumed) return false;
             if (order.Stage >= ServiceStage.Settled) return true;
-            bank?.Cancel(order.Key); order.Stage = ServiceStage.Cancelled; return true;
+            if(order.Booking>0){if(bookings==null||!bookings.CancelOrder(order,bank))return false;}
+            else if(!order.Visitor){if(bank==null)return false;bank.Cancel(order.Key);}
+            if(order.AllowanceAccount!=null){string k=order.AllowanceAccount+":"+order.AllowanceDay;if(HouseholdSpent.TryGetValue(k,out int spent))HouseholdSpent[k]=Math.Max(0,spent-order.Price);}
+            order.Stage = ServiceStage.Cancelled; return true;
         }
         public int Withdrawable(Establishment e, ICommerceBank bank) => bank == null ? 0 : Math.Max(0, bank.Available(bank.Business(e.Id)) - bank.Owed(bank.Business(e.Id)) - Earnings.Where(x => x.Business == e.Id && !x.Posted).Sum(x => x.Silver) - e.BonusPool - e.Reserve);
         public void Payday(Establishment e, ICommerceBank bank, int day)
@@ -165,7 +178,7 @@ namespace FamilyLife.Domain
         {
             var w = new StateWriter().Int("next", NextId).Int("order", NextOrder).Int("earning", NextEarning).Int("visitor", NextVisitorDay);
             w.Strings("businesses", Businesses.Select(EncodeBusiness).ToList());
-            w.Strings("orders", Orders.Select(o => new StateWriter().Ints("v", new[] { o.Id,o.Business,o.Customer,o.Thing,o.Count,o.Price,o.Created,o.DeliveredTick,o.Worker,o.TableCell,(int)o.Stage,o.LastTouched,o.Booking,o.Maker,o.Presentation }).Strings("a", new[] { o.Account ?? "", o.ExternalKey ?? "" }).Bool("visitor",o.Visitor).Bool("lodging",o.Lodging).Bool("refunded",o.Refunded).ToString()).ToList());
+            w.Strings("orders", Orders.Select(o => new StateWriter().Ints("v", new[] { o.Id,o.Business,o.Customer,o.Thing,o.Count,o.Price,o.Created,o.DeliveredTick,o.Worker,o.TableCell,(int)o.Stage,o.LastTouched,o.Booking,o.Maker,o.Presentation,o.AllowanceDay,o.Tip }).Strings("a", new[] { o.Account ?? "", o.ExternalKey ?? "",o.AllowanceAccount??"" }).Bool("visitor",o.Visitor).Bool("lodging",o.Lodging).Bool("refunded",o.Refunded).Bool("diet",o.DietRequest).Bool("tip",o.TipAttempted).ToString()).ToList());
             w.Strings("earnings", Earnings.Select(e => new StateWriter().Ints("v", new[] { e.Id,e.Business,e.Worker,e.Silver,e.DueDay }).Bool("posted",e.Posted).ToString()).ToList());
             w.Strings("guests", Guests.Select(g => new StateWriter().Ints("v", new[] { g.Pawn,g.Business,g.Group,g.ArrivalDay,g.UntilDay,g.Bed,g.Extensions,g.LastDecisionDay,g.LastLodgingDay,g.SleepTicks }).Bool("generated",g.Generated).Bool("leaving",g.Leaving).Float("experience",g.PersonalExperience).ToString()).ToList());
             WriteMap(w,"seen",Seen); WriteMap(w,"fractions",Fractions); WriteMap(w,"memory",Memories); WriteMap(w,"budget",HouseholdSpent);
@@ -176,6 +189,7 @@ namespace FamilyLife.Domain
             var w = new StateWriter().Strings("name",new[] { e.Name }).Ints("v", new[] { e.Id,e.Map,e.OwnerId,e.Counter,e.PricePercent,e.RoomPrice,e.BasePayMilli,e.StaffShare,(int)e.Kind,(int)e.Owner,e.OpenHour,e.CloseHour,e.MaxStay,e.HouseholdBudget,e.Reserve,e.Reliability,e.Food,e.Service,e.Comfort,e.Value,e.Safety,e.Rowdiness,e.Visits,e.Revenue,e.BonusPool,e.LastPayday,e.LastReviewDay,e.BonusRemainder });
             w.Bool("enabled",e.Enabled).Bool("residents",e.Residents).Bool("visitors",e.Visitors).Bool("alcohol",e.Alcohol).Bool("cutoff",e.CutOffDrunks).Bool("quiet",e.Quiet);
             w.Ints("staff",e.Staff).Ints("benches",e.Benches).Ints("beds",e.Beds).Ints("service",e.ServiceCells.OrderBy(x=>x).ToList()).Ints("stock",e.StockCells.OrderBy(x=>x).ToList()).Ints("storage",e.StorageCells.OrderBy(x=>x).ToList()).Ints("stockcontainers",e.StockContainers.OrderBy(x=>x).ToList()).Ints("storagecontainers",e.StorageContainers.OrderBy(x=>x).ToList()).Ints("weights",e.Weights);
+            w.Ints("banned",e.BannedCustomers.OrderBy(x=>x).ToList()).Ints("excluded",e.ExcludedFamilies.OrderBy(x=>x).ToList());
             w.Strings("personality",new[]{e.Personality.Encode()});
             WriteMap(w,"points",e.Points.ToDictionary(x=>x.Key.ToString(),x=>x.Value)); return w.ToString();
         }
@@ -189,10 +203,10 @@ namespace FamilyLife.Domain
                 var x=new StateReader(row); var v=x.Ints("v"); if(v.Count<28) continue;
                 var e=new Establishment { Id=v[0],Map=v[1],OwnerId=v[2],Counter=v[3],PricePercent=v[4],RoomPrice=v[5],BasePayMilli=v[6],StaffShare=v[7],Kind=(EstablishmentKind)v[8],Owner=(EstablishmentOwner)v[9],OpenHour=v[10],CloseHour=v[11],MaxStay=v[12],HouseholdBudget=v[13],Reserve=v[14],Reliability=v[15],Food=v[16],Service=v[17],Comfort=v[18],Value=v[19],Safety=v[20],Rowdiness=v[21],Visits=v[22],Revenue=v[23],BonusPool=v[24],LastPayday=v[25],LastReviewDay=v[26],BonusRemainder=v[27],Name=x.Strings("name").FirstOrDefault()??"Establishment",Enabled=x.Bool("enabled"),Residents=x.Bool("residents"),Visitors=x.Bool("visitors"),Alcohol=x.Bool("alcohol"),CutOffDrunks=x.Bool("cutoff"),Quiet=x.Bool("quiet") };
                 e.Personality=VenuePersonality.Decode(new StateReader(x.Strings("personality").FirstOrDefault()??""));
-                e.Staff.AddRange(x.Ints("staff"));e.Benches.AddRange(x.Ints("benches"));e.Beds.AddRange(x.Ints("beds"));e.ServiceCells.UnionWith(x.Ints("service"));e.StockCells.UnionWith(x.Ints("stock"));e.StorageCells.UnionWith(x.Ints("storage"));e.StockContainers.UnionWith(x.Ints("stockcontainers"));e.StorageContainers.UnionWith(x.Ints("storagecontainers"));var weights=x.Ints("weights");for(int i=0;i<Math.Min(4,weights.Count);i++)e.Weights[i]=weights[i];
+                e.BannedCustomers.UnionWith(x.Ints("banned"));e.ExcludedFamilies.UnionWith(x.Ints("excluded"));e.Staff.AddRange(x.Ints("staff"));e.Benches.AddRange(x.Ints("benches"));e.Beds.AddRange(x.Ints("beds"));e.ServiceCells.UnionWith(x.Ints("service"));e.StockCells.UnionWith(x.Ints("stock"));e.StorageCells.UnionWith(x.Ints("storage"));e.StockContainers.UnionWith(x.Ints("stockcontainers"));e.StorageContainers.UnionWith(x.Ints("storagecontainers"));var weights=x.Ints("weights");for(int i=0;i<Math.Min(4,weights.Count);i++)e.Weights[i]=weights[i];
                 var points=new Dictionary<string,int>();ReadMap(x,"points",points);foreach(var p in points)if(int.TryParse(p.Key,out int id))e.Points[id]=p.Value;b.Businesses.Add(e);
             }
-            foreach(var row in r.Strings("orders")) {var x=new StateReader(row);var v=x.Ints("v");var a=x.Strings("a");if(v.Count<12)continue;b.Orders.Add(new ServiceOrder{Id=v[0],Business=v[1],Customer=v[2],Thing=v[3],Count=v[4],Price=v[5],Created=v[6],DeliveredTick=v[7],Worker=v[8],TableCell=v[9],Stage=(ServiceStage)v[10],LastTouched=v[11],Booking=v.Count>12?v[12]:0,Maker=v.Count>13?v[13]:0,Presentation=v.Count>14?v[14]:0,Account=a.ElementAtOrDefault(0),ExternalKey=a.ElementAtOrDefault(1),Visitor=x.Bool("visitor"),Lodging=x.Bool("lodging"),Refunded=x.Bool("refunded")});}
+            foreach(var row in r.Strings("orders")) {var x=new StateReader(row);var v=x.Ints("v");var a=x.Strings("a");if(v.Count<12)continue;b.Orders.Add(new ServiceOrder{Id=v[0],Business=v[1],Customer=v[2],Thing=v[3],Count=v[4],Price=v[5],Created=v[6],DeliveredTick=v[7],Worker=v[8],TableCell=v[9],Stage=(ServiceStage)v[10],LastTouched=v[11],Booking=v.Count>12?v[12]:0,Maker=v.Count>13?v[13]:0,Presentation=v.Count>14?v[14]:0,AllowanceDay=v.Count>15?v[15]:-1,AllowanceAccount=a.ElementAtOrDefault(2),Account=a.ElementAtOrDefault(0),ExternalKey=a.ElementAtOrDefault(1),Visitor=x.Bool("visitor"),Lodging=x.Bool("lodging"),Refunded=x.Bool("refunded"),DietRequest=x.Bool("diet"),TipAttempted=x.Bool("tip"),Tip=v.Count>16?v[16]:0});}
             foreach(var row in r.Strings("earnings")){var x=new StateReader(row);var v=x.Ints("v");if(v.Count>=5)b.Earnings.Add(new StaffEarning{Id=v[0],Business=v[1],Worker=v[2],Silver=v[3],DueDay=v[4],Posted=x.Bool("posted")});}
             foreach(var row in r.Strings("guests")){var x=new StateReader(row);var v=x.Ints("v");if(v.Count>=9)b.Guests.Add(new GuestStay{Pawn=v[0],Business=v[1],Group=v[2],ArrivalDay=v[3],UntilDay=v[4],Bed=v[5],Extensions=v[6],LastDecisionDay=v[7],LastLodgingDay=v[8],SleepTicks=v.Count>9?v[9]:0,Generated=x.Bool("generated"),Leaving=x.Bool("leaving"),PersonalExperience=x.Float("experience",.5f)});}
             ReadMap(r,"seen",b.Seen);ReadMap(r,"fractions",b.Fractions);ReadMap(r,"memory",b.Memories);ReadMap(r,"budget",b.HouseholdSpent);b.History.AddRange(r.Strings("history").Take(100));return b;

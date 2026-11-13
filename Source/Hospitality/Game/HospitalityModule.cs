@@ -25,7 +25,9 @@ namespace FamilyLife
             CareerService.Registered(Id);
             FamilyFramework.Pages.Register(new CommunityPage<Func<Rect,FamilyComponent,float>>{Id="wils.hospitality.establishments",ModuleId=Id,LabelKey="WFL_H_Establishments",Order=140,Render=EstablishmentPage.Draw,Status=()=>FamilyFramework.Commerce.Bank==null?1:0});
             FamilyFramework.Roster.Register(new WorkItem{Id="wils.hospitality.work",ModuleId=Id,Interval=600,Run=HospitalityService.Tick});
+            FamilyFramework.ExternalCommerceAllowed.Add("wils.hospitality.external",Id,HospitalityInterop.Permit);
             FamilyFramework.TimedDepartureAllowed.Add("wils.hospitality.departure",Id,HospitalityVisitors.AllowDeparture);
+            FamilyFramework.PropertyDamaged.Add("wils.hospitality.damage",Id,HospitalityNarrative.Damage);
             FamilyFramework.SocialInteraction.Add("wils.hospitality.interaction",Id,HospitalityStories.Interaction);
             FamilyFramework.BillIngredientAllowed.Add("wils.hospitality.ingredients",Id,HospitalityService.IngredientAllowed);
             FamilyFramework.FoodAccess.Add("wils.hospitality.food",Id,HospitalityService.FoodAllowed);

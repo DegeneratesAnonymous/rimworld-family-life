@@ -74,7 +74,7 @@ namespace FamilyLife
                     fact="OwnerBonus";reason="awarded one silver of discretionary pay for recorded work, due on payday";change=4;break;
                 case OwnerApproach.FavorRelative:
                     fact="OwnerFamilyPraise";reason="singled out a working relative for special praise in front of colleagues";change=-2;
-                    foreach(var other in witnesses.Where(p=>p!=target&&p!=owner&&!Related(owner,p)&&otherCanSee(p,owner)))HospitalityService.Event(other,owner,"OwnerFavorWitness");
+                    foreach(var other in witnesses.Where(p=>p!=target&&p!=owner&&!Related(owner,p)&&otherCanSee(p,owner)))HospitalityService.Event(other,owner,"OwnerFavorWitness","Favoritism");
                     break;
                 case OwnerApproach.Celebrate:fact="OwnerCelebration";reason="celebrated recent sales and the employee's contribution";change=3;break;
                 default:fact="OwnerPraise";reason="recognized the employee's recorded contribution";change=2;break;

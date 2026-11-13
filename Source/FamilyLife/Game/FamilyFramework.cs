@@ -40,6 +40,8 @@ namespace FamilyLife
         public static readonly ContributionList<Func<Pawn, Thing, bool>> FoodAccess = new ContributionList<Func<Pawn, Thing, bool>>(Catalog);
         public static readonly ContributionList<Action<Pawn,Pawn,InteractionDef>> SocialInteraction = new ContributionList<Action<Pawn,Pawn,InteractionDef>>(Catalog);
         public static readonly ContributionList<Func<Verse.AI.Group.Lord,bool>> TimedDepartureAllowed = new ContributionList<Func<Verse.AI.Group.Lord,bool>>(Catalog);
+        public static readonly ContributionList<Func<Pawn,Thing,string,bool>> ExternalCommerceAllowed = new ContributionList<Func<Pawn,Thing,string,bool>>(Catalog);
+        public static readonly ContributionList<Action<PropertyDamageReport>> PropertyDamaged = new ContributionList<Action<PropertyDamageReport>>(Catalog);
         public static readonly CommerceCatalog Commerce = new CommerceCatalog(id => Catalog.IsEnabled(id));
         public static readonly ContributionList<Func<Pawn, string, bool>> PrivateWork = new ContributionList<Func<Pawn, string, bool>>(Catalog);
         public static readonly ContributionList<Func<LabourReport, bool>> PrivateLabour = new ContributionList<Func<LabourReport, bool>>(Catalog);

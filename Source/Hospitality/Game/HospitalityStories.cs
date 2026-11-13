@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FamilyLife.Domain;
+using FamilyLife.Framework;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -22,7 +23,7 @@ namespace FamilyLife
         public static void BookingServed(ServiceOrder order,Pawn customer)
         {
             if(order.Booking<=0)return;var booking=HospitalityService.Component.Registry.HospitalityBookings().Bookings.FirstOrDefault(b=>b.Id==order.Booking);if(booking==null)return;
-            booking.Served++;string fact=booking.Kind==BookingKind.CommunityMeal?"PublicFeast":booking.Kind==BookingKind.EmergencyShelter?"EmergencyShelter":"FamilyCelebration";
+            booking.Served++;if(booking.Kind==BookingKind.EmergencyShelter&&order.Maker>0)HospitalityService.EventAs("Cook",HospitalityService.Pawn(order.Maker),customer,"ShortageFilled");string fact=booking.Kind==BookingKind.CommunityMeal?"PublicFeast":booking.Kind==BookingKind.EmergencyShelter?"EmergencyShelter":"FamilyCelebration";
             var staff=HospitalityService.Pawn(order.Worker);HospitalityService.Event(customer,staff,fact);
             if(staff!=null)HospitalityService.Event(staff,customer,"CommissionDone");
         }
@@ -32,8 +33,11 @@ namespace FamilyLife
             if(e==null||bank==null||order.Stage!=ServiceStage.Settled||order.Refunded)return false;
             int protectedPay=bank.Owed(bank.Business(e.Id))+Book.Earnings.Where(x=>x.Business==e.Id&&!x.Posted).Sum(x=>x.Silver)+e.BonusPool;
             if(bank.Available(bank.Business(e.Id))-protectedPay<order.Price){Messages.Message("The business cannot fund this refund while protecting earned staff pay.",MessageTypeDefOf.RejectInput,false);return false;}
-            bool paid=order.Visitor?bank.ExternalRefund("refund:"+order.Id,bank.Business(e.Id),order.Price,HospitalityService.Day,()=>ReturnCash(e,customer,order.Price)):bank.Transfer("refund:"+order.Id,bank.Business(e.Id),bank.Successor(order.Account),order.Price,HospitalityService.Day);
-            if(!paid)return false;order.Refunded=true;e.Revenue=Math.Max(0,e.Revenue-order.Price);e.Service=Math.Min(100,e.Service+3);e.Reliability=Math.Min(100,e.Reliability+2);
+            string original=order.Visitor?"visitor:"+order.Key:"hold:"+order.Key;
+            bank.RememberSale(original,bank.Business(e.Id),order.Visitor?null:order.Account,order.Price,HospitalityService.Day);
+            bool paid=bank.RefundSale(original,bank.Business(e.Id),order.Visitor?null:bank.Successor(order.Account),order.Price,HospitalityService.Day,order.Visitor?(Func<bool>)(()=>ReturnCash(e,customer,order.Price)):null);
+            if(!paid)return false;order.Refunded=true;HospitalityNarrative.OnRefund(order,customer);
+            if(order.AllowanceAccount!=null){string k=order.AllowanceAccount+":"+order.AllowanceDay;if(Book.HouseholdSpent.TryGetValue(k,out int spent))Book.HouseholdSpent[k]=Math.Max(0,spent-order.Price);}e.Revenue=Math.Max(0,e.Revenue-order.Price);e.Service=Math.Min(100,e.Service+3);e.Reliability=Math.Min(100,e.Reliability+2);
             HospitalityService.Event(customer,Owner(e),"ComplaintResolved");var staff=HospitalityService.Pawn(order.Worker);HospitalityService.Event(staff,customer,"ComplaintResolved");Book.Note(e.Name+": refunded a "+order.Price+" silver bill; earned staff pay was preserved.");return true;
         }
         private static bool ReturnCash(Establishment e,Pawn customer,int amount)
@@ -87,8 +91,7 @@ namespace FamilyLife
                     var colleague=workers.FirstOrDefault(other=>other!=p&&other.Position.DistanceTo(p.Position)<4&&CareerService.SkillsOf(p)("Cooking")>=CareerService.SkillsOf(other)("Cooking")+2&&other.CurJob?.bill?.recipe?.workSkill==SkillDefOf.Cooking);
                     if(colleague!=null&&HospitalityService.Role(p)!="Cook"&&Book.Once("mentor:"+e.Id+":"+p.thingIDNumber+":"+day,day))
                     {
-                        p.interactions?.TryInteractWith(colleague,InteractionDefOf.Chitchat);colleague.skills?.Learn(SkillDefOf.Cooking,30f);
-                        HospitalityService.Event(p,colleague,"MentorSuccess");HospitalityService.Event(colleague,p,"CoworkerHelp");
+                        HospitalityNarrative.RequestMentoring(e,p,colleague);
                     }
                     var customer=map.mapPawns.AllPawnsSpawned.FirstOrDefault(other=>other!=p&&other.RaceProps.Humanlike&&!e.Staff.Contains(other.thingIDNumber)&&other.Position.DistanceTo(p.Position)<3&&!other.Downed&&!other.InMentalState&&e.ServiceCells.Contains(map.cellIndices.CellToIndex(other.Position)));
                     if(customer!=null&&Book.Once("attention:"+e.Id+":"+p.thingIDNumber+":"+customer.thingIDNumber+":"+day,day))
@@ -112,6 +115,8 @@ namespace FamilyLife
             if(interaction==InteractionDefOf.Insult)
             {
                 HospitalityService.Event(recipient,actor,"Insult");
+                var stories=HospitalityService.Component.Registry.HospitalityStories();string hostility="hostility:"+e.Id+":"+HospitalityService.Day;stories.Increment(hostility);
+                if(stories.Count(hostility)>=3)foreach(var worker in HospitalityService.Coverage(e).Where(p=>HospitalityNarrative.Near(p,actor)))HospitalityService.EventAs("Bartender",worker,actor,"RepeatedHostility");
                 e.Review(e.Food,Math.Max(0,e.Service-10),e.Comfort,e.Value,Math.Max(0,e.Safety-5),Math.Min(100,e.Rowdiness+20));
                 int household=HospitalityService.Component.Registry.GetPerson(actor.thingIDNumber)?.HouseholdId??0;
                 int other=HospitalityService.Component.Registry.GetPerson(recipient.thingIDNumber)?.HouseholdId??0;

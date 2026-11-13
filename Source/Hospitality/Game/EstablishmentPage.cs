@@ -49,6 +49,8 @@ namespace FamilyLife
             label("Service: "+b.ServiceCells.Count+" cells · sales: "+b.StockCells.Count+" cells / "+b.StockContainers.Count+" containers · storage: "+b.StorageCells.Count+" cells / "+b.StorageContainers.Count+" containers");
             label("Counter: "+b.Counter+" · benches: "+b.Benches.Count+" · guest beds: "+b.Beds.Count);
             if(button("Erase designated cells / unselect objects")) Menu(new[]{"Service","Stock","Storage","StockContainer","StorageContainer","Counter","Bench","Bed"}.Select(mode=>new FloatMenuOption(mode,()=>Activate(b,mode,true))));
+            if(button("Ban / allow individual customer"))Menu(c.Registry.Persons.Where(p=>p.InColony||book.Guests.Any(g=>g.Pawn==p.Id)).Select(p=>new FloatMenuOption((b.BannedCustomers.Contains(p.Id)?"Allow ":"Ban ")+p.Name,()=>{if(!b.BannedCustomers.Remove(p.Id))b.BannedCustomers.Add(p.Id); })));
+            if(button("Exclude / allow family"))Menu(c.Registry.Persons.Where(p=>p.PrimaryLineageId>0).GroupBy(p=>p.PrimaryLineageId).Select(g=>new FloatMenuOption((b.ExcludedFamilies.Contains(g.Key)?"Allow ":"Exclude ")+g.First().Name+" family",()=>{if(!b.ExcludedFamilies.Remove(g.Key))b.ExcludedFamilies.Add(g.Key); })));
             label("Customers");Check(rect,ref y,"Residents",ref b.Residents);Check(rect,ref y,"Visitors",ref b.Visitors);Check(rect,ref y,"Alcohol service (respects customer restrictions)",ref b.Alcohol);Check(rect,ref y,"Refuse further alcohol to intoxicated customers",ref b.CutOffDrunks);Check(rect,ref y,"Quiet house rules",ref b.Quiet);
             Slider(rect,ref y,"Opening hour",ref b.OpenHour,0,23);Slider(rect,ref y,"Closing hour",ref b.CloseHour,0,23);
             label("Equal opening and closing hours means closed; overnight schedules are supported.");
@@ -65,6 +67,7 @@ namespace FamilyLife
                 if(button("Fund business: 25 silver from owner"))HospitalityService.Fund(b,25);
                 if(button("Withdraw available profit: "+book.Withdrawable(b,finance)))HospitalityService.Withdraw(b);
             }
+            foreach(var adapter in OptionalCommerceHooks.Status)label("Compatibility: "+adapter);
             label("Character: "+b.Personality.Description);
             label("Warmth "+b.Personality.Culture.Warmth+" · refinement "+b.Personality.Culture.Refinement+" · thrift "+b.Personality.Culture.Frugality+" · discipline "+b.Personality.Culture.Discipline+" · revelry "+b.Personality.Culture.Revelry);
             label("Staff climate: "+b.Personality.StaffClimate+"/100 · "+EstablishmentPersonalityService.OwnerMood(b));
@@ -108,12 +111,12 @@ namespace FamilyLife
             }
             return Pick(cell)!=null;
         }
-        private Thing Pick(IntVec3 cell)=>cell.GetThingList(Map).FirstOrDefault(t=>mode=="Counter"?t.def.surfaceType==SurfaceType.Eat:mode=="Bed"?t is Building_Bed:mode=="Bench"?t is IBillGiver:t is IStoreSettingsParent);
+        private Thing Pick(IntVec3 cell)=>cell.GetThingList(Map).FirstOrDefault(t=>mode=="Counter"?(t.def.surfaceType==SurfaceType.Eat||HospitalityInterop.IsRegister(t)):mode=="Bed"?t is Building_Bed:mode=="Bench"?t is IBillGiver:t is IStoreSettingsParent);
         public override void DesignateSingleCell(IntVec3 cell)
         {
             var e=FamilyComponent.Current?.Registry.Establishments().ById(business);if(e==null)return;
             int index=Map.cellIndices.CellToIndex(cell);
-            if(DraggableDimensions==2){var cells=mode=="Service"?e.ServiceCells:mode=="Stock"?e.StockCells:e.StorageCells;if(erase)cells.Remove(index);else
+            if(DraggableDimensions==2){var cells=mode=="Service"?e.ServiceCells:mode=="Stock"?e.StockCells:e.StorageCells;if(erase){if(mode!="Service"&&cells.Contains(index))HospitalityNarrative.SuppliesRemoved(e,cell);cells.Remove(index);}else
                 {
                     cells.Add(index);
                     if(mode!="Service"&&Map.zoneManager.ZoneAt(cell)==null&&cell.Standable(Map))
@@ -126,9 +129,10 @@ namespace FamilyLife
             var t=Pick(cell);if(t==null)return;
             var others=FamilyComponent.Current.Registry.Establishments().Businesses.Where(o=>o.Id!=e.Id&&o.Map==e.Map);
             if(!erase&&others.Any(o=>o.Counter==t.thingIDNumber||o.Beds.Contains(t.thingIDNumber)||o.Benches.Contains(t.thingIDNumber)||o.StockContainers.Contains(t.thingIDNumber)||o.StorageContainers.Contains(t.thingIDNumber))){Messages.Message("That object belongs to another establishment.",MessageTypeDefOf.RejectInput,false);return;}
+            if(mode=="Counter"&&!erase&&!HospitalityInterop.CanUseCounter(t)){Messages.Message("Close the native Gastronomy restaurant and let its diners finish before assigning its register to this establishment. One system must own service.",MessageTypeDefOf.RejectInput,false);return;}
             if(mode=="Counter")e.Counter=erase?0:t.thingIDNumber;
             else if(mode=="Bed"||mode=="Bench"){var ids=mode=="Bed"?e.Beds:e.Benches;if(erase)ids.Remove(t.thingIDNumber);else if(!ids.Contains(t.thingIDNumber))ids.Add(t.thingIDNumber);}
-            else{var ids=mode=="StockContainer"?e.StockContainers:e.StorageContainers;if(erase)ids.Remove(t.thingIDNumber);else ids.Add(t.thingIDNumber);}
+            else{var ids=mode=="StockContainer"?e.StockContainers:e.StorageContainers;if(erase){if(ids.Contains(t.thingIDNumber))HospitalityNarrative.SuppliesRemoved(e,cell);ids.Remove(t.thingIDNumber);}else ids.Add(t.thingIDNumber);}
         }
         public override void SelectedUpdate(){base.SelectedUpdate();var e=FamilyComponent.Current?.Registry.Establishments().ById(business);if(e!=null&&e.Map==Map.uniqueID)GenDraw.DrawFieldEdges(e.ServiceCells.Select(Map.cellIndices.IndexToCell).ToList());}
     }

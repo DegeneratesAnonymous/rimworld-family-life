@@ -31,9 +31,10 @@ namespace FamilyLife
                 var p=HospitalityService.Pawn(stay.Pawn);var e=Book.ById(stay.Business);
                 if(p==null||!p.Spawned||p.Dead){Book.Guests.Remove(stay);continue;}
                 if(stay.Leaving)continue;
+                if(!HospitalityInterop.MayExtend(p.GetLord())){stay.Leaving=true;continue;}
                 if(e==null||!e.Enabled||PawnReadinessApi.Danger(p.Map)||p.Downed||p.HostileTo(Faction.OfPlayer)){LeaveGroup(stay.Group);continue;}
                 var bed=HospitalityService.Thing(stay.Bed) as Building_Bed;
-                if(stay.Bed>0&&(bed==null||!bed.Spawned||bed.Map!=p.Map)){stay.Bed=0;HospitalityService.Event(p,null,"LodgingFailed");}
+                if(stay.Bed>0&&(bed==null||!bed.Spawned||bed.Map!=p.Map)){stay.Bed=0;HospitalityService.Event(p,null,"LodgingFailed");foreach(var host in HospitalityService.Coverage(e).Where(h=>HospitalityNarrative.Near(h,p)))HospitalityService.EventAs("Innkeeper",host,p,stay.SleepTicks==0&&stay.LastLodgingDay<0?"CheckInFailed":"LodgingFailed");}
                 if(bed!=null&&p.needs.rest!=null&&p.needs.rest.CurLevelPercentage<.3f&&!p.InMentalState&&!p.Downed&&p.CurJob?.def!=JobDefOf.LayDown)
                     p.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown,bed));
                 if(bed!=null&&p.CurJob?.def==JobDefOf.LayDown&&p.CurJob.targetA.Thing==bed)
@@ -65,7 +66,7 @@ namespace FamilyLife
         }
         public static bool AllowDeparture(Lord lord)
         {
-            if(Book==null||FamilyFramework.Commerce.Bank==null)return true;
+            if(Book==null||FamilyFramework.Commerce.Bank==null||!HospitalityInterop.MayExtend(lord))return true;
             var members=lord.ownedPawns.Where(p=>p.RaceProps.Humanlike&&!p.Dead).ToList();if(members.Count==0||members.Any(p=>!p.Spawned||p.Downed||p.InMentalState||p.HostileTo(Faction.OfPlayer)||PawnReadinessApi.Danger(p.Map)))return true;
             int group=-lord.loadID;var existing=Book.Guests.Where(g=>g.Group==group).ToList();
             if(existing.Count>0)
@@ -77,20 +78,27 @@ namespace FamilyLife
             var e=Book.Businesses.Where(b=>b.Kind==EstablishmentKind.Inn&&b.Enabled&&b.Visitors&&b.Map==members[0].Map.uniqueID&&b.ServiceCells.Count>0).OrderByDescending(b=>b.Reputation).FirstOrDefault();if(e==null)return true;
             // Members must actually have visited or be close enough to know the place.
             if(!members.Any(p=>Book.Seen.ContainsKey("regular:"+e.Id+":"+p.thingIDNumber)||HospitalityService.Thing(e.Counter)!=null&&p.Position.DistanceTo(HospitalityService.Thing(e.Counter).Position)<20))return true;
-            var beds=e.Beds.Select(HospitalityService.Thing).OfType<Building_Bed>().Where(b=>b.Spawned&&!b.ForPrisoners&&!b.OwnersForReading.Any()&&!Book.Guests.Any(g=>g.Bed==b.thingIDNumber&&!g.Leaving)).ToList();if(beds.Count<members.Count)return true;
-            var stays=members.Select((p,i)=>new GuestStay{Pawn=p.thingIDNumber,Business=e.Id,Group=group,ArrivalDay=HospitalityService.Day,UntilDay=HospitalityService.Day+1,Bed=beds[i].thingIDNumber,Extensions=1,LastDecisionDay=HospitalityService.Day,Generated=false}).ToList();
+            var beds=e.Beds.Select(HospitalityService.Thing).OfType<Building_Bed>().Where(b=>b.Spawned&&!b.ForPrisoners&&!b.OwnersForReading.Any()&&!Book.Guests.Any(g=>g.Bed==b.thingIDNumber&&!g.Leaving)).ToList();if(beds.Count<members.Count(p=>!HospitalityInterop.NativeBed(p)))return true;
+            int nextBed=0;
+            var stays=members.Select((p,i)=>new GuestStay{Pawn=p.thingIDNumber,Business=e.Id,Group=group,ArrivalDay=HospitalityService.Day,UntilDay=HospitalityService.Day+1,Bed=HospitalityInterop.NativeBed(p)?0:beds[nextBed++].thingIDNumber,Extensions=1,LastDecisionDay=HospitalityService.Day,Generated=false}).ToList();
             if(!VisitorDecisions.ExtendGroup(e,stays.Select(g=>Preference(g,e)).ToList(),Rand.Value))return true;
             Book.Guests.AddRange(stays);Book.Note(e.Name+": a caravan unanimously opted to stay another night; its original lord and emergency departures remain intact.");return false;
         }
         public static int JourneyReserve(Pawn p)
         {
-            var stay=Book?.Guests.FirstOrDefault(g=>g.Pawn==p.thingIDNumber&&!g.Leaving);var e=stay==null?null:Book.ById(stay.Business);return 10+(e!=null&&stay.Bed>0&&stay.LastLodgingDay<HospitalityService.Day?e.RoomPrice:0);
+            int reserve=0;foreach(var payer in VisitorCommerce.Payers(p).Where(member=>member.RaceProps.Humanlike))
+            {
+                reserve+=10;var stay=Book?.Guests.FirstOrDefault(g=>g.Pawn==payer.thingIDNumber&&!g.Leaving);var e=stay==null?null:Book.ById(stay.Business);
+                if(e!=null&&stay.Bed>0&&stay.LastLodgingDay<HospitalityService.Day)reserve+=e.RoomPrice;
+            }
+            return reserve;
+
         }
         private static VisitorPreference Preference(GuestStay g,Establishment e)
         {
             var p=HospitalityService.Pawn(g.Pawn);int connections=0;
             if(p!=null&&HospitalityService.Map(e)!=null)connections=HospitalityService.Map(e).mapPawns.FreeColonistsSpawned.Count(other=>p.relations.OpinionOf(other)>30);
-            return new VisitorPreference{Taste=EstablishmentPersonalityService.Temperament(p),Sociable=HospitalityService.Trait(p,"Kind")||HospitalityService.Trait(p,"Abrasive"),Quiet=HospitalityService.Trait(p,"Ascetic"),Tough=HospitalityService.Trait(p,"Tough")||HospitalityService.Trait(p,"Brawler"),Refined=HospitalityService.Trait(p,"Greedy"),Thrifty=HospitalityService.Trait(p,"Ascetic"),Budget=HospitalityService.Cash(p),NightPrice=e.RoomPrice,FoodReserve=15,TravelReserve=15,DaysStayed=HospitalityService.Day-g.ArrivalDay,MaxDays=e.MaxStay,Experience=g.PersonalExperience,Connection=Math.Min(.5f,connections*.1f),Urgent=p==null||p.HostileTo(Faction.OfPlayer),Injured=p==null||p.Downed};
+            return new VisitorPreference{Taste=EstablishmentPersonalityService.Temperament(p),Sociable=HospitalityService.Trait(p,"Kind")||HospitalityService.Trait(p,"Abrasive"),Quiet=HospitalityService.Trait(p,"Ascetic"),Tough=HospitalityService.Trait(p,"Tough")||HospitalityService.Trait(p,"Brawler"),Refined=HospitalityService.Trait(p,"Greedy"),Thrifty=HospitalityService.Trait(p,"Ascetic"),Budget=HospitalityService.Cash(p)/VisitorCommerce.Humans(p),NightPrice=g.Bed>0?e.RoomPrice:0,FoodReserve=15,TravelReserve=15,DaysStayed=HospitalityService.Day-g.ArrivalDay,MaxDays=e.MaxStay,Experience=g.PersonalExperience,Connection=Math.Min(.5f,connections*.1f),Urgent=p==null||p.HostileTo(Faction.OfPlayer),Injured=p==null||p.Downed};
         }
         private static void Arrive(Establishment e)
         {
@@ -116,11 +124,12 @@ namespace FamilyLife
         {
             foreach(var stay in Book.Guests.Where(g=>g.Group==group))
             {
-                stay.Leaving=true;var p=HospitalityService.Pawn(stay.Pawn);if(p==null||!p.Spawned)continue;
+                if(!stay.Leaving)HospitalityNarrative.CompletedStay(stay);stay.Leaving=true;var p=HospitalityService.Pawn(stay.Pawn);if(p==null||!p.Spawned)continue;
                 // Only our own lord owns this departure policy. Never commandeer a trade caravan or Hospitality group.
                 var lord=p.GetLord();if(lord?.LordJob is LordJob_EstablishmentVisit)lord.ReceiveMemo("WFL_H_Leave");
             }
         }
+        public static void RequestLeave(Pawn pawn){var stay=Book?.Guests.FirstOrDefault(g=>g.Pawn==pawn.thingIDNumber&&!g.Leaving);if(stay!=null)LeaveGroup(stay.Group);}
         public static void ReleaseGenerated(){if(Book==null)return;foreach(var group in Book.Guests.Where(g=>g.Generated).Select(g=>g.Group).Distinct().ToList())LeaveGroup(group);}
     }
     public sealed class LordJob_EstablishmentVisit : LordJob

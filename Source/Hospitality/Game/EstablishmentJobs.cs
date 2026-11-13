@@ -38,6 +38,7 @@ namespace FamilyLife
                 var item=HospitalityService.Thing(order.Thing);var customer=HospitalityService.Pawn(order.Customer);if(item==null||!item.Spawned||customer==null||!customer.Spawned||!pawn.CanReserveAndReach(item,PathEndMode.ClosestTouch,Danger.Some))continue;
                 var job=JobMaker.MakeJob(DefDatabase<JobDef>.GetNamed("WFL_H_Service"),item,customer);job.count=order.Id;return job;
             }
+            var story=HospitalityNarrative.StoryJob(pawn,e);if(story!=null)return story;
             if(e.Kind==EstablishmentKind.Inn)
             {
                 foreach(int bedId in e.Beds)
@@ -73,7 +74,7 @@ namespace FamilyLife
             if(job.def.defName=="WFL_H_Checkout")
             {
                 var talk=Toils_General.Wait(120,TargetIndex.B);talk.tickAction=PayTime;yield return talk;
-                yield return Toils_General.Do(()=>{if(Order!=null&&Order.Stage==ServiceStage.Consumed){Order.Worker=pawn.thingIDNumber;HospitalityService.Settle(Order);}});yield break;
+                yield return Toils_General.Do(()=>{if(Order!=null&&Order.Stage==ServiceStage.Consumed){Order.Worker=pawn.thingIDNumber;HospitalityNarrative.BillTalk(Order,pawn);HospitalityService.Settle(Order);}});yield break;
             }
             yield return Toils_General.Do(()=>{var o=Order;var item=job.targetA.Thing;if(o==null||item==null||pawn.carryTracker.TryStartCarry(item,o.Count)==0)EndJobWith(JobCondition.Incompletable);});
             yield return Toils_Goto.GotoThing(TargetIndex.B,PathEndMode.Touch);
@@ -125,7 +126,7 @@ namespace FamilyLife
         {
             if(orderId==0)orderId=job.count;
             this.FailOn(()=>Order==null||Order.Stage==ServiceStage.Cancelled||pawn.Drafted||pawn.Downed||pawn.InMentalState||PawnReadinessApi.Danger(pawn.Map));
-            AddFinishAction(condition=>{var o=Order;if(o==null)return;if(o.Stage<ServiceStage.Delivered)HospitalityService.Book.Cancel(o,FamilyFramework.Commerce.Bank);else if(o.Stage<ServiceStage.Settled){o.Stage=ServiceStage.Consumed;HospitalityService.Settle(o,true);}});
+            AddFinishAction(condition=>{var o=Order;if(o==null)return;if(o.Stage<ServiceStage.Delivered)HospitalityService.CancelOrder(o);else if(o.Stage<ServiceStage.Settled){o.Stage=ServiceStage.Consumed;HospitalityService.Settle(o,true);}});
             yield return Toils_Goto.GotoCell(TargetIndex.A,PathEndMode.OnCell);
             // Browsing is a short walk through the service floor; diners wait at their chosen seat.
             if(HospitalityService.Book.ById(Order.Business).Kind==EstablishmentKind.Shop)

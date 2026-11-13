@@ -23,6 +23,23 @@ namespace FamilyLife.Framework
         bool ExternalRefund(string key, string business, int silver, int day, Func<bool> deliverSilver);
     }
 
+    /// <summary>Additive capability: older commerce providers still implement the unchanged base contract.
+    /// Unsupported adjustments refuse safely and preserve the pending obligation.</summary>
+    public interface ICommerceAdjustments
+    {
+        bool ReturnReservation(string fromKey,string toKey);
+        bool RememberSale(string key,string business,string payer,int silver,int day);
+        bool RefundSale(string key,string business,string recipient,int silver,int day,Func<bool> physicalReturn=null);
+        int WagesOwed(string business,int worker,int dueBefore);
+    }
+    public static class CommerceBankExtensions
+    {
+        public static bool ReturnReservation(this ICommerceBank bank,string fromKey,string toKey)=>bank is ICommerceAdjustments advanced&&advanced.ReturnReservation(fromKey,toKey);
+        public static bool RememberSale(this ICommerceBank bank,string key,string business,string payer,int silver,int day)=>bank is ICommerceAdjustments advanced&&advanced.RememberSale(key,business,payer,silver,day);
+        public static bool RefundSale(this ICommerceBank bank,string key,string business,string recipient,int silver,int day,Func<bool> physicalReturn=null)=>bank is ICommerceAdjustments advanced&&advanced.RefundSale(key,business,recipient,silver,day,physicalReturn);
+        public static int WagesOwed(this ICommerceBank bank,string business,int worker,int dueBefore)=>bank is ICommerceAdjustments advanced?advanced.WagesOwed(business,worker,dueBefore):0;
+    }
+
     /// <summary>At most one provider, registered during startup. Availability follows the provider's module lifecycle.</summary>
     public sealed class CommerceCatalog
     {

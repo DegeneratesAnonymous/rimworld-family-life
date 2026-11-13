@@ -115,7 +115,7 @@ namespace FamilyLife.Domain
    new HospitalityEvent { Id="CommunityNeutral", Role="Any", Label="Neutral ground", Fact="RivalsPeaceful", Mood=2, Opinion=1 },
    new HospitalityEvent { Id="CommunityUnexpected", Role="Any", Label="Unexpected hospitality", Fact="RivalServed", Mood=2, Opinion=2 },
    new HospitalityEvent { Id="CommunityFeud", Role="Any", Label="Trouble followed us here", Fact="FamilyDispute", Mood=-3, Opinion=-3 },
-   new HospitalityEvent { Id="CommunityCompetition", Role="Any", Label="A worthy competitor", Fact="CreativeRivalry", Mood=0, Opinion=2 },
+   new HospitalityEvent { Id="CommunityCompetition", Role="Any", Label="A worthy competitor", Fact="RespectfulRivalry", Mood=0, Opinion=2 },
    new HospitalityEvent { Id="CommunityFairRival", Role="Any", Label="Put business before the feud", Fact="RivalServed", Mood=2, Opinion=2 },
    new HospitalityEvent { Id="CommunityTurnedAway", Role="Any", Label="Turned away because of my family", Fact="FamilyExcluded", Mood=-3, Opinion=-4 },
    new HospitalityEvent { Id="OwnerPraise", Role="Any", Label="My work was recognized", Fact="OwnerPraise", Mood=2, Opinion=3 },
