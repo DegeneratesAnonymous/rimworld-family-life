@@ -16,6 +16,7 @@ namespace FamilyLife.Domain
         public string Name = "New establishment";
         public EstablishmentKind Kind;
         public EstablishmentOwner Owner;
+        public VenuePersonality Personality=new VenuePersonality();
         public bool Enabled, Residents = true, Visitors = true, Alcohol = true, CutOffDrunks = true, Quiet;
         public int OpenHour = 8, CloseHour = 22, MaxStay = 5, HouseholdBudget = 15, Reserve = 20;
         public readonly List<int> Staff = new List<int>(), Benches = new List<int>(), Beds = new List<int>();
@@ -98,7 +99,7 @@ namespace FamilyLife.Domain
             int silver = (int)(accrued / 2500000); Fractions[key] = (int)(accrued % 2500000);
             Earn(e, worker, silver, BusinessCalendar.Next(day));
         }
-        private void Earn(Establishment e, int worker, int silver, int due)
+        public void Earn(Establishment e, int worker, int silver, int due)
         {
             if (silver <= 0) return;
             // Aggregate by worker/payday; immutable after posting to the bank.
@@ -175,6 +176,7 @@ namespace FamilyLife.Domain
             var w = new StateWriter().Strings("name",new[] { e.Name }).Ints("v", new[] { e.Id,e.Map,e.OwnerId,e.Counter,e.PricePercent,e.RoomPrice,e.BasePayMilli,e.StaffShare,(int)e.Kind,(int)e.Owner,e.OpenHour,e.CloseHour,e.MaxStay,e.HouseholdBudget,e.Reserve,e.Reliability,e.Food,e.Service,e.Comfort,e.Value,e.Safety,e.Rowdiness,e.Visits,e.Revenue,e.BonusPool,e.LastPayday,e.LastReviewDay,e.BonusRemainder });
             w.Bool("enabled",e.Enabled).Bool("residents",e.Residents).Bool("visitors",e.Visitors).Bool("alcohol",e.Alcohol).Bool("cutoff",e.CutOffDrunks).Bool("quiet",e.Quiet);
             w.Ints("staff",e.Staff).Ints("benches",e.Benches).Ints("beds",e.Beds).Ints("service",e.ServiceCells.OrderBy(x=>x).ToList()).Ints("stock",e.StockCells.OrderBy(x=>x).ToList()).Ints("storage",e.StorageCells.OrderBy(x=>x).ToList()).Ints("stockcontainers",e.StockContainers.OrderBy(x=>x).ToList()).Ints("storagecontainers",e.StorageContainers.OrderBy(x=>x).ToList()).Ints("weights",e.Weights);
+            w.Strings("personality",new[]{e.Personality.Encode()});
             WriteMap(w,"points",e.Points.ToDictionary(x=>x.Key.ToString(),x=>x.Value)); return w.ToString();
         }
         private static void WriteMap(StateWriter w,string key,Dictionary<string,int> map) { w.Strings(key,map.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(x=>new StateWriter().Strings("k",new[]{x.Key}).Int("v",x.Value).ToString()).ToList()); }
@@ -186,6 +188,7 @@ namespace FamilyLife.Domain
             {
                 var x=new StateReader(row); var v=x.Ints("v"); if(v.Count<28) continue;
                 var e=new Establishment { Id=v[0],Map=v[1],OwnerId=v[2],Counter=v[3],PricePercent=v[4],RoomPrice=v[5],BasePayMilli=v[6],StaffShare=v[7],Kind=(EstablishmentKind)v[8],Owner=(EstablishmentOwner)v[9],OpenHour=v[10],CloseHour=v[11],MaxStay=v[12],HouseholdBudget=v[13],Reserve=v[14],Reliability=v[15],Food=v[16],Service=v[17],Comfort=v[18],Value=v[19],Safety=v[20],Rowdiness=v[21],Visits=v[22],Revenue=v[23],BonusPool=v[24],LastPayday=v[25],LastReviewDay=v[26],BonusRemainder=v[27],Name=x.Strings("name").FirstOrDefault()??"Establishment",Enabled=x.Bool("enabled"),Residents=x.Bool("residents"),Visitors=x.Bool("visitors"),Alcohol=x.Bool("alcohol"),CutOffDrunks=x.Bool("cutoff"),Quiet=x.Bool("quiet") };
+                e.Personality=VenuePersonality.Decode(new StateReader(x.Strings("personality").FirstOrDefault()??""));
                 e.Staff.AddRange(x.Ints("staff"));e.Benches.AddRange(x.Ints("benches"));e.Beds.AddRange(x.Ints("beds"));e.ServiceCells.UnionWith(x.Ints("service"));e.StockCells.UnionWith(x.Ints("stock"));e.StorageCells.UnionWith(x.Ints("storage"));e.StockContainers.UnionWith(x.Ints("stockcontainers"));e.StorageContainers.UnionWith(x.Ints("storagecontainers"));var weights=x.Ints("weights");for(int i=0;i<Math.Min(4,weights.Count);i++)e.Weights[i]=weights[i];
                 var points=new Dictionary<string,int>();ReadMap(x,"points",points);foreach(var p in points)if(int.TryParse(p.Key,out int id))e.Points[id]=p.Value;b.Businesses.Add(e);
             }

@@ -65,6 +65,14 @@ namespace FamilyLife
                 if(button("Fund business: 25 silver from owner"))HospitalityService.Fund(b,25);
                 if(button("Withdraw available profit: "+book.Withdrawable(b,finance)))HospitalityService.Withdraw(b);
             }
+            label("Character: "+b.Personality.Description);
+            label("Warmth "+b.Personality.Culture.Warmth+" · refinement "+b.Personality.Culture.Refinement+" · thrift "+b.Personality.Culture.Frugality+" · discipline "+b.Personality.Culture.Discipline+" · revelry "+b.Personality.Culture.Revelry);
+            label("Staff climate: "+b.Personality.StaffClimate+"/100 · "+EstablishmentPersonalityService.OwnerMood(b));
+            Check(rect,ref y,"Allow autonomous owner conversations",ref b.Personality.OwnerAutonomy);
+            Check(rect,ref y,"Allow discretionary owner bonuses from free business funds",ref b.Personality.AllowBonuses);
+            Check(rect,ref y,"Require equal treatment (prevent family favoritism)",ref b.Personality.EqualTreatment);
+            label(b.Personality.LastReason);
+            label("Character develops gradually from owners, staff and recent customers. A bad mood changes conversations, not earned wages or your policy settings.");
             label("Reputation: food "+b.Food+" · service "+b.Service+" · comfort "+b.Comfort+" · value "+b.Value+" · safety "+b.Safety);
             label("Atmosphere: "+(b.Rowdiness>60?"Rowdy":b.Rowdiness<30?"Peaceful":"Sociable")+" · completed visits "+b.Visits+" · collected sales "+b.Revenue);
             label("Recovery: improve supplies, seating, coverage and value; enforce alcohol / quiet rules. New experiences gradually outweigh older ones.");

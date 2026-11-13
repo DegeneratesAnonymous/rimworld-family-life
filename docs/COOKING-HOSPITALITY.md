@@ -84,3 +84,29 @@ Before merge/release, run on **both** game versions:
 8. Prepare/remove/re-add each module; a provider unavailable during a delivered bill must preserve the bill and never invent payment or report successful removal.
 
 No in-game behavior, measured TPS, balance tuning or UI rendering is claimed by an offline test pass.
+
+## Establishment personality expansion
+
+Establishments now develop a persistent character across five axes: warmth, refinement, frugality, discipline and revelry. Trait combinations contribute together, including Kind, Greedy, Abrasive, Psychopath, Ascetic, Gourmand and Brawler, plus the degrees of vanilla Industriousness and DrugDesire. Modded trait names are optional; missing traits are harmless. No character is inferred from xenotype.
+
+An individual owner contributes weight 5, the collective staff weight 3, and actual recent customers weight 2, normalized over sources that exist. Household owners contribute the mean of their adult members, without appointing a manager. Community-owned venues develop from staff and customers. Culture changes at most three points per axis per economic day; loading after a long absence cannot fast-forward it, and succession does not instantly replace its identity. Quiet house rules guide the revelry target. Descriptive tags emerge from the resulting values rather than being randomly assigned.
+
+Customers compare their own temperament with the venue's character when choosing to visit and considering an extension. Existing affordability, travel obligations, safety, group consent and maximum-stay rules remain in force. Matching character is a modest influence, not a guarantee of business.
+
+Owner mood is temporary and separate from stable culture. On-site owners can have at most one completed discretionary staff conversation per establishment per economic day. They must be physically close, able to interact, and not a Perspective Shift avatar. Conversations use the real social interaction path and do not forcibly interrupt jobs or pull an absent owner across the map. Household members can represent their own business; community venues have no invented personal proprietor.
+
+The response weighs the owner's temperament, current mood, opinion of the worker, the worker's distress, recorded contributions, actual backlog, recent sales, available business funds and existing family membership:
+
+- Praise recognizes recorded work.
+- Support responds to a struggling worker.
+- Criticism requires an actual service backlog; low mood and stress sensitivity increase its relative likelihood.
+- Profit discussion responds to recent sales or financial obligations; greedy owners favor it.
+- A discretionary one-silver bonus can be awarded for recorded work when free business funds cover it. It becomes an earned payday obligation immediately; reserve, existing wages and contribution shares are protected.
+- Family favoritism singles out a productive relative for special praise in front of unrelated coworkers. Only nearby witnesses who can see the owner receive the resentment memory. It does not steal anyone's credit or accrued pay.
+- Celebration acknowledges recorded contributions and recent sales.
+
+Eight new memories have both mood and opinion effects. Staff climate records the consequences of these exchanges, tends gradually toward neutral, and makes a bounded adjustment (at most five points) to service evaluation. It does not change vanilla skill levels, actual product quality or job speed. Staff distress can invite later support, so owners can repair relationships through real interactions.
+
+The Establishments page shows character, each axis, staff climate, owner mood and the reason for the latest owner decision. Players can disable owner conversations, separately prohibit discretionary bonuses, or require equal treatment to prevent family favoritism. Owner behavior never changes player-set prices, opening hours, base pay, contribution weights or staff share; earned wages cannot be reduced. The old explicit financial-policy suggestion button remains available.
+
+This adds live sources for ordinary employer support, pressure, recognition, bonuses and limited family favoritism. Secret disclosure, deliberate credit theft, rich rivalries and other previously listed dormant story sources are still separate work. Runtime behavior, social positioning and balance still need RimWorld testing.

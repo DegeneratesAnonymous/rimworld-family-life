@@ -9,6 +9,7 @@ namespace FamilyLife.Domain
         public bool Sociable, Quiet, Tough, Refined, Thrifty, Urgent, Injured;
         public int Budget, NightPrice, FoodReserve, TravelReserve, DaysStayed, MaxDays = 5;
         public float Experience = .5f, Connection;
+        public BusinessTemperament Taste;
         public float Appeal(Establishment e)
         {
             float score = e.Reputation / 100f * .4f + Experience * .4f + Connection * .15f;
@@ -17,6 +18,7 @@ namespace FamilyLife.Domain
             score += Tough ? e.Rowdiness / 1000f : 0;
             score += Refined ? (e.Food + e.Comfort - 100) / 500f : 0;
             score -= Thrifty ? Math.Max(0,e.PricePercent-100)/300f : 0;
+            if(Taste!=null)score+=(Taste.Affinity(e.Personality.Culture)-.5f)*.25f;
             return Math.Max(0,Math.Min(.9f,score));
         }
         public bool CanExtend => !Urgent && !Injured && DaysStayed < MaxDays && Budget >= NightPrice + FoodReserve + TravelReserve;

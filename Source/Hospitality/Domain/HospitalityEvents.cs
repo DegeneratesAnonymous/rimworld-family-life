@@ -118,6 +118,14 @@ namespace FamilyLife.Domain
    new HospitalityEvent { Id="CommunityCompetition", Role="Any", Label="A worthy competitor", Fact="CreativeRivalry", Mood=0, Opinion=2 },
    new HospitalityEvent { Id="CommunityFairRival", Role="Any", Label="Put business before the feud", Fact="RivalServed", Mood=2, Opinion=2 },
    new HospitalityEvent { Id="CommunityTurnedAway", Role="Any", Label="Turned away because of my family", Fact="FamilyExcluded", Mood=-3, Opinion=-4 },
+   new HospitalityEvent { Id="OwnerPraise", Role="Any", Label="My work was recognized", Fact="OwnerPraise", Mood=2, Opinion=3 },
+   new HospitalityEvent { Id="OwnerSupport", Role="Any", Label="My employer supported me", Fact="OwnerSupport", Mood=3, Opinion=4 },
+   new HospitalityEvent { Id="OwnerCriticism", Role="Any", Label="Criticized during a difficult service", Fact="OwnerCriticism", Mood=-3, Opinion=-3 },
+   new HospitalityEvent { Id="OwnerMargins", Role="Any", Label="Profit came before people", Fact="OwnerMargins", Mood=-1, Opinion=-2 },
+   new HospitalityEvent { Id="OwnerBonus", Role="Any", Label="My work earned a bonus", Fact="OwnerBonus", Mood=3, Opinion=4 },
+   new HospitalityEvent { Id="OwnerFamilyPraise", Role="Any", Label="My family contribution was singled out", Fact="OwnerFamilyPraise", Mood=2, Opinion=3 },
+   new HospitalityEvent { Id="OwnerFavorWitness", Role="Any", Label="My employer favored a relative", Fact="OwnerFavorWitness", Mood=-3, Opinion=-4 },
+   new HospitalityEvent { Id="OwnerCelebration", Role="Any", Label="We celebrated our work", Fact="OwnerCelebration", Mood=3, Opinion=3 },
   };
   public static IEnumerable<HospitalityEvent> Eligible(string role,ISet<string> facts,bool other) => All.Where(e=>e.Matches(role,facts,other));
  }

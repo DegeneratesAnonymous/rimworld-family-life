@@ -220,7 +220,7 @@ namespace FamilyLife
                 string account=resident?SpendingAccount(p,e,price):null;
                 int budget=booking!=null?booking.Budget-booking.Committed:resident?bank?.Available(account)??0:Math.Max(0,Cash(p)-HospitalityVisitors.JourneyReserve(p));if(budget<price)continue;
                 bool communal=map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree).Any(t=>t.def.ingestible!=null&&t.Spawned&&!Book.Businesses.Any(b=>InBusiness(t,b)));
-                float utility=VisitorDecisions.VisitUtility(p.needs.food==null?0:1-p.needs.food.CurLevelPercentage,p.needs.joy==null?0:1-p.needs.joy.CurLevelPercentage,.3f,e.Reputation/100f,price,budget,p.Position.DistanceTo(Thing(e.Counter).Position)/100f,communal);
+                float utility=VisitorDecisions.VisitUtility(p.needs.food==null?0:1-p.needs.food.CurLevelPercentage,p.needs.joy==null?0:1-p.needs.joy.CurLevelPercentage,.3f,Mathf.Clamp01(e.Reputation/100f*.7f+EstablishmentPersonalityService.Temperament(p).Affinity(e.Personality.Culture)*.3f),price,budget,p.Position.DistanceTo(Thing(e.Counter).Position)/100f,communal);
                 if(booking!=null)utility+=.5f;
                 if(utility<.2f||!Rand.Chance(booking!=null?.6f:.25f))continue;
                 var seats=e.ServiceCells.Select(map.cellIndices.IndexToCell).Where(c=>c.Standable(map)&&p.CanReach(c,PathEndMode.OnCell,Danger.Some)&&!Book.Orders.Any(o=>o.Stage<ServiceStage.Settled&&o.TableCell==map.cellIndices.CellToIndex(c)&&o.Business==e.Id)).OrderBy(c=>c.GetThingList(map).Any(t=>t.def.building?.isSittable==true)?0:1).Take(30).ToList();
@@ -270,6 +270,7 @@ namespace FamilyLife
                 var customer=Pawn(order.Customer);HospitalityStories.BookingServed(order,customer);var staff=Pawn(order.Worker)??Coverage(e).FirstOrDefault();
                 if(staff!=null){Book.Credit(e,staff.thingIDNumber,ContributionKind.Checkout,"checkout:"+order.Id,Day);CareerService.Report(Component,staff,CulinaryCareers.Career,e.Kind==EstablishmentKind.Inn?"Innkeeper":e.Kind==EstablishmentKind.Tavern?"Bartender":null,"service.checkout","checkout:"+order.Id,4,Now);if(customer!=null)Social(staff,customer);}
                 int service=remote&&customer!=null&&(customer.Drafted||customer.Downed||PawnReadinessApi.Danger(customer.Map))?70:Math.Max(10,90-(Now-order.Created)/300);float presentation=order.Presentation>0?order.Presentation/100f:8;
+                service=Mathf.Clamp(service+(e.Personality.StaffClimate-50)/10,10,100);
                 if(staff!=null)
                 {
                     string needed=e.Kind==EstablishmentKind.Inn?"Innkeeper":e.Kind==EstablishmentKind.Tavern?"Bartender":null;

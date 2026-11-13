@@ -90,7 +90,7 @@ namespace FamilyLife
         {
             var p=HospitalityService.Pawn(g.Pawn);int connections=0;
             if(p!=null&&HospitalityService.Map(e)!=null)connections=HospitalityService.Map(e).mapPawns.FreeColonistsSpawned.Count(other=>p.relations.OpinionOf(other)>30);
-            return new VisitorPreference{Sociable=HospitalityService.Trait(p,"Kind")||HospitalityService.Trait(p,"Abrasive"),Quiet=HospitalityService.Trait(p,"Ascetic"),Tough=HospitalityService.Trait(p,"Tough")||HospitalityService.Trait(p,"Brawler"),Refined=HospitalityService.Trait(p,"Greedy"),Thrifty=HospitalityService.Trait(p,"Ascetic"),Budget=HospitalityService.Cash(p),NightPrice=e.RoomPrice,FoodReserve=15,TravelReserve=15,DaysStayed=HospitalityService.Day-g.ArrivalDay,MaxDays=e.MaxStay,Experience=g.PersonalExperience,Connection=Math.Min(.5f,connections*.1f),Urgent=p==null||p.HostileTo(Faction.OfPlayer),Injured=p==null||p.Downed};
+            return new VisitorPreference{Taste=EstablishmentPersonalityService.Temperament(p),Sociable=HospitalityService.Trait(p,"Kind")||HospitalityService.Trait(p,"Abrasive"),Quiet=HospitalityService.Trait(p,"Ascetic"),Tough=HospitalityService.Trait(p,"Tough")||HospitalityService.Trait(p,"Brawler"),Refined=HospitalityService.Trait(p,"Greedy"),Thrifty=HospitalityService.Trait(p,"Ascetic"),Budget=HospitalityService.Cash(p),NightPrice=e.RoomPrice,FoodReserve=15,TravelReserve=15,DaysStayed=HospitalityService.Day-g.ArrivalDay,MaxDays=e.MaxStay,Experience=g.PersonalExperience,Connection=Math.Min(.5f,connections*.1f),Urgent=p==null||p.HostileTo(Faction.OfPlayer),Injured=p==null||p.Downed};
         }
         private static void Arrive(Establishment e)
         {

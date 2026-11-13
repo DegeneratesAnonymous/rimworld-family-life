@@ -46,6 +46,7 @@ namespace FamilyLife
         }
         public static void Tick()
         {
+            EstablishmentPersonalityService.Tick();
             var c=HospitalityService.Component;if(c==null||Book==null)return;int now=HospitalityService.Now,day=HospitalityService.Day;var bank=FamilyFramework.Commerce.Bank;
             foreach(var booking in c.Registry.HospitalityBookings().Bookings.Where(b=>!b.Closed).ToList())
             {
