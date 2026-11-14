@@ -59,10 +59,10 @@ namespace FamilyLife
                     if(bank==null)continue; // keep the reservation until its provider returns
                     c.Registry.HospitalityBookings().Close(booking,bank);var e=Book.ById(booking.Business);if(e==null)continue;
                     bool success=booking.Served>=Math.Max(1,booking.Expected/2);
-                    var host=Owner(e);var served=new HashSet<int>(Book.Orders.Where(o=>o.Booking==booking.Id&&o.Stage>=ServiceStage.Delivered).Select(o=>o.Customer));
-                    foreach(var p in e.Staff.Select(HospitalityService.Pawn).Where(p=>p!=null))HospitalityService.Event(p,host!=p?host:null,success?"CommissionDone":"CommissionFailed");
-                    if(booking.Household>0)foreach(int id in c.Registry.GetHousehold(booking.Household)?.ResidentIds??new List<int>()){if(!served.Contains(id))continue;var guest=HospitalityService.Pawn(id);HospitalityService.Event(guest,host!=guest?host:null,success?"FamilyCelebration":"FamilyBookingFailed");}
-                    else if(booking.Kind==BookingKind.CommunityMeal)foreach(var p in HospitalityService.Map(e)?.mapPawns.FreeColonistsSpawned??new List<Pawn>())if(p.Position.DistanceTo(HospitalityService.Thing(e.Counter)?.Position??p.Position)<15)if(served.Contains(p.thingIDNumber)||success)HospitalityService.Event(p,host!=p?host:null,success?"PublicContractDone":"PublicContractFailed");
+                    var served=new HashSet<int>(Book.Orders.Where(o=>o.Booking==booking.Id&&o.Stage>=ServiceStage.Delivered&&o.Stage<=ServiceStage.Settled).Select(o=>o.Customer));
+                    foreach(var p in e.Staff.Select(HospitalityService.Pawn).Where(p=>p!=null))HospitalityService.Event(p,Host(e,p),success?"CommissionDone":"CommissionFailed");
+                    if(booking.Household>0)foreach(int id in c.Registry.GetHousehold(booking.Household)?.ResidentIds??new List<int>()){if(!served.Contains(id))continue;var guest=HospitalityService.Pawn(id);HospitalityService.Event(guest,Host(e,guest),success?"FamilyCelebration":"FamilyBookingFailed");}
+                    else if(booking.Kind==BookingKind.CommunityMeal)foreach(var p in HospitalityService.Map(e)?.mapPawns.FreeColonistsSpawned??new List<Pawn>())if(p.Position.DistanceTo(HospitalityService.Thing(e.Counter)?.Position??p.Position)<15)if(served.Contains(p.thingIDNumber))HospitalityService.Event(p,Host(e,p),success?"PublicContractDone":"PublicContractFailed");
                     Book.Note(e.Name+": "+booking.Kind+" ended; "+booking.Served+" meals served.");
                 }
                 else if(booking.Kind==BookingKind.EmergencyShelter)
@@ -71,7 +71,7 @@ namespace FamilyLife
                     foreach(var p in map.mapPawns.FreeColonistsSpawned.Where(p=>p.ownership.OwnedBed==null&&p.needs.rest?.CurLevelPercentage<.25f&&!p.Drafted&&!p.Downed&&!p.InMentalState&&!FrameworkServices.IsAvatar(p)&&p.jobs?.curJob?.playerForced!=true).Take(3))
                     {
                         var bed=e.Beds.Select(HospitalityService.Thing).OfType<Building_Bed>().FirstOrDefault(b=>b.Spawned&&!b.ForPrisoners&&!b.OwnersForReading.Any()&&!Book.Guests.Any(g=>g.Bed==b.thingIDNumber&&!g.Leaving)&&p.CanReserveAndReach(b,PathEndMode.OnCell,Danger.Some));
-                        if(bed!=null&&p.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown,bed)))HospitalityService.Event(p,Owner(e)!=p?Owner(e):null,"EmergencyShelter");
+                        if(bed!=null&&p.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown,bed)))HospitalityService.Event(p,Host(e,p),"EmergencyShelter");
                     }
                 }
             }
@@ -130,6 +130,8 @@ namespace FamilyLife
                 if(e.Staff.Contains(actor.thingIDNumber)&&!e.Staff.Contains(recipient.thingIDNumber))HospitalityService.Event(recipient,actor,"SupportiveTalk");
             }
         }
+        // A real counterpart for outcome memories: the personal owner, otherwise a staff member, never the recipient.
+        private static Pawn Host(Establishment e,Pawn recipient){var owner=Owner(e);if(owner!=null&&owner!=recipient)return owner;return e.Staff.Select(HospitalityService.Pawn).FirstOrDefault(h=>h!=null&&h!=recipient);}
         private static Pawn Owner(Establishment e)=>e.Owner==EstablishmentOwner.Person?HospitalityService.Pawn(e.OwnerId):null;
     }
 }
