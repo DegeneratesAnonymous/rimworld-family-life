@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Wil's Treasury: personal and household accounts, the community treasury, wages and payday, taxation and the Treasurer. A separate assembly built against the framework's public surface only.
+    Wil's Role Modules : Treasury: personal and household accounts, the community treasury, wages and payday, taxation and the Treasurer. A separate assembly built against the framework's public surface only.
       dotnet build Source/FamilyLife -c Release -p:GameVersion=1.6        (framework first)
       dotnet build Source/Treasury  -c Release -p:GameVersion=1.6
   -->

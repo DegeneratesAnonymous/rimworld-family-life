@@ -17,7 +17,7 @@ namespace FamilyLife
         public void Register()
         {
             var catalog = FamilyFramework.Catalog;
-            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Community Care", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Role Modules : Community Care", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             catalog.Provide(Id, "wils.care.checkups");
             catalog.Provide(Id, "wils.care.outbreak");
             FamilyFramework.Offices.Register(new OfficeDefinition { Id = "wils.care.healer", ModuleId = Id, Kind = OfficeKind.Healer, LabelKey = "WFL_OfficeKind_Healer", PassionSkills = new[] { "Medicine" } });

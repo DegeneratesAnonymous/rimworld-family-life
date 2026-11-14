@@ -247,6 +247,26 @@ namespace FamilyLife.Tests
             Assert.DoesNotContain(packageId, framework);          // the framework package does not depend on a module
         }
 
+        [Theory]
+        [InlineData("WilsEducation", "Wil's Role Modules : Education")]
+        [InlineData("WilsCommunityCare", "Wil's Role Modules : Community Care")]
+        [InlineData("WilsTreasury", "Wil's Role Modules : Treasury")]
+        [InlineData("WilsHospitality", "Wil's Role Modules : Cooking &amp; Hospitality")]
+        [InlineData("WilsCrafting", "Wil's Role Modules : Crafting")]
+        public void Optional_packages_follow_the_role_module_naming_convention(string folder, string title)
+        {
+            string xml = File.ReadAllText(Path.Combine(RepoPaths.Root(), "Packages", folder, "About", "About.xml"));
+            Assert.Contains("<name>" + title + "</name>", xml);
+        }
+
+        [Fact]
+        public void Framework_keeps_its_community_framework_name()
+        {
+            string xml = File.ReadAllText(Path.Combine(RepoPaths.Root(), "About", "About.xml"));
+            Assert.Contains("<name>Wil's Community Framework</name>", xml);
+            Assert.DoesNotContain("Wil's Role Modules", Regex.Match(xml, @"<name>.*?</name>").Value);
+        }
+
         [Fact]
         public void Each_package_ships_the_defs_it_owns_and_none_twice()
         {

@@ -194,6 +194,7 @@ namespace FamilyLife
                     int medicine = PawnReadinessApi.Level(doc, SkillDefOf.Medicine), second = spec.Key == "Veterinarian" ? PawnReadinessApi.Level(doc, SkillDefOf.Animals) : PawnReadinessApi.Level(doc, SkillDefOf.Social);
                     var level = CheckupQuality.Level(CheckupQuality.Score(medicine, second, 1f, 0f, Rand.RangeInclusive(-2, 2)));
                     if (!full && level > ResultQuality.Fair) level = ResultQuality.Fair;
+                    if(full&&level<ResultQuality.Excellent)level++;
                     CareDriver.GiveBenefit(target, level);
                     if (target.RaceProps.Humanlike && OfficeCareView.MayKnowResult(target, doc)) MoteMaker.ThrowText(target.DrawPos, target.Map, "WFL_Checkup_Result".Translate(("WFL_Quality_" + level).Translate()), Color.white);
                 }

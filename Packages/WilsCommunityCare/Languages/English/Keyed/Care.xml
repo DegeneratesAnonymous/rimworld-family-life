@@ -19,6 +19,10 @@
   <wils.care.specialist.surgeon_label>Surgeon</wils.care.specialist.surgeon_label>
   <wils.care.specialist.midwife_label>Midwife</wils.care.specialist.midwife_label>
   <wils.care.specialist.veterinarian_label>Veterinarian</wils.care.specialist.veterinarian_label>
+  <WFL_Care_CounselorBonus>Supportive talks gain 10 percentage points of success chance and can encourage reconciliation.</WFL_Care_CounselorBonus>
+  <WFL_Care_SurgeonBonus>Post-operation and implant follow-ups gain one quality band, capped at Excellent.</WFL_Care_SurgeonBonus>
+  <WFL_Care_MidwifeBonus>Pregnancy and childbirth follow-ups gain one quality band, capped at Excellent; attended births leave a positive memory.</WFL_Care_MidwifeBonus>
+  <WFL_Care_VeterinarianBonus>Animal examinations gain one quality band, capped at Excellent, and animal tending builds veterinary experience.</WFL_Care_VeterinarianBonus>
   <WFL_Care_Page>Community Care</WFL_Care_Page>
   <WFL_Care_Practitioners>Care workers</WFL_Care_Practitioners>
   <WFL_Care_None>Nobody is assigned to care work yet. Assign a Healer or Doctor on the Professions page.</WFL_Care_None>
