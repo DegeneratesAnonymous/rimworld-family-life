@@ -102,14 +102,9 @@ namespace FamilyLife
             float v = Widgets.HorizontalSlider(new Rect(4f, y, 240f, 20f), pct, 0f, 100f, true, null, null, null, 5f); if ((int)v != pct) st.CommunityPercent = (int)v;
             y += 26f;
             y = Heading(r, y + 6f, "WFL_Tr_Valuables".Translate());
-            foreach (var val in st.Valuables.All.ToList())
-            {
-                Widgets.Label(new Rect(4f, y, 300f, 24f), val.DefName + (val.Liquid ? " (liquid)" : ""));
-                if (val.DefName != "Silver" && Widgets.ButtonText(new Rect(310f, y, 90f, 22f), "WFL_Tr_Remove".Translate())) st.Valuables.Remove(val.DefName);
-                y += 24f;
-            }
-            if (Widgets.ButtonText(new Rect(4f, y, 220f, 24f), "WFL_Tr_AddValuable".Translate()))
-                Find.WindowStack.Add(new FloatMenu(DefDatabase<ThingDef>.AllDefs.Where(d => d.category == ThingCategory.Item && d.BaseMarketValue >= 5f && !st.Valuables.Recognises(d.defName)).OrderByDescending(d => d.BaseMarketValue).Take(40).Select(d => { var n = d.defName; return new FloatMenuOption(d.LabelCap + " (" + (int)d.BaseMarketValue + ")", () => st.Valuables.Set(n, false)); }).ToList()));
+            var names = st.Valuables.All.Select(val => { var d = DefDatabase<ThingDef>.GetNamedSilentFail(val.DefName); return (d != null ? d.LabelCap.ToString() : val.DefName) + (val.Liquid ? " (" + "WFL_Tr_Liquid".Translate() + ")" : ""); }).ToList();
+            y = Line(r, y, string.Join(", ", names));
+            if (Widgets.ButtonText(new Rect(4f, y, 260f, 26f), "WFL_Tr_ChooseValuables".Translate())) Find.WindowStack.Add(new Dialog_Valuables(st));
             y += 30f;
             y = Heading(r, y + 6f, "WFL_Tr_Transactions".Translate());
             foreach (var t in l.History.Reverse().Take(6)) y = Line(r, y, TxText(c, t), true);

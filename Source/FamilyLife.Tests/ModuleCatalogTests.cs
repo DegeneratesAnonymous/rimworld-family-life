@@ -36,6 +36,21 @@ namespace FamilyLife.Tests
         }
 
         [Fact]
+        public void Every_identifier_a_module_registers_in_source_passes_the_catalog_check()
+        {
+            // Registration happens at game start, so a bad name (for example one with a hyphen) switches a whole module off in game while every offline test passes.
+            var bad = new List<string>();
+            foreach (var file in System.IO.Directory.EnumerateFiles(System.IO.Path.Combine(RepoPaths.Root(), "Source"), "*.cs", System.IO.SearchOption.AllDirectories))
+            {
+                if (file.Contains(System.IO.Path.DirectorySeparatorChar + "FamilyLife.Tests" + System.IO.Path.DirectorySeparatorChar) || file.Contains(System.IO.Path.DirectorySeparatorChar + "obj" + System.IO.Path.DirectorySeparatorChar)) continue;
+                string text = System.Text.RegularExpressions.Regex.Replace(System.IO.File.ReadAllText(file), @"//[^\n]*", "");
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text, @"\.(?:Add|Register)\(\s*""(wils\.[^""]*)"""))
+                    if (!ModuleCatalog.IdPattern.IsMatch(m.Groups[1].Value)) bad.Add(System.IO.Path.GetFileName(file) + ": " + m.Groups[1].Value);
+            }
+            Assert.True(bad.Count == 0, "identifiers the catalog would refuse: " + string.Join(", ", bad));
+        }
+
+        [Fact]
         public void A_duplicate_module_or_capability_is_refused_with_a_message_that_names_it()
         {
             var c = Standard();

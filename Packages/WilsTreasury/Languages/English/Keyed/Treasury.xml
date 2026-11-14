@@ -24,7 +24,9 @@
   <WFL_TZ_Open>Open the Treasury</WFL_TZ_Open>
   <WFL_TZ_OpenDesc>Open the Treasury page of the Community window.</WFL_TZ_OpenDesc>
   <WFL_Tr_Valuables>Recognised valuables (stored wealth, never spendable silver)</WFL_Tr_Valuables>
-  <WFL_Tr_AddValuable>Add a valuable...</WFL_Tr_AddValuable>
+  <WFL_Tr_ChooseValuables>Choose valuables...</WFL_Tr_ChooseValuables>
+  <WFL_Tr_ValuablesHint>Tick any item or resource that counts as stored wealth. Silver is always the spendable currency.</WFL_Tr_ValuablesHint>
+  <WFL_Tr_Liquid>liquid</WFL_Tr_Liquid>
   <WFL_Tr_Remove>Remove</WFL_Tr_Remove>
   <WFL_Tr_Overview>Overview</WFL_Tr_Overview>
   <WFL_Tr_Accounts>Accounts</WFL_Tr_Accounts>

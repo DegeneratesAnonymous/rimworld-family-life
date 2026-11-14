@@ -38,7 +38,7 @@ namespace FamilyLife
             FamilyFramework.LabourDone.Add("wils.hospitality.labour",Id,HospitalityService.OnLabour);
             FamilyFramework.PrivateLabour.Add("wils.hospitality.private",Id,HospitalityService.HandlesLabour);
             FamilyFramework.PrivateWork.Add("wils.hospitality.wages",Id,(pawn,career)=>career==CulinaryCareers.Career);
-            FamilyFramework.PrivateWorkEvent.Add("wils.hospitality.workshop-wages",Id,(pawn,career,kind)=>kind!=null&&kind.StartsWith("craft.",StringComparison.Ordinal));
+            FamilyFramework.PrivateWorkEvent.Add("wils.hospitality.workshopwages",Id,(pawn,career,kind)=>kind!=null&&kind.StartsWith("craft.",StringComparison.Ordinal));
             FamilyFramework.FamilyEventsApplied.Add("wils.hospitality.family",Id,HospitalityService.FamilyEvents);
             FamilyFramework.Resets.Add("wils.hospitality.reset",Id,HospitalityService.Reset);
             FamilyFramework.Reconcilers.Add("wils.hospitality.reconcile",Id,HospitalityService.Reconcile);

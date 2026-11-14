@@ -23,8 +23,8 @@ namespace FamilyLife
             foreach(var branch in new[]{"Smith","Tailor"})CareerService.RegisterRole(new ProfessionRole{Id=CraftingCareers.Role(branch),ModuleId=Id,Career=CraftingCareers.Career,Level=2,Specialty=branch});
             foreach(var specialty in new[]{"Weaponsmith","Armorsmith","Mechanist","Couturier","Outfitter"})CareerService.RegisterRole(new ProfessionRole{Id=CraftingCareers.Role(specialty),ModuleId=Id,Career=CraftingCareers.Career,Level=3,Specialty=specialty,BonusKey="WFL_Crafting_"+specialty+"Bonus"});
             FamilyFramework.WorkshopProducts.Add("wils.crafting.products",Id,CraftingProducts.Profile);
-            FamilyFramework.ProductMade.Add("wils.crafting.specialty-bonuses",Id,CraftingProducts.ApplyBonus);
-            FamilyFramework.WorkshopSale.Add("wils.crafting.customer-events",Id,CraftingStories.Sale);
+            FamilyFramework.ProductMade.Add("wils.crafting.specialtybonuses",Id,CraftingProducts.ApplyBonus);
+            FamilyFramework.WorkshopSale.Add("wils.crafting.customerevents",Id,CraftingStories.Sale);
             FamilyFramework.Resets.Add("wils.crafting.reset",Id,CraftingStories.Reset);
             CareerService.Registered(Id);
         }
