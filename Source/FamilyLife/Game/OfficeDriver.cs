@@ -108,13 +108,11 @@ namespace FamilyLife
             catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not read the colony's ideoligions: " + ex.Message); return null; }
         }
 
-        /// <summary>The chaplain speaks for the most popular ideoligion: its moral guide, or failing that its most socially able follower. The post simply follows the game.</summary>
+        /// <summary>The chaplain is the moral guide of the most popular ideoligion. No moral guide, no chaplain: the post is left vacant rather than given to someone else.</summary>
         internal static Pawn Speaker(Ideo ideo)
         {
-            if (ideo == null) return null;
-            var guide = ideo.RolesListForReading.FirstOrDefault(x => x.def == PreceptDefOf.IdeoRole_Moralist)?.ChosenPawnSingle();
-            if (guide != null && guide.Faction == Faction.OfPlayer && !guide.Dead) return guide;
-            return PawnsFinder.AllMaps_FreeColonists.Where(p => p.Ideo == ideo && !p.Dead).OrderByDescending(FrameworkServices.SocialFitness).FirstOrDefault();
+            var guide = ideo?.RolesListForReading.FirstOrDefault(x => x.def == PreceptDefOf.IdeoRole_Moralist)?.ChosenPawnSingle();
+            return guide != null && guide.Faction == Faction.OfPlayer && !guide.Dead ? guide : null;
         }
 
         private static void SyncChaplain(FamilyComponent c, FamilyRegistry r, int now)

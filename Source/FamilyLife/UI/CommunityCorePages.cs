@@ -44,6 +44,7 @@ namespace FamilyLife
             {
                 if (!FamilyFramework.Offices.Available(d.Kind)) continue;
                 var office = c.Registry.OfficeFor(d.Kind);
+                if (d.Kind == OfficeKind.Chaplain && !(office != null && office.Held)) continue;
                 y = Line(r, y, d.LabelKey.Translate() + ": " + (office != null && office.Held ? NameOf(c, office.HolderId) : "WFL_Hub_Vacant".Translate().ToString()));
             }
             return y;
@@ -67,8 +68,9 @@ namespace FamilyLife
             var ideo = OfficeDriver.PopularIdeo(); int speaker = reg.OfficeFor(OfficeKind.Chaplain) is CommunityOffice co && co.Held ? co.HolderId : 0;
             string govern = ("WFL_Institution_" + reg.Institution.Kind).Translate().ToString().CapitalizeFirst();
             LeaderCard(new Rect(0f, 0f, cw, h), c, FamilyRole.ColonyLeader, leader, govern, new Color(.85f, .7f, .3f));
-            LeaderCard(new Rect(side ? cw + gap : 0f, side ? 0f : h + 10f, cw, h), c, FamilyRole.Chaplain, speaker, ideo != null ? ideo.name : "WFL_Hub_NoIdeoligion".Translate().ToString(), new Color(.55f, .65f, .9f));
-            float top = (side ? h : h * 2f + 10f) + 14f;
+            // the chaplain is the moral guide of the colony's biggest ideoligion; with no moral guide there is no chaplain, so no card
+            if (speaker != 0) LeaderCard(new Rect(side ? cw + gap : 0f, side ? 0f : h + 10f, cw, h), c, FamilyRole.Chaplain, speaker, ideo != null ? ideo.name : "", new Color(.55f, .65f, .9f));
+            float top = (side || speaker == 0 ? h : h * 2f + 10f) + 14f;
             float w = CommunityPageLayout.ColumnWidth(r);
             float left = CommunityPageLayout.Section(r, 0f, top, w, "WFL_Hub_Residents".Translate(), a =>
             {

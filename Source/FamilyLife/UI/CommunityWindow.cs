@@ -35,7 +35,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current;
             if (c == null) return;
-            var pages = FamilyFramework.Pages.Visible();
+            var settingsId = ModuleCatalog.FrameworkId + ".settings"; var pages = FamilyFramework.Pages.Visible().Where(x => x.Id != settingsId).ToList();
             var page = FamilyFramework.Pages.Resolve(selected);
             if (page == null) { Widgets.Label(inRect, "WFL_Hub_NoPages".Translate()); return; }
             selected = page.Id;
@@ -46,7 +46,8 @@ namespace FamilyLife
             Text.Font = GameFont.Small;
             var statuses = pages.Select(p => FamilyFramework.Pages.StatusOf(p)).ToList();
             var rowHeights = pages.Select((p, i) => Mathf.Max(34f, Text.CalcHeight(p.LabelKey.Translate(), NavWidth - (statuses[i] > 0 ? 92f : 66f)) + 12f)).ToList();
-            Widgets.BeginScrollView(nav, ref navScroll, new Rect(0f, 0f, NavWidth - 18f, Mathf.Max(nav.height, rowHeights.Sum() + 12f)));
+            var navList = new Rect(0f, 0f, nav.width, nav.height - 40f);
+            Widgets.BeginScrollView(navList, ref navScroll, new Rect(0f, 0f, NavWidth - 18f, Mathf.Max(navList.height, rowHeights.Sum() + 12f)));
             int index = 0;
             foreach (var p in pages)
             {
@@ -67,6 +68,17 @@ namespace FamilyLife
                 y += row.height + 2f;
             }
             Widgets.EndScrollView();
+            // Settings is housekeeping, not a destination: it sits as a cog at the foot of the list.
+            var settings = FamilyFramework.Pages.ById(settingsId);
+            if (settings != null)
+            {
+                var cog = new Rect(8f, nav.height - 36f, 30f, 30f); bool onSettings = page.Id == settingsId;
+                if (onSettings) Widgets.DrawBoxSolid(cog, new Color(0.25f, 0.22f, 0.12f, 0.9f)); else if (Mouse.IsOver(cog)) Widgets.DrawHighlight(cog);
+                var cogTex = ContentFinder<Texture2D>.Get("UI/WFL_Cog", false);
+                if (cogTex != null) GUI.DrawTexture(cog.ContractedBy(4f), cogTex);
+                TooltipHandler.TipRegion(cog, settings.LabelKey.Translate());
+                if (Widgets.ButtonInvisible(cog) && !onSettings) selected = settingsId;
+            }
 
             var body = new Rect(NavWidth + 8f, 0f, inRect.width - NavWidth - 8f, inRect.height);
             Text.Font = GameFont.Medium; GUI.color = FamilyKit.Gold;
