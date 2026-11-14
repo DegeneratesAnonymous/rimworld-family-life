@@ -118,37 +118,9 @@ namespace FamilyLife
             Widgets.Label(new Rect(0f, y, 100f, 28f), "WFL_Hub_Search".Translate());
             professionSearch = Widgets.TextField(new Rect(104f, y, r.width - 104f, 28f), professionSearch);
             y += 38f;
-            var residents = reg.Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => NameOf(c, p.Id)).ToList();
             var shown = roles.Where(role => role.Career == selectedCareer && (professionSearch.Length == 0 || CareerService.TitleOf(role, reg).IndexOf(professionSearch, StringComparison.OrdinalIgnoreCase) >= 0)).ToList();
             if (shown.Count == 0) return Line(r, y, "WFL_Hub_NoMatches".Translate(), true);
-            foreach (var role in shown)
-            {
-                var holders = book.Holders(role.Id).Where(id => reg.GetPerson(id)?.InColony == true).ToList();
-                int qualified = residents.Count(p => !book.IsAssigned(p.Id, role.Id) && AssignmentBook.Check(role, ledger, p.Id) == AssignResult.Assigned);
-                float buttonW = Mathf.Min(150f, r.width * .3f), textW = r.width - buttonW - 24f;
-                string title = CareerService.TitleOf(role, reg);
-                string details = (holders.Count == 0 ? "WFL_Hub_Vacant".Translate().ToString() : string.Join(", ", holders.Select(id => NameOf(c, id)))) + "\n" + "WFL_Hub_Qualified".Translate(role.Level, qualified);
-                float titleH = Text.CalcHeight(title, textW), detailsH = Text.CalcHeight(details, textW);
-                float rowH = titleH + detailsH + 20f;
-                Widgets.DrawBoxSolid(new Rect(0f, y, r.width, rowH), new Color(.16f, .16f, .17f));
-                Widgets.Label(new Rect(8f, y + 6f, textW, titleH), title);
-                GUI.color = Color.gray; Widgets.Label(new Rect(8f, y + 8f + titleH, textW, detailsH), details); GUI.color = Color.white;
-                if (Widgets.ButtonText(new Rect(r.width - buttonW - 8f, y + 8f, buttonW, Mathf.Max(30f, Text.CalcHeight("WFL_Career_Assign".Translate(), buttonW - 16f) + 8f)), "WFL_Career_Assign".Translate()))
-                {
-                    var options = new List<FloatMenuOption>();
-                    foreach (var p in residents)
-                    {
-                        int id = p.Id; var rr = role;
-                        bool already = book.IsAssigned(id, rr.Id); var check = AssignmentBook.Check(rr, ledger, id);
-                        string label = NameOf(c, id) + (already ? " (" + "WFL_Career_Assigned".Translate() + ")" : check != AssignResult.Assigned ? " (" + "WFL_Career_Needs_Short".Translate() + ")" : "");
-                        options.Add(new FloatMenuOption(label, already ? (Action)(() => book.Unassign(id, rr.Id)) : check == AssignResult.Assigned ? () => book.Assign(id, rr, ledger, Find.TickManager.TicksGame) : (Action)null));
-                    }
-                    if (options.Count == 0) options.Add(new FloatMenuOption("WFL_ZoneNoFamilies".Translate(), null));
-                    Find.WindowStack.Add(new FloatMenu(options));
-                }
-                y += rowH + 8f;
-            }
-            return y;
+            return ProfessionTree.Draw(r, y, c, selectedCareer, roles.Where(role => role.Career == selectedCareer).ToList(), professionSearch);
         }
 
         private static float Assembly(Rect r, FamilyComponent c)
