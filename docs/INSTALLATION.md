@@ -1,16 +1,18 @@
 # Installing Wil's Family Life and its modules
 
-Wil's Family Life is now three packages. **Nothing here has been run in RimWorld yet**; the steps are what the layout and the scripts are built for, and [MODULE-VERIFICATION.md](MODULE-VERIFICATION.md) is how to check them.
+Wil's Community Framework and its optional modules are five packages. **This module candidate has not been gameplay-validated in this environment**; the steps are what the layout and the scripts are built for, and [MODULE-VERIFICATION.md](MODULE-VERIFICATION.md) is how to check them.
 
 | Package | Folder in `Mods` | packageId | What it gives you |
 |---|---|---|---|
-| Wil's Family Life (the framework) | `WilsFamilyLife` | `SpacemanWil.WilsFamilyLife` | Family records, houses, relationships, traditions, the community posts (hall keeper, chaplain), elections, and the hooks the modules plug into. Works alone. |
+| Wil's Community Framework (the framework) | `WilsFamilyLife` | `SpacemanWil.WilsFamilyLife` | Family records, houses, relationships, traditions, the community posts (hall keeper, chaplain), elections, and the hooks the modules plug into. Works alone. |
 | Wil's Education | `WilsEducation` | `SpacemanWil.WilsEducation` | The Teacher: classes, lessons, subjects, books, yearly assessment, the lectern button |
 | Wil's Community Care | `WilsCommunityCare` | `SpacemanWil.WilsCommunityCare` | The Healer: check-up rounds, the clinic, bedside visits, the outbreak round |
+| Wil's Treasury | `WilsTreasury` | `SpacemanWil.WilsTreasury` | Accounts, physical silver backing, wages, debts and taxation |
+| Wil's Cooking & Hospitality | `WilsHospitality` | `SpacemanWil.WilsHospitality` | Cooking careers, establishments, service, shops and inns; paid operations use Treasury's optional commerce capability |
 
 Education and Community Care each need only Wil's Family Life (and Harmony). They never need each other: any of the four combinations is valid.
 
-**Load order:** Harmony, Wil's Family Life, then Education and/or Community Care (their `About.xml` says `loadAfter`; RimWorld's mod manager will sort them). Each module announces itself when the game starts; if the framework is missing or loads after, the module will not work and the log says why.
+**Load order:** Harmony, Wil's Family Life, then Treasury, Education and/or Community Care, then Cooking & Hospitality (their `About.xml` says `loadAfter`; RimWorld's mod manager will sort them). Each module announces itself when the game starts; if the framework is missing or loads after, the module will not work and the log says why.
 
 ## Updating an existing game that used the all-in-one mod
 
@@ -37,11 +39,18 @@ Not undone by preparation (and said so in its report): skill experience already 
 ## Building and staging from the repository
 
 ```
-.\scripts\Test.ps1                 # builds all three assemblies for 1.6 and 1.7, runs the tests, assembles and checks the packages, checks the Harmony patches
-.\scripts\Build-Packages.ps1       # assembles dist\WilsFamilyLife, dist\WilsEducation, dist\WilsCommunityCare and checks their layout
-.\scripts\Stage-ToRimWorld.ps1     # builds and copies all three into the game's Mods folder (RimWorld must be closed)
+.\scripts\Test.ps1                 # builds all five assemblies for 1.6 and 1.7, runs the tests, assembles and checks the packages, checks the Harmony patches
+.\scripts\Build-Packages.ps1       # assembles all five package folders under dist and checks their layout
+.\scripts\Stage-ToRimWorld.ps1     # builds and copies all five into the game's Mods folder (RimWorld must be closed)
 .\scripts\Stage-ToRimWorld.ps1 -FrameworkOnly          # the framework alone
 .\scripts\Stage-ToRimWorld.ps1 -Only WilsEducation     # one package (the others already in Mods are left untouched)
 ```
 
 Do not publish any of these to the Workshop from the build output without playing the checklist in MODULE-VERIFICATION.md first.
+
+
+## Cooking & Hospitality development candidate
+
+Optional package `WilsHospitality` adds Community -> Establishments. Use matching Framework/Treasury builds from the candidate. See [COOKING-HOSPITALITY.md](COOKING-HOSPITALITY.md) for setup, implemented behavior, event sources and live acceptance requirements. CI publishes a checked five-package gameplay-test archive; it is not a Workshop release.
+
+The test zip includes matching builds, `README-TESTING.md` for installation and the first restaurant, `IMPLEMENTATION.md` for detailed behavior, and `BUILD-INFO.json` with the source commit and bundled-file checksums. See [the gameplay test checklist](HOSPITALITY-TESTING.md).

@@ -25,7 +25,7 @@ namespace FamilyLife.Tests
         public static IEnumerable<string> Roots()
         {
             yield return Framework;
-            foreach (var m in new[] { "Education", "Care", "Treasury" }) if (Directory.Exists(ModuleSource(m))) yield return ModuleSource(m);
+            foreach (var m in new[] { "Education", "Care", "Treasury", "Hospitality" }) if (Directory.Exists(ModuleSource(m))) yield return ModuleSource(m);
         }
 
         private static bool IsBuildOutput(string file) => file.Replace('\\', '/').Contains("/obj/");
@@ -36,7 +36,7 @@ namespace FamilyLife.Tests
         public static string Resolve(string rel)
         {
             rel = rel.Replace('\\', '/');
-            foreach (var m in new[] { "Education", "Care", "Treasury" })
+            foreach (var m in new[] { "Education", "Care", "Treasury", "Hospitality" })
                 if (rel.StartsWith(m + "/") && Directory.Exists(ModuleSource(m))) return Path.Combine(ModuleSource(m), rel.Substring(m.Length + 1));
             return Path.Combine(Framework, rel);
         }

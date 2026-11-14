@@ -18,6 +18,17 @@ namespace FamilyLife
 
         /// <summary>The current game tick.</summary>
         public static int Now => Activities.Now;
+        /// <summary>The shared absolute economic day, using the primary colony's longitude and the game's calendar. All business/public paydays use this same clock.</summary>
+        public static int EconomyDay
+        {
+            get
+            {
+                var map=Find.AnyPlayerHomeMap??Find.CurrentMap;
+                float longitude=map!=null?Find.WorldGrid.LongLatOf(map.Tile).x:0f;
+                long absolute=Find.TickManager.TicksAbs;
+                return GenDate.Year(absolute,longitude)*60+GenDate.DayOfYear(absolute,longitude);
+            }
+        }
 
         /// <summary>The pawn the player is currently playing as (Perspective Shift), or 0.</summary>
         public static int AvatarId => PerspectiveShiftBridge.AvatarId;

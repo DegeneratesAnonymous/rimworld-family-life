@@ -1,0 +1,1176 @@
+<?xml version="1.0" encoding="utf-8"?><Defs>
+<ThoughtDef>
+<defName>WFL_H_CookFedEveryone</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>fed everyone</label>
+<description>Fed everyone.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookCompliment</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a sincere compliment</label>
+<description>A sincere compliment.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookSmoothShift</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a smooth kitchen shift</label>
+<description>A smooth kitchen shift.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRecognized</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my contribution was recognized</label>
+<description>My contribution was recognized.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookHelped</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>help when i needed it</label>
+<description>Help when I needed it.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookDemand</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>could not meet demand</label>
+<description>Could not meet demand.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookCriticized</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>harshly criticized</label>
+<description>Harshly criticized.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookOverworked</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>overworked kitchen</label>
+<description>Overworked kitchen.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookStolenCredit</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>someone took my credit</label>
+<description>Someone took my credit.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookAbandoned</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>left to handle everything</label>
+<description>Left to handle everything.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefService</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a successful service</label>
+<description>A successful service.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRegular</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a satisfied regular</label>
+<description>A satisfied regular.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefApprentice</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my apprentice improved</label>
+<description>My apprentice improved.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefCommission</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a commission fulfilled</label>
+<description>A commission fulfilled.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefTeam</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a coordinated kitchen</label>
+<description>A coordinated kitchen.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefCollapse</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>service collapsed</label>
+<description>Service collapsed.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefLostRegular</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>lost a regular</label>
+<description>Lost a regular.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefDismissed</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>advice dismissed</label>
+<description>Advice dismissed.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefFailedCommission</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a commission failed</label>
+<description>A commission failed.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefDiverted</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my kitchen was undermined</label>
+<description>My kitchen was undermined.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanSignature</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a dish worth remembering</label>
+<description>A dish worth remembering.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanAppreciated</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my craft was appreciated</label>
+<description>My craft was appreciated.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanFreedom</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>creative freedom</label>
+<description>Creative freedom.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanOccasion</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a special occasion elevated</label>
+<description>A special occasion elevated.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanIdentity</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a restaurant finding its identity</label>
+<description>A restaurant finding its identity.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanPresentation</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>the presentation failed</label>
+<description>The presentation failed.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanMocked</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my work was mocked</label>
+<description>My work was mocked.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanCorners</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>forced to cut corners</label>
+<description>Forced to cut corners.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanMishandled</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>my dish was mishandled</label>
+<description>My dish was mishandled.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanExperiment</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>an unsuccessful experiment</label>
+<description>An unsuccessful experiment.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderLively</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a lively evening</label>
+<description>A lively evening.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRegular</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a trusted familiar face</label>
+<description>A trusted familiar face.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderDispute</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>defused a dispute</label>
+<description>Defused a dispute.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderTip</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a generous tip</label>
+<description>A generous tip.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderSafe</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>everyone got home safely</label>
+<description>Everyone got home safely.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderUgly</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>an ugly evening</label>
+<description>An ugly evening.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderAbuse</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>customer abuse</label>
+<description>Customer abuse.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderFight</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a fight behind my bar</label>
+<description>A fight behind my bar.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderBill</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>blamed for the bill</label>
+<description>Blamed for the bill.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelief</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>left without relief</label>
+<description>Left without relief.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperWelcome</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>guests felt welcome</label>
+<description>Guests felt welcome.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperReturn</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a returning traveler</label>
+<description>A returning traveler.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperResolved</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a problem put right</label>
+<description>A problem put right.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperShelter</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>shelter in hardship</label>
+<description>Shelter in hardship.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperHouse</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a well-run house</label>
+<description>A well-run house.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperArrivals</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>chaotic arrivals</label>
+<description>Chaotic arrivals.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperDisappointed</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a guest left disappointed</label>
+<description>A guest left disappointed.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperPromises</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>promises unfulfilled</label>
+<description>Promises unfulfilled.</description>
+<baseMoodEffect>-4</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperAbused</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>hospitality abused</label>
+<description>Hospitality abused.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperDraining</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a draining shift</label>
+<description>A draining shift.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRelationThanks</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>thanked the cook</label>
+<description>Thanked the cook.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRelationHelp</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>helped with the rush</label>
+<description>Helped with the rush.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRelationBlame</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>blamed the wrong person</label>
+<description>Blamed the wrong person.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRelationDiet</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>saved me a suitable meal</label>
+<description>Saved me a suitable meal.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CookRelationDumped</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>dumped work on me</label>
+<description>Dumped work on me.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRelationMentor</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>practical mentorship</label>
+<description>Practical mentorship.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRelationJudgment</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>trusted my judgment</label>
+<description>Trusted my judgment.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRelationComplaint</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>handled my complaint</label>
+<description>Handled my complaint.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRelationStandards</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>conflicting standards</label>
+<description>Conflicting standards.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ChefRelationProtected</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>protected the team</label>
+<description>Protected the team.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanRelationTaste</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>shared culinary taste</label>
+<description>Shared culinary taste.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanRelationOccasion</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>made our occasion special</label>
+<description>Made our occasion special.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanRelationRivalry</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>creative rivalry</label>
+<description>Creative rivalry.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanRelationRespect</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>respected my craft</label>
+<description>Respected my craft.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_ArtisanRelationMisrepresented</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>misrepresented my work</label>
+<description>Misrepresented my work.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelationOrder</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>remembered my order</label>
+<description>Remembered my order.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelationListening</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>heard me out</label>
+<description>Heard me out.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelationIntroduced</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>introduced us</label>
+<description>Introduced us.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelationRefused</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>refused further service</label>
+<description>Refused further service.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_BartenderRelationConfidence</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>betrayed a confidence</label>
+<description>Betrayed a confidence.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-5</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperRelationReturn</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>welcomed back</label>
+<description>Welcomed back.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperRelationStranded</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>helped when stranded</label>
+<description>Helped when stranded.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperRelationComplaint</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>fairly resolved a complaint</label>
+<description>Fairly resolved a complaint.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperRelationFavor</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>preferential treatment</label>
+<description>Preferential treatment.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_InnkeeperRelationRules</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>enforced house rules</label>
+<description>Enforced house rules.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityCustomerSatisfied</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>well served</label>
+<description>Well served.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityCustomerDisappointed</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a disappointing visit</label>
+<description>A disappointing visit.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityFamilyPride</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>proud of our establishment</label>
+<description>Proud of our establishment.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityUsualTable</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>our usual table</label>
+<description>Our usual table.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityCelebration</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a celebration to remember</label>
+<description>A celebration to remember.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityRelatives</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>welcomed our relatives</label>
+<description>Welcomed our relatives.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityTogether</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>built this together</label>
+<description>Built this together.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunitySuccession</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>carrying on their work</label>
+<description>Carrying on their work.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityAbsent</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>always at the business</label>
+<description>Always at the business.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityTakenForGranted</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>family labor taken for granted</label>
+<description>Family labor taken for granted.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityFavoritism</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>favoritism behind the counter</label>
+<description>Favoritism behind the counter.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunitySpoiled</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a family occasion spoiled</label>
+<description>A family occasion spoiled.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityLivelihood</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>our livelihood is struggling</label>
+<description>Our livelihood is struggling.</description>
+<baseMoodEffect>-2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityInheritance</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>disagreement over the inheritance</label>
+<description>Disagreement over the inheritance.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityBelong</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a place to belong</label>
+<description>A place to belong.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityNeighbors</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>met my neighbors</label>
+<description>Met my neighbors.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityFeast</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>community feast</label>
+<description>Community feast.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityShelter</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>sheltered in a crisis</label>
+<description>Sheltered in a crisis.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityEmployer</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>fair employer</label>
+<description>Fair employer.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityInstitution</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a local institution</label>
+<description>A local institution.</description>
+<baseMoodEffect>3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityPublicGood</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>public money well spent</label>
+<description>Public money well spent.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityPublicBad</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>public money wasted</label>
+<description>Public money wasted.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityTrouble</defName>
+<thoughtClass>Thought_Memory</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>trouble at the local</label>
+<description>Trouble at the local.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>0</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityExcluded</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>we were excluded</label>
+<description>We were excluded.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityBrokenShelter</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a promise of shelter broken</label>
+<description>A promise of shelter broken.</description>
+<baseMoodEffect>-4</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityNeutral</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>neutral ground</label>
+<description>Neutral ground.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>1</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityUnexpected</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>unexpected hospitality</label>
+<description>Unexpected hospitality.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityFeud</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>trouble followed us here</label>
+<description>Trouble followed us here.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-3</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityCompetition</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>a worthy competitor</label>
+<description>A worthy competitor.</description>
+<baseMoodEffect>0</baseMoodEffect>
+<baseOpinionOffset>2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityFairRival</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>put business before the feud</label>
+<description>Put business before the feud.</description>
+<baseMoodEffect>2</baseMoodEffect>
+<baseOpinionOffset>2</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef>
+<defName>WFL_H_CommunityTurnedAway</defName>
+<thoughtClass>Thought_MemorySocial</thoughtClass>
+<durationDays>2</durationDays>
+<stackLimit>1</stackLimit>
+<stages><li>
+<label>turned away because of my family</label>
+<description>Turned away because of my family.</description>
+<baseMoodEffect>-3</baseMoodEffect>
+<baseOpinionOffset>-4</baseOpinionOffset>
+</li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerPraise</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>my work was recognized</label><description>My work was recognized.</description><baseMoodEffect>2</baseMoodEffect><baseOpinionOffset>3</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerSupport</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>my employer supported me</label><description>My employer supported me.</description><baseMoodEffect>3</baseMoodEffect><baseOpinionOffset>4</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerCriticism</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>criticized during a difficult service</label><description>Criticized during a difficult service.</description><baseMoodEffect>-3</baseMoodEffect><baseOpinionOffset>-3</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerMargins</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>profit came before people</label><description>Profit came before people.</description><baseMoodEffect>-1</baseMoodEffect><baseOpinionOffset>-2</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerBonus</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>my work earned a bonus</label><description>My work earned a bonus.</description><baseMoodEffect>3</baseMoodEffect><baseOpinionOffset>4</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerFamilyPraise</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>my family contribution was singled out</label><description>My family contribution was singled out.</description><baseMoodEffect>2</baseMoodEffect><baseOpinionOffset>3</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerFavorWitness</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>my employer favored a relative</label><description>My employer favored a relative.</description><baseMoodEffect>-3</baseMoodEffect><baseOpinionOffset>-4</baseOpinionOffset></li></stages></ThoughtDef>
+<ThoughtDef><defName>WFL_H_OwnerCelebration</defName><thoughtClass>Thought_MemorySocial</thoughtClass><durationDays>2</durationDays><stackLimit>1</stackLimit><stages><li><label>we celebrated our work</label><description>We celebrated our work.</description><baseMoodEffect>3</baseMoodEffect><baseOpinionOffset>3</baseOpinionOffset></li></stages></ThoughtDef>
+</Defs>

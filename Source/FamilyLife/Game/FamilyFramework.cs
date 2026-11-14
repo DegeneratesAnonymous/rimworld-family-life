@@ -32,6 +32,19 @@ namespace FamilyLife
         public delegate void OfficeWork(FamilyComponent c, FamilyRegistry r, CommunityOffice office, Pawn holder, FamilySettings settings, int now);
 
         public static readonly ModuleCatalog Catalog = new ModuleCatalog();
+        public static readonly ContributionList<Func<Pawn, Thing, bool>> BillWorkAllowed = new ContributionList<Func<Pawn, Thing, bool>>(Catalog);
+        public static readonly ContributionList<Action<Pawn, Thing, Thing, int>> ProductMade = new ContributionList<Action<Pawn, Thing, Thing, int>>(Catalog);
+        public static readonly ContributionList<Action<Thing, Thing>> StackSplit = new ContributionList<Action<Thing, Thing>>(Catalog);
+        public static readonly ContributionList<Action<Thing, Thing, int>> StackMerged = new ContributionList<Action<Thing, Thing, int>>(Catalog);
+        public static readonly ContributionList<Func<Thing, Thing, bool>> BillIngredientAllowed = new ContributionList<Func<Thing, Thing, bool>>(Catalog);
+        public static readonly ContributionList<Func<Pawn, Thing, bool>> FoodAccess = new ContributionList<Func<Pawn, Thing, bool>>(Catalog);
+        public static readonly ContributionList<Action<Pawn,Pawn,InteractionDef>> SocialInteraction = new ContributionList<Action<Pawn,Pawn,InteractionDef>>(Catalog);
+        public static readonly ContributionList<Func<Verse.AI.Group.Lord,bool>> TimedDepartureAllowed = new ContributionList<Func<Verse.AI.Group.Lord,bool>>(Catalog);
+        public static readonly ContributionList<Func<Pawn,Thing,string,bool>> ExternalCommerceAllowed = new ContributionList<Func<Pawn,Thing,string,bool>>(Catalog);
+        public static readonly ContributionList<Action<PropertyDamageReport>> PropertyDamaged = new ContributionList<Action<PropertyDamageReport>>(Catalog);
+        public static readonly CommerceCatalog Commerce = new CommerceCatalog(id => Catalog.IsEnabled(id));
+        public static readonly ContributionList<Func<Pawn, string, bool>> PrivateWork = new ContributionList<Func<Pawn, string, bool>>(Catalog);
+        public static readonly ContributionList<Func<LabourReport, bool>> PrivateLabour = new ContributionList<Func<LabourReport, bool>>(Catalog);
         public static readonly OfficeCatalog Offices;
         public static readonly WorkRoster Roster;
         public static readonly PlannedEventCatalog PlannedEvents;

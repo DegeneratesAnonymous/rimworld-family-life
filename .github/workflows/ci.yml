@@ -17,12 +17,12 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build RimWorld 1.7
         run: |
-          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury; do
+          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury Hospitality/WilsHospitality; do
             dotnet build "Source/$project.csproj" -c Release -p:GameVersion=1.7 -v minimal || exit 1
           done
       - name: Build RimWorld 1.6
         run: |
-          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury; do
+          for project in FamilyLife/FamilyLife Education/WilsEducation Care/WilsCommunityCare Treasury/WilsTreasury Hospitality/WilsHospitality; do
             dotnet build "Source/$project.csproj" -c Release -p:GameVersion=1.6 -v minimal || exit 1
           done
       - name: Test domain and assembly contracts
@@ -39,3 +39,11 @@ jobs:
           for snapshot in controlled-outcomes.csv coverage.csv frequencies.csv summary.md; do
             diff -u "docs/calibration/$snapshot" "/tmp/family-life-calibration/$snapshot"
           done
+
+      - name: Assemble and verify gameplay test packages
+        run: python3 scripts/package.py
+      - name: Upload gameplay test packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooking-hospitality-gameplay-test
+          path: dist/WilsCookingHospitality-test.zip

@@ -125,5 +125,17 @@ namespace FamilyLife.Tests
                 Assert.DoesNotContain(Directory.GetFiles(dir, "*.dll").Select(Path.GetFileName), n => n.StartsWith("Wils"));          // the framework package carries no module assembly
             }
         }
+        [Theory]
+        [InlineData("1.6")]
+        [InlineData("1.7")]
+        public void Hospitality_and_Treasury_share_only_framework_contracts_and_ship_no_duplicate_types(string version)
+        {
+            var hospitality=Read(Module(version,"WilsHospitality","WilsHospitality"));
+            var treasury=Read(Module(version,"WilsTreasury","WilsTreasury"));
+            var framework=Read(Framework(version));
+            Assert.Contains("FamilyLife",hospitality.References);Assert.DoesNotContain("WilsTreasury",hospitality.References);Assert.DoesNotContain("WilsHospitality",treasury.References);Assert.DoesNotContain("WilsHospitality",framework.References);
+            Assert.Empty(hospitality.Types.Intersect(treasury.Types));Assert.Empty(hospitality.Types.Intersect(framework.Types));
+            var dlls=Directory.GetFiles(Path.GetDirectoryName(hospitality.Path),"*.dll").Select(Path.GetFileName).ToList();Assert.Equal(new[]{"WilsHospitality.dll"},dlls);
+        }
     }
 }

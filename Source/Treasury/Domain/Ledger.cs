@@ -5,6 +5,7 @@ using FamilyLife.Framework;
 
 namespace FamilyLife.Domain
 {
+    public sealed class BusinessReceipt { public string Key,Business,Payer;public int Gross,Refunded,Day; }
     public enum AccountKind : byte { Community, Person, Household, Business }
     public enum TxKind : byte { Income, Spend, Transfer, Reward, Payroll, Tax, Trade, Debt, Estate, Correction, Misconduct }
     public enum DebtKind : byte { Tax, Wage, Loan, Restitution, Damage, Commission, Wedding, Funeral, Inheritance, Separation, Emergency }
@@ -120,7 +121,39 @@ namespace FamilyLife.Domain
         public int Available(string id)
         {
             var a = Get(id); if (a == null || a.Closed) return 0;
-            return Math.Max(0, a.Balance - Impairment(a));
+            return Math.Max(0, a.Balance - Impairment(a) - Held(id));
+        }
+        private readonly Dictionary<string, KeyValuePair<string, int>> holds = new Dictionary<string, KeyValuePair<string, int>>();
+        public int Held(string account) => holds.Values.Where(h => h.Key == account).Sum(h => h.Value);
+        public bool Hold(string key, string account, int amount)
+        {
+            if (string.IsNullOrEmpty(key) || amount <= 0) return false;
+            if (holds.TryGetValue(key, out var old)) return old.Key == account && old.Value == amount;
+            if (Available(account) < amount) return false;
+            holds[key] = new KeyValuePair<string, int>(account, amount); return true;
+        }
+        public bool SplitHold(string fromKey,string toKey,int amount)
+        {
+            if(amount<=0||holds.ContainsKey(toKey)||!holds.TryGetValue(fromKey,out var source)||source.Value<amount)return false;
+            holds[toKey]=new KeyValuePair<string,int>(source.Key,amount);
+            if(source.Value==amount)holds.Remove(fromKey);else holds[fromKey]=new KeyValuePair<string,int>(source.Key,source.Value-amount);
+            return true;
+        }
+        public bool MergeHold(string from,string to)
+        {
+            if(string.IsNullOrEmpty(from)||string.IsNullOrEmpty(to)||from==to||!holds.TryGetValue(from,out var source))return false;
+            if(holds.TryGetValue(to,out var parent)&&parent.Key!=source.Key)return false;
+            holds[to]=new KeyValuePair<string,int>(source.Key,(holds.TryGetValue(to,out parent)?parent.Value:0)+source.Value);holds.Remove(from);return true;
+        }
+        public void ReleaseHold(string key) { holds.Remove(key); }
+        public bool CommitHold(string key, string to, int day)
+        {
+            if (Applied("hold:" + key)) return true;
+            if (!holds.TryGetValue(key, out var h)) return false;
+            holds.Remove(key);
+            var result = Transfer(h.Key, to, h.Value, TxKind.Trade, "hold:" + key, day, "establishment checkout");
+            if (result == LedgerResult.Ok || result == LedgerResult.Duplicate) { RememberSale("hold:"+key,to,h.Key,h.Value,day); return true; }
+            holds[key] = h; return false;
         }
         public long TotalAvailable => accounts.Values.Where(a => !a.Closed).Sum(a => (long)Available(a.Id));
 
@@ -146,7 +179,20 @@ namespace FamilyLife.Domain
         // Income received since an account was last assessed for tax (rewards, wages, trade proceeds). Kept here, not read back from the bounded history, so a busy colony cannot lose income to trimming.
         private readonly Dictionary<string, int> incomeSince = new Dictionary<string, int>();
         public int IncomeSince(string account) => incomeSince.TryGetValue(account, out var v) ? v : 0;
-        public int TakeIncome(string account) { int v = IncomeSince(account); incomeSince.Remove(account); return v; }
+        public int TakeIncome(string account) { int v=IncomeSince(account);if(v<=0)return 0;incomeSince.Remove(account);return v; }
+        private readonly Dictionary<string,BusinessReceipt> receipts=new Dictionary<string,BusinessReceipt>();
+        public BusinessReceipt Receipt(string key)=>receipts.TryGetValue(key,out var r)?r:null;
+        public bool RememberSale(string key,string business,string payer,int amount,int day)
+        {
+            if(!Applied(key)||Get(business)?.Kind!=AccountKind.Business||amount<=0)return false;
+            var old=Receipt(key);if(old!=null)return old.Business==business&&old.Payer==payer&&old.Gross==amount;
+            receipts[key]=new BusinessReceipt{Key=key,Business=business,Payer=payer,Gross=amount,Day=day};return true;
+        }
+        public bool RecordRefund(string key,int amount)
+        {
+            var receipt=Receipt(key);if(receipt==null||amount<=0||receipt.Refunded+amount>receipt.Gross)return false;
+            receipt.Refunded+=amount;incomeSince[receipt.Business]=IncomeSince(receipt.Business)-amount;return true;
+        }
 
         /// <summary>Applies the legs together or not at all. A leg with a null side is silver entering or leaving the community; both sides null, a non-positive amount, a closed or unknown account, or an account that would go negative refuses the whole batch.</summary>
         public LedgerResult Apply(string key, int day, TxKind kind, IList<Move> moves, string tag = null)
@@ -162,11 +208,12 @@ namespace FamilyLife.Domain
                 if (m.To != null) net[m.To] = (net.TryGetValue(m.To, out var t) ? t : 0) + m.Amount;
             }
             foreach (var kv in net) if (Get(kv.Key).Balance + kv.Value < 0) return LedgerResult.Insufficient;
-            if (Unbacked > 0 && (kind == TxKind.Payroll || kind == TxKind.Trade || kind == TxKind.Transfer)) foreach (var kv in net) if (kv.Value < 0 && -kv.Value > Available(kv.Key)) return LedgerResult.Insufficient;          // money that does not exist cannot be spent, by anyone, twice
+            foreach (var kv in net) if (kv.Value < 0 && (Held(kv.Key) > 0 || Unbacked > 0 && (kind == TxKind.Payroll || kind == TxKind.Trade || kind == TxKind.Transfer)) && -kv.Value > Available(kv.Key)) return LedgerResult.Insufficient;          // money that does not exist cannot be spent, by anyone, twice
             foreach (var m in moves)
             {
                 if (m.From != null) accounts[m.From].Balance -= m.Amount; else ExternalIn += m.Amount;
                 if (m.To != null) accounts[m.To].Balance += m.Amount; else ExternalOut += m.Amount;
+                if(m.From!=null&&Get(m.From).Kind==AccountKind.Business&&kind==TxKind.Payroll)incomeSince[m.From]=IncomeSince(m.From)-m.Amount;
                 if (m.To != null && (kind == TxKind.Reward || kind == TxKind.Payroll || kind == TxKind.Trade)) incomeSince[m.To] = IncomeSince(m.To) + m.Amount;
                 history.Add(new Transaction { Id = NextTxId++, Day = day, Kind = kind, From = m.From, To = m.To, Amount = m.Amount, Key = key, Memo = m.Memo, Tag = tag });
             }
@@ -185,6 +232,7 @@ namespace FamilyLife.Domain
         /// <summary>Forgets idempotency keys older than the memory window so the save stays small. A period older than this can no longer be replayed by a stale caller, which is the intent.</summary>
         public void Prune(int today)
         {
+            foreach(var key in receipts.Where(x=>today-x.Value.Day>200).Select(x=>x.Key).ToList())receipts.Remove(key);
             foreach (var k in keys.Where(kv => today - kv.Value > KeyMemoryDays).Select(kv => kv.Key).ToList()) keys.Remove(k);
         }
 
@@ -282,6 +330,8 @@ namespace FamilyLife.Domain
         public LedgerResult SettleEstate(string deceased, IList<string> heirs, string key, int day, bool heirsLiable = false)
         {
             var acct = Get(deceased); if (acct == null) return LedgerResult.UnknownAccount;
+            // A pending purchase/booking must settle or cancel before this account closes. No debt or estate state has changed yet.
+            if (Held(deceased) > 0) return LedgerResult.Insufficient;
             if (key != null && keys.ContainsKey(key)) return LedgerResult.Duplicate;
             var live = (heirs ?? new string[0]).Where(h => h != deceased && Get(h) != null && !Get(h).Closed).Distinct().ToList();
             var moves = new List<Move>(); int left = acct.Balance;
@@ -322,6 +372,8 @@ namespace FamilyLife.Domain
         public string Encode()
         {
             var w = new StateWriter().Int("ntx", NextTxId).Int("ndebt", NextDebtId).Strings("xin", new[] { ExternalIn.ToString(System.Globalization.CultureInfo.InvariantCulture) }).Strings("xout", new[] { ExternalOut.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            w.Strings("receipts",receipts.Values.OrderBy(x=>x.Key,StringComparer.Ordinal).Select(x=>new StateWriter().Strings("k",new[]{x.Key,x.Business,x.Payer??""}).Ints("v",new[]{x.Gross,x.Refunded,x.Day}).ToString()).ToList());
+            w.Strings("holds", holds.Select(h => h.Key + "|" + h.Value.Key + "|" + h.Value.Value).ToList());
             w.Strings("acct", accounts.Values.OrderBy(a => a.Id, StringComparer.Ordinal).Select(a => string.Join("|", S(a.Id), (int)a.Kind, a.Owner, a.Balance, a.Closed ? 1 : 0, S(a.Successor))).ToList());
             w.Strings("tx", history.Select(t => string.Join("|", t.Id, t.Day, (int)t.Kind, S(t.From), S(t.To), t.Amount, S(t.Key), S(t.Memo), S(t.Tag))).ToList());
             w.Strings("key", keys.OrderBy(k => k.Value).ThenBy(k => k.Key, StringComparer.Ordinal).Select(k => S(k.Key) + "|" + k.Value).ToList());
@@ -333,6 +385,8 @@ namespace FamilyLife.Domain
         public static Ledger Decode(StateReader r)
         {
             var l = new Ledger(); l.accounts.Clear();
+            foreach(var row in r.Strings("receipts")){var x=new StateReader(row);var k=x.Strings("k");var v=x.Ints("v");if(k.Count==3&&v.Count==3)l.receipts[k[0]]=new BusinessReceipt{Key=k[0],Business=k[1],Payer=k[2].Length==0?null:k[2],Gross=v[0],Refunded=v[1],Day=v[2]};}
+            foreach (var row in r.Strings("holds")) { var h = row.Split('|'); if (h.Length == 3 && I(h[2]) > 0) l.holds[h[0]] = new KeyValuePair<string, int>(h[1], I(h[2])); }
             l.NextTxId = Math.Max(1, r.Int("ntx", 1)); l.NextDebtId = Math.Max(1, r.Int("ndebt", 1));
             l.Unbacked = r.Int("unb"); foreach (var s in r.Strings("inc")) { var p = s.Split('|'); if (p.Length == 2 && p[0].Length > 0) l.incomeSince[p[0]] = I(p[1]); }
             long.TryParse(r.Strings("xin").FirstOrDefault() ?? "0", System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out l.ExternalIn);
