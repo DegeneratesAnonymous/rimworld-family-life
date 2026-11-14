@@ -19,6 +19,9 @@
   <WFL_Ov_Assembly>Next assembly</WFL_Ov_Assembly>
   <WFL_Ov_Leadership>Leadership</WFL_Ov_Leadership>
   <WFL_Ov_NoLeader>no leader</WFL_Ov_NoLeader>
+  <WFL_Ov_Staffed2>{0} of {1} posts have someone assigned</WFL_Ov_Staffed2>
+  <WFL_Ov_Races>Elections under way</WFL_Ov_Races>
+  <WFL_Assembly_InSession>In session</WFL_Assembly_InSession>
   <WFL_Tree_Needs>Needs: {0}</WFL_Tree_Needs>
   <WFL_Tree_Entry>Entry</WFL_Tree_Entry>
   <WFL_Tree_Skilled>Skilled</WFL_Tree_Skilled>

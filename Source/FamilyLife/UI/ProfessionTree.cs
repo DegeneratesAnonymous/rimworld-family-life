@@ -146,7 +146,7 @@ namespace FamilyLife
             if (role.Level >= 3 && parents.Count > 0) tip += "\n" + "WFL_Tree_Needs".Translate(string.Join(" / ", parents.Select(q => CareerService.TitleOf(q, reg)))).ToString();
             if (!string.IsNullOrEmpty(role.BonusKey)) tip += "\n" + "WFL_Career_Bonus".Translate(role.BonusKey.Translate());
             TooltipHandler.TipRegion(new Rect(n.x, n.y, n.width, 42f), tip);
-            if (Widgets.ButtonText(new Rect(inner.x, inner.yMax - 26f, inner.width, 24f), "WFL_Career_Assign".Translate() + (qualified > 0 ? " (" + qualified + ")" : ""))) Find.WindowStack.Add(new FloatMenu(Options(c, book, ledger, role, residents)));
+            if (Widgets.ButtonText(new Rect(inner.x, inner.yMax - 26f, inner.width, 24f), "WFL_Career_Assign".Translate() + (qualified > 0 ? " (" + qualified + ")" : ""))) Find.WindowStack.Add(new FloatMenu(Options(c, book, ledger, role, residents, def)));
             GUI.color = Color.white;
         }
 
@@ -156,13 +156,23 @@ namespace FamilyLife
             return def.Level2;
         }
 
-        private static List<FloatMenuOption> Options(FamilyComponent c, AssignmentBook book, CareerLedger ledger, ProfessionRole role, List<PersonRecord> residents)
+        /// <summary>The skills that matter for a role: the ones its own rule asks for, or, for an entry role, the ones the career's later steps ask for.</summary>
+        internal static List<string> RelevantSkills(CareerDefinition def, ProfessionRole role)
         {
-            var options = new List<FloatMenuOption>();
-            foreach (var p in residents)
+            if (def == null) return new List<string>();
+            var own = RuleOf(def, role).Skills.Keys.ToList(); if (own.Count > 0 && role.Level > 1) return own;
+            return new[] { def.Level2 }.Concat(def.Level2Branches.Values).Concat(def.Specialties.Values).SelectMany(q => q.Skills.Keys).Distinct().ToList();
+        }
+
+        private static List<FloatMenuOption> Options(FamilyComponent c, AssignmentBook book, CareerLedger ledger, ProfessionRole role, List<PersonRecord> residents, CareerDefinition def)
+        {
+            var options = new List<FloatMenuOption>(); var skills = RelevantSkills(def, role);
+            Func<PersonRecord, int[]> levels = p => { var pawn = c.TryGetPawn(p.Id); var of = pawn == null ? (Func<string, int>)(k => 0) : CareerService.SkillsOf(pawn); return skills.Select(k => of(k)).ToArray(); };
+            foreach (var p in residents.OrderByDescending(q => levels(q).Sum()).ThenBy(q => CommunityCorePages.NameOf(c, q.Id)))
             {
-                int id = p.Id; bool already = book.IsAssigned(id, role.Id); var check = AssignmentBook.Check(role, ledger, id);
-                string label = CommunityCorePages.NameOf(c, id) + (already ? " (" + "WFL_Career_Assigned".Translate() + ")" : check != AssignResult.Assigned ? " (" + "WFL_Career_Needs_Short".Translate() + ")" : "");
+                int id = p.Id; bool already = book.IsAssigned(id, role.Id); var check = AssignmentBook.Check(role, ledger, id); var lv = levels(p);
+                string skill = skills.Count == 0 ? "" : skills.Count == 1 ? " (" + lv[0] + ")" : " (" + string.Join(", ", skills.Select((k, i) => (DefDatabase<SkillDef>.GetNamedSilentFail(k)?.skillLabel ?? k).CapitalizeFirst() + " " + lv[i])) + ")";
+                string label = CommunityCorePages.NameOf(c, id) + skill + (already ? " [" + "WFL_Career_Assigned".Translate() + "]" : check != AssignResult.Assigned ? " [" + "WFL_Career_Needs_Short".Translate() + "]" : "");
                 options.Add(new FloatMenuOption(label, already ? (Action)(() => book.Unassign(id, role.Id)) : check == AssignResult.Assigned ? () => book.Assign(id, role, ledger, Find.TickManager.TicksGame) : (Action)null));
             }
             if (options.Count == 0) options.Add(new FloatMenuOption("WFL_ZoneNoFamilies".Translate(), null));

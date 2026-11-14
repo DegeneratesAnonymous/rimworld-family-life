@@ -184,31 +184,24 @@ namespace FamilyLife
 
         private static float Families(Rect r, FamilyComponent c)
         {
-            float y = Line(r, 0f, "WFL_Hub_FamiliesHelp".Translate(), true);
-            var families = c.Registry.Lineages.Where(l => c.Registry.IsListedFamily(l.Id)).OrderBy(l => l.Name).ToList();
-            if (families.Count == 0) y = Line(r, y, "WFL_NoFamilies".Translate(), true);
-            float w = CommunityPageLayout.ColumnWidth(r), left = y, right = y;
-            int index = 0;
-            foreach (var family in families)
+            var reg = c.Registry; float w = r.width, y = 0f, gap = 10f;
+            var families = reg.Lineages.Where(l => reg.IsListedFamily(l.Id)).OrderBy(l => l.Name).ToList();
+            GUI.color = Color.gray; Widgets.Label(new Rect(0f, 2f, w - 190f, 40f), "WFL_Hub_FamiliesHelp".Translate()); GUI.color = Color.white;
+            if (Widgets.ButtonText(new Rect(w - 180f, 0f, 180f, 30f), "WFL_Hub_AllFamilies".Translate()) && Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
+            y = 46f;
+            if (families.Count == 0) return Line(r, y, "WFL_NoFamilies".Translate(), true);
+            int perRow = w >= 760f ? 3 : w >= 480f ? 2 : 1; float cw = (w - gap * (perRow - 1)) / perRow, ch = 112f; int i = 0;
+            foreach (var f in families)
             {
-                int id = family.Id;
-                bool second = CommunityPageLayout.TwoColumns(r) && index++ % 2 == 1;
-                float end = CommunityPageLayout.Section(r, second ? w + CommunityPageLayout.Gap : 0f, second ? right : left, w, family.Name, a =>
-                {
-                    float h = Line(a, 0f, "WFL_Hub_FamilyResidents".Translate(c.Registry.LivingCount(id, Presence.Colony)));
-                    return CommunityPageLayout.Button(a, h, "WFL_Hub_OpenFamilies".Translate(), () =>
-                    {
-                        Window_Families.PendingLineageId = id;
-                        if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
-                    });
-                });
-                if (second) right = end; else left = end;
+                var card = new Rect(i % perRow * (cw + gap), y + i / perRow * (ch + gap), cw, ch); i++; int id = f.Id;
+                Widgets.DrawBoxSolid(card, new Color(.15f, .15f, .17f)); Widgets.DrawBoxSolid(new Rect(card.x, card.y, card.width, 3f), FamilyKit.Gold); if (Mouse.IsOver(card)) Widgets.DrawHighlight(card);
+                Text.Font = GameFont.Medium; Widgets.Label(new Rect(card.x + 14f, card.y + 10f, card.width - 28f, 30f), f.Name.Truncate(card.width - 28f)); Text.Font = GameFont.Small;
+                var members = reg.Persons.Where(p => p.InColony && reg.FamilyOf(p.Id) == id).Select(p => NameOf(c, p.Id)).ToList();
+                GUI.color = Color.gray; Widgets.Label(new Rect(card.x + 14f, card.y + 42f, card.width - 28f, 22f), "WFL_Hub_FamilyResidents".Translate(reg.LivingCount(id, Presence.Colony)).ToString());
+                Text.Font = GameFont.Tiny; Widgets.Label(new Rect(card.x + 14f, card.y + 66f, card.width - 28f, 40f), string.Join(", ", members).Truncate((card.width - 28f) * 2f - 20f)); Text.Font = GameFont.Small; GUI.color = Color.white;
+                if (Widgets.ButtonInvisible(card)) { Window_Families.PendingLineageId = id; if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families()); }
             }
-            y = Mathf.Max(left, right);
-            return CommunityPageLayout.Button(new Rect(0f, 0f, Mathf.Min(w, r.width), r.height), y, "WFL_Hub_AllFamilies".Translate(), () =>
-            {
-                if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
-            });
+            return y + ((families.Count + perRow - 1) / perRow) * (ch + gap);
         }
 
         private static float Professions(Rect r, FamilyComponent c)
@@ -216,14 +209,25 @@ namespace FamilyLife
             var reg = c.Registry; var book = reg.Assignments(); var ledger = reg.Careers();
             var roles = CareerService.Professions.All.Where(x => FamilyFramework.Catalog.IsEnabled(x.ModuleId)).OrderBy(x => x.Career, StringComparer.Ordinal).ThenBy(x => x.Level).ThenBy(x => x.Id, StringComparer.Ordinal).ToList();
             if (roles.Count == 0) return Line(r, 0f, "WFL_Hub_NoProfessions".Translate(), true);
-            float y = Line(r, 0f, "WFL_Hub_ProfessionsHelp".Translate(), true);
+            GUI.color = Color.gray; float y = Line(r, 0f, "WFL_Hub_ProfessionsHelp".Translate(), true); GUI.color = Color.white;
             var careers = roles.Select(x => x.Career).Distinct().ToList();
             if (!careers.Contains(selectedCareer)) selectedCareer = careers[0];
             Func<string, string> careerName = id => CareerService.Career(id) != null ? CareerService.CareerName(CareerService.Career(id), reg) : id;
-            y = CommunityPageLayout.Button(r, y, careerName(selectedCareer), () => Find.WindowStack.Add(new FloatMenu(careers.Select(id => new FloatMenuOption(careerName(id), () => { selectedCareer = id; professionSearch = ""; })).ToList())));
-            Widgets.Label(new Rect(0f, y, 100f, 28f), "WFL_Hub_Search".Translate());
-            professionSearch = Widgets.TextField(new Rect(104f, y, r.width - 104f, 28f), professionSearch);
-            y += 38f;
+            // one tab per career, with the search to the right
+            float tx = 0f, searchW = Mathf.Min(220f, r.width * .35f);
+            foreach (var id in careers)
+            {
+                string label = careerName(id); float tabW = Text.CalcSize(label).x + 32f; var tab = new Rect(tx, y, tabW, 32f); bool on = id == selectedCareer;
+                Widgets.DrawBoxSolid(tab, on ? new Color(.2f, .18f, .12f) : new Color(.14f, .14f, .16f)); if (!on && Mouse.IsOver(tab)) Widgets.DrawHighlight(tab);
+                if (on) Widgets.DrawBoxSolid(new Rect(tab.x, tab.yMax - 3f, tab.width, 3f), FamilyKit.Gold);
+                Text.Anchor = TextAnchor.MiddleCenter; Widgets.Label(tab, label); Text.Anchor = TextAnchor.UpperLeft;
+                if (!on && Widgets.ButtonInvisible(tab)) { selectedCareer = id; professionSearch = ""; }
+                tx += tabW + 6f;
+            }
+            if (tx < r.width - searchW) professionSearch = Widgets.TextField(new Rect(r.width - searchW, y + 2f, searchW, 28f), professionSearch);
+            y += 44f;
+            var mine = roles.Where(x => x.Career == selectedCareer).ToList(); int held = mine.Count(x => book.Holders(x.Id).Any(id => reg.GetPerson(id)?.InColony == true));
+            GUI.color = Color.gray; Widgets.Label(new Rect(0f, y, r.width, 22f), "WFL_Ov_Staffed2".Translate(held, mine.Count).ToString()); GUI.color = Color.white; y += 30f;
             var shown = roles.Where(role => role.Career == selectedCareer && (professionSearch.Length == 0 || CareerService.TitleOf(role, reg).IndexOf(professionSearch, StringComparison.OrdinalIgnoreCase) >= 0)).ToList();
             if (shown.Count == 0) return Line(r, y, "WFL_Hub_NoMatches".Translate(), true);
             return ProfessionTree.Draw(r, y, c, selectedCareer, roles.Where(role => role.Career == selectedCareer).ToList(), professionSearch);
@@ -231,32 +235,57 @@ namespace FamilyLife
 
         private static float Assembly(Rect r, FamilyComponent c)
         {
-            float y = Line(r, 0f, "WFL_Hub_AssemblyHelp".Translate(), true), w = CommunityPageLayout.ColumnWidth(r);
-            float left = CommunityPageLayout.Section(r, 0f, y, w, "WFL_Hub_Posts".Translate(), a => Posts(a, c));
-            bool columns = CommunityPageLayout.TwoColumns(r);
-            float right = CommunityPageLayout.Section(r, columns ? w + CommunityPageLayout.Gap : 0f, columns ? y : left, w, "WFL_Hub_Assembly".Translate(), a =>
+            var reg = c.Registry; float w = r.width, gap = 10f;
+            GUI.color = Color.gray; Widgets.Label(new Rect(0f, 2f, w, 22f), "WFL_Hub_AssemblyHelp".Translate()); GUI.color = Color.white; float y = 32f;
+            // status card
+            var card = new Rect(0f, y, w, 70f); Widgets.DrawBoxSolid(card, new Color(.13f, .13f, .15f)); Widgets.DrawBoxSolid(new Rect(0f, y, 5f, card.height), FamilyKit.Gold);
+            Text.Font = GameFont.Tiny; GUI.color = Color.gray; Widgets.Label(new Rect(20f, y + 8f, w - 220f, 16f), "WFL_Ov_Assembly".Translate().ToString().ToUpperInvariant()); GUI.color = Color.white;
+            Text.Font = GameFont.Medium; Widgets.Label(new Rect(20f, y + 26f, w - 220f, 34f), reg.OpenAssembly != null ? "WFL_Assembly_InSession".Translate().ToString() : reg.NextAssemblyTick > 0 ? FamilyUi.Date(reg.NextAssemblyTick) : "-"); Text.Font = GameFont.Small;
+            if (reg.NextAssemblyTick > 0 && reg.OpenAssembly == null && Widgets.ButtonText(new Rect(w - 190f, y + 20f, 176f, 30f), "WFL_Assembly_Postpone".Translate())) reg.PostponeAssembly(Find.TickManager.TicksGame, 30);
+            y += card.height + 14f;
+            if (reg.OpenAssembly != null)
             {
-                float h = 0f; var reg = c.Registry;
-                if (reg.NextAssemblyTick > 0) h = Line(a, h, "WFL_Assembly_Next".Translate(FamilyUi.Date(reg.NextAssemblyTick)));
-                if (reg.NextAssemblyTick > 0 && reg.OpenAssembly == null)
-                    h = CommunityPageLayout.Button(a, h, "WFL_Assembly_Postpone".Translate(), () => reg.PostponeAssembly(Find.TickManager.TicksGame, 30));
-                if (reg.OpenAssembly != null)
-                    foreach (var race in reg.OpenAssembly.Races)
-                        h = Line(a, h, "WFL_Assembly_RaceLine".Translate(("WFL_OfficeKind_" + race.Kind).Translate(), ("WFL_AssemblyState_" + reg.OpenAssembly.State).Translate(), FamilyUi.NameList(reg, race.Candidates)));
-                return h;
-            });
-            return Mathf.Max(left, right);
+                y = Rule(w, y, "WFL_Ov_Races".Translate());
+                foreach (var race in reg.OpenAssembly.Races)
+                {
+                    var row = new Rect(0f, y, w, 52f); Widgets.DrawBoxSolid(row, new Color(.15f, .15f, .17f));
+                    Widgets.Label(new Rect(14f, y + 5f, w * .4f, 22f), ("WFL_OfficeKind_" + race.Kind).Translate().ToString().CapitalizeFirst());
+                    GUI.color = Color.gray; Widgets.Label(new Rect(14f, y + 27f, w - 28f, 22f), ("WFL_AssemblyState_" + reg.OpenAssembly.State).Translate() + " - " + FamilyUi.NameList(reg, race.Candidates)); GUI.color = Color.white;
+                    y += 60f;
+                }
+            }
+            y = Rule(w, y, "WFL_Hub_Posts".Translate());
+            foreach (var d in FamilyFramework.Offices.All.OrderBy(o => o.Id, StringComparer.Ordinal))
+            {
+                if (!FamilyFramework.Offices.Available(d.Kind)) continue;
+                var office = reg.OfficeFor(d.Kind); bool held = office != null && office.Held; if (d.Kind == OfficeKind.Chaplain && !held) continue;
+                var row = new Rect(0f, y, w, 40f); Widgets.DrawBoxSolid(row, new Color(.15f, .15f, .17f));
+                Text.Anchor = TextAnchor.MiddleLeft; Widgets.Label(new Rect(14f, y, w * .4f, 40f), d.LabelKey.Translate().ToString().CapitalizeFirst());
+                GUI.color = held ? Color.white : Color.gray; Widgets.Label(new Rect(w * .4f, y, w * .6f - 14f, 40f), held ? NameOf(c, office.HolderId) : "WFL_Hub_Vacant".Translate().ToString()); GUI.color = Color.white; Text.Anchor = TextAnchor.UpperLeft;
+                y += 46f;
+            }
+            return y;
         }
 
         private static float Settings(Rect r, FamilyComponent c)
         {
-            float y = CommunityPageLayout.Button(r, 0f, "WFL_Hub_OpenSettings".Translate(), () =>
+            float w = r.width, y = 0f;
+            if (Widgets.ButtonText(new Rect(0f, 0f, Mathf.Min(300f, w), 34f), "WFL_Hub_OpenSettings".Translate()))
             {
                 var mod = LoadedModManager.GetMod<FamilyLifeMod>();
                 if (mod != null) Find.WindowStack.Add(new Dialog_ModSettings(mod));
-            });
-            y = CommunityPageLayout.Section(r, 0f, y, r.width, "WFL_Hub_Modules".Translate(), a => Modules(a, c));
-            foreach (var f in FamilyFramework.Failures) y = Line(r, y, f.Key + ": " + f.Value, true);
+            }
+            y = 50f; y = Rule(w, y, "WFL_Hub_Modules".Translate());
+            foreach (var m in FamilyFramework.Catalog.Modules.OrderBy(q => !q.IsFramework).ThenBy(q => q.Id, StringComparer.Ordinal))
+            {
+                string state = m.IsFramework ? "Active" : FamilyFramework.Describe(c, m.Id); bool bad = state == "Refused" || state == "Absent", on = state == "Active";
+                FamilyFramework.Failures.TryGetValue(m.Id, out var why); float h = string.IsNullOrEmpty(why) ? 42f : 42f + Text.CalcHeight(why, w - 40f);
+                var row = new Rect(0f, y, w, h); Widgets.DrawBoxSolid(row, new Color(.15f, .15f, .17f));
+                Widgets.DrawBoxSolid(new Rect(14f, y + 17f, 8f, 8f), bad ? new Color(.85f, .35f, .3f) : on ? new Color(.45f, .75f, .45f) : new Color(.55f, .55f, .55f));
+                Text.Anchor = TextAnchor.MiddleLeft; Widgets.Label(new Rect(32f, y, w * .6f, 42f), m.Name); GUI.color = Color.gray; Text.Anchor = TextAnchor.MiddleRight; Widgets.Label(new Rect(w - 160f, y, 146f, 42f), state); Text.Anchor = TextAnchor.UpperLeft;
+                if (!string.IsNullOrEmpty(why)) { GUI.color = new Color(.9f, .6f, .55f); Widgets.Label(new Rect(32f, y + 40f, w - 40f, h - 40f), why); }
+                GUI.color = Color.white; y += h + 6f;
+            }
             return y;
         }
     }
