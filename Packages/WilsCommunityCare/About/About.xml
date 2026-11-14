@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Wil's Community Care</name>
+  <name>Wil's Role Modules : Community Care</name>
   <author>Spaceman_Wil</author>
   <packageId>SpacemanWil.WilsCommunityCare</packageId>
   <modVersion>0.1.0</modVersion>
@@ -28,7 +28,7 @@
 
 Careers in care for Wil's Community Framework: anyone can be assigned as a Healer (a Nurse once the community has a Doctor), qualified Doctors run check-up rounds in the medical room, visits those too ill to travel, calls an outbreak round when many fall ill, and gives a modest, short-lived edge against illness to those who are seen. A check-up never treats anyone: emergencies and ongoing care come first.
 
-Requires Wil's Community Framework, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Educators and works without it.
+Requires Wil's Community Framework, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Role Modules : Education and works without it.
 
 Load it after Wil's Community Framework. If you take it out of a game, use the developer action "Prepare Community Care for removal" first (see the installation notes); the mod's own records stay in the save and are picked up again if you add it back.
 

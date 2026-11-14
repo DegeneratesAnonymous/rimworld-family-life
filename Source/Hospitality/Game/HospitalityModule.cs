@@ -17,11 +17,11 @@ namespace FamilyLife
         public string Id => CulinaryCareers.Module;
         public void Register()
         {
-            FamilyFramework.Catalog.Register(new ModuleInfo { Id=Id,Name="Wil's Cooking & Hospitality",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId} });
+            FamilyFramework.Catalog.Register(new ModuleInfo { Id=Id,Name="Wil's Role Modules : Cooking & Hospitality",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId} });
             CareerService.RegisterCareer(CulinaryCareers.Definition());
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Cook,ModuleId=Id,Career=CulinaryCareers.Career,Level=1});
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Chef,ModuleId=Id,Career=CulinaryCareers.Career,Level=2});
-            foreach(var specialty in new[]{"Artisan","Bartender","Innkeeper"}) CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Role(specialty),ModuleId=Id,Career=CulinaryCareers.Career,Level=3,Specialty=specialty});
+            foreach(var specialty in new[]{"Artisan","Bartender","Innkeeper"}) CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Role(specialty),ModuleId=Id,Career=CulinaryCareers.Career,Level=3,Specialty=specialty,BonusKey="WFL_H_"+specialty+"Bonus"});
             CareerService.Registered(Id);
             FamilyFramework.Pages.Register(new CommunityPage<Func<Rect,FamilyComponent,float>>{Id="wils.hospitality.establishments",ModuleId=Id,LabelKey="WFL_H_Establishments",Order=140,Render=EstablishmentPage.Draw,Status=()=>FamilyFramework.Commerce.Bank==null?1:0});
             FamilyFramework.Roster.Register(new WorkItem{Id="wils.hospitality.work",ModuleId=Id,Interval=600,Run=HospitalityService.Tick});
@@ -38,6 +38,7 @@ namespace FamilyLife
             FamilyFramework.LabourDone.Add("wils.hospitality.labour",Id,HospitalityService.OnLabour);
             FamilyFramework.PrivateLabour.Add("wils.hospitality.private",Id,HospitalityService.HandlesLabour);
             FamilyFramework.PrivateWork.Add("wils.hospitality.wages",Id,(pawn,career)=>career==CulinaryCareers.Career);
+            FamilyFramework.PrivateWorkEvent.Add("wils.hospitality.workshop-wages",Id,(pawn,career,kind)=>kind!=null&&kind.StartsWith("craft.",StringComparison.Ordinal));
             FamilyFramework.FamilyEventsApplied.Add("wils.hospitality.family",Id,HospitalityService.FamilyEvents);
             FamilyFramework.Resets.Add("wils.hospitality.reset",Id,HospitalityService.Reset);
             FamilyFramework.Reconcilers.Add("wils.hospitality.reconcile",Id,HospitalityService.Reconcile);
@@ -64,7 +65,7 @@ namespace FamilyLife
                 own.visible = false;
                 own.workGiversByPriority.Clear();
                 existing.workGiversByPriority.Sort((a,b)=>b.priorityInType.CompareTo(a.priorityInType));
-                Log.Message("[Wil's Cooking & Hospitality] Using existing Sell work type: "+existing.defName);
+                Log.Message("[Wil's Role Modules : Cooking & Hospitality] Using existing Sell work type: "+existing.defName);
             }
         }
     }

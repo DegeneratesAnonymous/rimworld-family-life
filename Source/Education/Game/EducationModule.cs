@@ -17,7 +17,7 @@ namespace FamilyLife
         public void Register()
         {
             var catalog = FamilyFramework.Catalog;
-            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Educators", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Role Modules : Education", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             catalog.Provide(Id, "wils.education.classes");
             catalog.Provide(Id, "wils.education.tutoring");
             catalog.Provide(Id, "wils.education.assessment");

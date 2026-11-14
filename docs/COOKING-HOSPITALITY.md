@@ -1,4 +1,4 @@
-# Wil's Cooking & Hospitality
+# Wil's Role Modules : Cooking & Hospitality
 
 Status: implementation candidate for controlled gameplay testing. **No RimWorld gameplay has been run in this environment.** This is a draft, not a Workshop release. Test on a copy of a save with matching Framework and Treasury builds.
 

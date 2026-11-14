@@ -105,21 +105,43 @@ namespace FamilyLife
             }
             return null;
         }
+        public static Job CraftingJob(Pawn p,Establishment e)
+        {
+            if(e?.Kind!=EstablishmentKind.Shop||FamilyFramework.WorkshopProducts.Enabled().Count()==0)return null;
+            var crafting=DefDatabase<WorkTypeDef>.GetNamedSilentFail("Crafting");if(crafting==null)return null;
+            foreach(var def in DefDatabase<WorkGiverDef>.AllDefsListForReading.Where(d=>d.workType==crafting))
+            {
+                if(!(def.Worker is WorkGiver_DoBill giver))continue;
+                foreach(int id in e.Benches){var bench=Thing(id);if(bench==null||!bench.Spawned)continue;var job=giver.JobOnThing(p,bench,false);if(job==null)continue;job.workGiverDef=def;return job;}
+            }
+            return null;
+        }
         public static void ProductMade(Pawn p,Thing bench,Thing product,int job)
         {
-            if(p==null||product==null||bench==null||p.CurJob?.bill?.recipe?.workSkill!=SkillDefOf.Cooking)return;
+            if(p==null||product==null||bench==null)return;
             var e=Book?.Businesses.FirstOrDefault(b=>b.Benches.Contains(bench.thingIDNumber)&&b.Staff.Contains(p.thingIDNumber));if(e==null)return;
-            bool failed=Role(p)=="Artisan"&&Rand.Chance(.2f);
-            Component.Registry.Production().Lots.Add(new ProductLot{ExperimentFailed=failed,Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=(int)((failed?.6f:1f)*CulinaryCareers.Presentation(CareerService.SkillsOf(p)("Cooking"),CareerService.SkillsOf(p)("Artistic"),Component.Registry.Careers().IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Artisan"))*100),Origin="recipe:"+job});
+            if(p.CurJob?.bill?.recipe?.workSkill==SkillDefOf.Cooking)
+            {
+                bool artisan=CareerService.IsAssignedSpecialist(p,CulinaryCareers.Career,"Artisan");bool failed=artisan&&Rand.Chance(.08f);
+                Component.Registry.Production().Lots.Add(new ProductLot{ExperimentFailed=failed,Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=(int)((failed?.6f:1f)*CulinaryCareers.Presentation(CareerService.SkillsOf(p)("Cooking"),CareerService.SkillsOf(p)("Artistic"),Component.Registry.Careers().IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Artisan"))*100),Origin="recipe:"+job,Career=CulinaryCareers.Career,Kind="cook.deposit"});
+                return;
+            }
+            if(e.Kind!=EstablishmentKind.Shop)return;
+            foreach(var classify in FamilyFramework.WorkshopProducts.Enabled())
+            {
+                WorkshopProductProfile profile=null;try{profile=classify(p,bench,product);}catch(Exception ex){Log.Warning("[Wil's Role Modules : Cooking & Hospitality] Workshop product classifier skipped: "+ex.Message);}
+                if(profile==null||string.IsNullOrEmpty(profile.Career))continue;
+                Component.Registry.Production().Lots.Add(new ProductLot{Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=profile.Presentation,ValuePercent=profile.ValuePercent,Origin="recipe:"+job,Career=profile.Career,Specialty=profile.Specialty,Kind=profile.Kind});return;
+            }
         }
         public static void Split(Thing from,Thing to){Component?.Registry.Production().Move(from.thingIDNumber,to.thingIDNumber,to.stackCount);cachedTick=-1;}
         public static void Merge(Thing from,Thing to,int count){Component?.Registry.Production().Move(from.thingIDNumber,to.thingIDNumber,count);cachedTick=-1;}
         public static string Role(Pawn p)
         {
             if(p==null)return "Cook";var ledger=Component.Registry.Careers();var employer=Employer(p)??Book.Businesses.FirstOrDefault(e=>e.Staff.Contains(p.thingIDNumber));
-            if(employer?.Kind==EstablishmentKind.Inn&&ledger.IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Innkeeper"))return "Innkeeper";
-            if(employer?.Kind==EstablishmentKind.Tavern&&ledger.IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Bartender"))return "Bartender";
-            foreach(var specialty in new[]{"Artisan","Innkeeper","Bartender"})if(ledger.IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,specialty))return specialty;
+            if(employer?.Kind==EstablishmentKind.Inn&&CareerService.IsAssignedSpecialist(p,CulinaryCareers.Career,"Innkeeper"))return "Innkeeper";
+            if(employer?.Kind==EstablishmentKind.Tavern&&CareerService.IsAssignedSpecialist(p,CulinaryCareers.Career,"Bartender"))return "Bartender";
+            foreach(var specialty in new[]{"Artisan","Innkeeper","Bartender"})if(CareerService.IsAssignedSpecialist(p,CulinaryCareers.Career,specialty))return specialty;
             return ledger.IsQualified(p.thingIDNumber,CulinaryCareers.Career)?"Chef":"Cook";
         }
         public static void Event(Pawn subject,Pawn other,params string[] facts)
@@ -149,12 +171,12 @@ namespace FamilyLife
                 if(!lot.Credited&&e!=null&&InBusiness(product,e)&&Book.Credit(e,lot.Worker,ContributionKind.Production,lot.Origin+":lot:"+lot.Id,Day,lot.Count))
                 {
                     lot.Credited=true;
-                    var p=Pawn(lot.Worker);if(p!=null){string specialty=CareerService.SkillsOf(p)("Artistic")>=6?"Artisan":null;CareerService.Report(Component,p,CulinaryCareers.Career,specialty,"cook.deposit",lot.Origin,5,now);if(specialty!=null&&Role(p)=="Artisan")Event(p,null,lot.ExperimentFailed?"SignatureFailed":"SignatureSuccess",lot.ExperimentFailed?"ExperimentFailed":"CreativeOrder");}
+                    var p=Pawn(lot.Worker);if(p!=null){string specialty=lot.Specialty;if(lot.Career==CulinaryCareers.Career)specialty=CareerService.SkillsOf(p)("Artistic")>=6?"Artisan":null;CareerService.Report(Component,p,lot.Career??CulinaryCareers.Career,specialty,lot.Kind??"cook.deposit",lot.Origin,5,now);if((lot.Career??CulinaryCareers.Career)==CulinaryCareers.Career&&specialty!=null&&Role(p)=="Artisan")Event(p,null,lot.ExperimentFailed?"SignatureFailed":"SignatureSuccess",lot.ExperimentFailed?"ExperimentFailed":"CreativeOrder");}
                 }
                 if(product==null||product.Destroyed)Component.Registry.Production().Lots.Remove(lot);
             }
             var production=Component.Registry.Production();
-            foreach(var group in production.Lots.Where(l=>l.Credited).GroupBy(l=>new {l.Thing,l.Worker,l.Business,l.Presentation,l.ExperimentFailed}).Where(g=>g.Count()>1).ToList())
+            foreach(var group in production.Lots.Where(l=>l.Credited).GroupBy(l=>new {l.Thing,l.Worker,l.Business,l.Presentation,l.ExperimentFailed,l.Career,l.Specialty,l.Kind}).Where(g=>g.Count()>1).ToList())
             {var first=group.First();first.Count=group.Sum(l=>l.Count);foreach(var other in group.Skip(1).ToList())production.Lots.Remove(other);}
             ReconcileOrders(bank);
             foreach(var e in Book.Businesses)
@@ -223,8 +245,8 @@ namespace FamilyLife
                 if(p.GetLord()?.LordJob is LordJob_EstablishmentVisit){}
                 else if(p.CurJob!=null&&p.CurJob.def!=JobDefOf.Wait_Wander&&p.CurJob.def!=JobDefOf.GotoWander&&p.CurJob.def!=JobDefOf.Wait_MaintainPosture)continue;
                 var candidates=Stock(e).Where(t=>Accepts(p,t,e)).Take(20).ToList();if(candidates.Count==0)continue;
-                var item=candidates.Where(t=>Math.Max(1,(int)Math.Round(t.MarketValue*e.PricePercent/100f))<=PurchasingPower(p,e,resident)).OrderByDescending(t=>t.MarketValue).FirstOrDefault();if(item==null)continue;int count=1;
-                int price=Math.Max(1,(int)Math.Round(item.MarketValue*e.PricePercent/100f));
+                var item=candidates.Where(t=>SalePrice(t,e)<=PurchasingPower(p,e,resident)).OrderByDescending(t=>SalePrice(t,e)).FirstOrDefault();if(item==null)continue;int count=1;
+                int price=SalePrice(item,e);
                 var bank=FamilyFramework.Commerce.Bank;var bookings=Component.Registry.HospitalityBookings();var booking=bookings.For(e.Id,Component.Registry.GetPerson(p.thingIDNumber)?.HouseholdId??0,Now,price);
                 string account=resident?SpendingAccount(p,e,price):null;
                 int budget=booking!=null?booking.Budget-booking.Committed:resident?bank?.Available(account)??0:Math.Max(0,Cash(p)-HospitalityVisitors.JourneyReserve(p));if(budget<price)continue;
@@ -244,9 +266,14 @@ namespace FamilyLife
                 if(!p.jobs.TryTakeOrderedJob(job))CancelOrder(order);
             }
         }
+        private static int SalePrice(Thing item,Establishment e)
+        {
+            var lot=Component.Registry.Production().Lots.FirstOrDefault(l=>l.Thing==item.thingIDNumber&&l.Business==e.Id);int specialist=lot?.ValuePercent??100;
+            return Math.Max(1,(int)Math.Round(item.MarketValue*e.PricePercent/100f*specialist/100f));
+        }
         private static bool Accepts(Pawn p,Thing t,Establishment e)
         {
-            if(e.Kind==EstablishmentKind.Shop)return t.def.category==ThingCategory.Item;
+            if(e.Kind==EstablishmentKind.Shop)return t.def.category==ThingCategory.Item&&WorkshopAccepts(e,t);
             if(t.def.ingestible==null||!t.IngestibleNow)return false;
             bool eats;menuProbe=true;try{eats=FoodUtility.WillEat(p,t,null,false);}finally{menuProbe=false;}if(!eats)return false;
             if(t.def.IsDrug)
@@ -257,6 +284,19 @@ namespace FamilyLife
                 return (t.def.ingestible.foodType & FoodTypeFlags.Liquor)!=0;
             }
             return t.def.ingestible.foodType!=FoodTypeFlags.Corpse&&t.def.ingestible.preferability>=FoodPreferability.MealAwful;
+        }
+        private static bool WorkshopAccepts(Establishment e,Thing t)
+        {
+            if(e.WorkshopFocus==WorkshopFocus.General)return true;var lot=Component.Registry.Production().Lots.FirstOrDefault(l=>l.Thing==t.thingIDNumber&&l.Business==e.Id);string kind=lot?.Kind??"";
+            switch(e.WorkshopFocus)
+            {
+                case WorkshopFocus.Smithy:return kind=="craft.smith"||kind=="craft.weapon"||kind=="craft.armor";
+                case WorkshopFocus.Tailor:return kind=="craft.outfit"||kind=="craft.couture"||kind=="craft.armor";
+                case WorkshopFocus.Armory:return kind=="craft.weapon"||kind=="craft.armor";
+                case WorkshopFocus.Mechanist:return kind=="craft.mechanism";
+                case WorkshopFocus.Boutique:return kind=="craft.couture"||kind=="craft.outfit";
+                default:return true;
+            }
         }
         private static int PurchasingPower(Pawn p,Establishment e,bool resident)
         {
@@ -289,13 +329,16 @@ namespace FamilyLife
                 if(staff!=null){Book.Credit(e,staff.thingIDNumber,ContributionKind.Checkout,"checkout:"+order.Id,Day);CareerService.Report(Component,staff,CulinaryCareers.Career,e.Kind==EstablishmentKind.Inn?"Innkeeper":e.Kind==EstablishmentKind.Tavern?"Bartender":null,"service.checkout","checkout:"+order.Id,4,Now);if(customer!=null)Social(staff,customer);}
                 int service=remote&&customer!=null&&(customer.Drafted||customer.Downed||PawnReadinessApi.Danger(customer.Map))?70:Math.Max(10,90-(Now-order.Created)/300);float presentation=order.Presentation>0?order.Presentation/100f:8;
                 service=Mathf.Clamp(service+(e.Personality.StaffClimate-50)/10,10,100);
+                if(staff!=null&&e.Kind==EstablishmentKind.Tavern&&CareerService.IsAssignedSpecialist(staff,CulinaryCareers.Career,"Bartender"))service=Math.Min(100,service+10);
+                if(staff!=null&&e.Kind==EstablishmentKind.Inn&&CareerService.IsAssignedSpecialist(staff,CulinaryCareers.Career,"Innkeeper"))service=Math.Min(100,service+10);
                 if(staff!=null)
                 {
                     string needed=e.Kind==EstablishmentKind.Inn?"Innkeeper":e.Kind==EstablishmentKind.Tavern?"Bartender":null;
                     bool professional=needed!=null?Component.Registry.Careers().IsSpecialist(staff.thingIDNumber,CulinaryCareers.Career,needed):Component.Registry.Careers().IsQualified(staff.thingIDNumber,CulinaryCareers.Career);
                     service=Math.Min(service,professional?100:65);
                 }
-                e.Review(Math.Min(100,45+(int)presentation*2),service,Comfort(e),Math.Max(0,150-e.PricePercent),85,e.Quiet?Math.Max(0,e.Rowdiness-15):Math.Max(0,e.Rowdiness-2));
+                int comfort=Comfort(e)+(staff!=null&&e.Kind==EstablishmentKind.Inn&&CareerService.IsAssignedSpecialist(staff,CulinaryCareers.Career,"Innkeeper")?10:0);
+                e.Review(Math.Min(100,45+(int)presentation*2),service,Math.Min(100,comfort),Math.Max(0,150-e.PricePercent),85,e.Quiet?Math.Max(0,e.Rowdiness-15):Math.Max(0,e.Rowdiness-2));
                 string visit="regular:"+e.Id+":"+order.Customer;bool regular=Book.Seen.ContainsKey(visit);Book.Seen[visit]=Day;
                 if(customer!=null){Event(customer,staff,service<40?"CustomerUnhappy":regular?"HappyRegular":"CustomerHappy");FamilyVisit(e,customer,staff);}
                 if(staff!=null)Event(staff,customer,service<40&&regular?"LostRegular":regular?"HappyRegular":"Compliment");

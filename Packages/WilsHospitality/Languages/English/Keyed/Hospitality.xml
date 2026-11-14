@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><LanguageData>
 <WFL_H_Establishments>Establishments</WFL_H_Establishments>
 <wils.hospitality.cook_label>Cook</wils.hospitality.cook_label><wils.hospitality.chef_label>Chef</wils.hospitality.chef_label><wils.hospitality.artisan_label>Artisan Chef</wils.hospitality.artisan_label><wils.hospitality.bartender_label>Bartender</wils.hospitality.bartender_label><wils.hospitality.innkeeper_label>Innkeeper</wils.hospitality.innkeeper_label>
+<WFL_H_ArtisanBonus>Artistic skill improves meal presentation, and signature experiments fail less often.</WFL_H_ArtisanBonus>
+<WFL_H_BartenderBonus>Tavern service gains 10 points and satisfied customers are 10 percentage points more likely to tip.</WFL_H_BartenderBonus>
+<WFL_H_InnkeeperBonus>Inn service and guest comfort each gain 10 points.</WFL_H_InnkeeperBonus>
 </LanguageData>

@@ -8,13 +8,13 @@ using Verse;
 
 namespace FamilyLife
 {
-    /// <summary>Wil's Treasury's entry point: announces the module to the framework once, from the mod constructor. Registration is explicit; nothing is discovered later.</summary>
+    /// <summary>The Treasury role module's entry point: announces the module to the framework once, from the mod constructor. Registration is explicit; nothing is discovered later.</summary>
     public class TreasuryMod : Mod
     {
         public TreasuryMod(ModContentPack content) : base(content) { FamilyFramework.Install(new TreasuryModule()); }
     }
 
-    /// <summary>What Wil's Treasury registers: its career (Treasurer, Tax Collector), its page, its work, its meeting and its listeners on the framework's economy hooks.</summary>
+    /// <summary>What Wil's Role Modules : Treasury registers: its career (Treasurer, Tax Collector), its page, its work, its meeting and its listeners on the framework's economy hooks.</summary>
     public sealed class TreasuryModule : IFamilyModule
     {
         public const string Id = TreasuryService.Id;
@@ -23,7 +23,7 @@ namespace FamilyLife
         public void Register()
         {
             var catalog = FamilyFramework.Catalog;
-            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Treasury", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
+            catalog.Register(new ModuleInfo { Id = Id, Name = "Wil's Role Modules : Treasury", ApiVersion = FamilyFramework.ApiVersion, Requires = new[] { ModuleCatalog.FrameworkId } });
             catalog.Provide(Id, "wils.treasury.accounts");
             FamilyFramework.Commerce.Register(Id, () => FamilyComponent.Current == null ? null : new BusinessBank(FamilyComponent.Current.Registry.Ledger()));
 
@@ -52,7 +52,7 @@ namespace FamilyLife
                 report.Step("Accounts, debts and payroll are kept in the save", () => "nothing to release");
                 return report;
             });
-            FamilyFramework.Reconcilers.Add("wils.treasury.reconcile", Id, c => { var l = c.Registry.Ledger(); if (!l.Conserved) Log.Warning("[Wil's Treasury] The saved ledger does not balance (claims " + l.TotalClaims + ", in minus out " + (l.ExternalIn - l.ExternalOut) + "). It is left as saved; nothing is adjusted silently."); });
+            FamilyFramework.Reconcilers.Add("wils.treasury.reconcile", Id, c => { var l = c.Registry.Ledger(); if (!l.Conserved) Log.Warning("[Wil's Role Modules : Treasury] The saved ledger does not balance (claims " + l.TotalClaims + ", in minus out " + (l.ExternalIn - l.ExternalOut) + "). It is left as saved; nothing is adjusted silently."); });
         }
     }
 }

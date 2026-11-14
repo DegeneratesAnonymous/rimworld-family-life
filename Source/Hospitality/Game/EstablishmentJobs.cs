@@ -54,6 +54,17 @@ namespace FamilyLife
             var standby=JobMaker.MakeJob(DefDatabase<JobDef>.GetNamed("WFL_H_Standby"),counter);standby.count=e.Id;return standby;
         }
     }
+    public sealed class WorkGiver_EstablishmentCrafting : WorkGiver
+    {
+        public override Job NonScanJob(Pawn pawn)
+        {
+            if(FamilyFramework.Commerce.Bank==null)return null;var e=HospitalityService.Employer(pawn);
+            if(e==null||e.Kind!=EstablishmentKind.Shop||!HospitalityService.Ready(pawn))return null;
+            int craft=HospitalityService.Priority(pawn,DefDatabase<WorkTypeDef>.GetNamedSilentFail("Crafting")),sell=HospitalityService.Priority(pawn,EstablishmentSelling.WorkType);
+            if(craft==0||(sell>0&&sell<craft&&HospitalityService.Book.Orders.Any(o=>o.Business==e.Id&&(o.Stage==ServiceStage.Ordered||o.Stage==ServiceStage.Consumed))))return null;
+            return HospitalityService.CraftingJob(pawn,e);
+        }
+    }
     public sealed class JobDriver_EstablishmentService : JobDriver
     {
         private int started,lastPaid;

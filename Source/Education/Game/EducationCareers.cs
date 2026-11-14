@@ -41,7 +41,7 @@ namespace FamilyLife
             foreach (string subject in Subjects)
             {
                 def.Specialties[subject] = new CareerRule { GeneralXp = SpecialistExperience, SpecialtyXp = SpecialistSubjectExperience }.Skill(subject, SpecialistSkill).Skill("Social", TeacherSocial);
-                CareerService.RegisterRole(new ProfessionRole { Id = SpecialistRole(subject), ModuleId = moduleId, Career = Career, Level = 3, Specialty = subject });
+                CareerService.RegisterRole(new ProfessionRole { Id = SpecialistRole(subject), ModuleId = moduleId, Career = Career, Level = 3, Specialty = subject, BonusKey="WFL_Education_SpecialistBonus" });
             }
             CareerService.RegisterSeat(moduleId, OfficeKind.Teacher, Teacher);
             CareerService.Registered(moduleId);

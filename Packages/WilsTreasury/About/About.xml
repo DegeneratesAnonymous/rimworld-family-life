@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Wil's Treasury</name>
+  <name>Wil's Role Modules : Treasury</name>
   <author>Spaceman_Wil</author>
   <packageId>SpacemanWil.WilsTreasury</packageId>
   <modVersion>0.1.0</modVersion>
@@ -30,7 +30,7 @@ Money for a community: personal and household accounts, a community treasury, a 
 
 Accounts are claims on the colony's real silver. Nothing here creates silver.
 
-Requires Wil's Community Framework. It does not need Wil's Educators or Wil's Community Care; when they are installed their professions can be paid wages.
+Requires Wil's Community Framework. It does not need Wil's Role Modules : Education or Wil's Role Modules : Community Care; when they are installed their professions can be paid wages.
 
 Early development: not yet verified in a running game. Load it after Wil's Community Framework. If you take it out of a game, use the developer action "Prepare Treasury for removal" first; its accounts stay in the save and are picked up again if you add it back.
 
