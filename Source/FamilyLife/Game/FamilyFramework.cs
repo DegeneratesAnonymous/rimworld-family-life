@@ -34,6 +34,8 @@ namespace FamilyLife
         public static readonly ModuleCatalog Catalog = new ModuleCatalog();
         public static readonly ContributionList<Func<Pawn, Thing, bool>> BillWorkAllowed = new ContributionList<Func<Pawn, Thing, bool>>(Catalog);
         public static readonly ContributionList<Action<Pawn, Thing, Thing, int>> ProductMade = new ContributionList<Action<Pawn, Thing, Thing, int>>(Catalog);
+        /// <summary>Optional producers describe non-food workshop output to establishment shops without either module referencing the other.</summary>
+        public static readonly ContributionList<Func<Pawn, Thing, Thing, WorkshopProductProfile>> WorkshopProducts = new ContributionList<Func<Pawn, Thing, Thing, WorkshopProductProfile>>(Catalog);
         public static readonly ContributionList<Action<Thing, Thing>> StackSplit = new ContributionList<Action<Thing, Thing>>(Catalog);
         public static readonly ContributionList<Action<Thing, Thing, int>> StackMerged = new ContributionList<Action<Thing, Thing, int>>(Catalog);
         public static readonly ContributionList<Func<Thing, Thing, bool>> BillIngredientAllowed = new ContributionList<Func<Thing, Thing, bool>>(Catalog);
@@ -44,6 +46,7 @@ namespace FamilyLife
         public static readonly ContributionList<Action<PropertyDamageReport>> PropertyDamaged = new ContributionList<Action<PropertyDamageReport>>(Catalog);
         public static readonly CommerceCatalog Commerce = new CommerceCatalog(id => Catalog.IsEnabled(id));
         public static readonly ContributionList<Func<Pawn, string, bool>> PrivateWork = new ContributionList<Func<Pawn, string, bool>>(Catalog);
+        public static readonly ContributionList<Func<Pawn, string, string, bool>> PrivateWorkEvent = new ContributionList<Func<Pawn, string, string, bool>>(Catalog);
         public static readonly ContributionList<Func<LabourReport, bool>> PrivateLabour = new ContributionList<Func<LabourReport, bool>>(Catalog);
         public static readonly OfficeCatalog Offices;
         public static readonly WorkRoster Roster;
@@ -255,5 +258,12 @@ namespace FamilyLife
             foreach (var reset in Resets.ForModule(moduleId)) { try { reset(); } catch (Exception ex) { Log.Warning("[Wil's Family Life] A module reset failed: " + ex.Message); } }
             return true;
         }
+    }
+
+    /// <summary>Career and merchandising metadata for a product made at an establishment workshop.</summary>
+    public sealed class WorkshopProductProfile
+    {
+        public string Career, Route, Specialty, Kind;
+        public int Presentation = 100;
     }
 }

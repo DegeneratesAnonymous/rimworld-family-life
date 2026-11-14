@@ -39,7 +39,7 @@ namespace FamilyLife
                 Menu(options);
             }
             label("Staff: "+string.Join(", ",b.Staff.Select(id=>c.TryGetPawn(id)?.LabelShort??("#"+id))));
-            if(button("Assign / remove staff")) Menu(c.Registry.Persons.Where(p=>p.InColony&&!p.Juvenile).Select(p=>new FloatMenuOption((b.Staff.Contains(p.Id)?"Remove ":"Assign ")+p.Name,()=>{if(!b.Staff.Remove(p.Id)){b.Staff.Add(p.Id);c.Registry.Assignments().Assign(p.Id,CareerService.Professions.ById(CulinaryCareers.Cook),c.Registry.Careers(),FrameworkServices.Now);}})));
+            if(button("Assign / remove staff")) Menu(c.Registry.Persons.Where(p=>p.InColony&&!p.Juvenile).Select(p=>new FloatMenuOption((b.Staff.Contains(p.Id)?"Remove ":"Assign ")+p.Name,()=>{if(!b.Staff.Remove(p.Id)){b.Staff.Add(p.Id);if(b.Kind!=EstablishmentKind.Shop)c.Registry.Assignments().Assign(p.Id,CareerService.Professions.ById(CulinaryCareers.Cook),c.Registry.Careers(),FrameworkServices.Now);}})));
             label("Staff use personal Work hours and Cooking / Sell priorities. Uncovered service pauses for necessary breaks.");
             foreach(var entry in new[]{new[]{"Service area","Service"},new[]{"Sales stock area","Stock"},new[]{"Private storage area","Storage"},new[]{"Sales containers","StockContainer"},new[]{"Storage containers","StorageContainer"},new[]{"Counter","Counter"},new[]{"Kitchen benches","Bench"}})
             {

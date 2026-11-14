@@ -105,12 +105,34 @@ namespace FamilyLife
             }
             return null;
         }
+        public static Job CraftingJob(Pawn p,Establishment e)
+        {
+            if(e?.Kind!=EstablishmentKind.Shop||FamilyFramework.WorkshopProducts.Enabled().Count()==0)return null;
+            var crafting=DefDatabase<WorkTypeDef>.GetNamedSilentFail("Crafting");if(crafting==null)return null;
+            foreach(var def in DefDatabase<WorkGiverDef>.AllDefsListForReading.Where(d=>d.workType==crafting))
+            {
+                if(!(def.Worker is WorkGiver_DoBill giver))continue;
+                foreach(int id in e.Benches){var bench=Thing(id);if(bench==null||!bench.Spawned)continue;var job=giver.JobOnThing(p,bench,false);if(job==null)continue;job.workGiverDef=def;return job;}
+            }
+            return null;
+        }
         public static void ProductMade(Pawn p,Thing bench,Thing product,int job)
         {
-            if(p==null||product==null||bench==null||p.CurJob?.bill?.recipe?.workSkill!=SkillDefOf.Cooking)return;
+            if(p==null||product==null||bench==null)return;
             var e=Book?.Businesses.FirstOrDefault(b=>b.Benches.Contains(bench.thingIDNumber)&&b.Staff.Contains(p.thingIDNumber));if(e==null)return;
-            bool failed=Role(p)=="Artisan"&&Rand.Chance(.2f);
-            Component.Registry.Production().Lots.Add(new ProductLot{ExperimentFailed=failed,Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=(int)((failed?.6f:1f)*CulinaryCareers.Presentation(CareerService.SkillsOf(p)("Cooking"),CareerService.SkillsOf(p)("Artistic"),Component.Registry.Careers().IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Artisan"))*100),Origin="recipe:"+job});
+            if(p.CurJob?.bill?.recipe?.workSkill==SkillDefOf.Cooking)
+            {
+                bool failed=Role(p)=="Artisan"&&Rand.Chance(.2f);
+                Component.Registry.Production().Lots.Add(new ProductLot{ExperimentFailed=failed,Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=(int)((failed?.6f:1f)*CulinaryCareers.Presentation(CareerService.SkillsOf(p)("Cooking"),CareerService.SkillsOf(p)("Artistic"),Component.Registry.Careers().IsSpecialist(p.thingIDNumber,CulinaryCareers.Career,"Artisan"))*100),Origin="recipe:"+job,Career=CulinaryCareers.Career,Kind="cook.deposit"});
+                return;
+            }
+            if(e.Kind!=EstablishmentKind.Shop)return;
+            foreach(var classify in FamilyFramework.WorkshopProducts.Enabled())
+            {
+                WorkshopProductProfile profile=null;try{profile=classify(p,bench,product);}catch(Exception ex){Log.Warning("[Wil's Cooking & Hospitality] Workshop product classifier skipped: "+ex.Message);}
+                if(profile==null||string.IsNullOrEmpty(profile.Career))continue;
+                Component.Registry.Production().Lots.Add(new ProductLot{Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=profile.Presentation,Origin="recipe:"+job,Career=profile.Career,Specialty=profile.Specialty,Kind=profile.Kind});return;
+            }
         }
         public static void Split(Thing from,Thing to){Component?.Registry.Production().Move(from.thingIDNumber,to.thingIDNumber,to.stackCount);cachedTick=-1;}
         public static void Merge(Thing from,Thing to,int count){Component?.Registry.Production().Move(from.thingIDNumber,to.thingIDNumber,count);cachedTick=-1;}
@@ -149,12 +171,12 @@ namespace FamilyLife
                 if(!lot.Credited&&e!=null&&InBusiness(product,e)&&Book.Credit(e,lot.Worker,ContributionKind.Production,lot.Origin+":lot:"+lot.Id,Day,lot.Count))
                 {
                     lot.Credited=true;
-                    var p=Pawn(lot.Worker);if(p!=null){string specialty=CareerService.SkillsOf(p)("Artistic")>=6?"Artisan":null;CareerService.Report(Component,p,CulinaryCareers.Career,specialty,"cook.deposit",lot.Origin,5,now);if(specialty!=null&&Role(p)=="Artisan")Event(p,null,lot.ExperimentFailed?"SignatureFailed":"SignatureSuccess",lot.ExperimentFailed?"ExperimentFailed":"CreativeOrder");}
+                    var p=Pawn(lot.Worker);if(p!=null){string specialty=lot.Specialty;if(lot.Career==CulinaryCareers.Career)specialty=CareerService.SkillsOf(p)("Artistic")>=6?"Artisan":null;CareerService.Report(Component,p,lot.Career??CulinaryCareers.Career,specialty,lot.Kind??"cook.deposit",lot.Origin,5,now);if((lot.Career??CulinaryCareers.Career)==CulinaryCareers.Career&&specialty!=null&&Role(p)=="Artisan")Event(p,null,lot.ExperimentFailed?"SignatureFailed":"SignatureSuccess",lot.ExperimentFailed?"ExperimentFailed":"CreativeOrder");}
                 }
                 if(product==null||product.Destroyed)Component.Registry.Production().Lots.Remove(lot);
             }
             var production=Component.Registry.Production();
-            foreach(var group in production.Lots.Where(l=>l.Credited).GroupBy(l=>new {l.Thing,l.Worker,l.Business,l.Presentation,l.ExperimentFailed}).Where(g=>g.Count()>1).ToList())
+            foreach(var group in production.Lots.Where(l=>l.Credited).GroupBy(l=>new {l.Thing,l.Worker,l.Business,l.Presentation,l.ExperimentFailed,l.Career,l.Specialty,l.Kind}).Where(g=>g.Count()>1).ToList())
             {var first=group.First();first.Count=group.Sum(l=>l.Count);foreach(var other in group.Skip(1).ToList())production.Lots.Remove(other);}
             ReconcileOrders(bank);
             foreach(var e in Book.Businesses)

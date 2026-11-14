@@ -48,7 +48,7 @@ namespace FamilyLife
             lines.Add("Hooks seen this session: operations " + MedicalWorkHits.Operations + ", tends " + MedicalWorkHits.Tends + ", operations credited " + MedicalWorkHits.OperationsCredited + ", animal tends credited " + MedicalWorkHits.AnimalTendsCredited);
             foreach (var p in r.Persons.Where(x => x.InColony).OrderBy(x => x.Id))
             {
-                var roles = b.RolesOf(p.Id).ToList(); var quals = Careers.SelectMany(d => new[] { d.Id }.Concat(d.Specialties.Keys.Select(k => d.Id + ":" + k))).Where(q => q.Contains(":") ? l.IsSpecialist(p.Id, q.Split(':')[0], q.Split(':')[1]) : l.IsQualified(p.Id, q)).ToList();
+                var roles = b.RolesOf(p.Id).ToList(); var quals = Careers.SelectMany(d => new[] { d.Id }.Concat(d.Level2Branches.Keys.Concat(d.Specialties.Keys).Distinct().Select(k => d.Id + ":" + k))).Where(q => q.Contains(":") ? l.IsSpecialist(p.Id, q.Split(':')[0], q.Split(':')[1]) : l.IsQualified(p.Id, q)).ToList();
                 int xp = Careers.Sum(d => l.GeneralXp(p.Id, d.Id));
                 if (roles.Count == 0 && quals.Count == 0 && xp == 0) continue;
                 lines.Add(FamilyUi.NameOf(r, p.Id) + ": assigned [" + string.Join(", ", roles) + "] qualified [" + string.Join(", ", quals) + "] experience " + xp);
@@ -130,12 +130,12 @@ namespace FamilyLife
         public static string TitleOf(ProfessionRole role, FamilyRegistry r) => (role.TitleKey?.Invoke(r) ?? role.Id + "_label").Translate().ToString();
 
         /// <summary>The career's own name for headings, from its Level 2 role.</summary>
-        public static string CareerName(CareerDefinition def, FamilyRegistry r) { var role = Professions.All.FirstOrDefault(x => x.Career == def.Id && x.Level == 2); return role != null ? TitleOf(role, r) : def.Id; }
+        public static string CareerName(CareerDefinition def, FamilyRegistry r) { if (!string.IsNullOrEmpty(def.LabelKey)) return def.LabelKey.Translate().ToString(); var role = Professions.All.FirstOrDefault(x => x.Career == def.Id && x.Level == 2); return role != null ? TitleOf(role, r) : def.Id; }
 
         /// <summary>A qualification id as a short phrase: the role it unlocks, or the career and specialty.</summary>
         public static string Describe(string qualification)
         {
-            var role = Professions.All.FirstOrDefault(r => (r.Level == 2 && r.Career == qualification) || (r.Level == 3 && r.Career + ":" + r.Specialty == qualification));
+            var role = Professions.All.FirstOrDefault(r => (r.Level == 2 && string.IsNullOrEmpty(r.Specialty) && r.Career == qualification) || (r.Level >= 2 && !string.IsNullOrEmpty(r.Specialty) && r.Career + ":" + r.Specialty == qualification));
             if (role != null) return TitleOf(role, FamilyComponent.Current?.Registry);
             return qualification;
         }

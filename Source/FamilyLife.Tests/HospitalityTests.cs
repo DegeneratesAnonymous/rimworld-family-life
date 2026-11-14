@@ -128,7 +128,7 @@ namespace FamilyLife.Tests
         }
         [Fact] public void Provenance_survives_stack_splits_merges_and_partial_moves()
         {
-            var b=new ProductionBook();b.Lots.Add(new ProductLot{Thing=1,Worker=2,Business=3,Count=10,Origin="recipe",Day=0});b.Move(1,4,3);b.Move(4,5,2);var copy=ProductionBook.Decode(new StateReader(b.Encode()));Assert.Equal(10,copy.Lots.Sum(l=>l.Count));Assert.Equal(2,copy.Lots.Single(l=>l.Thing==5).Count);Assert.All(copy.Lots,l=>Assert.Equal("recipe",l.Origin));
+            var b=new ProductionBook();b.Lots.Add(new ProductLot{Thing=1,Worker=2,Business=3,Count=10,Origin="recipe",Career=CraftingCareers.Career,Specialty="Smith",Kind="craft.smith",Day=0});b.Move(1,4,3);b.Move(4,5,2);var copy=ProductionBook.Decode(new StateReader(b.Encode()));Assert.Equal(10,copy.Lots.Sum(l=>l.Count));Assert.Equal(2,copy.Lots.Single(l=>l.Thing==5).Count);Assert.All(copy.Lots,l=>{Assert.Equal("recipe",l.Origin);Assert.Equal(CraftingCareers.Career,l.Career);Assert.Equal("Smith",l.Specialty);});
         }
         [Fact] public void Saved_establishments_keep_ownership_areas_orders_earnings_guests_and_event_cooldowns()
         {

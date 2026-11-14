@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+<name>Wil's Crafting &amp; Workshops</name><author>Spaceman_Wil</author><packageId>SpacemanWil.WilsCrafting</packageId><modVersion>0.1.0</modVersion>
+<supportedVersions><li>1.6</li><li>1.7</li></supportedVersions>
+<modDependencies><li><packageId>SpacemanWil.WilsFamilyLife</packageId><displayName>Wil's Community Framework</displayName></li></modDependencies>
+<loadAfter><li>SpacemanWil.WilsFamilyLife</li><li>SpacemanWil.WilsTreasury</li><li>SpacemanWil.WilsHospitality</li></loadAfter>
+<description>Woodworker and Stoneworker careers leading to Smith or Tailor, with Weaponsmith, Armorsmith, Mechanist, Couturier and Outfitter specialties. When Wil's Cooking &amp; Hospitality is installed, assigned shop benches become staffed commercial workshops. Early draft: offline builds and tests do not constitute RimWorld gameplay validation.</description>
+</ModMetaData>

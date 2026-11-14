@@ -58,7 +58,7 @@ namespace FamilyLife.Domain
             if (role == null) return AssignResult.UnknownRole;
             if (role.Level <= 1) return AssignResult.Assigned;
             if (!ledger.IsQualified(person, role.Career)) return AssignResult.NotQualified;
-            if (role.Level >= 3 && !ledger.IsSpecialist(person, role.Career, role.Specialty)) return AssignResult.NotQualified;
+            if (!string.IsNullOrEmpty(role.Specialty) && !ledger.IsSpecialist(person, role.Career, role.Specialty)) return AssignResult.NotQualified;
             return AssignResult.Assigned;
         }
 

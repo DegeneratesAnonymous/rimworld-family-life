@@ -85,6 +85,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current; if (c == null || pawn == null) return;
             if (FamilyFramework.PrivateWork.Enabled().Any(f => f(pawn, career))) return;
+            if (FamilyFramework.PrivateWorkEvent.Enabled().Any(f => f(pawn, career, kind))) return;
             var r = c.Registry; int id = pawn.thingIDNumber; var book = r.Assignments();
             var role = CareerService.Professions.All.Where(x => x.Career == career && book.IsAssigned(id, x.Id)).OrderByDescending(x => x.Specialty == specialty ? 1 : 0).ThenByDescending(x => x.Level).FirstOrDefault();
             if (role == null) return;

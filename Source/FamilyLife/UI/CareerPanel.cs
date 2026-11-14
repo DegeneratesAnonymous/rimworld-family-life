@@ -31,7 +31,7 @@ namespace FamilyLife
                 string title = CareerService.TitleOf(role, reg);
                 string status = assigned ? "WFL_Career_Assigned".Translate().ToString()
                     : check == AssignResult.Assigned ? (role.Level > 1 ? "WFL_Career_Qualified_Short".Translate().ToString() : "WFL_Career_Open".Translate().ToString())
-                    : "WFL_Career_Needs".Translate(string.Join(", ", ledger.Missing(id, role.Career, role.Level >= 3 ? role.Specialty : null, role.Level >= 3 && def != null && def.Specialties.TryGetValue(role.Specialty, out var sr) ? sr : def?.Level2 ?? new CareerRule(), CareerService.SkillsOf(pawn)))).ToString();
+                    : "WFL_Career_Needs".Translate(string.Join(", ", ledger.Missing(id, role.Career, role.Specialty, RuleFor(def, role), CareerService.SkillsOf(pawn)))).ToString();
                 Widgets.Label(new Rect(10f, y, view.width - 110f, 22f), title + " - " + status);
                 TooltipHandler.TipRegion(new Rect(10f, y, view.width - 110f, 22f), "WFL_Career_Experience".Translate(ledger.GeneralXp(id, role.Career)));
                 bool can = assigned || check == AssignResult.Assigned;
@@ -52,6 +52,17 @@ namespace FamilyLife
             y += 4f;
         }
 
+        private static CareerRule RuleFor(CareerDefinition def, ProfessionRole role)
+        {
+            if (def == null || role == null) return new CareerRule();
+            if (!string.IsNullOrEmpty(role.Specialty))
+            {
+                if (def.Level2Branches.TryGetValue(role.Specialty, out var branch)) return branch;
+                if (def.Specialties.TryGetValue(role.Specialty, out var specialty)) return specialty;
+            }
+            return def.Level2;
+        }
+
         /// <summary>
         /// Progress through one career: experience against what each step needs, each required skill against the pawn's own (green when met), and a bar for each. Shown only once the pawn has any
         /// experience, qualification or assignment in the career, and specialties only once they could matter.
@@ -66,10 +77,11 @@ namespace FamilyLife
             foreach (var row in rows)
             {
                 if (row.Key != null && !(row.Earned || row.SpecialtyXp > 0 || row.Available && row.GeneralXp > 0)) continue;
-                var role = CareerService.Professions.All.FirstOrDefault(r => r.Career == career.Id && (row.Key == null ? r.Level == 2 : r.Level == 3 && r.Specialty == row.Key));
+                var role = CareerService.Professions.All.FirstOrDefault(r => r.Career == career.Id && (row.Key == null ? r.Level == 2 && string.IsNullOrEmpty(r.Specialty) : r.Specialty == row.Key));
                 string name = role != null ? CareerService.TitleOf(role, reg) : careerName;
                 GUI.color = row.Earned ? new Color(.72f, 1f, .72f) : Color.white;
-                Widgets.Label(new Rect(10f, y, view.width - 10f, 22f), name + (row.Earned ? " \u2713" : row.Available ? "" : " (needs " + CareerService.Describe(career.Id) + ")")); GUI.color = Color.white; y += 20f;
+                string prerequisite = row.Key == null || !career.Specialties.TryGetValue(row.Key, out var rule) || rule.RequiresAny.Count == 0 ? CareerService.Describe(career.Id) : string.Join(" / ", rule.RequiresAny.Select(q => CareerService.Describe(career.Id + ":" + q)));
+                Widgets.Label(new Rect(10f, y, view.width - 10f, 22f), name + (row.Earned ? " \u2713" : row.Available ? "" : " (needs " + prerequisite + ")")); GUI.color = Color.white; y += 20f;
                 if (row.Earned) continue;
                 y = Bar(view, y, "WFL_Career_General".Translate(row.GeneralXp, row.GeneralNeeded), row.GeneralShare);
                 if (row.Key != null) y = Bar(view, y, "WFL_Career_Specialty".Translate(row.SpecialtyXp, row.SpecialtyNeeded), row.SpecialtyShare);
