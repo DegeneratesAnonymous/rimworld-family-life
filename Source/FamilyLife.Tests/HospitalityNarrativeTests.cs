@@ -57,6 +57,17 @@ namespace FamilyLife.Tests
             Assert.False(b.GiveTip(o,2,1,0,bank,()=>false));Assert.Empty(b.Earnings);Assert.Equal(0,l.ExternalIn);
             var copy=EstablishmentBook.Decode(new StateReader(b.Encode()));Assert.False(copy.GiveTip(copy.Order(o.Id),2,1,0,bank,()=>throw new Exception("duplicate")));
         }
+        [Fact] public void Sponsored_visitor_tips_use_physical_cash_not_a_colony_account()
+        {
+            var l=new Ledger();var bank=new BusinessBank(l);var b=new EstablishmentBook();var e=b.Create(1,EstablishmentKind.Tavern);l.Receive(bank.Person(1),50,TxKind.Income,"seed",0);var o=b.Begin(e,1,2,10,0,bank.Person(1),false,bank);o.Stage=ServiceStage.Settled;bool paidCash=false;
+            Assert.True(b.GiveTip(o,2,1,0,bank,()=>{paidCash=true;return true;},true));Assert.True(paidCash);Assert.Equal(40,bank.Available(bank.Person(1)));
+        }
+        [Fact] public void Booking_selection_skips_a_nearly_empty_booking_for_one_that_can_pay()
+        {
+            var l=new Ledger();var bank=new BusinessBank(l);var b=new EstablishmentBook();var e=b.Create(1,EstablishmentKind.Restaurant);l.Receive(bank.Person(1),200,TxKind.Income,"seed",0);
+            var bk=new BookingBook();var small=bk.Create(e,BookingKind.FamilyMeal,0,2,1,bank.Person(1),0,bank);var big=bk.Create(e,BookingKind.FamilyMeal,0,2,50,bank.Person(1),0,bank);
+            Assert.Same(big,bk.For(e.Id,0,1,5));Assert.Same(big,bk.For(e.Id,0,1));
+        }
         [Fact] public void Experiment_outcome_follows_split_stock_without_awarding_extra_credit()
         {
             var b=new ProductionBook();b.Lots.Add(new ProductLot{Id=1,Thing=10,Worker=2,Business=3,Count=4,ExperimentFailed=true,Presentation=500,Credited=true,Origin="recipe:1"});b.NextId=2;b.Move(10,11,2);

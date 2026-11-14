@@ -20,7 +20,7 @@ namespace FamilyLife.Domain
             var booking=new EstablishmentBooking{Id=Next++,Business=e.Id,Household=household,Expected=expected,Budget=budget,Sponsor=sponsor,Start=tick,End=tick+60000,Kind=kind};
             if(!bank.Reserve(booking.Key,sponsor,budget))return null;Bookings.Add(booking);return booking;
         }
-        public EstablishmentBooking For(int business,int household,int now)=>Bookings.FirstOrDefault(b=>b.Business==business&&!b.Closed&&now>=b.Start&&now<b.End&&(b.Household==0||b.Household==household)&&b.Committed<b.Budget);
+        public EstablishmentBooking For(int business,int household,int now,int minRemaining=1)=>Bookings.Where(b=>b.Business==business&&!b.Closed&&now>=b.Start&&now<b.End&&(b.Household==0||b.Household==household)&&b.Budget-b.Committed>=Math.Max(1,minRemaining)).OrderByDescending(b=>b.Budget-b.Committed).ThenBy(b=>b.Start).FirstOrDefault();
         public bool ReserveOrder(EstablishmentBooking b,string orderKey,int price,ICommerceBank bank)
         {
             if(bank==null||b.Closed||price<=0||b.Committed+price>b.Budget)return false;

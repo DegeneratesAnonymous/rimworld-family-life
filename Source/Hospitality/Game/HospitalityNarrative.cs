@@ -195,7 +195,7 @@ namespace FamilyLife
             {
                 float chance=.08f+(HospitalityService.Trait(customer,"Kind")?.1f:0)-(HospitalityService.Trait(customer,"Greedy")?.06f:0);
                 int tip=Rand.Chance(chance)&&((customer.Faction==Faction.OfPlayer?bank.Available(bank.Person(customer.thingIDNumber)):HospitalityService.Cash(customer)-HospitalityVisitors.JourneyReserve(customer))>=1)?1:0;
-                if(B.GiveTip(order,staff.thingIDNumber,tip,Day,bank,()=>HospitalityService.MoveCash(customer,tip,e)))HospitalityService.EventAs("Bartender",staff,customer,"TipReceived");
+                if(B.GiveTip(order,staff.thingIDNumber,tip,Day,bank,()=>HospitalityService.MoveCash(customer,tip,e),customer.Faction!=Faction.OfPlayer))HospitalityService.EventAs("Bartender",staff,customer,"TipReceived");
             }
         }
         public static bool Admission(Establishment e,Pawn customer)

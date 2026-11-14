@@ -34,10 +34,10 @@ namespace FamilyLife
                 if(!HospitalityInterop.MayExtend(p.GetLord())){stay.Leaving=true;continue;}
                 if(e==null||!e.Enabled||PawnReadinessApi.Danger(p.Map)||p.Downed||p.HostileTo(Faction.OfPlayer)){LeaveGroup(stay.Group);continue;}
                 var bed=HospitalityService.Thing(stay.Bed) as Building_Bed;
-                if(stay.Bed>0&&(bed==null||!bed.Spawned||bed.Map!=p.Map)){stay.Bed=0;HospitalityService.Event(p,null,"LodgingFailed");foreach(var host in HospitalityService.Coverage(e).Where(h=>HospitalityNarrative.Near(h,p)))HospitalityService.EventAs("Innkeeper",host,p,stay.SleepTicks==0&&stay.LastLodgingDay<0?"CheckInFailed":"LodgingFailed");}
+                if(stay.Bed>0&&(bed==null||!bed.Spawned||bed.Map!=p.Map)){stay.Bed=0;HospitalityService.Event(p,HospitalityService.Coverage(e).FirstOrDefault(),"LodgingFailed");foreach(var host in HospitalityService.Coverage(e).Where(h=>HospitalityNarrative.Near(h,p)))HospitalityService.EventAs("Innkeeper",host,p,stay.SleepTicks==0&&stay.LastLodgingDay<0?"CheckInFailed":"LodgingFailed");}
                 if(bed!=null&&p.needs.rest!=null&&p.needs.rest.CurLevelPercentage<.3f&&!p.InMentalState&&!p.Downed&&p.CurJob?.def!=JobDefOf.LayDown)
                     p.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.LayDown,bed));
-                if(bed!=null&&p.CurJob?.def==JobDefOf.LayDown&&p.CurJob.targetA.Thing==bed)
+                if(bed!=null&&p.CurJob?.def==JobDefOf.LayDown&&p.CurJob.targetA.Thing==bed&&p.CurrentBed()==bed&&!p.Awake())
                     stay.SleepTicks+=600;
                 if(stay.SleepTicks>=7500&&stay.LastLodgingDay<HospitalityService.Day&&GenLocalDate.HourOfDay(p)>=8)
                 {
@@ -48,7 +48,7 @@ namespace FamilyLife
                         Book.Sale(e,e.RoomPrice);stay.LastLodgingDay=HospitalityService.Day;stay.SleepTicks=0;
                         var host=HospitalityService.Coverage(e).FirstOrDefault();if(host!=null){Book.Credit(e,host.thingIDNumber,ContributionKind.Service,key,HospitalityService.Day);HospitalityService.Event(host,p,"CheckIn");}
                     }
-                    else {HospitalityService.Event(p,null,"LodgingFailed");LeaveGroup(stay.Group);}
+                    else {HospitalityService.Event(p,HospitalityService.Coverage(e).FirstOrDefault(),"LodgingFailed");LeaveGroup(stay.Group);}
                 }
             }
             foreach(var group in Book.Guests.Where(g=>!g.Leaving).GroupBy(g=>g.Group).ToList())
@@ -130,7 +130,9 @@ namespace FamilyLife
             }
         }
         public static void RequestLeave(Pawn pawn){var stay=Book?.Guests.FirstOrDefault(g=>g.Pawn==pawn.thingIDNumber&&!g.Leaving);if(stay!=null)LeaveGroup(stay.Group);}
-        public static void ReleaseGenerated(){if(Book==null)return;foreach(var group in Book.Guests.Where(g=>g.Generated).Select(g=>g.Group).Distinct().ToList())LeaveGroup(group);}
+        public static bool OwesUnsettledBill(GuestStay stay)=>Book!=null&&Book.Orders.Any(o=>o.Customer==stay.Pawn&&o.Stage>=ServiceStage.Delivered&&o.Stage<ServiceStage.Settled);
+        // With no commerce provider a delivered bill cannot be collected, and the customer must stay spawned for VisitorCommerce.Move. Hold such groups until the bill settles; emergencies still release them.
+        public static void ReleaseGenerated(){if(Book==null)return;foreach(var group in Book.Guests.Where(g=>g.Generated).GroupBy(g=>g.Group).ToList())if(!group.Any(OwesUnsettledBill)||group.Any(g=>{var p=HospitalityService.Pawn(g.Pawn);return p==null||!p.Spawned||PawnReadinessApi.Danger(p.Map)||p.Downed||p.HostileTo(Faction.OfPlayer);}))LeaveGroup(group.Key);}
     }
     public sealed class LordJob_EstablishmentVisit : LordJob
     {

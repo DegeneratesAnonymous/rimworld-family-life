@@ -225,7 +225,7 @@ namespace FamilyLife
                 var candidates=Stock(e).Where(t=>Accepts(p,t,e)).Take(20).ToList();if(candidates.Count==0)continue;
                 var item=candidates.Where(t=>Math.Max(1,(int)Math.Round(t.MarketValue*e.PricePercent/100f))<=PurchasingPower(p,e,resident)).OrderByDescending(t=>t.MarketValue).FirstOrDefault();if(item==null)continue;int count=1;
                 int price=Math.Max(1,(int)Math.Round(item.MarketValue*e.PricePercent/100f));
-                var bank=FamilyFramework.Commerce.Bank;var bookings=Component.Registry.HospitalityBookings();var booking=bookings.For(e.Id,Component.Registry.GetPerson(p.thingIDNumber)?.HouseholdId??0,Now);
+                var bank=FamilyFramework.Commerce.Bank;var bookings=Component.Registry.HospitalityBookings();var booking=bookings.For(e.Id,Component.Registry.GetPerson(p.thingIDNumber)?.HouseholdId??0,Now,price);
                 string account=resident?SpendingAccount(p,e,price):null;
                 int budget=booking!=null?booking.Budget-booking.Committed:resident?bank?.Available(account)??0:Math.Max(0,Cash(p)-HospitalityVisitors.JourneyReserve(p));if(budget<price)continue;
                 bool communal=map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree).Any(t=>t.def.ingestible!=null&&t.Spawned&&!Book.Businesses.Any(b=>InBusiness(t,b)));
