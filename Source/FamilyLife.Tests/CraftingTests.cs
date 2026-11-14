@@ -1,4 +1,6 @@
 using System.Linq;
+using System.IO;
+using System.Xml.Linq;
 using FamilyLife.Domain;
 using Xunit;
 
@@ -37,6 +39,21 @@ namespace FamilyLife.Tests
             var d=CraftingCareers.Definition();var l=new CareerLedger();var smith=new ProfessionRole{Id="wils.crafting.smith",ModuleId=CraftingCareers.Module,Career=d.Id,Level=2,Specialty="Smith"};
             l.Award(1,d.Id,"Tailor","craft","tailor",150,0);l.Evaluate(1,d,k=>20);Assert.Equal(AssignResult.NotQualified,AssignmentBook.Check(smith,l,1));
             l.Award(1,d.Id,"Smith","craft","smith",150,1);l.Evaluate(1,d,k=>20);Assert.Equal(AssignResult.Assigned,AssignmentBook.Check(smith,l,1));
+        }
+        [Fact] public void Specialty_bonuses_are_bounded_and_require_an_active_assignment()
+        {
+            Assert.Equal(100,CraftingBonuses.ValuePercent("Couturier",false));Assert.Equal(125,CraftingBonuses.ValuePercent("Couturier",true));Assert.Equal(120,CraftingBonuses.ValuePercent("Mechanist",true));
+            Assert.Equal(3,CraftingBonuses.ImprovedQuality(2,true));Assert.Equal(4,CraftingBonuses.ImprovedQuality(4,true));Assert.Equal(2,CraftingBonuses.ImprovedQuality(2,false));
+        }
+        [Fact] public void Every_crafting_role_has_five_positive_negative_and_relationship_events()
+        {
+            foreach(var role in CraftingEvents.Roles){var e=CraftingEvents.All.Where(x=>x.Role==role).ToList();Assert.Equal(5,e.Count(x=>x.Mood>0));Assert.Equal(5,e.Count(x=>x.Mood<0));Assert.Equal(5,e.Count(x=>x.Opinion!=0));}
+            Assert.Equal(CraftingEvents.All.Length,CraftingEvents.All.Select(x=>x.Id).Distinct().Count());
+        }
+        [Fact] public void Crafting_thoughts_and_package_xml_are_well_formed()
+        {
+            string root=RepoPaths.Root();var doc=XDocument.Load(Path.Combine(root,"Packages/WilsCrafting/Defs/CraftingThoughts.xml"));var names=doc.Descendants("defName").Select(x=>x.Value).ToList();foreach(var e in CraftingEvents.All)Assert.Contains(e.Thought,names);
+            foreach(var file in Directory.GetFiles(Path.Combine(root,"Packages/WilsCrafting"),"*.xml",SearchOption.AllDirectories))XDocument.Load(file);
         }
     }
 }

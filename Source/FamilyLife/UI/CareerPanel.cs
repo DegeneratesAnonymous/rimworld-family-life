@@ -33,7 +33,9 @@ namespace FamilyLife
                     : check == AssignResult.Assigned ? (role.Level > 1 ? "WFL_Career_Qualified_Short".Translate().ToString() : "WFL_Career_Open".Translate().ToString())
                     : "WFL_Career_Needs".Translate(string.Join(", ", ledger.Missing(id, role.Career, role.Specialty, RuleFor(def, role), CareerService.SkillsOf(pawn)))).ToString();
                 Widgets.Label(new Rect(10f, y, view.width - 110f, 22f), title + " - " + status);
-                TooltipHandler.TipRegion(new Rect(10f, y, view.width - 110f, 22f), "WFL_Career_Experience".Translate(ledger.GeneralXp(id, role.Career)));
+                string tip="WFL_Career_Experience".Translate(ledger.GeneralXp(id, role.Career)).ToString();
+                if(!string.IsNullOrEmpty(role.BonusKey))tip+="\n"+"WFL_Career_Bonus".Translate(role.BonusKey.Translate());
+                TooltipHandler.TipRegion(new Rect(10f, y, view.width - 110f, 22f), tip);
                 bool can = assigned || check == AssignResult.Assigned;
                 if (can && Widgets.ButtonText(new Rect(view.width - 100f, y, 96f, 22f), (assigned ? "WFL_Career_Unassign" : "WFL_Career_Assign").Translate()))
                 {

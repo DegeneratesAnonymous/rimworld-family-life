@@ -4,4 +4,9 @@
 <wils.crafting.smith_label>Smith</wils.crafting.smith_label><wils.crafting.tailor_label>Tailor</wils.crafting.tailor_label>
 <wils.crafting.weaponsmith_label>Weaponsmith</wils.crafting.weaponsmith_label><wils.crafting.armorsmith_label>Armorsmith</wils.crafting.armorsmith_label>
 <wils.crafting.mechanist_label>Mechanist</wils.crafting.mechanist_label><wils.crafting.couturier_label>Couturier</wils.crafting.couturier_label><wils.crafting.outfitter_label>Outfitter</wils.crafting.outfitter_label>
+<WFL_Crafting_WeaponsmithBonus>Weapons gain one quality band up to Excellent and receive a 15% specialist shop premium.</WFL_Crafting_WeaponsmithBonus>
+<WFL_Crafting_ArmorsmithBonus>Armor gains one quality band up to Excellent and receives a 15% specialist shop premium.</WFL_Crafting_ArmorsmithBonus>
+<WFL_Crafting_MechanistBonus>Mechanical goods receive 20% better workshop presentation and shop value.</WFL_Crafting_MechanistBonus>
+<WFL_Crafting_CouturierBonus>Prestige clothing gains one quality band up to Excellent and receives a 25% specialist shop premium.</WFL_Crafting_CouturierBonus>
+<WFL_Crafting_OutfitterBonus>General apparel gains one quality band up to Excellent and receives a 15% specialist shop premium.</WFL_Crafting_OutfitterBonus>
 </LanguageData>

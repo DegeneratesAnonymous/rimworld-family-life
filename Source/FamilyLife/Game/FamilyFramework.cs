@@ -36,6 +36,7 @@ namespace FamilyLife
         public static readonly ContributionList<Action<Pawn, Thing, Thing, int>> ProductMade = new ContributionList<Action<Pawn, Thing, Thing, int>>(Catalog);
         /// <summary>Optional producers describe non-food workshop output to establishment shops without either module referencing the other.</summary>
         public static readonly ContributionList<Func<Pawn, Thing, Thing, WorkshopProductProfile>> WorkshopProducts = new ContributionList<Func<Pawn, Thing, Thing, WorkshopProductProfile>>(Catalog);
+        public static readonly ContributionList<Action<Pawn, Pawn, string, int>> WorkshopSale = new ContributionList<Action<Pawn, Pawn, string, int>>(Catalog);
         public static readonly ContributionList<Action<Thing, Thing>> StackSplit = new ContributionList<Action<Thing, Thing>>(Catalog);
         public static readonly ContributionList<Action<Thing, Thing, int>> StackMerged = new ContributionList<Action<Thing, Thing, int>>(Catalog);
         public static readonly ContributionList<Func<Thing, Thing, bool>> BillIngredientAllowed = new ContributionList<Func<Thing, Thing, bool>>(Catalog);
@@ -264,6 +265,6 @@ namespace FamilyLife
     public sealed class WorkshopProductProfile
     {
         public string Career, Route, Specialty, Kind;
-        public int Presentation = 100;
+        public int Presentation = 100, ValuePercent = 100;
     }
 }

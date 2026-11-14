@@ -129,6 +129,13 @@ namespace FamilyLife
 
         public static string TitleOf(ProfessionRole role, FamilyRegistry r) => (role.TitleKey?.Invoke(r) ?? role.Id + "_label").Translate().ToString();
 
+        /// <summary>A specialty benefit is active only while the qualified pawn is assigned to that exact specialty.</summary>
+        public static bool IsAssignedSpecialist(Pawn pawn, string career, string specialty)
+        {
+            var r=FamilyComponent.Current?.Registry;if(pawn==null||r==null||string.IsNullOrEmpty(specialty)||!r.Careers().IsSpecialist(pawn.thingIDNumber,career,specialty))return false;
+            return Professions.All.Any(role=>role.Career==career&&role.Specialty==specialty&&r.Assignments().IsAssigned(pawn.thingIDNumber,role.Id));
+        }
+
         /// <summary>The career's own name for headings, from its Level 2 role.</summary>
         public static string CareerName(CareerDefinition def, FamilyRegistry r) { if (!string.IsNullOrEmpty(def.LabelKey)) return def.LabelKey.Translate().ToString(); var role = Professions.All.FirstOrDefault(x => x.Career == def.Id && x.Level == 2); return role != null ? TitleOf(role, r) : def.Id; }
 

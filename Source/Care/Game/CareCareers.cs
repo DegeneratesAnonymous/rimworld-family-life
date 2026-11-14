@@ -18,7 +18,7 @@ namespace FamilyLife
             foreach (var spec in CareSpecialties.All)
             {
                 CareerService.Career(CareRoles.Career).Specialties[spec.Key] = CareSpecialties.Rule(spec);
-                CareerService.RegisterRole(new ProfessionRole { Id = spec.RoleId, ModuleId = moduleId, Career = CareRoles.Career, Level = 3, Specialty = spec.Key });
+                CareerService.RegisterRole(new ProfessionRole { Id = spec.RoleId, ModuleId = moduleId, Career = CareRoles.Career, Level = 3, Specialty = spec.Key, BonusKey="WFL_Care_"+spec.Key+"Bonus" });
             }
             CareSpecialistWork.Register(moduleId);
             CareerService.Registered(moduleId);

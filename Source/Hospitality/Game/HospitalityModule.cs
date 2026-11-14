@@ -21,7 +21,7 @@ namespace FamilyLife
             CareerService.RegisterCareer(CulinaryCareers.Definition());
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Cook,ModuleId=Id,Career=CulinaryCareers.Career,Level=1});
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Chef,ModuleId=Id,Career=CulinaryCareers.Career,Level=2});
-            foreach(var specialty in new[]{"Artisan","Bartender","Innkeeper"}) CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Role(specialty),ModuleId=Id,Career=CulinaryCareers.Career,Level=3,Specialty=specialty});
+            foreach(var specialty in new[]{"Artisan","Bartender","Innkeeper"}) CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Role(specialty),ModuleId=Id,Career=CulinaryCareers.Career,Level=3,Specialty=specialty,BonusKey="WFL_H_"+specialty+"Bonus"});
             CareerService.Registered(Id);
             FamilyFramework.Pages.Register(new CommunityPage<Func<Rect,FamilyComponent,float>>{Id="wils.hospitality.establishments",ModuleId=Id,LabelKey="WFL_H_Establishments",Order=140,Render=EstablishmentPage.Draw,Status=()=>FamilyFramework.Commerce.Bank==null?1:0});
             FamilyFramework.Roster.Register(new WorkItem{Id="wils.hospitality.work",ModuleId=Id,Interval=600,Run=HospitalityService.Tick});

@@ -20,11 +20,23 @@ Advanced specialties require Crafting 10. Couturier also requires Artistic 6. Qu
 4. Crafted output is tagged with its maker, business, product track, and career route. That provenance survives stack splits and merges.
 5. Depositing output into the shop's stock or storage area credits production contribution and career experience exactly once. Sales and paydays remain handled by the establishment/Treasury systems.
 
+Shops may now identify themselves as a **General shop, Smithy, Tailor, Armory, Mechanist workshop, or Boutique**. A focused workshop offers only matching goods with recorded workshop provenance; General retains the original sell-any-stock behavior.
+
+## Assigned specialty bonuses
+
+- Weaponsmith: weapons gain one quality band up to Excellent and a 15% shop premium.
+- Armorsmith: armor gains one quality band up to Excellent and a 15% shop premium.
+- Mechanist: mechanical goods gain 20% presentation and shop value.
+- Couturier: prestige apparel gains one quality band up to Excellent and a 25% shop premium.
+- Outfitter: general apparel gains one quality band up to Excellent and a 15% shop premium.
+
+Bonuses require both qualification and assignment to the exact specialty. Qualification alone never activates them. Craft work also produces bounded mood and customer relationship memories; every crafting role has five positive, five negative, and five relationship event definitions, with initial production-quality and customer-sale triggers wired in.
+
 Products are classified from vanilla item traits and names: weapons, armor, mechanical goods, prestige apparel, ordinary apparel, metalwork, stonework, and woodwork. Modded products with unusual definitions may initially fall outside a track; compatibility mappings are a planned tuning surface.
 
 ## First-draft boundaries
 
 - Reuses the existing generic **Shop** establishment rather than adding separate workshop types.
 - Does not add new crafting recipes or replace vanilla bills.
-- Does not yet add role-specific mood or relationship event libraries; those should be designed after the work loop is validated in game.
+- The first event triggers cover completed products, flawed low-quality work, and customer reactions. More situational triggers such as rejected commissions, material shortages, rivalry, and stolen credit remain a narrative expansion surface.
 - Offline compilation and domain tests cover both RimWorld 1.6 and 1.7, but gameplay validation is still required for job priority, modded recipes, stock hauling, customer demand, and balance.

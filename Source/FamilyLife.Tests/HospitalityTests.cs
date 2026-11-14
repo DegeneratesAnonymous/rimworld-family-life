@@ -128,13 +128,13 @@ namespace FamilyLife.Tests
         }
         [Fact] public void Provenance_survives_stack_splits_merges_and_partial_moves()
         {
-            var b=new ProductionBook();b.Lots.Add(new ProductLot{Thing=1,Worker=2,Business=3,Count=10,Origin="recipe",Career=CraftingCareers.Career,Specialty="Smith",Kind="craft.smith",Day=0});b.Move(1,4,3);b.Move(4,5,2);var copy=ProductionBook.Decode(new StateReader(b.Encode()));Assert.Equal(10,copy.Lots.Sum(l=>l.Count));Assert.Equal(2,copy.Lots.Single(l=>l.Thing==5).Count);Assert.All(copy.Lots,l=>{Assert.Equal("recipe",l.Origin);Assert.Equal(CraftingCareers.Career,l.Career);Assert.Equal("Smith",l.Specialty);});
+            var b=new ProductionBook();b.Lots.Add(new ProductLot{Thing=1,Worker=2,Business=3,Count=10,Origin="recipe",Career=CraftingCareers.Career,Specialty="Smith",Kind="craft.smith",ValuePercent=125,Day=0});b.Move(1,4,3);b.Move(4,5,2);var copy=ProductionBook.Decode(new StateReader(b.Encode()));Assert.Equal(10,copy.Lots.Sum(l=>l.Count));Assert.Equal(2,copy.Lots.Single(l=>l.Thing==5).Count);Assert.All(copy.Lots,l=>{Assert.Equal("recipe",l.Origin);Assert.Equal(CraftingCareers.Career,l.Career);Assert.Equal("Smith",l.Specialty);Assert.Equal(125,l.ValuePercent);});
         }
         [Fact] public void Saved_establishments_keep_ownership_areas_orders_earnings_guests_and_event_cooldowns()
         {
-            var x=Setup();x.e.Name="Will's | Kitchen, & Inn";x.e.Owner=EstablishmentOwner.Household;x.e.OwnerId=42;x.e.ServiceCells.Add(23);x.e.StockContainers.Add(99);x.e.Staff.Add(2);x.e.Beds.Add(10);x.e.Points[2]=20;
+            var x=Setup();x.e.Name="Will's | Kitchen, & Inn";x.e.Owner=EstablishmentOwner.Household;x.e.OwnerId=42;x.e.WorkshopFocus=WorkshopFocus.Armory;x.e.ServiceCells.Add(23);x.e.StockContainers.Add(99);x.e.Staff.Add(2);x.e.Beds.Add(10);x.e.Points[2]=20;
             x.book.Begin(x.e,1,10,20,3,x.bank.Person(1),false,x.bank);x.book.Guests.Add(new GuestStay{Pawn=90,Business=x.e.Id,UntilDay=5,SleepTicks=5000,LastDecisionDay=2});x.book.Memory(1,"event",2,3);x.book.WorkTime(x.e,2,100000,"s:100000",1);
-            var copy=EstablishmentBook.Decode(new StateReader(x.book.Encode()));Assert.Equal(x.book.Encode(),copy.Encode());Assert.Equal(5000,copy.Guests.Single().SleepTicks);Assert.Equal(x.e.Name,copy.ById(x.e.Id).Name);
+            var copy=EstablishmentBook.Decode(new StateReader(x.book.Encode()));Assert.Equal(x.book.Encode(),copy.Encode());Assert.Equal(5000,copy.Guests.Single().SleepTicks);Assert.Equal(x.e.Name,copy.ById(x.e.Id).Name);Assert.Equal(WorkshopFocus.Armory,copy.ById(x.e.Id).WorkshopFocus);
         }
         [Fact] public void Module_payload_survives_an_absent_module_and_reappears_without_migration()
         {

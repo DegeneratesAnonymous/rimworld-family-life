@@ -50,4 +50,16 @@ namespace FamilyLife.Domain
             return null;
         }
     }
+    public static class CraftingBonuses
+    {
+        public static int ValuePercent(string specialty,bool assigned)
+        {
+            if(!assigned)return 100;
+            return specialty=="Couturier"?125:specialty=="Mechanist"?120:specialty=="Weaponsmith"||specialty=="Armorsmith"||specialty=="Outfitter"?115:100;
+        }
+        public static int ImprovedQuality(int quality,bool assigned)
+        {
+            return assigned&&quality<4?quality+1:quality;
+        }
+    }
 }

@@ -44,6 +44,7 @@
   <wils.education.specialist.medicine_label>Medicine Instructor</wils.education.specialist.medicine_label>
   <wils.education.specialist.social_label>Rhetoric Instructor</wils.education.specialist.social_label>
   <wils.education.specialist.intellectual_label>Scholar</wils.education.specialist.intellectual_label>
+  <WFL_Education_SpecialistBonus>Lessons in this specialist's assigned subject have 15% better delivery; assisting that subject still gives the class its existing specialist bonus.</WFL_Education_SpecialistBonus>
   <WFL_Event_Testing_TextMany>It is the season for the children's annual assessment. {0} each have assessments due: a few short daytime sittings over two days, and the result will come from what each child has actually studied and how they took part. You do not need to do anything; they begin tomorrow. You can begin now, put them off for a week, or skip this assessment period.</WFL_Event_Testing_TextMany>
   <WFL_Edu_Page>Education</WFL_Edu_Page>
   <WFL_Edu_Instructors>Instructors</WFL_Edu_Instructors>
