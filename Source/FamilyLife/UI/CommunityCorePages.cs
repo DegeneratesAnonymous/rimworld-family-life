@@ -53,27 +53,57 @@ namespace FamilyLife
         {
             float y = 0f;
             foreach (var m in FamilyFramework.Catalog.Modules.Where(x => !x.IsFramework).OrderBy(x => x.Id, StringComparer.Ordinal))
+                {
                 y = Line(r, y, m.Name + ": " + FamilyFramework.Describe(c, m.Id));
+                if (FamilyFramework.Failures.TryGetValue(m.Id, out var why) && !string.IsNullOrEmpty(why)) y = Line(r, y, why, true);
+            }
             return y;
         }
 
         private static float Overview(Rect r, FamilyComponent c)
         {
+            var reg = c.Registry; bool side = r.width >= 560f; float gap = CommunityPageLayout.Gap, cw = side ? (r.width - gap) / 2f : r.width, h = 132f;
+            int leader = reg.Institution.Kind == InstitutionKind.Consensus ? 0 : reg.Institution.LeaderId; if (reg.GetPerson(leader)?.InColony != true) leader = 0;
+            var ideo = OfficeDriver.PopularIdeo(); int speaker = reg.OfficeFor(OfficeKind.Chaplain) is CommunityOffice co && co.Held ? co.HolderId : 0;
+            string govern = ("WFL_Institution_" + reg.Institution.Kind).Translate().ToString().CapitalizeFirst();
+            LeaderCard(new Rect(0f, 0f, cw, h), c, FamilyRole.ColonyLeader, leader, govern, new Color(.85f, .7f, .3f));
+            LeaderCard(new Rect(side ? cw + gap : 0f, side ? 0f : h + 10f, cw, h), c, FamilyRole.Chaplain, speaker, ideo != null ? ideo.name : "WFL_Hub_NoIdeoligion".Translate().ToString(), new Color(.55f, .65f, .9f));
+            float top = (side ? h : h * 2f + 10f) + 14f;
             float w = CommunityPageLayout.ColumnWidth(r);
-            float left = CommunityPageLayout.Section(r, 0f, 0f, w, "WFL_Hub_Residents".Translate(), a =>
+            float left = CommunityPageLayout.Section(r, 0f, top, w, "WFL_Hub_Residents".Translate(), a =>
             {
-                float y = Line(a, 0f, "WFL_Hub_ResidentsLine".Translate(c.Registry.Persons.Count(p => p.InColony), c.Registry.Lineages.Count(l => c.Registry.IsListedFamily(l.Id))));
-                return CommunityPageLayout.Button(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".families"));
-            });
-            left = CommunityPageLayout.Section(r, 0f, left, w, "WFL_Hub_Modules".Translate(), a => Modules(a, c));
-            bool columns = CommunityPageLayout.TwoColumns(r);
-            float right = CommunityPageLayout.Section(r, columns ? w + CommunityPageLayout.Gap : 0f, columns ? 0f : left, w, "WFL_Hub_Posts".Translate(), a =>
-            {
-                float y = Posts(a, c);
-                if (c.Registry.NextAssemblyTick > 0) y = Line(a, y, "WFL_Assembly_Next".Translate(FamilyUi.Date(c.Registry.NextAssemblyTick)), true);
+                float y = Line(a, 0f, "WFL_Hub_ResidentsLine".Translate(reg.Persons.Count(p => p.InColony), reg.Lineages.Count(l => reg.IsListedFamily(l.Id))));
+                y = CommunityPageLayout.Button(a, y, "WFL_Hub_Families".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".families"));
+                if (reg.NextAssemblyTick > 0) y = Line(a, y, "WFL_Assembly_Next".Translate(FamilyUi.Date(reg.NextAssemblyTick)), true);
                 return CommunityPageLayout.Button(a, y, "WFL_Hub_Assembly".Translate(), () => MainTabWindow_Community.Open(ModuleCatalog.FrameworkId + ".assembly"));
             });
+            bool columns = CommunityPageLayout.TwoColumns(r);
+            float right = CommunityPageLayout.Section(r, columns ? w + CommunityPageLayout.Gap : 0f, columns ? top : left, w, "WFL_Hub_Modules".Translate(), a => Modules(a, c));
             return Mathf.Max(left, right);
+        }
+
+        /// <summary>A large card for one of the colony's two public figures: portrait, title, name and what they lead or speak for.</summary>
+        private static void LeaderCard(Rect card, FamilyComponent c, FamilyRole role, int person, string subtitle, Color accent)
+        {
+            Widgets.DrawBoxSolid(card, new Color(.14f, .14f, .16f)); Widgets.DrawBoxSolid(new Rect(card.x, card.y, card.width, 4f), accent);
+            GUI.color = new Color(1f, 1f, 1f, .07f); RoleIcons.Draw(new Rect(card.xMax - 118f, card.y + 10f, 110f, 110f), role, true); GUI.color = Color.white;
+            var portrait = new Rect(card.x + 14f, card.y + 16f, 84f, card.height - 32f);
+            Widgets.DrawBoxSolid(portrait, new Color(.08f, .08f, .09f));
+            var pawn = person != 0 ? c.TryGetPawn(person) : null;
+            if (pawn != null) GUI.DrawTexture(portrait, PortraitsCache.Get(pawn, portrait.size, Rot4.South, new Vector3(0f, 0f, 0.1f), 1.15f));
+            else RoleIcons.Draw(portrait.ContractedBy(14f), role, true);
+            Widgets.DrawBox(portrait);
+            float x = portrait.xMax + 14f, tw = card.xMax - x - 12f;
+            Text.Font = GameFont.Tiny; GUI.color = accent; Widgets.Label(new Rect(x, card.y + 16f, tw, 18f), RoleIcons.Label(role).ToUpperInvariant()); GUI.color = Color.white;
+            Text.Font = GameFont.Medium; if (person == 0) GUI.color = Color.gray;
+            Widgets.Label(new Rect(x, card.y + 36f, tw, 34f), person != 0 ? NameOf(c, person) : "WFL_Hub_Vacant".Translate().CapitalizeFirst().ToString());
+            Text.Font = GameFont.Small; GUI.color = Color.gray; Widgets.Label(new Rect(x, card.y + 74f, tw, 44f), subtitle); GUI.color = Color.white;
+            TooltipHandler.TipRegion(card, RoleIcons.Description(role));
+            if (person != 0 && Widgets.ButtonInvisible(card))
+            {
+                var lineage = c.Registry.FamilyOf(person); if (lineage != 0) Window_Families.PendingLineageId = lineage;
+                if (Find.WindowStack.WindowOfType<Window_Families>() == null) Find.WindowStack.Add(new Window_Families());
+            }
         }
 
         private static float Families(Rect r, FamilyComponent c)

@@ -96,20 +96,32 @@ namespace FamilyLife
             FamilyFramework.Roster.RunDue(now, 0, (item, ex) => Log.Warning("[Wil's Family Life] Community work '" + item.Id + "' skipped: " + ex.Message));
         }
 
-        /// <summary>The chaplain is the ideoligion's moral guide, the one who converts and speaks for the faith. The post simply follows the game.</summary>
+        /// <summary>The ideoligion with the most followers among the player's colonists (a tie goes to the colony's primary one). Null without Ideology.</summary>
+        internal static Ideo PopularIdeo()
+        {
+            if (!ModsConfig.IdeologyActive) return null;
+            try
+            {
+                var primary = Faction.OfPlayer.ideos?.PrimaryIdeo;
+                return PawnsFinder.AllMaps_FreeColonists.Where(p => p.Ideo != null).GroupBy(p => p.Ideo).OrderByDescending(g => g.Count()).ThenByDescending(g => g.Key == primary).Select(g => g.Key).FirstOrDefault() ?? primary;
+            }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not read the colony's ideoligions: " + ex.Message); return null; }
+        }
+
+        /// <summary>The chaplain speaks for the most popular ideoligion: its moral guide, or failing that its most socially able follower. The post simply follows the game.</summary>
+        internal static Pawn Speaker(Ideo ideo)
+        {
+            if (ideo == null) return null;
+            var guide = ideo.RolesListForReading.FirstOrDefault(x => x.def == PreceptDefOf.IdeoRole_Moralist)?.ChosenPawnSingle();
+            if (guide != null && guide.Faction == Faction.OfPlayer && !guide.Dead) return guide;
+            return PawnsFinder.AllMaps_FreeColonists.Where(p => p.Ideo == ideo && !p.Dead).OrderByDescending(FrameworkServices.SocialFitness).FirstOrDefault();
+        }
+
         private static void SyncChaplain(FamilyComponent c, FamilyRegistry r, int now)
         {
             int person = 0;
-            try
-            {
-                if (ModsConfig.IdeologyActive)
-                {
-                    var ideo = Faction.OfPlayer.ideos?.PrimaryIdeo;
-                    var guide = ideo?.RolesListForReading.FirstOrDefault(x => x.def == PreceptDefOf.IdeoRole_Moralist)?.ChosenPawnSingle();
-                    if (guide != null && guide.Faction == Faction.OfPlayer && !guide.Dead) person = guide.thingIDNumber;
-                }
-            }
-            catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not read the moral guide: " + ex.Message); }
+            try { person = Speaker(PopularIdeo())?.thingIDNumber ?? 0; }
+            catch (Exception ex) { Log.Warning("[Wil's Family Life] Could not read the ideoligion's speaker: " + ex.Message); }
             if (r.AppointOffice(OfficeKind.Chaplain, person, now) && person != 0 && c.TryGetPawn(person) is Pawn p)
                 Messages.Message("WFL_Chaplain_Named".Translate(p.LabelShort), p, MessageTypeDefOf.NeutralEvent, false);
         }
