@@ -35,7 +35,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current;
             if (c == null) return;
-            var settingsId = ModuleCatalog.FrameworkId + ".settings"; var pages = FamilyFramework.Pages.Visible().Where(x => x.Id != settingsId).ToList();
+            var settingsId = CommunityCorePages.PageId("settings"); var pages = FamilyFramework.Pages.Visible().Where(x => x.Id != settingsId).ToList();
             var page = FamilyFramework.Pages.Resolve(selected);
             if (page == null) { Widgets.Label(inRect, "WFL_Hub_NoPages".Translate()); return; }
             selected = page.Id;

@@ -10,6 +10,15 @@
   <WFL_Hub_Residents>Residents</WFL_Hub_Residents>
   <WFL_Hub_ResidentsLine>{0} people live in the colony, in {1} families.</WFL_Hub_ResidentsLine>
   <WFL_Hub_Posts>Community posts</WFL_Hub_Posts>
+  <WFL_Ov_Summary>{0} people in {1} families · {2}</WFL_Ov_Summary>
+  <WFL_Ov_Residents>Residents</WFL_Ov_Residents>
+  <WFL_Ov_Children>{0} children</WFL_Ov_Children>
+  <WFL_Ov_Families>Families</WFL_Ov_Families>
+  <WFL_Ov_Professions>Professions</WFL_Ov_Professions>
+  <WFL_Ov_Staffed>posts staffed</WFL_Ov_Staffed>
+  <WFL_Ov_Assembly>Next assembly</WFL_Ov_Assembly>
+  <WFL_Ov_Leadership>Leadership</WFL_Ov_Leadership>
+  <WFL_Ov_NoLeader>no leader</WFL_Ov_NoLeader>
   <WFL_Tree_Needs>Needs: {0}</WFL_Tree_Needs>
   <WFL_Tree_Entry>Entry</WFL_Tree_Entry>
   <WFL_Tree_Skilled>Skilled</WFL_Tree_Skilled>
