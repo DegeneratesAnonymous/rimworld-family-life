@@ -58,7 +58,7 @@ namespace FamilyLife
     {
         public override Job NonScanJob(Pawn pawn)
         {
-            if(FamilyFramework.Commerce.Bank==null)return null;var e=HospitalityService.Employer(pawn);
+            if(!FamilyFramework.Catalog.IsEnabled(CulinaryCareers.Module)||FamilyFramework.Commerce.Bank==null)return null;var e=HospitalityService.Employer(pawn);
             if(e==null||e.Kind!=EstablishmentKind.Shop||!HospitalityService.Ready(pawn))return null;
             int craft=HospitalityService.Priority(pawn,DefDatabase<WorkTypeDef>.GetNamedSilentFail("Crafting")),sell=HospitalityService.Priority(pawn,EstablishmentSelling.WorkType);
             if(craft==0||(sell>0&&sell<craft&&HospitalityService.Book.Orders.Any(o=>o.Business==e.Id&&(o.Stage==ServiceStage.Ordered||o.Stage==ServiceStage.Consumed))))return null;

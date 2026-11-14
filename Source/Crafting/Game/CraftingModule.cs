@@ -48,12 +48,18 @@ namespace FamilyLife
             };
             return CraftingClassifier.Classify(facts);
         }
+        /// <summary>The specialty an advanced product is credited to: it needs any accepted branch (Armorsmith accepts Smith or Tailor), otherwise the product's route.</summary>
+        public static string ReportedSpecialty(Pawn pawn,CraftingTrack track)
+        {
+            if(track?.Specialty==null)return track?.Specialty;
+            var ledger=FamilyComponent.Current?.Registry.Careers();if(ledger==null)return track.Route;
+            bool qualified=ledger.IsSpecialist(pawn.thingIDNumber,CraftingCareers.Career,track.Route)||(track.Specialty=="Armorsmith"&&(ledger.IsSpecialist(pawn.thingIDNumber,CraftingCareers.Career,"Smith")||ledger.IsSpecialist(pawn.thingIDNumber,CraftingCareers.Career,"Tailor")));
+            return qualified?track.Specialty:track.Route;
+        }
         public static WorkshopProductProfile Profile(Pawn pawn,Thing bench,Thing product)
         {
             if(pawn?.CurJob?.bill?.recipe?.workSkill!=SkillDefOf.Crafting)return null;var track=Track(product);if(track==null)return null;
-            string specialty=track.Specialty;
-            var ledger=FamilyComponent.Current?.Registry.Careers();
-            if(specialty!=null&&ledger?.IsSpecialist(pawn.thingIDNumber,CraftingCareers.Career,track.Route)!=true)specialty=track.Route;
+            string specialty=ReportedSpecialty(pawn,track);
             bool active=track.Specialty!=null&&CareerService.IsAssignedSpecialist(pawn,CraftingCareers.Career,track.Specialty);
             int premium=CraftingBonuses.ValuePercent(track.Specialty,active);
             return new WorkshopProductProfile{Career=CraftingCareers.Career,Route=track.Route,Specialty=specialty,Kind=track.Kind,Presentation=active?premium:100,ValuePercent=premium};
@@ -66,6 +72,8 @@ namespace FamilyLife
             {
                 var quality=product.TryGetComp<CompQuality>();if(quality!=null){var current=quality.Quality;var improved=(QualityCategory)CraftingBonuses.ImprovedQuality((int)current,true);if(improved!=current)quality.SetQuality(improved,ArtGenerationContext.Colony);}
             }
+            // Crafting owns its experience so it works without a commercial shop. Hospitality credits shop deposits under the same activity key, which the ledger counts once.
+            if(job!=0)CareerService.Report(FamilyComponent.Current,pawn,CraftingCareers.Career,ReportedSpecialty(pawn,track),track.Kind,"recipe:"+job,5,FrameworkServices.Now);
             CraftingStories.Produced(pawn,track,product,job);
         }
     }
@@ -94,7 +102,7 @@ namespace FamilyLife
         }
         public static void Sale(Pawn maker,Pawn customer,string kind,int order)
         {
-            if(maker==null||customer==null)return;var track=kind==null?null:new CraftingTrack{Specialty=kind=="craft.weapon"?"Weaponsmith":kind=="craft.armor"?"Armorsmith":kind=="craft.mechanism"?"Mechanist":kind=="craft.couture"?"Couturier":kind=="craft.outfit"?"Outfitter":null,Route=kind=="craft.outfit"||kind=="craft.couture"?"Tailor":"Smith",Entry=kind=="craft.stone"?"Stoneworker":"Woodworker"};
+            if(maker==null||customer==null||kind==null||!kind.StartsWith("craft."))return;var track=new CraftingTrack{Specialty=kind=="craft.weapon"?"Weaponsmith":kind=="craft.armor"?"Armorsmith":kind=="craft.mechanism"?"Mechanist":kind=="craft.couture"?"Couturier":kind=="craft.outfit"?"Outfitter":null,Route=kind=="craft.outfit"||kind=="craft.couture"?"Tailor":"Smith",Entry=kind=="craft.stone"?"Stoneworker":"Woodworker"};
             Give(customer,maker,ActiveRole(maker,track),new[]{"CraftPraised","HelpfulAdvice","SharedTechnique"}[System.Math.Abs(order)%3],order);
         }
     }
