@@ -1,6 +1,6 @@
 # Crafting and Workshops — first draft
 
-This module adds a crafting career tree and lets the existing establishment system operate player-designated commercial workshops. It is optional and references only Wil's Community Framework. Wil's Cooking & Hospitality supplies establishments; Wil's Treasury supplies real accounts, sales, wages, reserves, and payday settlement.
+Wil's Role Modules : Crafting adds a crafting career tree and lets the existing establishment system operate player-designated commercial workshops. It is optional and references only Wil's Community Framework. Wil's Role Modules : Cooking & Hospitality supplies establishments; Wil's Role Modules : Treasury supplies real accounts, sales, wages, reserves, and payday settlement.
 
 ## Career tree
 

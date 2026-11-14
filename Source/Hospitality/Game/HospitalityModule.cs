@@ -17,7 +17,7 @@ namespace FamilyLife
         public string Id => CulinaryCareers.Module;
         public void Register()
         {
-            FamilyFramework.Catalog.Register(new ModuleInfo { Id=Id,Name="Wil's Cooking & Hospitality",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId} });
+            FamilyFramework.Catalog.Register(new ModuleInfo { Id=Id,Name="Wil's Role Modules : Cooking & Hospitality",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId} });
             CareerService.RegisterCareer(CulinaryCareers.Definition());
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Cook,ModuleId=Id,Career=CulinaryCareers.Career,Level=1});
             CareerService.RegisterRole(new ProfessionRole{Id=CulinaryCareers.Chef,ModuleId=Id,Career=CulinaryCareers.Career,Level=2});
@@ -65,7 +65,7 @@ namespace FamilyLife
                 own.visible = false;
                 own.workGiversByPriority.Clear();
                 existing.workGiversByPriority.Sort((a,b)=>b.priorityInType.CompareTo(a.priorityInType));
-                Log.Message("[Wil's Cooking & Hospitality] Using existing Sell work type: "+existing.defName);
+                Log.Message("[Wil's Role Modules : Cooking & Hospitality] Using existing Sell work type: "+existing.defName);
             }
         }
     }

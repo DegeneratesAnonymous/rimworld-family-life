@@ -25,4 +25,4 @@ These bonuses do not replace or silently alter vanilla surgery outcomes.
 
 Weaponsmith, Armorsmith, Couturier and Outfitter improve matching quality by one band up to Excellent and earn bounded shop premiums. Mechanist goods receive a 20% presentation/value premium because many mechanical products do not carry RimWorld quality levels.
 
-Wil's Treasury currently has no level-three specialty; Treasurer and Tax Collector therefore receive no fabricated specialty bonus. If Treasury gains branching specialties later, they should use this same assigned-specialty rule.
+Wil's Role Modules : Treasury currently has no level-three specialty; Treasurer and Tax Collector therefore receive no fabricated specialty bonus. If Treasury gains branching specialties later, they should use this same assigned-specialty rule.

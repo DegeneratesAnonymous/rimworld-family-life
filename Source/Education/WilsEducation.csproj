@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Wil's Education: the Teacher post, classes, lessons, attendance, subjects, learning records, assessments and the lectern. A separate assembly, built against the framework
+    Wil's Role Modules : Education: the Teacher post, classes, lessons, attendance, subjects, learning records, assessments and the lectern. A separate assembly, built against the framework
     assembly's public surface only. Build one game version at a time:
       dotnet build Source/FamilyLife -c Release -p:GameVersion=1.6        (framework first)
       dotnet build Source/Education  -c Release -p:GameVersion=1.6

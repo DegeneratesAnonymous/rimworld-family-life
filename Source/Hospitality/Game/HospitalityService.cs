@@ -129,7 +129,7 @@ namespace FamilyLife
             if(e.Kind!=EstablishmentKind.Shop)return;
             foreach(var classify in FamilyFramework.WorkshopProducts.Enabled())
             {
-                WorkshopProductProfile profile=null;try{profile=classify(p,bench,product);}catch(Exception ex){Log.Warning("[Wil's Cooking & Hospitality] Workshop product classifier skipped: "+ex.Message);}
+                WorkshopProductProfile profile=null;try{profile=classify(p,bench,product);}catch(Exception ex){Log.Warning("[Wil's Role Modules : Cooking & Hospitality] Workshop product classifier skipped: "+ex.Message);}
                 if(profile==null||string.IsNullOrEmpty(profile.Career))continue;
                 Component.Registry.Production().Lots.Add(new ProductLot{Id=Component.Registry.Production().NextId++,Thing=product.thingIDNumber,Worker=p.thingIDNumber,Business=e.Id,Count=product.stackCount,Day=Day,Presentation=profile.Presentation,ValuePercent=profile.ValuePercent,Origin="recipe:"+job,Career=profile.Career,Specialty=profile.Specialty,Kind=profile.Kind});return;
             }

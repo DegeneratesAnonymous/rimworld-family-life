@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-  <!-- A tax collection visit: the framework's shared talk job, with the meaning supplied by Wil's Treasury. -->
+  <!-- A tax collection visit: the framework's shared talk job, with the meaning supplied by Wil's Role Modules : Treasury. -->
   <JobDef>
     <defName>WFL_TaxVisit</defName>
     <driverClass>FamilyLife.JobDriver_StoryTalk</driverClass>

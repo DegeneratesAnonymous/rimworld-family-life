@@ -16,7 +16,7 @@ namespace FamilyLife
         public string Id=>CraftingCareers.Module;
         public void Register()
         {
-            FamilyFramework.Catalog.Register(new ModuleInfo{Id=Id,Name="Wil's Crafting & Workshops",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId}});
+            FamilyFramework.Catalog.Register(new ModuleInfo{Id=Id,Name="Wil's Role Modules : Crafting",ApiVersion=FamilyFramework.ApiVersion,Requires=new[]{ModuleCatalog.FrameworkId}});
             CareerService.RegisterCareer(CraftingCareers.Definition());
             CareerService.RegisterRole(new ProfessionRole{Id=CraftingCareers.Woodworker,ModuleId=Id,Career=CraftingCareers.Career,Level=1});
             CareerService.RegisterRole(new ProfessionRole{Id=CraftingCareers.Stoneworker,ModuleId=Id,Career=CraftingCareers.Career,Level=1});

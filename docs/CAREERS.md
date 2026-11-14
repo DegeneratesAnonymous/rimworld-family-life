@@ -120,7 +120,7 @@ Built from commit `366d78f`; the staged candidate (a66953b) is untouched (its in
 The three packages share package ids with the installed ones (`SpacemanWil.WilsFamilyLife`, `.WilsEducation`, `.WilsCommunityCare`), so **they cannot be enabled together with the staged copies**. Two safe ways to test, neither performed by me:
 1. **Separate game copy (recommended).** Copy the RimWorld folder (or use a second Steam library install), put only these three folders (plus Harmony and, if wanted, other mods) in that copy's `Mods`, and start it with `-savedatafolder=C:\RW-careers-test` so saves and config are separate.
 2. **Swap in place.** Move the three installed folders (`WilsFamilyLife`, `WilsEducation`, `WilsCommunityCare`) to a backup folder outside `Mods`, copy the test folders in, test, then reverse. Back up your saves first; do not load the staged runtime-test save with these builds, since the staged candidate's own validation is separate.
-Mod list order: Harmony, Core/DLC, Wil's Community Framework, Wil's Educators, Wil's Community Care. Enable Development mode and, in Mod Settings, "Log family events to the dev log".
+Mod list order: Harmony, Core/DLC, Wil's Community Framework, Wil's Role Modules : Education, Wil's Role Modules : Community Care. Enable Development mode and, in Mod Settings, "Log family events to the dev log".
 
 ## Diagnostics (all low-overhead; per-event, never per-tick)
 Always written: module registration, migration, qualifications, load reconcile, failures.

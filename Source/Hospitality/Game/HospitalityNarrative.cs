@@ -186,7 +186,7 @@ namespace FamilyLife
         public static void OnSettled(ServiceOrder order,Pawn customer,Pawn staff,int service)
         {
             var e=B.ById(order.Business);var maker=P(order.Maker);var bank=FamilyFramework.Commerce.Bank;if(e==null||customer==null)return;
-            var lot=C.Registry.Production().Lots.FirstOrDefault(l=>l.Thing==order.Thing&&l.Business==order.Business);if(maker!=null&&lot!=null)foreach(var listener in FamilyFramework.WorkshopSale.Enabled())try{listener(maker,customer,lot.Kind,order.Id);}catch(Exception ex){Log.Warning("[Wil's Cooking & Hospitality] Workshop sale event skipped: "+ex.Message);}
+            var lot=C.Registry.Production().Lots.FirstOrDefault(l=>l.Thing==order.Thing&&l.Business==order.Business);if(maker!=null&&lot!=null)foreach(var listener in FamilyFramework.WorkshopSale.Enabled())try{listener(maker,customer,lot.Kind,order.Id);}catch(Exception ex){Log.Warning("[Wil's Role Modules : Cooking & Hospitality] Workshop sale event skipped: "+ex.Message);}
             if(order.DietRequest)HospitalityService.EventAs("Cook",customer,maker??staff,"DietAccommodation");
             if(maker!=null&&Role(maker)=="Artisan"&&EstablishmentPersonalityService.Temperament(customer).Refinement>=65&&Near(customer,maker)&&HospitalityService.Social(maker,customer))HospitalityService.EventAs("Artisan",customer,maker,"SharedTaste");
             if(staff!=null&&RivalFamilies(customer,staff))HospitalityService.Event(customer,staff,"RivalServed");
