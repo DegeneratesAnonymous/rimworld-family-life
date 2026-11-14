@@ -131,11 +131,11 @@ namespace FamilyLife.Domain
             if (order.Visitor ? externalPayment == null || !externalPayment(order) : bank == null || !bank.Commit(order.Key, bank.Business(e.Id), day)) return false;
             order.Stage = ServiceStage.Settled; Sale(e, order.Price); return true;
         }
-        public bool GiveTip(ServiceOrder order,int worker,int silver,int day,ICommerceBank bank,Func<bool> physicalPayment=null)
+        public bool GiveTip(ServiceOrder order,int worker,int silver,int day,ICommerceBank bank,Func<bool> physicalPayment=null,bool? customerIsOutsideVisitor=null)
         {
             if(order.Stage!=ServiceStage.Settled||order.TipAttempted||bank==null||worker<=0)return false;order.TipAttempted=true;
             if(silver<=0||silver>3)return false;string key="tip:"+order.Key;var e=ById(order.Business);if(e==null)return false;
-            bool paid=order.Visitor?bank.ExternalSale(key,bank.Business(e.Id),silver,day,physicalPayment):bank.Transfer(key,bank.Person(order.Customer),bank.Business(e.Id),silver,day,true);
+            bool paid=(customerIsOutsideVisitor??order.Visitor)?bank.ExternalSale(key,bank.Business(e.Id),silver,day,physicalPayment):bank.Transfer(key,bank.Person(order.Customer),bank.Business(e.Id),silver,day,true);
             if(!paid)return false;Earn(e,worker,silver,BusinessCalendar.Next(day));order.Tip=silver;return true;
         }
         public bool Cancel(ServiceOrder order, ICommerceBank bank, BookingBook bookings=null)

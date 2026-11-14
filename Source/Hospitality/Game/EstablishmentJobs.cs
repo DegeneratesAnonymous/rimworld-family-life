@@ -132,7 +132,7 @@ namespace FamilyLife
             if(HospitalityService.Book.ById(Order.Business).Kind==EstablishmentKind.Shop)
             {
                 yield return Toils_General.Wait(180);
-                var browse=Toils_General.Do(()=>{var e=HospitalityService.Book.ById(Order.Business);var cell=e.ServiceCells.Select(pawn.Map.cellIndices.IndexToCell).Where(c=>c.Standable(pawn.Map)).OrderBy(c=>c.DistanceTo(pawn.Position)).Skip(2).FirstOrDefault();if(cell.IsValid)job.SetTarget(TargetIndex.A,cell);});yield return browse;
+                var browse=Toils_General.Do(()=>{var e=HospitalityService.Book.ById(Order.Business);var cell=e.ServiceCells.Select(pawn.Map.cellIndices.IndexToCell).Where(c=>c.Standable(pawn.Map)).OrderBy(c=>c.DistanceTo(pawn.Position)).Skip(2).Cast<IntVec3?>().FirstOrDefault();if(cell.HasValue)job.SetTarget(TargetIndex.A,cell.Value);});yield return browse;
                 yield return Toils_Goto.GotoCell(TargetIndex.A,PathEndMode.OnCell);
             }
             var wait=ToilMaker.MakeToil("WaitForService");wait.defaultCompleteMode=ToilCompleteMode.Never;wait.tickAction=()=>
