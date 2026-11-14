@@ -21,10 +21,10 @@ foreach ($m in "Education", "Care") {
     if ($LASTEXITCODE -ne 0) { throw "$m.Domain no longer builds on its own: a module is using something internal to the shared code" }
 }
 
-# 4. Assemble the four installable packages and check their layout.
+# 4. Assemble the five installable packages and check their layout.
 & (Join-Path $PSScriptRoot "Build-Packages.ps1") -NoBuild
 
 # 5. The Harmony patches still match the game.
 & (Join-Path $PSScriptRoot "Check-Patches.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Patch check failed" }
-Write-Host "Tests passed, the modules build in isolation, all four assemblies build for both versions, the packages check out, and all patches match the game."
+Write-Host "Tests passed, the modules build in isolation, all five assemblies build for both versions, the packages check out, and all patches match the game."

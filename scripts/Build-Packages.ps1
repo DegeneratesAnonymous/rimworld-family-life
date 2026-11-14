@@ -1,7 +1,9 @@
-# Assembles the three installable packages under dist\ and checks each one's layout. Nothing is copied into the game; use Stage-ToRimWorld.ps1 for that.
+# Assembles the five installable packages under dist\ and checks each one's layout. Nothing is copied into the game; use Stage-ToRimWorld.ps1 for that.
 #   dist\WilsFamilyLife       the framework package (SpacemanWil.WilsFamilyLife): family records, community posts, and everything the modules plug into
 #   dist\WilsEducation        SpacemanWil.WilsEducation (needs the framework)
 #   dist\WilsCommunityCare    SpacemanWil.WilsCommunityCare (needs the framework)
+#   dist\WilsTreasury         SpacemanWil.WilsTreasury (needs the framework)
+#   dist\WilsHospitality      SpacemanWil.WilsHospitality (needs the framework; Treasury enables paid operations)
 # Usage: .\scripts\Build-Packages.ps1 [-NoBuild]
 param([switch]$NoBuild)
 $ErrorActionPreference = "Stop"
@@ -63,4 +65,4 @@ $fwDefs = (Get-ChildItem (Join-Path $dist "WilsFamilyLife\Defs") -Recurse -Filte
 foreach ($name in "WFL_ClassTeacher", "WFL_OfficeLesson", "WFL_ClinicDoctor", "WFL_CheckedUp") { if ($fwDefs -match "<defName>$name</defName>") { $problems += "framework package defines $name, which a module owns" } }
 
 if ($problems.Count -gt 0) { $problems | ForEach-Object { Write-Host "PACKAGE PROBLEM: $_" -ForegroundColor Red }; throw "Package check failed" }
-Write-Host "Packages assembled under $dist and checked: WilsFamilyLife, WilsEducation, WilsCommunityCare, WilsTreasury (1.6 and 1.7)."
+Write-Host "Packages assembled under $dist and checked: WilsFamilyLife, WilsEducation, WilsCommunityCare, WilsTreasury, WilsHospitality (1.6 and 1.7)."
