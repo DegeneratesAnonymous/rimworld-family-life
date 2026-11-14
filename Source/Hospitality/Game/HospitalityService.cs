@@ -402,7 +402,8 @@ namespace FamilyLife
         }
         public static void Reconcile(FamilyComponent c)
         {
-            Reset();VisitorCommerce.Reconcile();var bank=FamilyFramework.Commerce.Bank;
+            Reset();if(Book==null)return;      // while a save is still loading there is no running game to check against; the regular pass reconciles once play starts
+            VisitorCommerce.Reconcile();var bank=FamilyFramework.Commerce.Bank;
             if(bank!=null)foreach(var o in Book.Orders.Where(o=>o.Stage==ServiceStage.Settled&&!o.Refunded))bank.RememberSale(o.Visitor?"visitor:"+o.Key:"hold:"+o.Key,bank.Business(o.Business),o.Visitor?null:o.Account,o.Price,Day);
             // Loaded job drivers retain their order ids; only genuinely orphaned deliveries are reopened.
             ReconcileOrders(bank);

@@ -45,29 +45,70 @@ namespace FamilyLife
         {
             var reg = c.Registry; var book = reg.Assignments(); var ledger = reg.Careers(); var def = CareerService.Career(career);
             var depth = Depths(def, roles); int cols = depth.Values.DefaultIfEmpty(0).Max() + 1;
-            float nodeW = Mathf.Clamp((r.width - GapX * (cols - 1)) / cols, 110f, 210f);
+            float nodeW = Mathf.Clamp((r.width - GapX * (cols - 1)) / cols, 110f, 210f), top = y + 26f;
             var residents = reg.Persons.Where(p => p.InColony && !p.Juvenile).OrderBy(p => CommunityCorePages.NameOf(c, p.Id)).ToList();
-            var pos = new Dictionary<ProfessionRole, Rect>(); var rowsUsed = 0f;
-            for (int col = 0; col < cols; col++)
+            var children = roles.ToDictionary(x => x, x => roles.Where(k => ParentsOf(def, roles, k).Contains(x)).ToList());
+            var pos = new Dictionary<ProfessionRole, Rect>();
+            // Leaves first, then each earlier column is centred on what it leads to, so the tree reads like a tree rather than a stack of boxes.
+            for (int col = cols - 1; col >= 0; col--)
             {
-                var inCol = roles.Where(x => depth[x] == col).OrderBy(x => { var ps = ParentsOf(def, roles, x).Where(p => pos.ContainsKey(p)).ToList(); return ps.Count == 0 ? 1000f : ps.Average(p => pos[p].y); }).ThenBy(x => x.Id, StringComparer.Ordinal).ToList();
-                float cy = y;
+                var inCol = roles.Where(x => depth[x] == col).ToList();
+                var want = new Dictionary<ProfessionRole, float>();
                 foreach (var x in inCol)
                 {
-                    var parents = ParentsOf(def, roles, x).Where(p => pos.ContainsKey(p)).ToList();
-                    if (parents.Count > 0) cy = Mathf.Max(cy, parents.Average(p => pos[p].y));
-                    pos[x] = new Rect(col * (nodeW + GapX), cy, nodeW, NodeH); cy += NodeH + GapY;
+                    var kids = children[x].Where(k => pos.ContainsKey(k)).ToList();
+                    want[x] = kids.Count > 0 ? kids.Average(k => pos[k].center.y) - NodeH / 2f : float.NaN;
                 }
-                rowsUsed = Mathf.Max(rowsUsed, cy);
+                if (inCol.All(x => float.IsNaN(want[x])) && col < cols - 1)
+                {
+                    var next = pos.Where(kv => depth[kv.Key] == col + 1).Select(kv => kv.Value).ToList();
+                    float mid = next.Count > 0 ? (next.Min(n => n.y) + next.Max(n => n.yMax)) / 2f : top, total = inCol.Count * NodeH + (inCol.Count - 1) * GapY, start = mid - total / 2f;
+                    foreach (var x in inCol.OrderBy(k => k.Id, StringComparer.Ordinal)) { want[x] = start; start += NodeH + GapY; }
+                }
+                float floor = float.MinValue;
+                foreach (var x in inCol.OrderBy(k => float.IsNaN(want[k]) ? float.MaxValue : want[k]).ThenBy(k => k.Id, StringComparer.Ordinal))
+                {
+                    float cy = float.IsNaN(want[x]) ? (floor == float.MinValue ? top : floor) : want[x];
+                    if (floor != float.MinValue) cy = Mathf.Max(cy, floor);
+                    pos[x] = new Rect(col * (nodeW + GapX), cy, nodeW, NodeH); floor = cy + NodeH + GapY;
+                }
             }
-            var line = new Color(.55f, .5f, .35f, .8f);
-            foreach (var x in roles) foreach (var p in ParentsOf(def, roles, x)) if (pos.ContainsKey(p) && pos.ContainsKey(x))
+            float shift = top - pos.Values.Min(n => n.y); foreach (var x in roles.ToList()) { var n = pos[x]; pos[x] = new Rect(n.x, n.y + shift, n.width, n.height); }
+            float bottom = pos.Values.Max(n => n.yMax);
+            // column headings
+            for (int col = 0; col < cols; col++)
             {
-                Vector2 a = new Vector2(pos[p].xMax, pos[p].center.y), b = new Vector2(pos[x].x, pos[x].center.y), m = new Vector2((a.x + b.x) / 2f, 0f);
-                Widgets.DrawLine(a, new Vector2(m.x, a.y), line, 2f); Widgets.DrawLine(new Vector2(m.x, a.y), new Vector2(m.x, b.y), line, 2f); Widgets.DrawLine(new Vector2(m.x, b.y), b, line, 2f);
+                var inCol = roles.Where(x => depth[x] == col).ToList(); if (inCol.Count == 0) continue;
+                int lvl = inCol.Min(x => x.Level); string key = lvl <= 1 ? "WFL_Tree_Entry" : lvl == 2 ? "WFL_Tree_Skilled" : "WFL_Tree_Specialist";
+                Text.Font = GameFont.Tiny; GUI.color = new Color(FamilyKit.Gold.r, FamilyKit.Gold.g, FamilyKit.Gold.b, .8f);
+                Widgets.Label(new Rect(col * (nodeW + GapX) + 4f, y + 4f, nodeW, 18f), key.Translate().ToString().ToUpperInvariant()); GUI.color = Color.white; Text.Font = GameFont.Small;
             }
+            var line = new Color(.62f, .55f, .34f, .9f);
+            // entry roles share one trunk: anyone may start there, so they all lead to the same next step
+            var entries = roles.Where(x => ParentsOf(def, roles, x).Count == 0).ToList();
+            var gated = roles.Where(x => x.Level >= 2 && ParentsOf(def, roles, x).Count > 0 && ParentsOf(def, roles, x).All(q => q.Level == 1)).ToList();
+            if (entries.Count > 0 && gated.Count > 0)
+            {
+                float ex = entries.Max(q => pos[q].xMax), top2 = entries.Min(q => pos[q].center.y), bot2 = entries.Max(q => pos[q].center.y), mx = ex + GapX / 2f - 4f, mid = (top2 + bot2) / 2f;
+                foreach (var q in entries) Widgets.DrawLine(new Vector2(pos[q].xMax, pos[q].center.y), new Vector2(mx, pos[q].center.y), line, 2f);
+                Widgets.DrawLine(new Vector2(mx, top2), new Vector2(mx, bot2), line, 2f);
+                foreach (var g in gated) Curve(new Vector2(mx, mid), new Vector2(pos[g].x, pos[g].center.y), line);
+            }
+            foreach (var x in roles) foreach (var p in ParentsOf(def, roles, x)) if (!(x.Level >= 2 && ParentsOf(def, roles, x).All(q => q.Level == 1)))
+                Curve(new Vector2(pos[p].xMax, pos[p].center.y), new Vector2(pos[x].x, pos[x].center.y), line);
             foreach (var x in roles) Node(pos[x], c, reg, book, ledger, def, x, residents, search);
-            return rowsUsed + 4f;
+            return bottom + 8f;
+        }
+
+        private static void Curve(Vector2 a, Vector2 b, Color col)
+        {
+            const int steps = 14; Vector2 prev = a;
+            for (int i = 1; i <= steps; i++)
+            {
+                float t = i / (float)steps, s = t * t * (3f - 2f * t);      // smooth step: leaves flat, turns in the middle
+                var cur = new Vector2(Mathf.Lerp(a.x, b.x, t), Mathf.Lerp(a.y, b.y, s));
+                Widgets.DrawLine(prev, cur, col, 2f); prev = cur;
+            }
         }
 
         private static void Node(Rect n, FamilyComponent c, FamilyRegistry reg, AssignmentBook book, CareerLedger ledger, CareerDefinition def, ProfessionRole role, List<PersonRecord> residents, string search)
