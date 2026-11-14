@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Wil's Educators</name>
+  <name>Wil's Role Modules : Education</name>
   <author>Spaceman_Wil</author>
   <packageId>SpacemanWil.WilsEducation</packageId>
   <modVersion>0.1.0</modVersion>
@@ -28,7 +28,7 @@
 
 Careers in teaching for Wil's Community Framework: anyone can be assigned as a Tutor, qualified Teachers hold classes for the colony's children, teaches subjects the teacher is really better at, uses books, runs a yearly assessment, and keeps a record of what each child has studied.
 
-Requires Wil's Community Framework, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Community Care and works without it.
+Requires Wil's Community Framework, which provides the family records, the community posts and everything this module plugs into. It does not need Wil's Role Modules : Community Care and works without it.
 
 Load it after Wil's Community Framework. If you take it out of a game, use the developer action "Prepare Education for removal" first (see the installation notes); the mod's own records stay in the save and are picked up again if you add it back.
 

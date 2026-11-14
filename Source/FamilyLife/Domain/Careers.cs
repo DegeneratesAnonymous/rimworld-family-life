@@ -12,8 +12,11 @@ namespace FamilyLife.Domain
     public sealed class CareerRule
     {
         public Dictionary<string, int> Skills = new Dictionary<string, int>();
+        /// <summary>For an advanced specialty, at least one named branch/specialty must already be qualified. Empty keeps the original unrestricted behavior.</summary>
+        public List<string> RequiresAny = new List<string>();
         public int GeneralXp, SpecialtyXp;
         public CareerRule Skill(string skill, int min) { Skills[skill] = min; return this; }
+        public CareerRule After(params string[] qualifications) { RequiresAny.AddRange(qualifications.Where(q => !string.IsNullOrEmpty(q))); return this; }
     }
 
     /// <summary>One step of a career as the pawn tab shows it. Skills are (name, have, need).</summary>
@@ -31,8 +34,10 @@ namespace FamilyLife.Domain
     /// <summary>A career a module defines: level 2 (qualified professional) and any number of level 3 specialties. All thresholds are data, so they can be tuned or overridden.</summary>
     public sealed class CareerDefinition
     {
-        public string Id, ModuleId;
+        public string Id, ModuleId, LabelKey;
         public CareerRule Level2 = new CareerRule();
+        /// <summary>Parallel skilled qualifications. When present, any branch can be earned from level 1 and the career has no single unnamed level-2 step.</summary>
+        public Dictionary<string, CareerRule> Level2Branches = new Dictionary<string, CareerRule>();
         public Dictionary<string, CareerRule> Specialties = new Dictionary<string, CareerRule>();
     }
 
@@ -150,12 +155,25 @@ namespace FamilyLife.Domain
         public List<string> Evaluate(int person, CareerDefinition def, Func<string, int> skill)
         {
             var gained = new List<string>(); var e = Of(person);
-            if (!e.Quals.Contains(def.Id) && GeneralXp(person, def.Id) >= def.Level2.GeneralXp && Meets(def.Level2, skill)) { e.Quals.Add(def.Id); gained.Add(def.Id); }
+            if (def.Level2Branches.Count == 0)
+            {
+                if (!e.Quals.Contains(def.Id) && GeneralXp(person, def.Id) >= def.Level2.GeneralXp && Meets(def.Level2, skill)) { e.Quals.Add(def.Id); gained.Add(def.Id); }
+            }
+            else
+            {
+                foreach (var branch in def.Level2Branches.OrderBy(x => x.Key, StringComparer.Ordinal))
+                {
+                    string q = Special(def.Id, branch.Key);
+                    if (!e.Quals.Contains(q) && GeneralXp(person, def.Id) >= branch.Value.GeneralXp && SpecialtyXp(person, def.Id, branch.Key) >= branch.Value.SpecialtyXp && Meets(branch.Value, skill))
+                    { e.Quals.Add(q); e.Quals.Add(def.Id); gained.Add(q); }
+                }
+            }
             if (e.Quals.Contains(def.Id))
                 foreach (var s in def.Specialties.OrderBy(x => x.Key, StringComparer.Ordinal))
                 {
                     string q = Special(def.Id, s.Key);
-                    if (!e.Quals.Contains(q) && GeneralXp(person, def.Id) >= s.Value.GeneralXp && SpecialtyXp(person, def.Id, s.Key) >= s.Value.SpecialtyXp && Meets(s.Value, skill)) { e.Quals.Add(q); gained.Add(q); }
+                    bool prerequisite = s.Value.RequiresAny.Count == 0 || s.Value.RequiresAny.Any(required => e.Quals.Contains(Special(def.Id, required)));
+                    if (!e.Quals.Contains(q) && prerequisite && GeneralXp(person, def.Id) >= s.Value.GeneralXp && SpecialtyXp(person, def.Id, s.Key) >= s.Value.SpecialtyXp && Meets(s.Value, skill)) { e.Quals.Add(q); gained.Add(q); }
                 }
             return gained;
         }
@@ -167,9 +185,11 @@ namespace FamilyLife.Domain
         public List<CareerProgressRow> Progress(int person, CareerDefinition def, Func<string, int> skill)
         {
             var rows = new List<CareerProgressRow>();
-            rows.Add(Row(person, def, null, def.Level2, IsQualified(person, def.Id), true, skill));
+            if (def.Level2Branches.Count == 0) rows.Add(Row(person, def, null, def.Level2, IsQualified(person, def.Id), true, skill));
+            else foreach (var branch in def.Level2Branches.OrderBy(x => x.Key, StringComparer.Ordinal))
+                rows.Add(Row(person, def, branch.Key, branch.Value, IsSpecialist(person, def.Id, branch.Key), true, skill));
             foreach (var s in def.Specialties.OrderBy(x => x.Key, StringComparer.Ordinal))
-                rows.Add(Row(person, def, s.Key, s.Value, IsSpecialist(person, def.Id, s.Key), IsQualified(person, def.Id), skill));
+                rows.Add(Row(person, def, s.Key, s.Value, IsSpecialist(person, def.Id, s.Key), IsQualified(person, def.Id) && (s.Value.RequiresAny.Count == 0 || s.Value.RequiresAny.Any(required => IsSpecialist(person, def.Id, required))), skill));
             return rows;
         }
 

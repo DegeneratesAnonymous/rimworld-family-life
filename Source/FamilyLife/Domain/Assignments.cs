@@ -14,7 +14,7 @@ namespace FamilyLife.Domain
     /// <summary>A professional role a module defines. Level 1 needs no qualification; a higher level needs the career's qualification (and the specialty, at level 3).</summary>
     public sealed class ProfessionRole
     {
-        public string Id, ModuleId, Career, Specialty;
+        public string Id, ModuleId, Career, Specialty, BonusKey;
         public int Level = 1;
         /// <summary>Optional: the label key to show now (a role can be titled differently as the community changes, without its id changing).</summary>
         public Func<FamilyRegistry, string> TitleKey;
@@ -58,7 +58,7 @@ namespace FamilyLife.Domain
             if (role == null) return AssignResult.UnknownRole;
             if (role.Level <= 1) return AssignResult.Assigned;
             if (!ledger.IsQualified(person, role.Career)) return AssignResult.NotQualified;
-            if (role.Level >= 3 && !ledger.IsSpecialist(person, role.Career, role.Specialty)) return AssignResult.NotQualified;
+            if (!string.IsNullOrEmpty(role.Specialty) && !ledger.IsSpecialist(person, role.Career, role.Specialty)) return AssignResult.NotQualified;
             return AssignResult.Assigned;
         }
 

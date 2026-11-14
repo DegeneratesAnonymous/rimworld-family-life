@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Wil's Community Care: the Healer post, check-up rounds, appointments, bedside care, outbreak rounds and their effects. A separate assembly, built against the framework
+    Wil's Role Modules : Community Care: the Healer post, check-up rounds, appointments, bedside care, outbreak rounds and their effects. A separate assembly, built against the framework
     assembly's public surface only. Build one game version at a time:
       dotnet build Source/FamilyLife -c Release -p:GameVersion=1.6        (framework first)
       dotnet build Source/Care  -c Release -p:GameVersion=1.6

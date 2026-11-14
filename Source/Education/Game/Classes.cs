@@ -149,6 +149,7 @@ namespace FamilyLife
             var skillDef = DefDatabase<SkillDef>.GetNamedSilentFail(subject);
             if (book != null && !(BookValues(book).Keys.Any(k => k.defName == subject))) book = null;          // a book that is not about this subject is left on the shelf
             float delivery = LessonMath.Delivery(PawnReadinessApi.Level(teacher, skillDef), PawnReadinessApi.Level(teacher, SkillDefOf.Social), 0f, ClassRooms.Facility(room, front), PawnReadinessApi.Fatigue(teacher));
+            if(CareerService.IsAssignedSpecialist(teacher,EducationCareers.Career,subject))delivery=Math.Min(1.4f,delivery*1.15f);
             string place = front != null ? "t" + front.thingIDNumber : room != null ? "r" + room.ID : "c" + cell.x + "_" + cell.z;
             var seated = Board.Open(teacher.thingIDNumber, roster, subject, place, now);          // claims the instructor, the pupils and the room in one step
             if (seated == null) { FrameworkServices.Trace("class: " + teacher.LabelShort + " must wait, the room is already in use"); return BeginResult.Later; }

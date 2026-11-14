@@ -1,4 +1,4 @@
-# Community Management Hub and Wil's Treasury
+# Community Management Hub and Wil's Role Modules : Treasury
 > **Superseded in part by `docs/TREASURY_STATUS.md`** (the completeness pass: audit fixes, physical treasury, ordinary-labour wages, Family Life integration, module pages). Read that first for what is real, what is only offline-tested and what needs RimWorld.
 
 Branch `feature/community-treasury` (cut from `feature/community-careers`; neither the careers branch, PR #7, nor any staged package was touched).

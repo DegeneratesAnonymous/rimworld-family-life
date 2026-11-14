@@ -137,5 +137,14 @@ namespace FamilyLife.Tests
             Assert.Empty(hospitality.Types.Intersect(treasury.Types));Assert.Empty(hospitality.Types.Intersect(framework.Types));
             var dlls=Directory.GetFiles(Path.GetDirectoryName(hospitality.Path),"*.dll").Select(Path.GetFileName).ToList();Assert.Equal(new[]{"WilsHospitality.dll"},dlls);
         }
+        [Theory]
+        [InlineData("1.6")]
+        [InlineData("1.7")]
+        public void Crafting_uses_only_the_framework_contract_and_ships_only_its_assembly(string version)
+        {
+            var crafting=Read(Module(version,"WilsCrafting","WilsCrafting"));var framework=Read(Framework(version));
+            Assert.Contains("FamilyLife",crafting.References);Assert.DoesNotContain("WilsHospitality",crafting.References);Assert.DoesNotContain("WilsTreasury",crafting.References);Assert.Empty(crafting.Types.Intersect(framework.Types));
+            var dlls=Directory.GetFiles(Path.GetDirectoryName(crafting.Path),"*.dll").Select(Path.GetFileName).ToList();Assert.Equal(new[]{"WilsCrafting.dll"},dlls);
+        }
     }
 }

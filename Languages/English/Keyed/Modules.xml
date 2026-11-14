@@ -19,6 +19,7 @@
   <WFL_Career_Qualified_Short>qualified, not assigned</WFL_Career_Qualified_Short>
   <WFL_Career_Needs>needs {0}</WFL_Career_Needs>
   <WFL_Career_Experience>Professional experience: {0}</WFL_Career_Experience>
+  <WFL_Career_Bonus>Assigned specialty bonus: {0}</WFL_Career_Bonus>
   <WFL_Career_Assign>Assign</WFL_Career_Assign>
   <WFL_Career_Unassign>Unassign</WFL_Career_Unassign>
   <WFL_Career_History>Qualified: {0}</WFL_Career_History>

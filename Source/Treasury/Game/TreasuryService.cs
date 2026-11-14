@@ -11,8 +11,8 @@ using Verse;
 namespace FamilyLife
 {
     /// <summary>
-    /// The game side of Wil's Treasury: it reads the world (silver in storage, who is assigned, the calendar) and calls the pure ledger, payroll and tax code. Everything financial is decided
-    /// by <see cref="Ledger"/> and friends; nothing here moves money except through them. Owner: Wil's Treasury.
+    /// The game side of Wil's Role Modules : Treasury: it reads the world (silver in storage, who is assigned, the calendar) and calls the pure ledger, payroll and tax code. Everything financial is decided
+    /// by <see cref="Ledger"/> and friends; nothing here moves money except through them. Owner: Wil's Role Modules : Treasury.
     /// </summary>
     internal static class TreasuryService
     {
@@ -75,7 +75,7 @@ namespace FamilyLife
             st.LastIncomeDay = Today();
             var res = Trade.Settle(l, report.Id, Today(), plan, sales, Residents(r), new IncomePolicy { CommunityPercent = st.CommunityPercent, OwnerFeePercent = st.OwnerFeePercent });
             if (res == LedgerResult.Ok && plan != null && plan.Legs.Count > 0) TreasuryOffice.Add(c, "trade|" + report.Id, FinancialOp.PooledTrade);
-            if (res != LedgerResult.Ok && res != LedgerResult.Duplicate) Log.Warning("[Wil's Treasury] A trade could not be recorded (" + res + ").");
+            if (res != LedgerResult.Ok && res != LedgerResult.Duplicate) Log.Warning("[Wil's Role Modules : Treasury] A trade could not be recorded (" + res + ").");
         }
 
         // ------------------------------------------------------------------ wages
@@ -85,6 +85,7 @@ namespace FamilyLife
         {
             var c = FamilyComponent.Current; if (c == null || pawn == null) return;
             if (FamilyFramework.PrivateWork.Enabled().Any(f => f(pawn, career))) return;
+            if (FamilyFramework.PrivateWorkEvent.Enabled().Any(f => f(pawn, career, kind))) return;
             var r = c.Registry; int id = pawn.thingIDNumber; var book = r.Assignments();
             var role = CareerService.Professions.All.Where(x => x.Career == career && book.IsAssigned(id, x.Id)).OrderByDescending(x => x.Specialty == specialty ? 1 : 0).ThenByDescending(x => x.Level).FirstOrDefault();
             if (role == null) return;
